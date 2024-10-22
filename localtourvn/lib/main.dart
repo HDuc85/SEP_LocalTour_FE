@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'accountpage.dart';
-import 'bookmarkpage.dart';
-import 'home_screen.dart'; // Make sure you have imported the correct HomeScreen file
-import 'mappage.dart';
+import 'page/accountpage.dart';
+import 'page/bookmarkpage.dart';
+import 'page/home_screen.dart';
+import 'page/mappage.dart';
 import 'now_location.dart';
-import 'schedulepage.dart';
-import 'search_bar.dart'; // Import the SearchBarHome
+import 'page/schedulepage.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,7 +18,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  int currentIndex = 0; // Track the current index of the selected screen
+  int currentIndex = 0; 
   List<Widget> screens = [
     const HomeScreen(),
     const MapPage(),
@@ -35,13 +34,11 @@ class _MyAppState extends State<MyApp> {
       title: 'Flutter Demo',
       home: Scaffold(
         backgroundColor: const Color(0xFFEDE8D0),
-        appBar: AppBar(
-          title: const NowLocation(),
-        ),
-        body: Column( // Use Column to stack the SearchBar and the selected screen
+        body: Column( 
           children: [
-            Expanded( // Use Expanded to allow the screen to take the remaining space
-              child: screens[currentIndex], // Display the selected screen
+            NowLocation(),
+            Expanded( 
+              child: screens[currentIndex], 
             ),
           ],
         ),
@@ -49,7 +46,7 @@ class _MyAppState extends State<MyApp> {
           currentIndex: currentIndex,
           onTap: (value) {
             setState(() {
-              currentIndex = value; // Update the current index on tap
+              currentIndex = value; 
             });
           },
           selectedItemColor: Colors.red,

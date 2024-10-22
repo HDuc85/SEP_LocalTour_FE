@@ -13,7 +13,7 @@ class _NowLocationState extends State<NowLocation> {
   @override
   void initState() {
     super.initState();
-    _fetchLocation();  // Simulate location fetching
+    _fetchLocation(); // Simulate location fetching
   }
 
   Future<void> _fetchLocation() async {
@@ -27,24 +27,31 @@ class _NowLocationState extends State<NowLocation> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Your location',
-            style: TextStyle(color: Colors.black, fontSize: 11),
-          ),
-          Row(
-            children: [
-              const Icon(Icons.location_on, color: Colors.red),
-              Text(
-                _location,
-                style: const TextStyle(color: Colors.black, fontSize: 13),
-              ),
-            ],
-          ),
-        ],
+    return Container(
+      margin: const EdgeInsets.only(top: 30),
+      padding: const EdgeInsets.all(10),// Add horizontal padding
+      color: Colors.white, // Set background to white
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Your location',
+              style: TextStyle(color: Colors.black, fontSize: 11),
+            ),
+            Row(
+              children: [
+                const Icon(Icons.location_on, color: Colors.red),
+                Flexible(
+                  child: Text(
+                    _location,
+                    style: const TextStyle(color: Colors.black, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
