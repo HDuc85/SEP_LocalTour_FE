@@ -10,8 +10,16 @@ class AccountPage extends StatefulWidget {
 class _AccountPageState extends State<AccountPage> {
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text("This is Account Page"),
+    Size size = MediaQuery.of(context).size;
+    return SizedBox(
+      height: size.height,
+      width: size.width, // Changed from size.height to size.width
+      child: Scaffold(
+        appBar: AppBar(title: Text("Account Page"),),
+        body: Center(
+          child: Text("This is Account Page"),
+        ),
+      ),
     );
   }
 }

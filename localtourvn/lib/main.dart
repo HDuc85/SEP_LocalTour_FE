@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'page/accountpage.dart';
-import 'page/bookmarkpage.dart';
-import 'page/home_screen.dart';
 import 'page/mappage.dart';
-import 'now_location.dart';
 import 'page/schedulepage.dart';
+import 'basepage.dart';
+import 'const.dart';
+import 'page/bookmarkpage.dart';
+import 'page/detailpage.dart';
+import 'page/history.dart';
+import 'page/home_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,8 +21,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  int currentIndex = 0; 
-  List<Widget> screens = [
+  int currentIndex = 0;
+
+  final List<Widget> screens = [
     const HomeScreen(),
     const MapPage(),
     const BookmarkPage(),
@@ -27,54 +31,34 @@ class _MyAppState extends State<MyApp> {
     const AccountPage(),
   ];
 
+  void onTabTapped(int index) {
+    setState(() {
+      currentIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      home: Scaffold(
-        backgroundColor: const Color(0xFFEDE8D0),
-        body: Column( 
-          children: [
-            NowLocation(),
-            Expanded( 
-              child: screens[currentIndex], 
-            ),
-          ],
-        ),
-        bottomNavigationBar: BottomNavigationBar(
+      title: 'Local Tour',
+      theme: ThemeData(
+          primaryColor: Constants.primaryColor,
+          scaffoldBackgroundColor: const Color(0xFFEDE8D0)),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => BasePage(
+          body: screens[currentIndex],
           currentIndex: currentIndex,
-          onTap: (value) {
-            setState(() {
-              currentIndex = value; 
-            });
-          },
-          selectedItemColor: Colors.red,
-          unselectedItemColor: Colors.grey,
-          items: const [
-            BottomNavigationBarItem(
-              label: "Home",
-              icon: Icon(Icons.home),
-            ),
-            BottomNavigationBarItem(
-              label: "Map",
-              icon: Icon(Icons.map),
-            ),
-            BottomNavigationBarItem(
-              label: "Bookmark",
-              icon: Icon(Icons.bookmark),
-            ),
-            BottomNavigationBarItem(
-              label: "Schedule",
-              icon: Icon(Icons.schedule),
-            ),
-            BottomNavigationBarItem(
-              label: "Account",
-              icon: Icon(Icons.account_box),
-            ),
-          ],
+          onTabTapped: onTabTapped,
         ),
-      ),
+        '/detail': (context) => const DetailPage(),
+        '/bookmark': (context) => const BookmarkPage(),
+        '/map': (context) => const MapPage(),
+        '/schedule': (context) => const SchedulePage(),
+        '/account': (context) => const AccountPage(),
+        '/history': (context) => const HistoryPage(),
+      },
     );
   }
 }

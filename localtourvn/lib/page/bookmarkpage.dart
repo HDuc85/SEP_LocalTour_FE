@@ -10,8 +10,18 @@ class BookmarkPage extends StatefulWidget {
 class _BookmarkPageState extends State<BookmarkPage> {
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text("This is BookmarkPage"),
+    Size size = MediaQuery.of(context).size;
+    return SizedBox(
+        height: size.height,
+        width: size.width, // Changed from size.height to size.width
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text("Bookmark Page"),
+          ),
+          body: Center(
+            child: const Text("This is Bookmark Page"),
+          ),
+        )
     );
   }
 }

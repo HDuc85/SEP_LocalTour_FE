@@ -13,15 +13,22 @@ class _NowLocationState extends State<NowLocation> {
   @override
   void initState() {
     super.initState();
-    _fetchLocation(); // Simulate location fetching
+    _fetchLocation();
+  }
+
+  @override
+  void dispose() {
+    // Clean up if necessary
+    super.dispose();
   }
 
   Future<void> _fetchLocation() async {
-    // Simulate a delay to represent fetching the current location.
     await Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _location = '123 TKC street, Tan Dinh ward, District 1, HCM City';
-      });
+      if (mounted) {
+        setState(() {
+          _location = '123 TKC street, Tan Dinh ward, District 1, HCM City';
+        });
+      }
     });
   }
 
@@ -29,8 +36,8 @@ class _NowLocationState extends State<NowLocation> {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(top: 30),
-      padding: const EdgeInsets.all(10),// Add horizontal padding
-      color: Colors.white, // Set background to white
+      padding: const EdgeInsets.all(10),
+      color: Colors.white,
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

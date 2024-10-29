@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'models/places/placetranslation.dart';
 
 class SearchBarIcon extends StatefulWidget {
-  const SearchBarIcon({super.key});
+  final List<PlaceTranslation> placeTranslations;
+
+  const SearchBarIcon({super.key, required this.placeTranslations});
 
   @override
   State<SearchBarIcon> createState() => _SearchBarIconState();
@@ -12,23 +15,15 @@ class _SearchBarIconState extends State<SearchBarIcon> {
   final TextEditingController _searchController = TextEditingController();
 
   String searchText = '';
-  List<String> items = [
-    "Bitexco",
-    "Cu Chi",
-    "Hoc Mon",
-    "War Remnants Museum",
-    "Independence Palace",
-    "Snow Town Sai Gon",
-    "Bui Vien walking street",
-    "Ben Thanh Market",
-  ];
-
+  List<String> items = []; // Will include all place names
   List<String> filteredItems = [];
   int maxItemsToShow = 10;
 
   @override
   void initState() {
     super.initState();
+    // Populate items with place names from the provided place translations
+    items = widget.placeTranslations.map((translation) => translation.placeName).toList();
     filteredItems = List.from(items);
   }
 
@@ -44,9 +39,10 @@ class _SearchBarIconState extends State<SearchBarIcon> {
       filteredItems = List.from(items);
     } else {
       filteredItems = items
-          .where((item) =>
-          item.toLowerCase().contains(searchText.toLowerCase()))
+          .where((item) => item.toLowerCase().contains(searchText.toLowerCase()))
           .toList();
+
+      filteredItems.insert(0, 'Search for "$searchText"');
     }
   }
 
@@ -55,85 +51,92 @@ class _SearchBarIconState extends State<SearchBarIcon> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Row(
             children: [
-              Container(
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                height: 50,
+                width: isSearchIsClicked
+                    ? MediaQuery.of(context).size.width * 0.90
+                    : 50,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
                   color: Colors.white,
                   border: Border.all(color: Colors.black, width: 1),
+                  borderRadius: BorderRadius.circular(25),
                 ),
-                child: IconButton(
-                  onPressed: () {
-                    setState(() {
-                      isSearchIsClicked = !isSearchIsClicked;
-                      if (!isSearchIsClicked) {
-                        _searchController.clear();
-                      }
-                    });
-                  },
-                  icon: Icon(isSearchIsClicked ? Icons.close : Icons.search),
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.only(right: 20),
-                  child: isSearchIsClicked
-                      ? Container(
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: _onSearchChanged,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 40),
-                        fillColor: Colors.grey[200],
-                        hintText: "Where do you want to go?",
-                        hintStyle: TextStyle(color: Colors.grey[600]),
-                        border: InputBorder.none,
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        isSearchIsClicked ? Icons.close : Icons.search,
+                        color: Colors.black,
                       ),
+                      onPressed: () {
+                        setState(() {
+                          isSearchIsClicked = !isSearchIsClicked;
+                          if (!isSearchIsClicked) {
+                            _searchController.clear();
+                            searchText = '';
+                          }
+                        });
+                      },
                     ),
-                  )
-                      : const Text(""),
+                    if (isSearchIsClicked)
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: _onSearchChanged,
+                          autofocus: true,
+                          decoration: const InputDecoration(
+                            hintText: "Where do you want to go?",
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
         if (isSearchIsClicked && searchText.isNotEmpty)
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 5,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: filteredItems.length > maxItemsToShow
-                  ? maxItemsToShow
-                  : filteredItems.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(filteredItems[index]),
-                  onTap: () {
-                    // Handle item click
-                    print('Selected: ${filteredItems[index]}');
-                  },
-                );
-              },
+          Positioned(
+            top: 60,
+            left: 16,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 5,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: filteredItems.length > maxItemsToShow
+                    ? maxItemsToShow
+                    : filteredItems.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(filteredItems[index]),
+                    onTap: () {
+                      if (index == 0 && searchText.isNotEmpty) {
+                        print('Searching for: $searchText');
+                      } else {
+                        print('Selected: ${filteredItems[index]}');
+                      }
+                    },
+                  );
+                },
+              ),
             ),
           ),
       ],
