@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import '../base/custombutton.dart';
+import '../base/now_location.dart';
+import '../base/search_bar_icon.dart';
 import '../card/place_card.dart';
 import '../card/place_card_info.dart';
 import '../models/places/place.dart';
 import '../models/places/placemedia.dart';
 import '../models/places/placetranslation.dart';
 import '../models/tag.dart';
-import '../now_location.dart';
-import '../search_bar_icon.dart';
-import '../custombutton.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -267,7 +267,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        CustomButton(text: "SEE ALL",
+        CustomSeeAllButton(text: "SEE ALL",
             onPressed: (){
 
             })
@@ -421,7 +421,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          CustomButton(
+          CustomSeeAllButton(
             text: 'SEE ALL',
             onPressed: () {
               // Your logic here

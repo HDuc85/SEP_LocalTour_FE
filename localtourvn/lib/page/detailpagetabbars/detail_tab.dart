@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:localtourvn/custombutton.dart';
-import 'package:localtourvn/placedescription.dart';
+import '../../base/custombutton.dart';
 import '../../card/activity_card.dart';
 import '../../card/activity_card_info.dart';
 import '../../models/event.dart';
@@ -10,8 +9,9 @@ import '../../models/places/placeactivitymedia.dart';
 import '../../models/places/placeactivitytranslation.dart';
 import '../../models/places/placetranslation.dart';
 import '../../models/tag.dart';
-import '../../weatherwidget.dart';
+import '../../weather/widgets/weatherwidget.dart';
 import '../allproduct.dart';
+import '../detailpage/placedescription.dart';
 import 'form/activityformdialog.dart';
 import 'form/reportform.dart';
 import 'form/schedule.dart';
@@ -500,7 +500,7 @@ class _DetailTabState extends State<DetailTab> {
           ),
         ),
         const SizedBox(height: 30),
-        CustomButton(
+        CustomSeeAllButton(
           text: "SEE ALL",
           onPressed: () {
             Navigator.push(
