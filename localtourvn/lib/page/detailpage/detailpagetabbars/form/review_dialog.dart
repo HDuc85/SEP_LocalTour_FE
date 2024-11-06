@@ -144,23 +144,25 @@ class _ReviewDialogState extends State<ReviewDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Wrap(
-                alignment: WrapAlignment.center,
-                children: List.generate(5, (index) {
-                  return IconButton(
-                    icon: Icon(
-                      Icons.star,
-                      color:
-                      index < selectedRating ? Colors.orange : Colors.grey,
-                      size: 30,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        selectedRating = index + 1;
-                      });
-                    },
-                  );
-                }),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: List.generate(5, (index) {
+                    return IconButton(
+                      icon: Icon(
+                        Icons.star,
+                        color:
+                        index < selectedRating ? Colors.orange : Colors.grey,
+                        size: 30,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          selectedRating = index + 1;
+                        });
+                      },
+                    );
+                  }),
+                ),
               ),
               TextField(
                 controller: contentController,
