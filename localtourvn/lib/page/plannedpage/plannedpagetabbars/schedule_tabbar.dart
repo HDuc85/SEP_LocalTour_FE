@@ -38,6 +38,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
   final TextEditingController searchController = TextEditingController();
   final FocusNode searchFocusNode = FocusNode();
   int? _expandedIndex;
+  bool _isEditingName = false;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _detailController = TextEditingController();
   Map<int, bool> scheduleVisibility = {};
@@ -499,9 +500,37 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(schedule.scheduleName,
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isEditingName = !_isEditingName;
+                            if (_isEditingName) {
+                              _nameController.text = schedule.scheduleName;
+                            }
+                          });
+                        },
+                        child: _isEditingName
+                            ? TextFormField(
+                          controller: _nameController,
+                          onFieldSubmitted: (newValue) {
+                            setState(() {
+                              schedule.scheduleName = newValue;
+                              _isEditingName = false;
+                            });
+                          },
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                        )
+                            : Text(
+                          schedule.scheduleName,
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
                       Row(
                         children: [
                           Text(
