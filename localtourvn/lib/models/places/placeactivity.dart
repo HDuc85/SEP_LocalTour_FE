@@ -6,7 +6,7 @@ class PlaceActivity {
   final int id;
   final int placeId;
   final int displayNumber;
-  final String? photoDisplay; // Nullable field
+  final String? photoDisplay;
 
   PlaceActivity({
     required this.id,

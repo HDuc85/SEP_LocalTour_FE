@@ -1,6 +1,6 @@
 import 'dart:math';
+import '../users/users.dart';
 import 'placefeedback.dart';
-import '../../users/users.dart'; // Adjust the import path as needed
 
 class PlaceFeedbackHelpful {
   final int placeFeedbackHelpfulId;
@@ -93,5 +93,5 @@ List<PlaceFeedbackHelpful> generatePlaceFeedbackHelpfuls(
   return feebBackHelpfuls;
 }
 
-  List<PlaceFeedbackHelpful> feebBackHelpfuls = generatePlaceFeedbackHelpfuls(200, feedbacks, fakeUsers);
+  List<PlaceFeedbackHelpful> feebBackHelpfuls = generatePlaceFeedbackHelpfuls(1000, feedbacks, fakeUsers);
 

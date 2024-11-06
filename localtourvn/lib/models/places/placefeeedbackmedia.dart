@@ -32,7 +32,12 @@ class PlaceFeedbackMedia {
     'Url': url,
     'CreateDate': createDate.toIso8601String(),
   };
+  static Future<List<PlaceFeedbackMedia>> loadMediaByFeedbackId(int feedbackId) async {
+// Filter media for the specific feedbackId
+    return feedbackMediaList.where((media) => media.feedbackId == feedbackId).toList();
+  }
 }
+
 
 // Function to generate random PlaceFeedbackMedia data
 List<PlaceFeedbackMedia> generatePlaceFeedbackMedias(int count, List<PlaceFeedback> feedbacks) {
@@ -49,8 +54,8 @@ List<PlaceFeedbackMedia> generatePlaceFeedbackMedias(int count, List<PlaceFeedba
 
     // Generate a random media URL based on the type
     String url = (type == 'video')
-        ? 'https://example.com/videos/video_$id.mp4' // Example URL for video
-        : 'https://example.com/photos/photo_$id.jpg'; // Example URL for photo
+        ? 'assets/videos/video_${random.nextInt(3) + 1}.mp4'
+        : 'https://picsum.photos/seed/${random.nextInt(1000)}/600/400'; // Example URL for photo
 
     // Randomly generate a creation date within the past 30 days
     DateTime createDate = DateTime.now().subtract(Duration(days: random.nextInt(30)));
@@ -64,10 +69,12 @@ List<PlaceFeedbackMedia> generatePlaceFeedbackMedias(int count, List<PlaceFeedba
     );
 
     mediaList.add(media);
+
   }
 
   return mediaList;
+
 }
 
-  List<PlaceFeedbackMedia> mediaList = generatePlaceFeedbackMedias(50, feedbacks);
+  List<PlaceFeedbackMedia> feedbackMediaList = generatePlaceFeedbackMedias(200, feedbacks);
 

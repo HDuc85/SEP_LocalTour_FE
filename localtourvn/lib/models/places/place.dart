@@ -1,5 +1,6 @@
-import 'dart:math';
+// lib/models/places/place.dart
 
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 class Place {
@@ -25,18 +26,19 @@ class Place {
 
   factory Place.fromJson(Map<String, dynamic> json) {
     return Place(
-        placeId: json['placeId'],
-        wardId: json['wardId'],
-        photoDisplay: json['photoDisplay'],
-        timeOpen: json['timeOpen'] != null
-            ? _timeOfDayFromString(json['timeOpen'])
-            : null,
-        timeClose: json['timeClose'] != null
-            ? _timeOfDayFromString(json['timeClose'])
-            : null,
-        longitude: json['longitude'].toDouble(),
-        latitude: json['latitude'].toDouble(),
-        placeUrl: json['placeUrl']);
+      placeId: json['placeId'],
+      wardId: json['wardId'],
+      photoDisplay: json['photoDisplay'],
+      timeOpen: json['timeOpen'] != null
+          ? _timeOfDayFromString(json['timeOpen'])
+          : null,
+      timeClose: json['timeClose'] != null
+          ? _timeOfDayFromString(json['timeClose'])
+          : null,
+      longitude: json['longitude'].toDouble(),
+      latitude: json['latitude'].toDouble(),
+      placeUrl: json['placeUrl'],
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -87,25 +89,10 @@ List<Place> generateDummyPlaces(int count) {
       photoDisplay: 'https://picsum.photos/200/300?random=$id',
       timeOpen: timeOpen,
       timeClose: timeClose,
-      longitude: 100.0 + index * 0.5,
-      latitude: 20.0 + index * 0.5,
+      longitude: 106.0 + index,
+      latitude: 10.0 + index,
       placeUrl: 'https://fap.fpt.edu.vn/',
     );
   });
 }
-
-// Helper function to check if current time is between open and close times
-bool _isTimeBetween(TimeOfDay currentTime, TimeOfDay startTime, TimeOfDay endTime) {
-  final currentMinutes = currentTime.hour * 60 + currentTime.minute;
-  final startMinutes = startTime.hour * 60 + startTime.minute;
-  final endMinutes = endTime.hour * 60 + endTime.minute;
-
-  if (endMinutes < startMinutes) {
-    // Handles cases where endTime is past midnight
-    return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
-  } else {
-    return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
-  }
-}
-
 

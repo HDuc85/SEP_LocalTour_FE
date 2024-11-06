@@ -37,7 +37,8 @@ class PlaceActivityMedia {
 // Function to generate random PlaceActivityMedia data
 List<PlaceActivityMedia> generatePlaceActivityMedias(int count, List<PlaceActivity> placeActivities) {
   final random = Random();
-  List<String> mediaTypes = ['photo']; // Define the media types list
+  List<String> mediaTypes = ['video', 'photo']; // Define the media types list
+
   List<PlaceActivityMedia> placeActivityMedias = [];
 
   for (int i = 0; i < count; i++) {
@@ -47,7 +48,9 @@ List<PlaceActivityMedia> generatePlaceActivityMedias(int count, List<PlaceActivi
     // Randomly select a media type ('video' or 'photo')
     String type = mediaTypes[random.nextInt(mediaTypes.length)];
     // Generate a random media URL based on the type (either 'video' or 'photo')
-    String url = 'https://picsum.photos/seed/${random.nextInt(1000)}/600/400';
+    String url = (type == 'video')
+        ? 'assets/videos/video_${random.nextInt(3) + 1}.mp4'
+        : 'https://picsum.photos/seed/${random.nextInt(1000)}/600/400';
     // Randomly generate a creation date within the past 30 days
     DateTime createDate = DateTime.now().subtract(Duration(days: random.nextInt(30)));
 
@@ -65,4 +68,4 @@ List<PlaceActivityMedia> generatePlaceActivityMedias(int count, List<PlaceActivi
   return placeActivityMedias;
 }
 
-List<PlaceActivityMedia> mediaActivityList = generatePlaceActivityMedias(10000, randomActivities);
+List<PlaceActivityMedia> mediaActivityList = generatePlaceActivityMedias(1000, randomActivities);
