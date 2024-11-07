@@ -90,7 +90,7 @@ class BookmarkPage extends StatelessWidget {
                       );
 
                       // Fetch score
-                      int score =
+                      double score =
                           PlaceScoreManager.instance.getScore(place.placeId);
 
                       // Calculate distance from current location

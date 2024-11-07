@@ -8,17 +8,21 @@ import '../../models/schedule/schedulelike.dart';
 import '../../models/users/users.dart';
 
 class PlannedPage extends StatefulWidget {
-  final User user;
+  final String userId;
   final List<Schedule> schedules;
   final List<ScheduleLike> scheduleLikes;
   final List<Destination> destinations;
+  final ScrollController scrollController;
+  final List<User> users;
 
   const PlannedPage({
     super.key,
-    required this.user,
+    required this.userId,
     required this.schedules,
     required this.scheduleLikes,
     required this.destinations,
+    required this.scrollController,
+    required this.users,
   });
 
   @override
@@ -26,18 +30,22 @@ class PlannedPage extends StatefulWidget {
 }
 
 class _PlannedPageState extends State<PlannedPage> {
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
     return SizedBox(
-      height: size.height,
-      width: size.width, // Changed from size.height to size.width
+      width: double.infinity,
+      height: MediaQuery.of(context).size.height,
       child: DefaultTabController(
         length: 2, // Schedule and History
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('Planned Page'),
-            bottom: const TabBar(
+            title: const TabBar(
               tabs: [
                 Tab(text: 'Schedule'),
                 Tab(text: 'History'),
@@ -47,10 +55,11 @@ class _PlannedPageState extends State<PlannedPage> {
           body: TabBarView(
             children: [
               ScheduleTabbar(
-                userId: widget.user.userId,
-                user: widget.user,
-                schedules: widget.schedules,
-                scheduleLikes: widget.scheduleLikes,
+                scrollController: widget.scrollController,
+                userId: 'anh-tuan-unique-id-1234',
+                users: widget.users,
+                schedules: dummySchedules.where((schedule) => schedule.userId == 'anh-tuan-unique-id-1234').toList(),
+                scheduleLikes: dummyScheduleLikes.where((scheduleLike) => scheduleLike.userId == 'anh-tuan-unique-id-1234').toList(),
                 destinations: widget.destinations,
                 onFavoriteToggle: (scheduleId, isFavorited) {
                   setState(() {

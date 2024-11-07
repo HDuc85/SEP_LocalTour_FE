@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class ScrollableTextContainer extends StatelessWidget {
   final String content;
 
-  const ScrollableTextContainer({Key? key, required this.content}) : super(key: key);
+  const ScrollableTextContainer({super.key, required this.content});
 
   @override
   Widget build(BuildContext context) {

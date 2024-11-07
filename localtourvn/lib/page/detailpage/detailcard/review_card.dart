@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../../models/places/placefeedback.dart';
+import '../../../base/const.dart';
 import '../../../fullmedia/fullfeedbackmediaviewer.dart';
 import '../../../models/places/placefeedbackhelpful.dart';
 import '../../../models/places/placefeeedbackmedia.dart';
@@ -124,7 +125,7 @@ class _ReviewCardState extends State<ReviewCard> {
                               (index) => Icon(
                             Icons.star,
                             color: index < widget.feedback.rating
-                                ? Colors.pinkAccent
+                                ? Constants.starColor
                                 : Colors.grey,
                             size: 18,
                           ),

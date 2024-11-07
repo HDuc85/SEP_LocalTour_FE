@@ -1,14 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:localtourvn/page/bookmark/bookmarkmanager.dart';
+import 'package:localtourvn/page/mymap/MapPage.dart';
 import 'package:localtourvn/page/plannedpage/plannedpagetabbars/history_tabbar.dart';
-import 'package:localtourvn/page/vietmap/features/map_screen/bloc/map_bloc.dart';
-import 'package:localtourvn/page/vietmap/features/routing_screen/bloc/routing_bloc.dart';
-import 'package:localtourvn/page/vietmap/mappage.dart';
 import 'package:localtourvn/weather/providers/weather_provider.dart';
 import 'package:localtourvn/weather/weather_page.dart';
 import 'package:provider/provider.dart';
@@ -23,34 +19,12 @@ import 'page/bookmark/bookmarkpage.dart';
 import 'page/detailpage/detailpage.dart';
 import 'page/homescreen/home_screen.dart';
 import 'page/plannedpage/planned_page.dart';
+import 'models/users/users.dart';
 
 final random = Random();
 
-User myUser = User(
-  userId: 'anh-tuan-unique-id-1234',
-  userName: 'tuannta2k',
-  normalizedUserName: 'TUANNTA2K',
-  email: 'nguyenthanhanhtuan123@gmail.com',
-  normalizedEmail: 'NGUYENTHANHANHTUAN123@GMAIL.COM',
-  emailConfirmed: true,
-  passwordHash: null,
-  phoneNumber: '+84705543619',
-  phoneNumberConfirmed: true,
-  fullName: 'Nguyen Thanh Anh Tuan',
-  dateOfBirth: DateTime(2000, 04, 24),
-  address: '123 Example Street',
-  gender: 'Male',
-  profilePictureUrl: 'https://picsum.photos/seed/${random.nextInt(1000)}/600/400/',
-  dateCreated: DateTime.now().subtract(Duration(days: 100)),
-  dateUpdated: DateTime.now(),
-  reportTimes: 0,
-);
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
 
   // Initialize Hive
   await Hive.initFlutter();
@@ -79,27 +53,23 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   int currentIndex = 0;
-
   late final List<Widget> screens;
+  final ScrollController scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     screens = [
       const HomeScreen(),
-      MultiBlocProvider(
-        providers: [
-          BlocProvider(create: (context) => MapBloc()),
-          BlocProvider(create: (context) => RoutingBloc()),
-        ],
-        child: const MapPage(),
-      ),
+      const MapPage(),
       const BookmarkPage(),
       PlannedPage(
-        user: myUser,
-        schedules: dummySchedules.where((schedule) => schedule.userId == myUser.userId).toList(),
-        scheduleLikes: dummyScheduleLikes.where((scheduleLike) => scheduleLike.userId == myUser.userId).toList(),
+        schedules: dummySchedules,
+        scheduleLikes: dummyScheduleLikes,
         destinations: dummyDestinations,
+        scrollController: scrollController,
+        users: fakeUsers,
+        userId: 'anh-tuan-unique-id-1234',
       ),
       const AccountPage(),
     ];
@@ -152,22 +122,16 @@ class _MyAppState extends State<MyApp> {
           case '/planned_page':
             return MaterialPageRoute(
               builder: (context) => PlannedPage(
-                user: myUser,
                 schedules: dummySchedules,
                 scheduleLikes: dummyScheduleLikes,
                 destinations: dummyDestinations,
+                scrollController: scrollController,
+                users: fakeUsers,
+                userId: 'anh-tuan-unique-id-1234',
               ),
             );
           case '/map':
-            return MaterialPageRoute(
-              builder: (context) => MultiBlocProvider(
-                providers: [
-                  BlocProvider(create: (context) => MapBloc()),
-                  BlocProvider(create: (context) => RoutingBloc()),
-                ],
-                child: const MapPage(),
-              ),
-            );
+            return MaterialPageRoute(builder: (context) => const MapPage());
           case '/account':
             return MaterialPageRoute(builder: (context) => const AccountPage());
           case '/history':

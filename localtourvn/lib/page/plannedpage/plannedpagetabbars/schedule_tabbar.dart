@@ -8,23 +8,27 @@ import '../../../models/schedule/schedule.dart';
 import '../../../models/schedule/schedulelike.dart';
 import '../../../models/users/users.dart';
 import 'dart:ui' as ui;
+import 'add_schedule_dialog.dart';
+import 'fearuted_schedule_page.dart';
 
 class ScheduleTabbar extends StatefulWidget {
   final String userId;
-  final User user;
   final List<Schedule> schedules;
   final List<ScheduleLike> scheduleLikes;
   final List<Destination> destinations;
   final Function(int scheduleId, bool isFavorited) onFavoriteToggle;
+  final ScrollController scrollController;
+  final List<User> users;
 
   const ScheduleTabbar({
     super.key,
     required this.userId,
-    required this.user,
     required this.schedules,
     required this.scheduleLikes,
     required this.destinations,
     required this.onFavoriteToggle,
+    required this.scrollController,
+    required this.users,
   });
 
   @override
@@ -32,21 +36,23 @@ class ScheduleTabbar extends StatefulWidget {
 }
 
 class _ScheduleTabbarState extends State<ScheduleTabbar> {
+  final FocusNode _nameFocusNode = FocusNode();
   String bullet = "\u2022 ";
   DateTime? _fromDate;
   DateTime? _toDate;
   final TextEditingController searchController = TextEditingController();
   final FocusNode searchFocusNode = FocusNode();
   int? _expandedIndex;
-  bool _isEditingName = false;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _detailController = TextEditingController();
   Map<int, bool> scheduleVisibility = {};
   final Set<int> favoritedScheduleIds = {};
+  final Set<int> _editingScheduleIds = {};
 
   @override
   void initState() {
     super.initState();
+    _nameFocusNode.addListener(_onNameFieldFocusChange);
     _initializeFavoriteSchedules();
     for (var schedule in widget.schedules) {
       scheduleVisibility[schedule.id] = true;
@@ -56,9 +62,27 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
   @override
   void dispose() {
     _detailController.dispose();
-    searchFocusNode.dispose(); // Dispose FocusNode
-    _nameController.dispose(); // Dispose the controller when done
+    searchFocusNode.dispose();
+    _nameController.dispose();
+    _nameFocusNode.dispose(); // Dispose the name focus node
     super.dispose();
+  }
+
+  void _onNameFieldFocusChange() {
+    if (!_nameFocusNode.hasFocus && _editingScheduleIds.isNotEmpty) {
+      _saveScheduleName();
+    }
+  }
+
+  void _saveScheduleName() {
+    if (_editingScheduleIds.isNotEmpty) {
+      final scheduleId = _editingScheduleIds.first;
+      final schedule = widget.schedules.firstWhere((s) => s.id == scheduleId);
+      setState(() {
+        schedule.scheduleName = _nameController.text;
+        _editingScheduleIds.remove(scheduleId); // Exit edit mode
+      });
+    }
   }
 
   void _initializeFavoriteSchedules() {
@@ -67,6 +91,20 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
         favoritedScheduleIds.add(like.scheduleId);
       }
     }
+  }
+
+  // Method to toggle editing mode for a specific schedule ID
+  void _toggleEditing(int scheduleId) {
+    setState(() {
+      if (_editingScheduleIds.contains(scheduleId)) {
+        _editingScheduleIds.remove(scheduleId);
+      } else {
+        _editingScheduleIds.add(scheduleId);
+        final schedule = widget.schedules.firstWhere((s) => s.id == scheduleId);
+        _nameController.text = schedule.scheduleName; // Set initial text
+        _nameFocusNode.requestFocus(); // Focus on the TextField
+      }
+    });
   }
 
   void _showDetailDialog(String initialText, Function(String) onSave) {
@@ -135,6 +173,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
       onTap: () => FocusScope.of(context)
           .unfocus(), // Deselect TextFields when clicking outside
       child: SingleChildScrollView(
+        controller: widget.scrollController,
         child: ConstrainedBox(
           constraints: BoxConstraints(
             minHeight: MediaQuery.of(context).size.height,
@@ -288,8 +327,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
     );
   }
 
-  // Usage in your destination list:
-  Widget _buildDestinationList(List<Destination> scheduleDestinations) {
+  // Modify _buildDestinationList to accept the schedule as a parameter
+  Widget _buildDestinationList(
+      List<Destination> scheduleDestinations, Schedule schedule) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: scheduleDestinations.asMap().entries.map((entry) {
@@ -357,10 +397,49 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
                 destination.detail = newDetail;
               });
             }),
+            if (schedule.userId == widget.userId)
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () {
+                  _showDeleteDestinationConfirmationDialog(destination);
+                },
+              ),
             if (!isLast) const Divider(),
           ],
         );
       }).toList(),
+    );
+  }
+
+  // Helper method to show confirmation dialog before deleting a destination
+  void _showDeleteDestinationConfirmationDialog(Destination destination) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Destination'),
+          content:
+              const Text('Are you sure you want to delete this destination?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  widget.destinations
+                      .removeWhere((d) => d.id == destination.id);
+                });
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -433,7 +512,26 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
             ),
           ),
           ElevatedButton.icon(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FeaturedSchedulePage(
+                    allSchedules: dummySchedules,
+                    scheduleLikes: dummyScheduleLikes,
+                    destinations: widget.destinations,
+                    users: widget.users,
+                    userId: 'anh-tuan-unique-id-1234',
+                    onClone: (Schedule clonedSchedule, List<Destination> clonedDestinations) {
+                      setState(() {
+                        widget.schedules.add(clonedSchedule); // Add to user's schedules
+                        widget.destinations.addAll(clonedDestinations);
+                      });
+                    },
+                  ),
+                ),
+              );
+            },
             icon: const Icon(Icons.add, color: Colors.white),
             label: const Text("Most Schedule Like"),
             style: ElevatedButton.styleFrom(
@@ -445,7 +543,22 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
             ),
           ),
           ElevatedButton.icon(
-            onPressed: () {},
+            onPressed: () {
+              showAddScheduleDialog(context,
+                  (scheduleName, startDate, endDate) {
+                setState(() {
+                  widget.schedules.add(Schedule(
+                    id: widget.schedules.length + 1,
+                    userId: widget.userId,
+                    scheduleName: scheduleName,
+                    startDate: startDate,
+                    endDate: endDate,
+                    createdDate: DateTime.now(),
+                    isPublic: false,
+                  ));
+                });
+              });
+            },
             icon: const Icon(Icons.add, color: Colors.white),
             label: const Text("Add Schedule"),
             style: ElevatedButton.styleFrom(
@@ -469,8 +582,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
       itemCount: filteredSchedules.length,
       itemBuilder: (context, index) {
         final schedule = filteredSchedules[index];
-        final isExpanded = _expandedIndex == index;
         final userOwnsSchedule = schedule.userId == widget.userId;
+        final isEditingName = _editingScheduleIds.contains(schedule.id);
+        final isExpanded = _expandedIndex == index;
         final scheduleLikes = widget.scheduleLikes
             .where((like) => like.scheduleId == schedule.id)
             .toList();
@@ -483,7 +597,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
         return GestureDetector(
           onTap: () {
             setState(() {
-              _expandedIndex = isExpanded ? null : index;
+              _expandedIndex = _expandedIndex == index ? null : index;
             });
           },
           child: Column(
@@ -501,35 +615,27 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _isEditingName = !_isEditingName;
-                            if (_isEditingName) {
-                              _nameController.text = schedule.scheduleName;
-                            }
-                          });
-                        },
-                        child: _isEditingName
+                        onTap: () => _toggleEditing(schedule.id),
+                        child: isEditingName
                             ? TextFormField(
-                          controller: _nameController,
-                          onFieldSubmitted: (newValue) {
-                            setState(() {
-                              schedule.scheduleName = newValue;
-                              _isEditingName = false;
-                            });
-                          },
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8),
-                          ),
-                        )
+                                controller: _nameController,
+                                focusNode: _nameFocusNode,
+                                onFieldSubmitted: (newValue) {
+                                  _saveScheduleName(); // Save on Enter
+                                },
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  contentPadding:
+                                      EdgeInsets.symmetric(horizontal: 8),
+                                ),
+                              )
                             : Text(
-                          schedule.scheduleName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
+                                schedule.scheduleName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
                       ),
                       Row(
                         children: [
@@ -625,14 +731,14 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
               ),
               if (isExpanded)
                 Container(
-                  margin: EdgeInsets.only(bottom: 20),
+                  margin: const EdgeInsets.only(bottom: 20),
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(15),
                     border: Border.all(color: Colors.black, width: 1),
                   ),
-                  child: _buildDestinationList(scheduleDestinations),
+                  child: _buildDestinationList(scheduleDestinations, schedule),
                 ),
             ],
           ),

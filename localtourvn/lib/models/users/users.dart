@@ -39,6 +39,16 @@ class User {
     required this.reportTimes,
   });
 
+  // Named constructor for a minimal User with default values for non-nullable fields
+  User.minimal({
+    required this.userId,
+    this.userName,
+  })  : emailConfirmed = false,
+        phoneNumberConfirmed = false,
+        dateCreated = DateTime.now(),
+        dateUpdated = DateTime.now(),
+        reportTimes = 0;
+
   // Factory method to create a User object from JSON
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -86,6 +96,7 @@ class User {
       'reportTimes': reportTimes,
     };
   }
+
 }
 
 // Helper function to generate a random GUID

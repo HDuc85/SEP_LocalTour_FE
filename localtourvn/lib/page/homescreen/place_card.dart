@@ -1,7 +1,5 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-
 import '../../base/place_score_manager.dart';
 
 class PlaceCard extends StatefulWidget {
@@ -10,7 +8,7 @@ class PlaceCard extends StatefulWidget {
   final String ward;
   final String photoDisplay;
   final String iconUrl;
-  final int score;
+  final double score;
   final double distance;
 
   const PlaceCard({
@@ -29,7 +27,8 @@ class PlaceCard extends StatefulWidget {
 }
 
 class _PlaceCardState extends State<PlaceCard> {
-  late int score;
+  late double score;
+  late int totalReviewers;
   late StreamSubscription<int> _scoreSubscription;
 
   @override
@@ -37,12 +36,14 @@ class _PlaceCardState extends State<PlaceCard> {
     super.initState();
     // Get the initial score
     score = PlaceScoreManager.instance.getScore(widget.placeCardId);
+    totalReviewers = PlaceScoreManager.instance.getReviewCount(widget.placeCardId);
 
     // Listen for score updates
     _scoreSubscription = PlaceScoreManager.instance.scoreUpdates.listen((updatedPlaceId) {
       if (updatedPlaceId == widget.placeCardId) {
         setState(() {
           score = PlaceScoreManager.instance.getScore(widget.placeCardId);
+          totalReviewers = PlaceScoreManager.instance.getReviewCount(widget.placeCardId);
         });
       }
     });
@@ -54,6 +55,22 @@ class _PlaceCardState extends State<PlaceCard> {
     super.dispose();
   }
 
+  Widget buildStarRating(double score) {
+    int fullStars = score.floor(); // Full stars
+    bool hasHalfStar = (score - fullStars) >= 0.5; // Determine if there’s a half-star
+
+    return Row(
+      children: List.generate(5, (index) {
+        if (index < fullStars) {
+          return const Icon(Icons.star, color: Colors.red, size: 16);
+        } else if (index == fullStars && hasHalfStar) {
+          return const Icon(Icons.star_half, color: Colors.red, size: 16);
+        } else {
+          return const Icon(Icons.star_border, color: Colors.red, size: 16);
+        }
+      }),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -156,12 +173,14 @@ class _PlaceCardState extends State<PlaceCard> {
                               width: 16,
                               height: 16,
                             ),
-                            Row(
-                              children: [
-                                Text('$score',),
-                              ],
-                            ),
+                            const SizedBox(width: 4),
+                            buildStarRating(score / 2), // Display the score as stars
                           ],
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '(${totalReviewers.toString()})', // Display totalReviewers as text
+                          style: const TextStyle(fontSize: 12), // Optional styling
                         ),
                         const SizedBox(height: 4),
                         Row(

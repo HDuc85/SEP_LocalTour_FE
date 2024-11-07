@@ -113,7 +113,7 @@ class _SearchPageState extends State<SearchPage> {
       );
 
       // Fetch score
-      int score = PlaceScoreManager.instance.getScore(place.placeId);
+      double score = PlaceScoreManager.instance.getScore(place.placeId);
 
       // Calculate distance
       double distance = calculateDistance(_currentPosition!.latitude,

@@ -7,7 +7,6 @@ import '../../../models/places/placefeedback.dart';
 import '../../../models/places/placefeedbackhelpful.dart';
 import '../../../models/places/placefeeedbackmedia.dart';
 import '../all_reviews_page.dart';
-import '../../../base/score_tooltip.dart';
 import 'form/reportform.dart';
 import 'form/review_dialog.dart';
 import '../../../base/place_score_manager.dart';
@@ -39,6 +38,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
   List<PlaceFeedbackMedia> feedbackMediaList = [];
   List<PlaceFeedbackHelpful> feedbackHelpfuls = [];
   bool showAllReviews = false;
+  late int totalReviewers;
 
   @override
   void initState() {
@@ -51,10 +51,11 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
     feedbackHelpfuls = feebBackHelpfuls;
 
     // Calculate the initial score
-    int score = calculateScore(placeFeedbacks);
-
+    double score = calculateScore(placeFeedbacks);
+    totalReviewers = placeFeedbacks.length;
     // Set the score in PlaceScoreManager
     PlaceScoreManager.instance.setScore(widget.placeId, score);
+    PlaceScoreManager.instance.setReviewCount(widget.placeId, totalReviewers);
   }
 
   void addOrUpdateReview(
@@ -109,9 +110,15 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
       }
 
       // Recalculate the score and update PlaceScoreManager
-      int score = calculateScore(placeFeedbacks);
+      double score = calculateScore(placeFeedbacks);
       PlaceScoreManager.instance.setScore(widget.placeId, score);
     });
+    // After adding/updating:
+    double score = calculateScore(placeFeedbacks);
+    totalReviewers = placeFeedbacks.length;
+
+    PlaceScoreManager.instance.setScore(widget.placeId, score);
+    PlaceScoreManager.instance.setReviewCount(widget.placeId, totalReviewers);
   }
 
   void deleteReview() {
@@ -124,7 +131,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
           .removeWhere((media) => media.feedbackId == widget.userId);
 
       // Recalculate the score and update PlaceScoreManager
-      int score = calculateScore(placeFeedbacks);
+      double score = calculateScore(placeFeedbacks);
       PlaceScoreManager.instance.setScore(widget.placeId, score);
     });
   }
@@ -154,30 +161,11 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
     );
   }
 
-  int calculateScore(List<PlaceFeedback> placeFeedbacks) {
-    int score = 0;
-    for (var feedback in placeFeedbacks) {
-      switch (feedback.rating.toInt()) {
-        case 5:
-          score += 2;
-          break;
-        case 4:
-          score += 1;
-          break;
-        case 3:
-          score += 0;
-          break;
-        case 2:
-          score -= 1;
-          break;
-        case 1:
-          score -= 2;
-          break;
-        default:
-          score += 1;
-      }
-    }
-    return score;
+  double calculateScore(List<PlaceFeedback> placeFeedbacks) {
+    if (placeFeedbacks.isEmpty) return 0.0; // Avoid division by zero
+
+    int totalStars = placeFeedbacks.fold(0, (sum, feedback) => sum + feedback.rating.toInt());
+    return totalStars / placeFeedbacks.length; // Calculate average as a double
   }
 
   bool _areListsEqual(List<File> list1, List<File> list2) {
@@ -193,7 +181,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
     final int totalReviews = placeFeedbacks.length;
     final bool userHasReviewed = hasUserReviewed();
     final int totalReviewers = placeFeedbacks.length;
-    final int score = calculateScore(placeFeedbacks);
+    final double score = calculateScore(placeFeedbacks);
 
     // Get current user's review
     PlaceFeedback? currentUserReview = placeFeedbacks.firstWhereOrNull(
@@ -232,15 +220,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                   "reviewers: ${formatNumber(totalReviewers)}",
                   style: const TextStyle(fontSize: 10),
                 ),
-                Text(
-                  "Score: ${formatNumber(score)}",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Colors.red,
-                  ),
-                ),
-                ScoreDetailsTooltip(),
+                buildStarRating(score),
                 TextButton(
                   onPressed: () {
                     Navigator.push(
@@ -432,6 +412,27 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
       ),
     );
   }
+
+  Widget buildStarRating(double score) {
+    int fullStars = score.floor(); // Full stars
+    bool hasHalfStar = (score - fullStars) >= 0.5; // Determine if there’s a half-star
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(5, (index) {
+        if (index < fullStars) {
+          return const Icon(Icons.star, color: Colors.red, size: 20);
+        } else if (index == fullStars && hasHalfStar) {
+          return const Icon(Icons.star_half, color: Colors.red, size: 20);
+        } else {
+          return const Icon(Icons.star_border, color: Colors.red, size: 20);
+        }
+      }),
+    );
+  }
+
+
+
 
   // Handle favorite toggle
   void _handleFavoriteToggle(int feedbackId, bool isFavorited) {

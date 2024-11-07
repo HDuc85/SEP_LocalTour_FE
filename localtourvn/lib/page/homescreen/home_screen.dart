@@ -69,7 +69,6 @@ class _HomeScreenState extends State<HomeScreen> {
       // When we reach here, permissions are granted, and we can get the position
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
-      // Access placeScores from the Provider
       setState(() {
         _currentPosition = position;
 

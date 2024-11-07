@@ -41,8 +41,16 @@ class _NowLocationState extends State<NowLocation> {
 
   Future<void> _getCurrentPosition() async {
     try {
+      LocationSettings locationSettings = const LocationSettings(
+        accuracy: LocationAccuracy.high, // Set the desired accuracy
+        distanceFilter: 100,
+        timeLimit: Duration(seconds: 10),
+      );
+
       Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+        locationSettings: locationSettings,
+      );
+
       setState(() {
         _currentPosition = position;
         _location = '${position.latitude}, ${position.longitude}';
@@ -53,6 +61,7 @@ class _NowLocationState extends State<NowLocation> {
       });
     }
   }
+
 
 
   @override

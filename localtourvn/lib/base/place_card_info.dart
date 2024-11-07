@@ -10,7 +10,7 @@ class CardInfo {
   final int wardId;
   final String photoDisplay;
   final String iconUrl;
-  final int score;
+  final double score;
   final double distance;
   final List<int> tagIds;
 
@@ -50,7 +50,7 @@ CardInfo mapPlaceToCardInfo(Place place, double latitude, double longitude) {
     ),
   );
 
-  int score = PlaceScoreManager.instance.getScore(place.placeId);
+  double score = PlaceScoreManager.instance.getScore(place.placeId);
 
   List<int> associatedTagIds = placeTags
       .where((pt) => pt.placeId == place.placeId)

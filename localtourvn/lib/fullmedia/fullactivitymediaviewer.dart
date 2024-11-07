@@ -48,7 +48,7 @@ class _FullActivityMediaViewerState extends State<FullActivityMediaViewer> {
       if (currentMedia.url.startsWith('http')) {
         // Network video
         print('Initializing network video: ${currentMedia.url}');
-        _videoController = VideoPlayerController.network(currentMedia.url);
+        _videoController = VideoPlayerController.networkUrl(Uri.parse(currentMedia.url));
       } else {
         // Asset video
         print('Initializing asset video: ${currentMedia.url}');

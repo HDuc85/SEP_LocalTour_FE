@@ -5,14 +5,16 @@ class BasePage extends StatefulWidget {
   final int currentIndex;
   final Function(int) onTabTapped;
   final bool isMapPage;
+  final ScrollController? scrollController;
 
   const BasePage({
-    Key? key,
+    super.key,
     required this.body,
     required this.currentIndex,
     required this.onTabTapped,
     this.isMapPage = false,
-  }) : super(key: key);
+    this.scrollController,
+  });
 
   @override
   _BasePageState createState() => _BasePageState();
@@ -26,13 +28,11 @@ class _BasePageState extends State<BasePage> {
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
+    _scrollController = widget.scrollController ?? ScrollController();
     _scrollController.addListener(() {
       setState(() {
         if (_scrollController.offset >= 200) {
           _showBackToTopButton = true;
-        } else {
-          _showBackToTopButton = false;
         }
       });
     });
@@ -40,7 +40,9 @@ class _BasePageState extends State<BasePage> {
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    if (widget.scrollController == null) {
+      _scrollController.dispose();
+    }
     super.dispose();
   }
 
@@ -50,12 +52,6 @@ class _BasePageState extends State<BasePage> {
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeIn,
     );
-  }
-
-  void _toggleFormVisibility() {
-    setState(() {
-      _showForm = !_showForm;
-    });
   }
 
   void _closeForm() {
@@ -85,29 +81,27 @@ class _BasePageState extends State<BasePage> {
                 ? widget.body
                 : SingleChildScrollView(
               controller: _scrollController,
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width,
+
                 child: widget.body,
-              ),
             ),
             // Back to Top button (visible when scrolled)
             if (_showBackToTopButton && !widget.isMapPage)
               Positioned(
-                bottom: 60, // Adjusted to avoid overlapping with bottom navigation
+                bottom: 5, // Adjusted to avoid overlapping with bottom navigation
                 left: 0,
                 right: 0,
                 child: Center(
                   child: ElevatedButton.icon(
                     onPressed: _scrollToTop,
                     icon: const Icon(Icons.arrow_upward),
-                    label: const Text("Back to Top"),
+                    label: const Text("Back to Top", style: TextStyle(color: Colors.black),),
                   ),
                 ),
               ),
             // Weather button at the bottom left
             if (!widget.isMapPage)
               Positioned(
-                bottom: 10, // Adjusted position for better placement
+                bottom: 5, // Adjusted position for better placement
                 left: 20,
                 child: IconButton(
                   onPressed: _navigateToWeatherPage,
@@ -132,10 +126,7 @@ class _BasePageState extends State<BasePage> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.map_sharp), label: 'Map'),
           BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Bookmark'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month_outlined),
-            label: 'Planned',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), label: 'Planned',),
           BottomNavigationBarItem(icon: Icon(Icons.account_circle_rounded), label: 'Account',
           ),
         ],

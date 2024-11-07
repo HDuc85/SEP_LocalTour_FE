@@ -11,7 +11,7 @@ class SecondPlaceCard extends StatefulWidget {
   final int ward;
   final String photoDisplay;
   final String iconUrl;
-  final int score;
+  final double score;
   final double distance;
 
   const SecondPlaceCard({
@@ -30,7 +30,8 @@ class SecondPlaceCard extends StatefulWidget {
 }
 
 class _SecondPlaceCardState extends State<SecondPlaceCard> {
-  late int score;
+  late double score;
+  late int totalReviewers;
   late StreamSubscription<int> _scoreSubscription;
 
   @override
@@ -38,12 +39,14 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
     super.initState();
     // Get the initial score
     score = PlaceScoreManager.instance.getScore(widget.placeCardId);
+    totalReviewers = PlaceScoreManager.instance.getReviewCount(widget.placeCardId);
 
     // Listen for score updates
     _scoreSubscription = PlaceScoreManager.instance.scoreUpdates.listen((updatedPlaceId) {
       if (updatedPlaceId == widget.placeCardId) {
         setState(() {
           score = PlaceScoreManager.instance.getScore(widget.placeCardId);
+          totalReviewers = PlaceScoreManager.instance.getReviewCount(widget.placeCardId);
         });
       }
     });
@@ -53,6 +56,23 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
   void dispose() {
     _scoreSubscription.cancel();
     super.dispose();
+  }
+
+  Widget buildStarRating(double score) {
+    int fullStars = score.floor(); // Full stars
+    bool hasHalfStar = (score - fullStars) >= 0.5; // Determine if there’s a half-star
+
+    return Row(
+      children: List.generate(5, (index) {
+        if (index < fullStars) {
+          return const Icon(Icons.star, color: Colors.red, size: 16);
+        } else if (index == fullStars && hasHalfStar) {
+          return const Icon(Icons.star_half, color: Colors.red, size: 16);
+        } else {
+          return const Icon(Icons.star_border, color: Colors.red, size: 16);
+        }
+      }),
+    );
   }
 
   @override
@@ -111,9 +131,7 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
                       height: 16,
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      '$score',
-                    ),
+                    buildStarRating(score / 2),
                     const Spacer(),
                     Row(
                       children: [
