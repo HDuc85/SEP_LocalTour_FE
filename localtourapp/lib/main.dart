@@ -19,7 +19,7 @@ import 'package:localtourapp/page/bookmark/bookmark_manager.dart';
 import 'package:localtourapp/page/bookmark/bookmark_page.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provider.dart';
-import 'package:localtourapp/page/homescreen/home_screen.dart';
+import 'package:localtourapp/page/home_screen/home_screen.dart';
 import 'package:localtourapp/page/my_map/map_page.dart';
 import 'package:localtourapp/page/planned_page/planned_page.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/history_tabbar.dart';

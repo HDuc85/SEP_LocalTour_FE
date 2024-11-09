@@ -6,7 +6,7 @@ import '../../base/custom_button.dart';
 import '../../base/filter_option.dart';
 import '../../base/weather_icon_button.dart';
 import '../../models/places/tag.dart';
-import '../searchpage/search_page.dart';
+import '../search_page/search_page.dart';
 import 'place_card.dart';
 import '../../base/place_card_info.dart';
 import '../../models/places/place.dart';

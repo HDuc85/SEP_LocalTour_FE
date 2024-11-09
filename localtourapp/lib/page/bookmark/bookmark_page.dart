@@ -1,13 +1,15 @@
+// lib/bookmark_page.dart
 
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:localtourapp/base/place_card_info.dart';
+import 'package:localtourapp/models/places/placemedia.dart';
 import 'package:localtourapp/page/bookmark/bookmark_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart'; // Import for firstWhereOrNull
 import '../../base/back_to_top_button.dart';
-import '../../base/place_card_info.dart';
 import '../../base/weather_icon_button.dart';
 import '../../models/places/markplace.dart';
 import '../../models/places/place.dart';
@@ -136,7 +138,6 @@ class _BookmarkPageState extends State<BookmarkPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Consumer<BookmarkManager>(
@@ -157,180 +158,188 @@ class _BookmarkPageState extends State<BookmarkPage> {
             _currentPosition == null
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.separated(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    itemCount: bookmarkedPlaceIds.length,
-                    itemBuilder: (context, index) {
-                      int placeId = bookmarkedPlaceIds[index];
-                      // Access MarkPlace associated with the placeId via the instance
-                      MarkPlace? markPlace =
-                          bookmarkManager.markPlaces.firstWhereOrNull(
-                        (mp) => mp.placeId == placeId,
-                      );
+              controller: _scrollController,
+              padding: const EdgeInsets.only(bottom: 16.0),
+              itemCount: bookmarkedPlaceIds.length,
+              itemBuilder: (context, index) {
+                int placeId = bookmarkedPlaceIds[index];
+                // Access MarkPlace associated with the placeId via the instance
+                MarkPlace? markPlace =
+                bookmarkManager.markPlaces.firstWhereOrNull(
+                      (mp) => mp.placeId == placeId,
+                );
 
-                      if (markPlace == null) {
-                        // Handle missing MarkPlace
-                        return ListTile(
-                          leading: const Icon(Icons.error, color: Colors.red),
-                          title: Text('Place ID $placeId not found'),
-                          subtitle:
-                              const Text('This place may have been removed.'),
-                        );
-                      }
-                      // Find the corresponding Place
-                      Place? place = dummyPlaces
-                          .firstWhereOrNull((p) => p.placeId == placeId);
+                if (markPlace == null) {
+                  // Handle missing MarkPlace
+                  return ListTile(
+                    leading: const Icon(Icons.error, color: Colors.red),
+                    title: Text('Place ID $placeId not found'),
+                    subtitle:
+                    const Text('This place may have been removed.'),
+                  );
+                }
+                // Find the corresponding Place
+                Place? place = dummyPlaces
+                    .firstWhereOrNull((p) => p.placeId == placeId);
 
-                      if (place == null) {
-                        // Handle missing Place
-                        return ListTile(
-                          leading: const Icon(Icons.error, color: Colors.red),
-                          title: Text('Place ID $placeId not found'),
-                          subtitle:
-                              const Text('This place may have been removed.'),
-                        );
-                      }
+                if (place == null) {
+                  // Handle missing Place
+                  return ListTile(
+                    leading: const Icon(Icons.error, color: Colors.red),
+                    title: Text('Place ID $placeId not found'),
+                    subtitle:
+                    const Text('This place may have been removed.'),
+                  );
+                }
 
-                      // Fetch translation
-                      PlaceTranslation? translation =
-                          translations.firstWhereOrNull(
-                        (trans) => trans.placeId == place.placeId,
-                      );
+                // Fetch translation
+                PlaceTranslation? translation =
+                translations.firstWhereOrNull(
+                      (trans) => trans.placeId == place.placeId,
+                );
 
-                      // Fetch score
-                      double score =
-                          PlaceScoreManager.instance.getScore(place.placeId);
+                // Fetch score
+                double score =
+                PlaceScoreManager.instance.getScore(place.placeId);
 
-                      // Calculate distance from current location
-                      double distance = calculateDistance(
-                        _currentPosition!.latitude,
-                        _currentPosition!.longitude,
-                        place.latitude,
-                        place.longitude,
-                      );
+                // Calculate distance from current location
+                double distance = calculateDistance(
+                  _currentPosition!.latitude,
+                  _currentPosition!.longitude,
+                  place.latitude,
+                  place.longitude,
+                );
 
-                      return Column(
-                        children: [
-                          // Place Image
-                          Container(
-                            color: Colors.white,
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  child: Image.network(
-                                    place.photoDisplay,
-                                    width: 75,
-                                    height: 75,
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            Container(
+                return GestureDetector(
+                  onTap: () {
+                    _navigateToDetail(placeId, place, translation, mediaList);
+                  },
+                  child: Column(
+                    children: [
+                      // Place Image and Details
+                      Container(
+                        color: Colors.white,
+                        child: Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8.0),
+                              child: Image.network(
+                                place.photoDisplay,
+                                width: 75,
+                                height: 75,
+                                fit: BoxFit.cover,
+                                errorBuilder:
+                                    (context, error, stackTrace) =>
+                                    Container(
                                       width: 75,
                                       height: 75,
                                       color: Colors.grey,
                                       child: const Icon(Icons.image,
                                           color: Colors.white),
                                     ),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 8,
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    translation?.placeName ??
+                                        "Unknown Place",
+                                    style: const TextStyle(
+                                      fontSize: 16.0,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                                const SizedBox(
-                                  width: 8,
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                  Text(
+                                    'Ward ${place.wardId}',
+                                    style: const TextStyle(
+                                        color: Colors.grey, fontSize: 14),
+                                  ),
+                                  Row(
                                     children: [
-                                      Text(
-                                        translation?.placeName ??
-                                            "Unknown Place",
-                                        style: const TextStyle(
-                                          fontSize: 16.0,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                      Image.asset(
+                                        'assets/icons/logo.png',
+                                        width: 16,
+                                        height: 16,
                                       ),
-                                      Text(
-                                        'Ward ${place.wardId}',
-                                        style: const TextStyle(
-                                            color: Colors.grey, fontSize: 14),
+                                      const SizedBox(
+                                        width: 8,
                                       ),
-                                      Row(
-                                        children: [
-                                          Image.asset(
-                                            'assets/icons/logo.png',
-                                            width: 16,
-                                            height: 16,
-                                          ),
-                                          const SizedBox(
-                                            width: 8,
-                                          ),
-                                          Text('$score'),
-                                          const Spacer(),
-                                          const Icon(Icons.location_on,
-                                              color: Colors.red, size: 16),
-                                          const SizedBox(width: 8.0),
-                                          Text(
-                                            '${distance.toStringAsFixed(2)} km',
-                                            style:
-                                                const TextStyle(fontSize: 12),
-                                          ),
-                                        ],
+                                      Text('$score'),
+                                      const Spacer(),
+                                      const Icon(Icons.location_on,
+                                          color: Colors.red, size: 16),
+                                      const SizedBox(width: 8.0),
+                                      Text(
+                                        '${distance.toStringAsFixed(2)} km',
+                                        style:
+                                        const TextStyle(fontSize: 12),
                                       ),
                                     ],
                                   ),
-                                )
-                              ],
-                            ),
-                          ),
-                          //row here:
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.bookmark,
-                                  color: Colors.red,
-                                ),
-                                onPressed: () {
-                                  bookmarkManager.removeBookmark(place.placeId);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text('Bookmark removed')),
-                                  );
-                                },
-                              ),
-                              Text(
-                                'Added on: ${markPlace.createdDate.toLocal().toShortDateString()}',
-                                style: const TextStyle(
-                                    fontSize: 12.0, color: Colors.black),
-                              ),
-                              Row(
-                                children: [
-                                  const Text('Visited',
-                                      style: TextStyle(fontSize: 12.0)),
-                                  Checkbox(
-                                    value: markPlace.isVisited,
-                                    onChanged: (bool? value) {
-                                      bookmarkManager
-                                          .toggleVisited(place.placeId);
-                                    },
-                                  ),
                                 ],
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                      // Bookmark Actions Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.bookmark,
+                              color: Colors.red,
+                            ),
+                            onPressed: () {
+                              bookmarkManager
+                                  .removeBookmark(place.placeId);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Bookmark removed')),
+                              );
+                            },
+                          ),
+                          Text(
+                            'Added on: ${markPlace.createdDate.toLocal().toShortDateString()}',
+                            style: const TextStyle(
+                                fontSize: 12.0, color: Colors.black),
+                          ),
+                          Row(
+                            children: [
+                              const Text('Visited',
+                                  style: TextStyle(fontSize: 12.0)),
+                              Checkbox(
+                                value: markPlace.isVisited,
+                                onChanged: (bool? value) {
+                                  bookmarkManager
+                                      .toggleVisited(place.placeId);
+                                },
                               ),
                             ],
                           ),
                         ],
-                      );
-                    },
-                    separatorBuilder: (context, index) => const Divider(
-                      color: Colors.black, // Divider color
-                      thickness: 2,
-                      height: 2, // Divider thickness
-                    ),
+                      ),
+                    ],
                   ),
+                );
+              },
+              separatorBuilder: (context, index) => const Divider(
+                color: Colors.black, // Divider color
+                thickness: 2,
+                height: 2, // Divider thickness
+              ),
+            ),
 
+            // Positioned Weather Icon Button (Bottom Left)
             Positioned(
               bottom: 0,
               left: 20,
@@ -349,8 +358,8 @@ class _BookmarkPageState extends State<BookmarkPage> {
                 duration: const Duration(milliseconds: 300),
                 child: _showBackToTopButton
                     ? BackToTopButton(
-                        onPressed: _scrollToTop,
-                      )
+                  onPressed: _scrollToTop,
+                )
                     : const SizedBox.shrink(),
               ),
             ),
@@ -359,33 +368,37 @@ class _BookmarkPageState extends State<BookmarkPage> {
       },
     );
   }
-}
-double calculateDistance(
-    double startLatitude,
-    double startLongitude,
-    double endLatitude,
-    double endLongitude,
-    ) {
-  const double earthRadius = 6371; // Radius of the Earth in kilometers
-  double dLat = _degreesToRadians(endLatitude - startLatitude);
-  double dLon = _degreesToRadians(endLongitude - startLongitude);
 
-  double a =
-      (sin(dLat / 2) * sin(dLat / 2)) +
-          cos(_degreesToRadians(startLatitude)) *
-              cos(_degreesToRadians(endLatitude)) *
-              (sin(dLon / 2) * sin(dLon / 2));
+  // Navigation method to DetailPage using named routes
+  void _navigateToDetail(int placeId, Place place, PlaceTranslation? translation, List<PlaceMedia> mediaList) {
+    if (translation == null) {
+      // Handle missing translation, optionally provide a default
+      translation = PlaceTranslation(
+        placeTranslationId: 0,
+        placeId: place.placeId,
+        languageCode: 'en',
+        placeName: 'Unknown Place',
+        address: '',
+      );
+    }
 
-  double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-  return earthRadius * c;
+    Navigator.pushNamed(
+      context,
+      '/detail',
+      arguments: {
+        'placeName': translation.placeName,
+        'placeId': place.placeId,
+        'mediaList': mediaList.where((media) => media.placeId == place.placeId).toList(),
+      },
+    );
+  }
 }
 
-double _degreesToRadians(double degrees) {
-  return degrees * (pi / 180);
-}
 // Extension to format DateTime
 extension DateHelpers on DateTime {
   String toShortDateString() {
     return "$day/$month/$year";
   }
 }
+
+// Ensure you have a DetailPage that can accept the arguments
