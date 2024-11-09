@@ -91,4 +91,4 @@ List<PlaceFeedback> generatePlaceFeedbacks(int count, List<Place> places, List<U
 
 //Usage
 
-List<PlaceFeedback> feedbacks = generatePlaceFeedbacks(200, dummyPlaces, fakeUsers);
+List<PlaceFeedback> feedbacks = generatePlaceFeedbacks(500, dummyPlaces, fakeUsers);

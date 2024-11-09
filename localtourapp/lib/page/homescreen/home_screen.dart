@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../base/back_to_top_button.dart';
 import '../../base/const.dart';
-import '../../base/custombutton.dart';
+import '../../base/custom_button.dart';
+import '../../base/filter_option.dart';
+import '../../base/weather_icon_button.dart';
 import '../../models/places/tag.dart';
 import '../searchpage/search_page.dart';
 import 'place_card.dart';
@@ -11,8 +14,7 @@ import '../../models/places/placemedia.dart';
 import '../../models/places/placetranslation.dart';
 import '../../base/now_location.dart';
 import '../../base/search_bar_icon.dart';
-import '../detailpage/detailpage.dart';
-import 'package:localtourvn/base/filter_option.dart';
+import '../detail_page/detail_page.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,7 +24,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
+  bool _showBackToTopButton = false;
   final Map<int, GlobalKey> tagSectionKeys = {};
   List<Place> placeList = dummyPlaces;
   List<CardInfo> nearestLocation = [];
@@ -36,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
+    _scrollController.addListener(_scrollListener);
     super.initState();
 
     // Generate mediaList
@@ -48,6 +52,41 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Get the current position
     _getCurrentPosition();
+  }
+
+  @override
+  void dispose() {
+    // Remove listener and dispose the controller to prevent memory leaks
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // Listener to handle scroll events
+  void _scrollListener() {
+    if (_scrollController.offset >= 200 && !_showBackToTopButton) {
+      setState(() {
+        _showBackToTopButton = true;
+      });
+    } else if (_scrollController.offset < 200 && _showBackToTopButton) {
+      setState(() {
+        _showBackToTopButton = false;
+      });
+    }
+  }
+
+  // Function to navigate to the Weather page
+  void _navigateToWeatherPage() {
+    Navigator.pushNamed(context, '/weather');
+  }
+
+  // Function to scroll back to the top
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   Future<void> _getCurrentPosition() async {
@@ -93,34 +132,64 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     if (_currentPosition == null) {
-      return Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator());
     }
 
-    return SingleChildScrollView(
-      controller: _scrollController,
-      child: Column(
-        children: [
-          const NowLocation(),
-          const SizedBox(height: 10),
-          SearchBarIcon(placeTranslations: translations),
-          const SizedBox(height: 10),
-          _buildTagGrid(listTag),
-          const SizedBox(height: 40),
-          _buildNearFeaturedSection('assets/icons/Nearest Places.png',
-              'Nearest Location', nearestLocation, FilterOption.nearest),
-          const SizedBox(height: 40),
-          _buildNearFeaturedSection('assets/icons/Featured Places.png',
-              'Featured Places', featuredPlaces, FilterOption.featured),
-          const SizedBox(height: 40),
-          ...listTag.map((tag) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 30.0),
-              child: _buildTagSection(tag),
-            );
-          }).toList(),
-          const SizedBox(height: 40),
-        ],
-      ),
+    return Stack(
+      children: [
+        // Main Scrollable Content
+        SingleChildScrollView(
+          controller: _scrollController,
+          child: Column(
+            children: [
+              const NowLocation(),
+              const SizedBox(height: 10),
+              SearchBarIcon(placeTranslations: translations),
+              const SizedBox(height: 10),
+              _buildTagGrid(listTag),
+              const SizedBox(height: 40),
+              _buildNearFeaturedSection('assets/icons/Nearest Places.png',
+                  'Nearest Location', nearestLocation, FilterOption.nearest),
+              const SizedBox(height: 40),
+              _buildNearFeaturedSection('assets/icons/Featured Places.png',
+                  'Featured Places', featuredPlaces, FilterOption.featured),
+              const SizedBox(height: 40),
+              ...listTag.map((tag) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 30.0),
+                  child: _buildTagSection(tag),
+                );
+              }).toList(),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+
+        // Positioned Weather Icon Button (Bottom Left)
+        Positioned(
+          bottom: 0,
+          left: 20,
+          child: WeatherIconButton(
+            onPressed: _navigateToWeatherPage,
+            assetPath: 'assets/icons/weather.png',
+          ),
+        ),
+
+        // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
+        Positioned(
+          bottom: 12,
+          left: 110,
+          child: AnimatedOpacity(
+            opacity: _showBackToTopButton ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 300),
+            child: _showBackToTopButton
+                ? BackToTopButton(
+              onPressed: _scrollToTop,
+            )
+                : const SizedBox.shrink(),
+          ),
+        ),
+      ],
     );
   }
 

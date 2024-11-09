@@ -61,5 +61,5 @@ List<PlaceActivity> generatePlaceActivities(int count, List<Place> places) {
   return placeActivities;
 }
 
-  List<PlaceActivity> randomActivities = generatePlaceActivities(1000, dummyPlaces);
+  List<PlaceActivity> randomActivities = generatePlaceActivities(400, dummyPlaces);
 

@@ -68,4 +68,4 @@ List<PlaceActivityMedia> generatePlaceActivityMedias(int count, List<PlaceActivi
   return placeActivityMedias;
 }
 
-List<PlaceActivityMedia> mediaActivityList = generatePlaceActivityMedias(1000, randomActivities);
+List<PlaceActivityMedia> mediaActivityList = generatePlaceActivityMedias(2000, randomActivities);

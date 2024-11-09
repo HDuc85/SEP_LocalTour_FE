@@ -1,55 +1,36 @@
-import 'dart:math';
+// lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-<<<<<<< Updated upstream
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:localtourvn/page/bookmark/bookmarkmanager.dart';
-import 'package:localtourvn/page/mymap/MapPage.dart';
-import 'package:localtourvn/page/plannedpage/plannedpagetabbars/history_tabbar.dart';
-import 'package:localtourvn/weather/providers/weather_provider.dart';
-import 'package:localtourvn/weather/weather_page.dart';
-import 'package:provider/provider.dart';
-import 'base/basepage.dart';
-import 'base/const.dart';
-import 'models/schedule/destination.dart';
-import 'models/schedule/schedule.dart';
-import 'models/schedule/schedulelike.dart';
-import 'models/users/users.dart';
-import 'page/accountpage.dart';
-import 'page/bookmark/bookmarkpage.dart';
-import 'page/detailpage/detailpage.dart';
-import 'page/homescreen/home_screen.dart';
-import 'page/plannedpage/planned_page.dart';
-import 'models/users/users.dart';
-
-final random = Random();
-=======
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:localtourapp/account/account_page.dart';
+import 'package:localtourapp/account/language_provider.dart';
 import 'package:localtourapp/account/user_provider.dart';
 import 'package:localtourapp/account/users_provider.dart';
-import 'package:localtourapp/page/bookmark/bookmarkmanager.dart';
-import 'package:localtourapp/page/bookmark/bookmarkpage.dart';
-import 'package:localtourapp/page/detailpage/detailpage.dart';
+import 'package:localtourapp/base/base_page.dart';
+import 'package:localtourapp/base/const.dart';
+import 'package:localtourapp/generated/l10n.dart';
+import 'package:localtourapp/models/schedule/destination.dart';
+import 'package:localtourapp/models/schedule/schedule.dart';
+import 'package:localtourapp/models/schedule/schedulelike.dart';
+import 'package:localtourapp/models/users/followuser.dart';
+import 'package:localtourapp/models/users/users.dart';
+import 'package:localtourapp/page/bookmark/bookmark_manager.dart';
+import 'package:localtourapp/page/bookmark/bookmark_page.dart';
+import 'package:localtourapp/page/detail_page/detail_page.dart';
+import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provider.dart';
 import 'package:localtourapp/page/homescreen/home_screen.dart';
-import 'package:localtourapp/page/mymap/MapPage.dart';
-import 'package:localtourapp/page/plannedpage/planned_page.dart';
-import 'package:localtourapp/page/plannedpage/plannedpagetabbars/history_tabbar.dart';
+import 'package:localtourapp/page/my_map/map_page.dart';
+import 'package:localtourapp/page/planned_page/planned_page.dart';
+import 'package:localtourapp/page/planned_page/planned_page_tab_bars/history_tabbar.dart';
 import 'package:localtourapp/weather/providers/weather_provider.dart';
 import 'package:localtourapp/weather/weather_page.dart';
 import 'package:provider/provider.dart';
-import 'package:hive_flutter/hive_flutter.dart'; // Assuming Hive is being used
+import 'package:hive_flutter/hive_flutter.dart';
 
-import '../models/users/followuser.dart';
-import '../models/users/users.dart';
-import '../page/detailpage/detailpagetabbars/count_provider.dart';
-import 'account/accountpage.dart';
-import 'base/basepage.dart';
-import 'base/const.dart';
-import 'models/schedule/destination.dart';
-import 'models/schedule/schedule.dart';
-import 'models/schedule/schedulelike.dart';
->>>>>>> Stashed changes
+// Import your models and other dependencies as needed
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Hive
@@ -59,42 +40,33 @@ Future<void> main() async {
   BookmarkManager bookmarkManager = BookmarkManager();
   await bookmarkManager.loadBookmarks();
 
-<<<<<<< Updated upstream
-=======
   // Generate fake users
+  List<User> fakeUsers = generateFakeUsers(10); // Ensure generateFakeUsers is defined
   User myUser = fakeUsers.firstWhere(
         (user) => user.userId == 'anh-tuan-unique-id-1234',
     orElse: () => fakeUsers.first, // Fallback to first user if not found
   );
 
->>>>>>> Stashed changes
   runApp(
     MultiProvider(
       providers: [
+        // Add LanguageProvider here
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => bookmarkManager),
         ChangeNotifierProvider(create: (_) => WeatherProvider()),
-<<<<<<< Updated upstream
-      ],
-      child: const MyApp(),
-=======
         ChangeNotifierProvider(create: (_) => UserProvider()..setCurrentUser(myUser)),
         ChangeNotifierProvider(create: (_) => UsersProvider(fakeUsers)),
         ChangeNotifierProvider(create: (_) => CountProvider()),
       ],
       child: MyApp(myUser: myUser),
->>>>>>> Stashed changes
     ),
   );
 }
 
 class MyApp extends StatefulWidget {
-<<<<<<< Updated upstream
-  const MyApp({Key? key}) : super(key: key);
-=======
   final User myUser;
 
   const MyApp({Key? key, required this.myUser}) : super(key: key);
->>>>>>> Stashed changes
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -103,10 +75,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   int currentIndex = 0;
   late final List<Widget> screens;
-<<<<<<< Updated upstream
-=======
   late final List<String?> titles;
->>>>>>> Stashed changes
   final ScrollController scrollController = ScrollController();
 
   @override
@@ -117,23 +86,13 @@ class _MyAppState extends State<MyApp> {
       const MapPage(),
       const BookmarkPage(),
       PlannedPage(
-        schedules: dummySchedules,
-        scheduleLikes: dummyScheduleLikes,
-        destinations: dummyDestinations,
-<<<<<<< Updated upstream
-        scrollController: scrollController,
-        users: fakeUsers,
-        userId: 'anh-tuan-unique-id-1234',
-      ),
-      const AccountPage(),
-    ];
-  }
-
-=======
+        schedules: dummySchedules, // Ensure dummySchedules is defined
+        scheduleLikes: dummyScheduleLikes, // Ensure dummyScheduleLikes is defined
+        destinations: dummyDestinations, // Ensure dummyDestinations is defined
         userId: 'anh-tuan-unique-id-1234',
         users: Provider.of<UsersProvider>(context, listen: false).users,
       ),
-      AccountPage(user: widget.myUser, followUsers: dummyFollowUsers),
+      AccountPage(user: widget.myUser, followUsers: dummyFollowUsers), // Ensure dummyFollowUsers is defined
     ];
 
     titles = [
@@ -151,7 +110,6 @@ class _MyAppState extends State<MyApp> {
     super.dispose();
   }
 
->>>>>>> Stashed changes
   void onTabTapped(int index) {
     setState(() {
       currentIndex = index;
@@ -160,17 +118,37 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      locale: languageProvider.currentLocale,
+      supportedLocales: const [
+        Locale('en'),
+        Locale('vn'),
+        Locale('cn'),
+      ],
+      localizationsDelegates: const [
+        S.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      localeResolutionCallback: (locale, supportedLocales) {
+        if (locale == null) return supportedLocales.first;
+        for (var supportedLocale in supportedLocales) {
+          if (supportedLocale.languageCode == locale.languageCode) {
+            return supportedLocale;
+          }
+        }
+        return supportedLocales.first;
+      },
       title: 'Local Tour',
       theme: ThemeData(
-        primaryColor: Constants.primaryColor,
+        primaryColor: Constants.primaryColor, // Ensure Constants.primaryColor is defined
         scaffoldBackgroundColor: const Color(0xFFEDE8D0),
       ),
-<<<<<<< Updated upstream
-      initialRoute: '/',
-=======
->>>>>>> Stashed changes
+      // Assuming EasyLoading is set up correctly
       builder: EasyLoading.init(),
       onGenerateRoute: (settings) {
         if (settings.name == '/detail') {
@@ -184,16 +162,13 @@ class _MyAppState extends State<MyApp> {
               );
             },
           );
-<<<<<<< Updated upstream
-        }
-=======
         } else if (settings.name == '/account') {
           final args = settings.arguments as Map<String, dynamic>?;
 
           // If no userId is passed, default to current user's account
           final userId = args != null && args.containsKey('userId') ? args['userId'] as String : null;
           final selectedUser = userId != null
-              ? fakeUsers.firstWhere((user) => user.userId == userId, orElse: () => widget.myUser)
+              ? Provider.of<UsersProvider>(context, listen: false).getUserById(userId) ?? widget.myUser
               : widget.myUser;
 
           return MaterialPageRoute(
@@ -201,25 +176,18 @@ class _MyAppState extends State<MyApp> {
           );
         }
         // Handle other routes...
->>>>>>> Stashed changes
         switch (settings.name) {
           case '/':
             return MaterialPageRoute(
               builder: (context) => BasePage(
                 body: screens[currentIndex],
-<<<<<<< Updated upstream
-                currentIndex: currentIndex,
-                onTabTapped: onTabTapped,
-                isMapPage: currentIndex == 1,
-=======
                 title: titles[currentIndex],
                 currentIndex: currentIndex,
                 onTabTapped: onTabTapped,
->>>>>>> Stashed changes
               ),
             );
           case '/weather':
-            return MaterialPageRoute(builder: (context) => WeatherPage());
+            return MaterialPageRoute(builder: (context) => const WeatherPage());
           case '/bookmark':
             return MaterialPageRoute(builder: (context) => const BookmarkPage());
           case '/planned_page':
@@ -228,23 +196,12 @@ class _MyAppState extends State<MyApp> {
                 schedules: dummySchedules,
                 scheduleLikes: dummyScheduleLikes,
                 destinations: dummyDestinations,
-<<<<<<< Updated upstream
-                scrollController: scrollController,
-                users: fakeUsers,
-                userId: 'anh-tuan-unique-id-1234',
-=======
                 userId: 'anh-tuan-unique-id-1234',
                 users: Provider.of<UsersProvider>(context, listen: false).users,
->>>>>>> Stashed changes
               ),
             );
           case '/map':
             return MaterialPageRoute(builder: (context) => const MapPage());
-<<<<<<< Updated upstream
-          case '/account':
-            return MaterialPageRoute(builder: (context) => const AccountPage());
-=======
->>>>>>> Stashed changes
           case '/history':
             return MaterialPageRoute(builder: (context) => const HistoryTabbar());
           default:
@@ -257,15 +214,12 @@ class _MyAppState extends State<MyApp> {
             );
         }
       },
-<<<<<<< Updated upstream
-=======
       home: BasePage(
         body: screens[currentIndex],
         title: titles[currentIndex],
         currentIndex: currentIndex,
         onTabTapped: onTabTapped,
       ),
->>>>>>> Stashed changes
     );
   }
 }

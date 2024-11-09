@@ -1,8 +1,8 @@
 // lib/weather/widgets/weather_widget.dart
 
 import 'package:flutter/material.dart';
-import 'package:localtourvn/weather/providers/weather_provider.dart';
-import 'package:localtourvn/weather/weather_detail_page.dart';
+import 'package:localtourapp/weather/providers/weather_provider.dart';
+import 'package:localtourapp/weather/weather_detail_page.dart';
 import 'package:provider/provider.dart';
 
 class WeatherWidget extends StatefulWidget {

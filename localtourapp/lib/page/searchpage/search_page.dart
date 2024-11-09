@@ -3,7 +3,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:localtourvn/page/searchpage/second_place_card.dart';
 import '../../base/const.dart';
 import '../../base/filter_option.dart';
 import '../../base/place_card_info.dart';
@@ -13,6 +12,7 @@ import '../../models/places/placemedia.dart';
 import '../../models/places/placetag.dart';
 import '../../models/places/placetranslation.dart';
 import '../../models/places/tag.dart';
+import 'second_place_card.dart';
 import 'tags_modal.dart'; // Ensure correct path
 
 class SearchPage extends StatefulWidget {

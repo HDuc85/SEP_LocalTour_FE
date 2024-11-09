@@ -1,7 +1,11 @@
+import 'dart:math';
+
+import 'package:localtourapp/models/users/users.dart';
+
 class FollowUser {
   int id;
-  String userId;
-  String userFollow;
+  String userId; // The user who follows another user
+  String userFollow; // The user being followed
   DateTime dateCreated;
 
   FollowUser({
@@ -11,17 +15,55 @@ class FollowUser {
     required this.dateCreated,
   });
 
-  factory FollowUser.fromJson(Map<String, dynamic> json) => FollowUser(
-    id: json['Id'] as int,
-    userId: json['UserId'] as String,
-    userFollow: json['UserFollow'] as String,
-    dateCreated: DateTime.parse(json['DateCreated'] as String),
-  );
+  factory FollowUser.fromJson(Map<String, dynamic> json) {
+    return FollowUser(
+      id: json['id'],
+      userId: json['userId'],
+      userFollow: json['userFollow'],
+      dateCreated: DateTime.parse(json['dateCreated']),
+    );
+  }
 
-  Map<String, dynamic> toJson() => {
-    'Id': id,
-    'UserId': userId,
-    'UserFollow': userFollow,
-    'DateCreated': dateCreated.toIso8601String(),
-  };
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'userFollow': userFollow,
+      'dateCreated': dateCreated.toIso8601String(),
+    };
+  }
+
+  // Method to count followers of a specific user
+  static int countFollowers(String userId, List<FollowUser> followUsers) {
+    return followUsers.where((follow) => follow.userFollow == userId).length;
+  }
+
+  // Method to count the number of users a specific user is following
+  static int countFollowing(String userId, List<FollowUser> followUsers) {
+    return followUsers.where((follow) => follow.userId == userId).length;
+  }
 }
+
+// Dummy Data Generator for FollowUser
+List<FollowUser> generateDummyFollowUsers(int count, List<User> users) {
+  final random = Random();
+  return List.generate(count, (index) {
+    String follower = users[random.nextInt(users.length)].userId;
+    String following;
+
+    // Ensure the follower is not the same as the following user
+    do {
+      following = users[random.nextInt(users.length)].userId;
+    } while (following == follower);
+
+    return FollowUser(
+      id: index + 1,
+      userId: follower,
+      userFollow: following,
+      dateCreated: DateTime.now().subtract(Duration(days: random.nextInt(365))),
+    );
+  });
+}
+
+// Example usage
+List<FollowUser> dummyFollowUsers = generateDummyFollowUsers(10, fakeUsers);

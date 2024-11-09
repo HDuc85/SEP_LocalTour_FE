@@ -1,5 +1,6 @@
 import 'dart:math';
-import 'package:localtourvn/models/places/place.dart';
+
+import 'place.dart';
 
 class Event {
   int eventId;

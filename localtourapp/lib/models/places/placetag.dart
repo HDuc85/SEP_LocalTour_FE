@@ -1,8 +1,7 @@
 import 'dart:math';
 
-import 'package:localtourvn/models/places/tag.dart';
-
 import 'place.dart';
+import 'tag.dart';
 
 // Define PlaceTag class to map Place and Tag
 class PlaceTag {

@@ -1,5 +1,6 @@
 import 'dart:math';
-import 'package:localtourvn/models/users/users.dart';
+
+import '../users/users.dart';
 
 class Schedule {
   final int id;
