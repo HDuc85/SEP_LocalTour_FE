@@ -1,21 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:localtourapp/models/event/event_model.dart';
-import 'package:localtourapp/page/detail_page/event_detail_page.dart';
-import 'package:localtourapp/services/event_service.dart';
-
-import '../constants/getListApi.dart';
-import '../models/HomePage/placeCard.dart';
-import '../page/detail_page/detail_page.dart';
-import '../page/search_page/search_page.dart';
-import '../services/place_service.dart';
+import '../models/places/placetranslation.dart';
 
 class SearchBarIcon extends StatefulWidget {
-  final Position? position;
-  final String? language;
-  const SearchBarIcon({Key? key, this.position, this.language}) : super(key: key);
+  final List<PlaceTranslation> placeTranslations;
+
+  const SearchBarIcon({Key? key, required this.placeTranslations}) : super(key: key);
 
   @override
   State<SearchBarIcon> createState() => _SearchBarIconState();
@@ -25,37 +14,41 @@ class _SearchBarIconState extends State<SearchBarIcon> {
   bool isSearchIsClicked = false;
   final TextEditingController _searchController = TextEditingController();
   String searchText = '';
-  final PlaceService _placeService = PlaceService();
-  final EventService _eventService = EventService();
-  Position? _currentPosition;
+  List<dynamic> filteredItems = [];
 
-  List<PlaceCardModel> placeTranslations = [];
-  List<EventModel> events =[];
-  Timer? _debounce;
   @override
   void initState() {
     super.initState();
-    _currentPosition = widget.position;
+    filteredItems = List<dynamic>.from(widget.placeTranslations);
   }
 
   void _onSearchChanged(String value) {
-    if (_debounce?.isActive ?? false) _debounce?.cancel();
-
-    _debounce = Timer(const Duration(seconds: 2), () async {
-      setState(() {
-        searchText = value;
-      });
-      final fetchedSearchList = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.asc,[],searchText);
-      setState(() {
-        placeTranslations = fetchedSearchList;
-      });
-      final fetchedEventList = await _eventService.getEventInPlace(null, _currentPosition!.latitude, _currentPosition!.longitude, SortOrder.asc,SortBy.distance,searchText);
-      setState(() {
-        events = fetchedEventList;
-      });
+    setState(() {
+      searchText = value;
+      _filterItems();
     });
   }
 
+  void _filterItems() {
+    if (searchText.isEmpty) {
+      filteredItems = List<dynamic>.from(widget.placeTranslations);
+    } else {
+      final lowerSearchText = searchText.toLowerCase();
+
+      // Filter based on multiple fields
+      filteredItems = List<dynamic>.from(
+        widget.placeTranslations.where((item) {
+          return item.placeName.toLowerCase().contains(lowerSearchText) ||
+              (item.description?.toLowerCase().contains(lowerSearchText) ?? false) ||
+              item.address.toLowerCase().contains(lowerSearchText) ||
+              (item.contact?.toLowerCase().contains(lowerSearchText) ?? false);
+        }).toList(),
+      );
+
+      // Insert the placeholder search action at the top
+      filteredItems.insert(0, 'Search for "$searchText"');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +83,7 @@ class _SearchBarIconState extends State<SearchBarIcon> {
                           if (!isSearchIsClicked) {
                             _searchController.clear();
                             searchText = '';
-                            placeTranslations;
+                            filteredItems = List<dynamic>.from(widget.placeTranslations);
                           }
                         });
                       },
@@ -101,8 +94,8 @@ class _SearchBarIconState extends State<SearchBarIcon> {
                           controller: _searchController,
                           onChanged: _onSearchChanged,
                           autofocus: true,
-                          decoration:  InputDecoration(
-                            hintText: widget.language != 'vi'? "Where do you want to go?" : 'Bạn muốn đi đâu?',
+                          decoration: const InputDecoration(
+                            hintText: "Where do you want to go?",
                             border: InputBorder.none,
                           ),
                         ),
@@ -132,68 +125,47 @@ class _SearchBarIconState extends State<SearchBarIcon> {
                   ),
                 ],
               ),
-              child: ListView.builder(
+              child: filteredItems.isNotEmpty
+                  ? ListView.builder(
                 padding: EdgeInsets.zero,
-                itemCount: placeTranslations.length + events.length + 1,
+                itemCount: filteredItems.length,
                 itemBuilder: (context, index) {
+                  final item = filteredItems[index];
 
-                  bool isPlace = true;
-                  if(index >= placeTranslations.length){
-                    isPlace = false;
-                  }
-                  bool lastItem = index == placeTranslations.length + events.length;
-
-                  final placeItem =  !lastItem ?  (isPlace ? placeTranslations[index] : null) : null;
-                  final eventItem = !lastItem ?  (!isPlace ? events[index - placeTranslations.length] : null) : null;
                   return ListTile(
-                    leading: lastItem
+                    leading: item is String
                         ? const Icon(Icons.search)
-                        : (isPlace ? Icon(Icons.location_on) : Icon(Icons.event_available_rounded)),
-                    title: lastItem
-                        ? Text(widget.language != 'vi'?"Search for $searchText" : 'Tìm kiếm với $searchText') // Display the "Search for..." action
-                        : (isPlace ? Text(placeItem!.placeName) : Text(eventItem!.eventName) ), // Display place name for PlaceTranslation
-                    subtitle: lastItem
+                        : const Icon(Icons.location_on),
+                    title: item is String
+                        ? Text(item) // Display the "Search for..." action
+                        : Text(item.placeName), // Display place name for PlaceTranslation
+                    subtitle: item is String
                         ? null
-                        : (isPlace ? Text(placeItem!.address) : Text(eventItem!.placeName)), // Display address if item is PlaceTranslation
+                        : Text(item.address), // Display address if item is PlaceTranslation
                     onTap: () {
-                      if (lastItem) {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => SearchPage(
-                                sortBy: SortBy.distance,
-                                initialTags: [], //
-                              textSearch: searchText,
-                              ),
-                            ));
-
+                      if (item is String) {
+                        // Handle the search action here
+                        // Example: Perform a search based on `searchText`
+                        print('Search for "$searchText"');
+                        // You can navigate to a search results page or perform additional actions
                       } else {
-                        if(isPlace){
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => DetailPage(
-                                placeId: placeItem!.placeId,
-
-                              ),
-                            ),
-                          );
-                        }else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => EventDetailPage(
-                                eventModel: eventItem!,
-                              ),
-                            ),
-                          );
-                        }
-
+                        // Handle selection of a specific place here
+                        // Example: Navigate to a detail page or update the state
+                        print('Selected place: ${item.placeName}');
                       }
+                      setState(() {
+                        isSearchIsClicked = false;
+                        _searchController.clear();
+                        searchText = '';
+                        filteredItems = List<dynamic>.from(widget.placeTranslations);
+                      });
                     },
                   );
                 },
-
+              )
+                  : const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text('No results found.'),
               ),
             ),
           ),

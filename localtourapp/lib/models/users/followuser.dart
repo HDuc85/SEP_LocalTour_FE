@@ -1,27 +1,27 @@
-import 'dart:math';
+class FollowUser {
+  int id;
+  String userId;
+  String userFollow;
+  DateTime dateCreated;
 
-import 'package:localtourapp/models/users/users.dart';
-
-
-class FollowUserModel {
-  String userId; // The user who follows another user
-  String userFollow; // The user being followed
-  String userName;
-  String? userProfileUrl;
-
-  FollowUserModel({
+  FollowUser({
+    required this.id,
     required this.userId,
-    required this.userFollow, // Default value for optional fields
-    required this.userName,
-    this.userProfileUrl,
+    required this.userFollow,
+    required this.dateCreated,
   });
 
-  factory FollowUserModel.fromJson(Map<String, dynamic> json) {
-    return FollowUserModel(
-      userId: json['userId'], // Required field from API
-      userFollow: json['userFollow'] ?? '', // Use default if not provided
-      userName: json['userName'], // Required field from API
-      userProfileUrl: json['userProfileUrl'] ?? '', // Required field from API
-    );
-  }
+  factory FollowUser.fromJson(Map<String, dynamic> json) => FollowUser(
+    id: json['Id'] as int,
+    userId: json['UserId'] as String,
+    userFollow: json['UserFollow'] as String,
+    dateCreated: DateTime.parse(json['DateCreated'] as String),
+  );
+
+  Map<String, dynamic> toJson() => {
+    'Id': id,
+    'UserId': userId,
+    'UserFollow': userFollow,
+    'DateCreated': dateCreated.toIso8601String(),
+  };
 }
