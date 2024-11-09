@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:vietmap_flutter_navigation/vietmap_flutter_navigation.dart';
@@ -35,9 +36,8 @@ class _MapPageState extends State<MapPage> {
     super.initState();
     _navigationOption = _vietmapNavigationPlugin.getDefaultOptions();
     _navigationOption.simulateRoute = false;
-    _navigationOption.apiKey = '9e37b843f972388f80a9e51612cad4c1bc3877c71c107e46';
-    _navigationOption.mapStyle = 'https://maps.vietmap.vn/api/maps/light/styles.json?apikey=9e37b843f972388f80a9e51612cad4c1bc3877c71c107e46';
-
+    _navigationOption.apiKey = dotenv.get('VIETMAP_API_KEY');
+    _navigationOption.mapStyle = dotenv.get('VIETMAP_MAP_STYLE_URL');
     _getCurrentLocation();
   }
   void _getCurrentLocation() async {
