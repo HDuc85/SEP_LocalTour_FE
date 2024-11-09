@@ -66,8 +66,6 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
-
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -91,23 +89,9 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  assets:
-  - assets/images/.
-  - assets/icons/.
-  - assets/navigation_symbol/
-  - assets/tiles/
-  - .env
-  - assets/videos/video_1.mp4
-  - assets/videos/video_2.mp4
-  - assets/videos/video_3.mp4
-  - assets/images/video_placeholder.png
-  # flutter pub run build_runner build
-flutter_icons:
-  android: false #"launcher_icon"
-  ios: true
-  image_path: "assets/images/vm_demo.png"
-  remove_alpha_ios: true
-  min_sdk_android: 21 # android min sdk min:16, default 21
+  # assets:
+  #   - images/a_dot_burr.jpeg
+  #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -134,5 +118,3 @@ flutter_icons:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-flutter_intl:
-  enabled: true
