@@ -38,6 +38,7 @@ class _MapPageState extends State<MapPage> {
     _navigationOption.simulateRoute = false;
     _navigationOption.apiKey = dotenv.get('VIETMAP_API_KEY');
     _navigationOption.mapStyle = dotenv.get('VIETMAP_MAP_STYLE_URL');
+    //deleted vietmapAPI
     _getCurrentLocation();
   }
   void _getCurrentLocation() async {
