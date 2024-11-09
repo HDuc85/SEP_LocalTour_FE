@@ -1,1 +1,0 @@
-enum FilterOption { none, nearest, featured }
