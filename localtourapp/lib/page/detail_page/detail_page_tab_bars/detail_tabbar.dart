@@ -1,9 +1,7 @@
 // lib/page/detail_page/detail_page_tab_bars/detail_tabbar.dart
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
-import 'package:localtourapp/base/schedule_destination_manager.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
 import '../../../base/custom_button.dart';
 import '../../../models/places/event.dart';
@@ -32,21 +30,19 @@ class DetailTabbar extends StatefulWidget {
   final VoidCallback onReportPressed;
 
   const DetailTabbar({
-    super.key,
+    Key? key,
     required this.userId,
     required this.placeId,
     required this.tags,
     required this.onAddPressed,
     required this.onReportPressed,
-  });
+  }) : super(key: key);
 
   @override
   State<DetailTabbar> createState() => _DetailTabbarState();
 }
 
 class _DetailTabbarState extends State<DetailTabbar> {
-  final ScrollController _scrollController = ScrollController();
-  bool _showBackToTopButton = false;
   Place? place;
   PlaceTranslation? placeTranslation;
   bool isLoading = true;
@@ -57,40 +53,17 @@ class _DetailTabbarState extends State<DetailTabbar> {
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_scrollListener);
     _fetchPlaceDetails();
     _filterEvents();
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_scrollListener);
-    _scrollController.dispose();
     super.dispose();
-  }
-
-  void _scrollListener() {
-    if (_scrollController.offset >= 200 && !_showBackToTopButton) {
-      setState(() {
-        _showBackToTopButton = true;
-      });
-    } else if (_scrollController.offset < 200 && _showBackToTopButton) {
-      setState(() {
-        _showBackToTopButton = false;
-      });
-    }
   }
 
   void _navigateToWeatherPage() {
     Navigator.pushNamed(context, '/weather');
-  }
-
-  void _scrollToTop() {
-    _scrollController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
-    );
   }
 
   void _fetchPlaceDetails() {
@@ -131,113 +104,110 @@ class _DetailTabbarState extends State<DetailTabbar> {
 
   void _filterEvents() {
     setState(() {
-      placeEvents = dummyEvents.where((event) => event.placeId == widget.placeId).toList();
+      placeEvents = dummyEvents
+          .where((event) => event.placeId == widget.placeId)
+          .toList();
     });
-  }
-
-  void _onAddToSchedulePressed() {
-    _showScheduleFormDialog(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      // Optionally, show a loading indicator while fetching data
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Stack(
       children: [
-        SingleChildScrollView(
-          controller: _scrollController,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _buildTagChips(widget.tags),
-                ),
+        ListView(
+          padding: EdgeInsets.zero, // Important to prevent additional padding
+          children: [
+            // Tags Section
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _buildTagChips(widget.tags),
               ),
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.black,
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
+            ),
+            // Action Buttons Section
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 2,
                       ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: IconButton(
+                      color: const Color(0xFF9DC183),
+                      onPressed: widget.onAddPressed, // Use the callback
+                      icon: const Icon(Icons.add_circle, size: 40),
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 1,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Transform.scale(
+                      scale: 3,
                       child: IconButton(
-                        color: const Color(0xFF9DC183),
-                        onPressed: () {
-                          _showScheduleFormDialog(context);
-                        },
-                        icon: const Icon(Icons.add_circle, size: 40),
+                        color: Colors.red,
+                        onPressed: widget.onReportPressed, // Use the callback
+                        icon: const Icon(Icons.flag, size: 10),
                       ),
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.black,
-                          width: 1,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Transform.scale(
-                        scale: 3,
-                        child: IconButton(
-                          color: Colors.red,
-                          onPressed: () {
-                            _showReportFormDialog(context);
-                          },
-                          icon: const Icon(Icons.flag, size: 10),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
+                  )
+                ],
               ),
-              Container(
-                margin: const EdgeInsets.only(bottom: 20),
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    _buildTimeStatus(),
-                    const SizedBox(height: 10),
-                    _buildAddressRow(),
-                    const SizedBox(height: 10),
-                    _buildMapImage(),
-                    const SizedBox(height: 10),
-                    _buildContactRow(),
-                    const SizedBox(height: 10),
-                    _buildPlaceUrl(),
-                    const SizedBox(height: 10),
-                    WeatherWidget(
-                      latitude: place!.latitude,
-                      longitude: place!.longitude,
-                    ),
-                    const SizedBox(height: 10),
-                    PlaceDescription(
-                      placeId: place!.placeId,
-                    ),
-                  ],
-                ),
+            ),
+            // Place Details Section
+            Container(
+              margin: const EdgeInsets.only(bottom: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  _buildTimeStatus(),
+                  const SizedBox(height: 10),
+                  _buildAddressRow(),
+                  const SizedBox(height: 10),
+                  _buildMapImage(),
+                  const SizedBox(height: 10),
+                  _buildContactRow(),
+                  const SizedBox(height: 10),
+                  _buildPlaceUrl(),
+                  const SizedBox(height: 10),
+                  WeatherWidget(
+                    latitude: place!.latitude,
+                    longitude: place!.longitude,
+                  ),
+                  const SizedBox(height: 10),
+                  PlaceDescription(
+                    placeId: place!.placeId,
+                  ),
+                ],
               ),
-              _buildActivitySection(),
-              Container(
-                margin: const EdgeInsets.only(bottom: 20),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Column(
-                  children: [
-                    _buildEventSection(),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 50),
-            ],
-          ),
+            ),
+            // Activity Section
+            _buildActivitySection(),
+            // Event Section
+            Container(
+              margin: const EdgeInsets.only(bottom: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: _buildEventSection(),
+            ),
+            const SizedBox(height: 50),
+          ],
         ),
         Positioned(
           bottom: 10,
@@ -245,19 +215,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
           child: WeatherIconButton(
             onPressed: _navigateToWeatherPage,
             assetPath: 'assets/icons/weather.png',
-          ),
-        ),
-        Positioned(
-          bottom: 30,
-          left: 110,
-          child: AnimatedOpacity(
-            opacity: _showBackToTopButton ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 300),
-            child: _showBackToTopButton
-                ? BackToTopButton(
-              onPressed: _scrollToTop,
-            )
-                : const SizedBox.shrink(),
           ),
         ),
       ],
@@ -549,8 +506,8 @@ class _DetailTabbarState extends State<DetailTabbar> {
               final activityCardInfo = activityCards[index];
               return ActivityCard(
                 activityName: activityCardInfo.activityName,
-                photoDisplay:
-                activityCardInfo.photoDisplay ?? 'https://picsum.photos/250?image=9',
+                photoDisplay: activityCardInfo.photoDisplay ??
+                    'https://picsum.photos/250?image=9',
                 price: activityCardInfo.price,
                 priceType: activityCardInfo.priceType,
                 discount: activityCardInfo.discount,
@@ -621,21 +578,8 @@ class _DetailTabbarState extends State<DetailTabbar> {
         const SizedBox(height: 10),
         Column(
           children: placeEvents
-              .where((event) => event.eventStatus != 'unapproved')
-              .map((event) => FutureBuilder<Widget>(
-            future: buildEventCard(event),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
-              } else if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              } else if (snapshot.hasData) {
-                return snapshot.data!;
-              } else {
-                return const Text('No data available');
-              }
-            },
-          ))
+              .where((event) => event.eventStatus.toLowerCase() != 'unapproved')
+              .map((event) => EventCardWidget(event: event))
               .toList(),
         ),
       ],

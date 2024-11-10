@@ -1,12 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:localtourapp/base/weather_icon_button.dart';
 import 'package:provider/provider.dart';
 import '../../../models/users/users.dart';
 import '../detail_card/review_card_list.dart';
 import '../detail_card/review_card.dart';
 import '../../../models/places/placefeedback.dart';
 import '../../../models/places/placefeedbackhelpful.dart';
-import '../../../models/places/placefeeedbackmedia.dart';
+import '../../../models/places/placefeedbackmedia.dart';
 import '../all_reviews_page.dart';
 import 'count_provider.dart';
 import 'form/reportform.dart';
@@ -42,6 +43,10 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
   bool showAllReviews = false;
   late int totalReviewers;
 
+  void _navigateToWeatherPage() {
+    Navigator.pushNamed(context, '/weather');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -74,7 +79,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
       userId: widget.userId,
       rating: rating.toDouble(),
       content: content,
-      createdDate: DateTime.now(),
+      createdAt: DateTime.now(),
     );
 
     setState(() {
@@ -84,6 +89,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
       } else {
         widget.feedbacks.insert(0, feedback);
         placeFeedbacks.insert(0, feedback);
+        Provider.of<CountProvider>(context, listen: false).incrementReviewCount();
       }
 
       // Remove any existing media entries for this feedback before adding user-added media
@@ -140,6 +146,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
       feedbackMediaList
           .removeWhere((media) => media.feedbackId == widget.userId);
 
+      Provider.of<CountProvider>(context, listen: false).decrementReviewCount();
       // Recalculate the score and update PlaceScoreManager
       double score = calculateScore(placeFeedbacks);
       PlaceScoreManager.instance.setScore(widget.placeId, score);
@@ -214,216 +221,228 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
       }
     }
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.black, width: 1),
-              borderRadius: BorderRadius.circular(50),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Text(
-                  "reviewers: ${formatNumber(totalReviewers)}",
-                  style: const TextStyle(fontSize: 10),
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.black, width: 1),
+                  borderRadius: BorderRadius.circular(50),
                 ),
-                buildStarRating(score),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AllReviewsPage(
-                          feedbacks: widget.feedbacks,
-                          users: widget.users,
-                          feedbackMediaList: widget.feedbackMediaList,
-                          placeId: widget.placeId,
-                          userId: widget.userId,
-                          favoritedFeedbackIds: favoritedFeedbackIds,
-                          totalReviews: totalReviews,
-                          feedbackHelpfuls: feedbackHelpfuls,
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Text("See all"),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Text(
+                      "reviewers: ${formatNumber(totalReviewers)}",
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                    buildStarRating(score),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AllReviewsPage(
+                              feedbacks: widget.feedbacks,
+                              users: widget.users,
+                              feedbackMediaList: widget.feedbackMediaList,
+                              placeId: widget.placeId,
+                              userId: widget.userId,
+                              favoritedFeedbackIds: favoritedFeedbackIds,
+                              totalReviews: totalReviews,
+                              feedbackHelpfuls: feedbackHelpfuls,
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text("See all"),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          if (!userHasReviewed)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.black, width: 1),
               ),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundImage: NetworkImage(
-                        getUserDetails(widget.userId).profilePictureUrl ?? ''),
+              if (!userHasReviewed)
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.black, width: 1),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "${getUserDetails(widget.userId).userName}, you have no reviews yet, let's explore and review it!",
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return ReviewDialog(
-                            onSubmit: (int rating, String content,
-                                List<File> images, List<File> videos) {
-                              addOrUpdateReview(
-                                  rating, content, images, videos);
-                              setState(() {});
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundImage: NetworkImage(
+                            getUserDetails(widget.userId).profilePictureUrl ?? ''),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        "${getUserDetails(widget.userId).userName}, you have no reviews yet, let's explore and review it!",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return ReviewDialog(
+                                onSubmit: (int rating, String content,
+                                    List<File> images, List<File> videos) {
+                                  addOrUpdateReview(
+                                      rating, content, images, videos);
+                                  setState(() {});
+                                },
+                              );
                             },
                           );
                         },
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.pinkAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.pinkAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 30),
+                          elevation: 2,
+                          side: const BorderSide(color: Colors.black, width: 1),
+                        ),
+                        child: const Text(
+                          'Review !!!',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 30),
-                      elevation: 2,
-                      side: const BorderSide(color: Colors.black, width: 1),
-                    ),
-                    child: const Text(
-                      'Review !!!',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          if (currentUserReview != null)
-            ReviewCard(
-              userId: widget.userId,
-              user: getUserDetails(currentUserReview.userId),
-              feedback: currentUserReview,
-              feedbackMediaList: feedbackMediaList
-                  .where((media) =>
-                      media.feedbackId == currentUserReview.placeFeedbackId)
-                  .toList(),
-              favoritedFeedbackIds: favoritedFeedbackIds,
-              onFavoriteToggle: _handleFavoriteToggle,
-              feedbackHelpfuls: feedbackHelpfuls
-                  .where((helpful) =>
-                      helpful.placeFeedbackId ==
-                      currentUserReview.placeFeedbackId)
-                  .toList(),
-              onUpdate: () {
-                final parentContext = context;
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return ReviewDialog(
-                      initialRating: currentUserReview.rating.toInt(),
-                      initialContent: currentUserReview.content ?? '',
-                      initialImages: feedbackMediaList
-                          .where((media) => media.type == 'photo')
-                          .map((media) => File(media.url))
-                          .toList(),
-                      initialVideos: feedbackMediaList
-                          .where((media) => media.type == 'video')
-                          .map((media) => File(media.url))
-                          .toList(),
-                      onSubmit: (int rating, String content, List<File> images,
-                          List<File> videos) {
-                        if (rating != currentUserReview.rating.toInt() ||
-                            content != currentUserReview.content ||
-                            !_areListsEqual(
-                                images,
-                                feedbackMediaList
-                                    .where((media) => media.type == 'photo')
-                                    .map((media) => File(media.url))
-                                    .toList()) ||
-                            !_areListsEqual(
-                                videos,
-                                feedbackMediaList
-                                    .where((media) => media.type == 'video')
-                                    .map((media) => File(media.url))
-                                    .toList())) {
-                          addOrUpdateReview(rating, content, images, videos);
-                          ScaffoldMessenger.of(parentContext).showSnackBar(
-                            const SnackBar(
-                                content: Text('Your review updated')),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(parentContext).showSnackBar(
-                            const SnackBar(
-                                content: Text('You have not changed anything')),
-                          );
-                        }
+                ),
+              if (currentUserReview != null)
+                ReviewCard(
+                  userId: widget.userId,
+                  user: getUserDetails(currentUserReview.userId),
+                  feedback: currentUserReview,
+                  feedbackMediaList: feedbackMediaList
+                      .where((media) =>
+                          media.feedbackId == currentUserReview.placeFeedbackId)
+                      .toList(),
+                  favoritedFeedbackIds: favoritedFeedbackIds,
+                  onFavoriteToggle: _handleFavoriteToggle,
+                  feedbackHelpfuls: feedbackHelpfuls
+                      .where((helpful) =>
+                          helpful.placeFeedbackId ==
+                          currentUserReview.placeFeedbackId)
+                      .toList(),
+                  onUpdate: () {
+                    final parentContext = context;
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return ReviewDialog(
+                          initialRating: currentUserReview.rating.toInt(),
+                          initialContent: currentUserReview.content ?? '',
+                          initialImages: feedbackMediaList
+                              .where((media) => media.type == 'photo')
+                              .map((media) => File(media.url))
+                              .toList(),
+                          initialVideos: feedbackMediaList
+                              .where((media) => media.type == 'video')
+                              .map((media) => File(media.url))
+                              .toList(),
+                          onSubmit: (int rating, String content, List<File> images,
+                              List<File> videos) {
+                            if (rating != currentUserReview.rating.toInt() ||
+                                content != currentUserReview.content ||
+                                !_areListsEqual(
+                                    images,
+                                    feedbackMediaList
+                                        .where((media) => media.type == 'photo')
+                                        .map((media) => File(media.url))
+                                        .toList()) ||
+                                !_areListsEqual(
+                                    videos,
+                                    feedbackMediaList
+                                        .where((media) => media.type == 'video')
+                                        .map((media) => File(media.url))
+                                        .toList())) {
+                              addOrUpdateReview(rating, content, images, videos);
+                              ScaffoldMessenger.of(parentContext).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Your review updated')),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(parentContext).showSnackBar(
+                                const SnackBar(
+                                    content: Text('You have not changed anything')),
+                              );
+                            }
+                          },
+                        );
                       },
                     );
                   },
-                );
-              },
-              onDelete: deleteReview,
-              onReport: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ReportForm(
-                        message:
-                            'Have a problem with this person, please report them to us.'),
-                  ),
-                );
-              },
-            ),
-          ReviewCardList(
-            feedbacks: otherUserReviews,
-            users: widget.users,
-            feedbackMediaList: feedbackMediaList,
-            userId: widget.userId,
-            favoritedFeedbackIds: favoritedFeedbackIds,
-            onFavoriteToggle: _handleFavoriteToggle,
-            feedbackHelpfuls: feedbackHelpfuls,
-            limit: 2,
-            onSeeAll: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AllReviewsPage(
-                    feedbacks: widget.feedbacks,
-                    users: widget.users,
-                    feedbackMediaList: widget.feedbackMediaList,
-                    placeId: widget.placeId,
-                    userId: widget.userId,
-                    feedbackHelpfuls: feedbackHelpfuls,
-                    favoritedFeedbackIds: favoritedFeedbackIds,
-                    totalReviews: totalReviews,
-                  ),
+                  onDelete: deleteReview,
+                  onReport: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ReportForm(
+                            message:
+                                'Have a problem with this person, please report them to us.'),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-            onReport: (feedback) {
-              ReportForm.show(
-                context,
-                'Have a problem with this person? Report them to us!',
-              );
-            },
+              ReviewCardList(
+                feedbacks: otherUserReviews,
+                users: widget.users,
+                feedbackMediaList: feedbackMediaList,
+                userId: widget.userId,
+                favoritedFeedbackIds: favoritedFeedbackIds,
+                onFavoriteToggle: _handleFavoriteToggle,
+                feedbackHelpfuls: feedbackHelpfuls,
+                limit: 2,
+                onSeeAll: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AllReviewsPage(
+                        feedbacks: widget.feedbacks,
+                        users: widget.users,
+                        feedbackMediaList: widget.feedbackMediaList,
+                        placeId: widget.placeId,
+                        userId: widget.userId,
+                        feedbackHelpfuls: feedbackHelpfuls,
+                        favoritedFeedbackIds: favoritedFeedbackIds,
+                        totalReviews: totalReviews,
+                      ),
+                    ),
+                  );
+                },
+                onReport: (feedback) {
+                  ReportForm.show(
+                    context,
+                    'Have a problem with this person? Report them to us!',
+                  );
+                },
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        Positioned(
+          bottom: 10,
+          left: 40,
+          child: WeatherIconButton(
+            onPressed: _navigateToWeatherPage,
+            assetPath: 'assets/icons/weather.png',
+          ),
+        ),
+      ],
     );
   }
 

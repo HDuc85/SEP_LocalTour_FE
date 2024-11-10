@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/places/placefeedback.dart';
 import '../../../models/places/placefeedbackhelpful.dart';
-import '../../../models/places/placefeeedbackmedia.dart';
+import '../../../models/places/placefeedbackmedia.dart';
 import '../../../models/users/users.dart';
 import 'review_card.dart';
 

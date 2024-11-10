@@ -3,14 +3,15 @@ import 'package:localtourapp/base/schedule_provider.dart';
 import 'package:localtourapp/models/places/place.dart';
 import 'package:localtourapp/models/places/placetranslation.dart';
 import 'package:localtourapp/page/account/user_provider.dart';
+import 'package:localtourapp/page/planned_page/planned_page_tab_bars/history_tab_bar.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/schedule/destination.dart';
 import '../../models/schedule/schedule.dart';
 import '../../models/schedule/schedulelike.dart';
 import '../../models/users/users.dart';
-import 'planned_page_tab_bars/history_tabbar.dart';
-import 'planned_page_tab_bars/schedule_tabbar.dart';
+import 'planned_page_tab_bars/history_tab_bar.dart';
+import 'planned_page_tab_bars/schedule_tab_bar.dart';
 
 class PlannedPage extends StatefulWidget {
   final String userId;
@@ -43,7 +44,6 @@ class _PlannedPageState extends State<PlannedPage> {
     final List<Schedule> userSchedules = allSchedules
         .where((schedule) => schedule.userId == widget.userId)
         .toList();
-    print('User Schedules Count: ${userSchedules.length}');
     final List<ScheduleLike> userScheduleLikes = widget.scheduleLikes
         .where((like) => like.userId == widget.userId)
         .toList();
@@ -52,7 +52,8 @@ class _PlannedPageState extends State<PlannedPage> {
       length: 2, // Schedule and History
       child: Scaffold(
         appBar: AppBar(
-          title: const TabBar(
+          title: const Text("Planned Page"),
+          bottom: const TabBar(
             tabs: [
               Tab(text: 'Schedule'),
               Tab(text: 'History'),

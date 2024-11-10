@@ -26,7 +26,7 @@ class _BasePageState extends State<BasePage> {
     return Scaffold(
       appBar: widget.title != null
           ? AppBar(
-        title: Text(widget.title!,maxLines: 2,),
+        title: Text(widget.title!,maxLines: 2,style: const TextStyle(fontSize: 16),),
       )
           : null,
       body: GestureDetector(

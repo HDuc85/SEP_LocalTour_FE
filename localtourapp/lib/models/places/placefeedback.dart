@@ -10,7 +10,8 @@ class PlaceFeedback {
   final String userId; // GUID stored as String
   final double rating; //Random from 0-5
   final String? content; // Nullable field
-  final DateTime createdDate;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
 
   PlaceFeedback({
     required this.placeFeedbackId,
@@ -18,7 +19,8 @@ class PlaceFeedback {
     required this.userId,
     required this.rating,
     this.content, // Nullable
-    required this.createdDate,
+    required this.createdAt,
+    this.updatedAt,
   });
 
   // Factory method to create a PlaceFeedback object from JSON
@@ -29,7 +31,8 @@ class PlaceFeedback {
       userId: json['userId'], // GUID stored as a String
       rating: json['rating'].toDouble(),
       content: json['content'], // Nullable field
-      createdDate: DateTime.parse(json['createdDate']),
+      createdAt: DateTime.parse(json['createdDate']),
+      updatedAt: DateTime.parse(json['createdDate']),
     );
   }
 
@@ -41,7 +44,8 @@ class PlaceFeedback {
       'userId': userId, // GUID stored as String
       'rating': rating,
       'content': content, // Nullable field
-      'createdDate': createdDate.toIso8601String(),
+      'createdDate': createdAt.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
     };
   }
 }
@@ -70,6 +74,7 @@ List<PlaceFeedback> generatePlaceFeedbacks(int count, List<Place> places, List<U
     double rating = (random.nextDouble() * 4 + 1).roundToDouble(); // Random rating 1-5
     String? content = random.nextBool() ? 'Great place to visit! ($placeId)' : null;
     DateTime createdDate = DateTime.now().subtract(Duration(days: random.nextInt(30)));
+    DateTime updatedAt = DateTime.now().subtract(Duration(days: random.nextInt(60)));
 
     feedbacks.add(PlaceFeedback(
       placeFeedbackId: placeFeedbackId++,
@@ -77,7 +82,8 @@ List<PlaceFeedback> generatePlaceFeedbacks(int count, List<Place> places, List<U
       userId: userId,
       rating: rating,
       content: content,
-      createdDate: createdDate,
+      createdAt: createdDate,
+      updatedAt: updatedAt,
     ));
 
     existingFeedbacks.add(key);

@@ -10,6 +10,13 @@ import 'package:localtourapp/base/destination_provider.dart';
 import 'package:localtourapp/base/schedule_destination_manager.dart';
 import 'package:localtourapp/base/schedule_provider.dart';
 import 'package:localtourapp/generated/l10n.dart';
+import 'package:localtourapp/models/places/place.dart';
+import 'package:localtourapp/models/places/placetranslation.dart';
+import 'package:localtourapp/models/posts/post.dart';
+import 'package:localtourapp/models/posts/postcomment.dart';
+import 'package:localtourapp/models/posts/postcommentlike.dart';
+import 'package:localtourapp/models/posts/postlike.dart';
+import 'package:localtourapp/models/posts/postmedia.dart';
 import 'package:localtourapp/models/schedule/destination.dart';
 import 'package:localtourapp/models/schedule/schedule.dart';
 import 'package:localtourapp/models/schedule/schedulelike.dart';
@@ -19,6 +26,7 @@ import 'package:localtourapp/page/account/account_page.dart';
 import 'package:localtourapp/page/account/language_provider.dart';
 import 'package:localtourapp/page/account/user_provider.dart';
 import 'package:localtourapp/page/account/users_provider.dart';
+import 'package:localtourapp/page/account/view_profile/post_provider.dart';
 import 'package:localtourapp/page/bookmark/bookmark_manager.dart';
 import 'package:localtourapp/page/bookmark/bookmark_page.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
@@ -26,7 +34,7 @@ import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provide
 import 'package:localtourapp/page/home_screen/home_screen.dart';
 import 'package:localtourapp/page/my_map/map_page.dart';
 import 'package:localtourapp/page/planned_page/planned_page.dart';
-import 'package:localtourapp/page/planned_page/planned_page_tab_bars/history_tabbar.dart';
+import 'package:localtourapp/page/planned_page/planned_page_tab_bars/history_tab_bar.dart';
 import 'package:localtourapp/weather/providers/weather_provider.dart';
 import 'package:localtourapp/weather/weather_page.dart';
 import 'package:provider/provider.dart';
@@ -46,7 +54,7 @@ void main() async {
 
   // Generate fake users
   User myUser = fakeUsers.firstWhere(
-        (user) => user.userId == 'anh-tuan-unique-id-1234',
+    (user) => user.userId == 'anh-tuan-unique-id-1234',
     orElse: () => fakeUsers.first, // Fallback to first user if not found
   );
   runApp(
@@ -56,17 +64,34 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => bookmarkManager),
         ChangeNotifierProvider(create: (_) => WeatherProvider()),
-        ChangeNotifierProvider(create: (_) => UserProvider(initialUser: myUser)),
+        ChangeNotifierProvider(
+            create: (_) => UserProvider(initialUser: myUser)),
         ChangeNotifierProvider(create: (_) => UsersProvider(fakeUsers)),
         ChangeNotifierProvider(create: (_) => CountProvider()),
-        ChangeNotifierProvider(create: (_) => ScheduleProvider()),
+        ChangeNotifierProvider(
+            create: (_) => ScheduleProvider(
+                  schedules: dummySchedules,
+                  scheduleLikes: dummyScheduleLikes,
+                  destinations: dummyDestinations,
+                  places: dummyPlaces,
+                  translations: dummyTranslations,
+                )),
         ChangeNotifierProvider(create: (_) => DestinationProvider()),
-        ProxyProvider2<ScheduleProvider, DestinationProvider, ScheduleDestinationManager>(
+        ChangeNotifierProvider(
+            create: (_) => PostProvider(
+                  posts: dummyPosts,
+                  comments: dummyComments,
+                  postLikes: dummyPostLikes,
+                  commentLikes: dummyPostCommentLikes,
+                  media: dummyPostMedia,
+                )),
+        ProxyProvider2<ScheduleProvider, DestinationProvider,
+            ScheduleDestinationManager>(
           update: (_, scheduleProvider, destinationProvider, __) =>
               ScheduleDestinationManager(
-                scheduleProvider: scheduleProvider,
-                destinationProvider: destinationProvider,
-              ),
+            scheduleProvider: scheduleProvider,
+            destinationProvider: destinationProvider,
+          ),
         ),
       ],
       child: MyApp(myUser: myUser),
@@ -97,12 +122,15 @@ class _MyAppState extends State<MyApp> {
       const MapPage(),
       const BookmarkPage(),
       PlannedPage(
-        scheduleLikes: dummyScheduleLikes, // Ensure dummyScheduleLikes is defined
+        scheduleLikes:
+            dummyScheduleLikes, // Ensure dummyScheduleLikes is defined
         destinations: dummyDestinations, // Ensure dummyDestinations is defined
         userId: widget.myUser.userId,
         users: Provider.of<UsersProvider>(context, listen: false).users,
       ),
-      AccountPage(user: widget.myUser, followUsers: dummyFollowUsers), // Ensure dummyFollowUsers is defined
+      AccountPage(
+          user: widget.myUser,
+          followUsers: dummyFollowUsers), // Ensure dummyFollowUsers is defined
     ];
 
     titles = [
@@ -155,7 +183,8 @@ class _MyAppState extends State<MyApp> {
       },
       title: 'Local Tour',
       theme: ThemeData(
-        primaryColor: Constants.primaryColor, // Ensure Constants.primaryColor is defined
+        primaryColor:
+            Constants.primaryColor, // Ensure Constants.primaryColor is defined
         scaffoldBackgroundColor: const Color(0xFFEDE8D0),
       ),
       // Assuming EasyLoading is set up correctly
@@ -177,13 +206,18 @@ class _MyAppState extends State<MyApp> {
           final args = settings.arguments as Map<String, dynamic>?;
 
           // If no userId is passed, default to current user's account
-          final userId = args != null && args.containsKey('userId') ? args['userId'] as String : null;
+          final userId = args != null && args.containsKey('userId')
+              ? args['userId'] as String
+              : null;
           final selectedUser = userId != null
-              ? Provider.of<UsersProvider>(context, listen: false).getUserById(userId) ?? widget.myUser
+              ? Provider.of<UsersProvider>(context, listen: false)
+                      .getUserById(userId) ??
+                  widget.myUser
               : widget.myUser;
 
           return MaterialPageRoute(
-            builder: (context) => AccountPage(user: selectedUser, followUsers: dummyFollowUsers),
+            builder: (context) =>
+                AccountPage(user: selectedUser, followUsers: dummyFollowUsers),
           );
         }
         // Handle other routes...
@@ -200,7 +234,8 @@ class _MyAppState extends State<MyApp> {
           case '/weather':
             return MaterialPageRoute(builder: (context) => const WeatherPage());
           case '/bookmark':
-            return MaterialPageRoute(builder: (context) => const BookmarkPage());
+            return MaterialPageRoute(
+                builder: (context) => const BookmarkPage());
           case '/planned_page':
             return MaterialPageRoute(
               builder: (context) => PlannedPage(
@@ -213,7 +248,8 @@ class _MyAppState extends State<MyApp> {
           case '/map':
             return MaterialPageRoute(builder: (context) => const MapPage());
           case '/history':
-            return MaterialPageRoute(builder: (context) => const HistoryTabbar());
+            return MaterialPageRoute(
+                builder: (context) => const HistoryTabbar());
           default:
             return MaterialPageRoute(
               builder: (context) => Scaffold(

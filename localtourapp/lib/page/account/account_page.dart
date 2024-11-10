@@ -5,6 +5,7 @@ import 'package:localtourapp/base/weather_icon_button.dart';
 import 'package:localtourapp/models/users/users.dart';
 import 'package:localtourapp/page/account/faq.dart';
 import 'package:localtourapp/page/account/personal_infomation.dart';
+import 'package:localtourapp/page/account/view_profile/view_profile.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:localtourapp/page/account/user_provider.dart';
@@ -192,7 +193,14 @@ class _AccountPageState extends State<AccountPage> {
             margin: const EdgeInsets.only(top: 10),
             padding: const EdgeInsets.symmetric(horizontal: 50),
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ViewProfilePage(userId: displayedUser.userId),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD6B588),
                 minimumSize: const Size(double.infinity, 36),

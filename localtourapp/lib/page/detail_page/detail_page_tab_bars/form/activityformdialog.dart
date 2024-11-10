@@ -1,7 +1,9 @@
 // lib/page/detailpagetabbars/form/activityformdialog.dart
 
 import 'package:flutter/material.dart';
-import '../../../../fullmedia/full_activity_media_viewer.dart';
+import 'package:localtourapp/base/scrollable_text_container.dart';
+import 'package:localtourapp/full_media/full_activity_media_viewer.dart';
+import 'package:localtourapp/models/places/placeactivitytranslation.dart';
 import '../../../../models/places/placeactivitymedia.dart';
 
 class ActivityFormDialog extends StatelessWidget {
@@ -69,12 +71,7 @@ class ActivityFormDialog extends StatelessWidget {
           Container(
             height: 200, // Fixed height for the description
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: SingleChildScrollView(
-              child: Text(
-                description ?? 'No description available',
-                style: const TextStyle(fontSize: 14),
-              ),
-            ),
+            child: ScrollableTextContainer(content: description ?? 'No activity description available.', textSize: 16,),
           ),
           // Activity Name
           Text(

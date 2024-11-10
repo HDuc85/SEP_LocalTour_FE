@@ -1,4 +1,3 @@
-// lib/page/planned_page/planned_page_tab_bars/schedule_tabbar.dart
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -71,7 +70,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
   @override
   void initState() {
     super.initState();
-
     _scrollController.addListener(_scrollListener);
     _nameFocusNode.addListener(_onNameFieldFocusChange);
     _initializeFavoriteSchedules();
@@ -232,7 +230,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
                   schedule.endDate!.isBefore(_toDate!)));
       return matchesName && matchesDate;
     }).toList();
-    print('Filtered Schedules Count: ${filtered.length}');
     return filtered;
   }
 
@@ -244,13 +241,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
       return const Center(child: CircularProgressIndicator());
     }
     final List<Schedule> filteredSchedules = getFilteredSchedules();
-    print('Schedules Passed to ScheduleTabbar: ${widget.schedules.length}');
-
     // Fetch all schedules from ScheduleProvider
     final List<Schedule> allSchedules =
         Provider.of<ScheduleProvider>(context, listen: false).schedules;
-    print('Total Schedules in ScheduleProvider: ${allSchedules.length}');
-
     return Stack(
       children: [
         GestureDetector(
@@ -270,7 +263,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
                     const SizedBox(height: 20),
                     _buildButtonsSection(),
                     const SizedBox(height: 25),
-                    _buildScheduleList(filteredSchedules),
+                    _buildScheduleSection(filteredSchedules),
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -385,9 +378,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
     );
   }
 
-  Widget _buildScheduleList(List<Schedule> filteredSchedules) {
-    final scheduleProvider = Provider.of<ScheduleProvider>(context);
-
+  Widget _buildScheduleSection(List<Schedule> filteredSchedules) {
     if (filteredSchedules.isEmpty) {
       return const Center(
         child: Text(

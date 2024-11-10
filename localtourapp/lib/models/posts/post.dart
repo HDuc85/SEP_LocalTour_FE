@@ -9,11 +9,9 @@ class Post {
   String authorId; // Should map to userId in User
   int? placeId; // Should map to placeId in Place
   int? scheduleId; // Should map to id in Schedule
-  double longitude;
-  double latitude;
   String title;
-  DateTime createdDate;
-  DateTime updateDate;
+  DateTime createdAt;
+  DateTime updatedAt;
   String content;
   bool isPublic;
 
@@ -22,11 +20,9 @@ class Post {
     required this.authorId,
     this.placeId,
     this.scheduleId,
-    required this.longitude,
-    required this.latitude,
     required this.title,
-    required this.createdDate,
-    required this.updateDate,
+    required this.createdAt,
+    required this.updatedAt,
     required this.content,
     required this.isPublic,
   });
@@ -37,11 +33,9 @@ class Post {
     authorId: json['AuthorId'] as String,
     placeId: json['PlaceId'] != null ? json['PlaceId'] as int : null,
     scheduleId: json['ScheduleId'] != null ? json['ScheduleId'] as int : null,
-    longitude: (json['Longitude'] as num).toDouble(),
-    latitude: (json['Latitude'] as num).toDouble(),
     title: json['Title'] as String,
-    createdDate: DateTime.parse(json['CreatedDate'] as String),
-    updateDate: DateTime.parse(json['UpdateDate'] as String),
+    createdAt: DateTime.parse(json['createdAt'] as String),
+    updatedAt: DateTime.parse(json['updatedAt'] as String),
     content: json['Content'] as String,
     isPublic: json['Public'] as bool,
   );
@@ -52,11 +46,9 @@ class Post {
     'AuthorId': authorId,
     'PlaceId': placeId,
     'ScheduleId': scheduleId,
-    'Longitude': longitude,
-    'Latitude': latitude,
     'Title': title,
-    'CreatedDate': createdDate.toIso8601String(),
-    'UpdateDate': updateDate.toIso8601String(),
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
     'Content': content,
     'Public': isPublic,
   };
@@ -76,11 +68,9 @@ List<Post> generateDummyPosts(int count, List<User> users, List<Place> places, L
       authorId: selectedUser.userId, // Maps to userId in User
       placeId: selectedPlace.placeId, // Maps to placeId in Place
       scheduleId: selectedSchedule.id, // Maps to id in Schedule
-      longitude: selectedPlace.longitude,
-      latitude: selectedPlace.latitude,
       title: 'Post Title ${index + 1}',
-      createdDate: DateTime.now().subtract(Duration(days: random.nextInt(365))),
-      updateDate: DateTime.now().subtract(Duration(days: random.nextInt(100))),
+      createdAt: DateTime.now().subtract(Duration(days: random.nextInt(365))),
+      updatedAt: DateTime.now().subtract(Duration(days: random.nextInt(100))),
       content: 'This is a sample content for post ${index + 1}.',
       isPublic: random.nextBool(),
     );

@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:localtourapp/full_media/full_feedback_media_viewer.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../../models/places/placefeedback.dart';
 import '../../../base/const.dart';
-import '../../../fullmedia/full_feedback_media_viewer.dart';
 import '../../../models/places/placefeedbackhelpful.dart';
-import '../../../models/places/placefeeedbackmedia.dart';
+import '../../../models/places/placefeedbackmedia.dart';
 import '../../../models/users/users.dart';
 import '../../../video_player/video_thumbnail.dart';
 
@@ -197,7 +197,7 @@ class _ReviewCardState extends State<ReviewCard> {
           ),
           const SizedBox(height: 5),
           Text(
-            widget.feedback.createdDate.toLocal().toIso8601String().split('T').first,
+            widget.feedback.createdAt.toLocal().toIso8601String().split('T').first,
             style: const TextStyle(color: Colors.grey, fontSize: 12),
           ),
           const SizedBox(height: 5),

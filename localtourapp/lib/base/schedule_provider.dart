@@ -10,35 +10,25 @@ import 'package:localtourapp/models/places/place.dart';
 
 class ScheduleProvider with ChangeNotifier {
   // Private lists to hold schedules, likes, destinations, places, and translations
-  List<Schedule> _schedules = dummySchedules;
-  List<ScheduleLike> _scheduleLikes = dummyScheduleLikes;
-  List<Destination> _destinations = dummyDestinations;
-  List<Place> _places = dummyPlaces;
-  List<PlaceTranslation> _translations = dummyTranslations;
+  List<Schedule> _schedules = [];
+  List<ScheduleLike> _scheduleLikes = [];
+  List<Destination> _destinations = [];
+  List<Place> _places = [];
+  List<PlaceTranslation> _translations = [];
 
   // Constructor to initialize with optional initial data
   ScheduleProvider({
-    List<Schedule>? initialSchedules,
-    List<ScheduleLike>? initialScheduleLikes,
-    List<Destination>? initialDestinations,
-    List<Place>? initialPlaces,
-    List<PlaceTranslation>? initialTranslations,
+    List<Schedule>? schedules,
+    List<ScheduleLike>? scheduleLikes,
+    List<Destination>? destinations,
+    List<Place>? places,
+    List<PlaceTranslation>? translations,
   }) {
-    if (initialSchedules != null) {
-      _schedules = initialSchedules;
-    }
-    if (initialScheduleLikes != null) {
-      _scheduleLikes = initialScheduleLikes;
-    }
-    if (initialDestinations != null) {
-      _destinations = initialDestinations;
-    }
-    if (initialPlaces != null) {
-      _places = initialPlaces;
-    }
-    if (initialTranslations != null) {
-      _translations = initialTranslations;
-    }
+      _schedules = schedules ?? [];
+      _scheduleLikes = scheduleLikes ?? [];
+      _destinations = destinations ?? [];
+      _places = places ?? [];
+      _translations = translations ?? [];
   }
 
   // Getters to access the private lists

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
 import '../../../../models/places/placefeedback.dart';
-import '../../../models/places/placefeeedbackmedia.dart';
+import '../../../models/places/placefeedbackmedia.dart';
 import '../../models/users/users.dart';
 import 'detail_card/review_card.dart';
 import '../../models/places/placefeedbackhelpful.dart';
@@ -174,9 +174,9 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
     filteredFeedbacks.sort((a, b) {
       switch (sortOrder) {
         case "Latest":
-          return b.createdDate.compareTo(a.createdDate);
+          return b.createdAt.compareTo(a.createdAt);
         case "Oldest":
-          return a.createdDate.compareTo(b.createdDate);
+          return a.createdAt.compareTo(b.createdAt);
         case "Favorite (High to Low)":
           return _getHelpfulCount(b).compareTo(_getHelpfulCount(a));
         case "Favorite (Low to High)":
