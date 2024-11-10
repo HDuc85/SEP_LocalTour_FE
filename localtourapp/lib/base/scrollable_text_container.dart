@@ -20,7 +20,7 @@ class ScrollableTextContainer extends StatelessWidget {
         ),
         child: SingleChildScrollView(
           child: Text(
-            content.length > 1000 ? content.substring(0, 1000) : content, // Limit content to 200 characters
+            content.length > 500 ? content.substring(0, 500) : content,
             style: const TextStyle(fontSize: 16),
           ),
         ),

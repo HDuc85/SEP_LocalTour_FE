@@ -1,22 +1,27 @@
+// lib/page/account/account_page.dart
+
 import 'package:flutter/material.dart';
-import 'package:localtourapp/account/faq.dart';
-import 'package:localtourapp/account/personal_infomation.dart';
-import 'package:localtourapp/account/setting_page.dart';
-import 'package:localtourapp/account/users_provider.dart';
+import 'package:localtourapp/base/weather_icon_button.dart';
+import 'package:localtourapp/models/users/users.dart';
+import 'package:localtourapp/page/account/faq.dart';
+import 'package:localtourapp/page/account/personal_infomation.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:localtourapp/page/account/user_provider.dart';
+import 'package:localtourapp/page/account/users_provider.dart';
+import 'package:localtourapp/page/account/setting_page.dart';
+import 'package:localtourapp/models/users/followuser.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import '../base/weather_icon_button.dart';
-import '../models/users/followuser.dart';
-import '../models/users/users.dart';
-import 'user_provider.dart';
 
 class AccountPage extends StatefulWidget {
   final User user;
   final List<FollowUser> followUsers;
 
-  const AccountPage({super.key, required this.user, required this.followUsers});
+  const AccountPage({
+    Key? key,
+    required this.user,
+    required this.followUsers,
+  }) : super(key: key);
 
   @override
   State<AccountPage> createState() => _AccountPageState();
@@ -24,16 +29,6 @@ class AccountPage extends StatefulWidget {
 
 class _AccountPageState extends State<AccountPage> {
   late User displayedUser;
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  // Function to navigate to the Weather page
-  void _navigateToWeatherPage() {
-    Navigator.pushNamed(context, '/weather');
-  }
 
   @override
   void didChangeDependencies() {
@@ -46,21 +41,25 @@ class _AccountPageState extends State<AccountPage> {
       displayedUser = userProvider.currentUser;
     } else {
       // Fetch the other user's information from UsersProvider
-      displayedUser = usersProvider.getUserById(widget.user.userId!) ??
+      displayedUser = usersProvider.getUserById(widget.user.userId) ??
           userProvider.currentUser;
     }
   }
-
+  void _navigateToWeatherPage() {
+    Navigator.pushNamed(context, '/weather');
+  }
   @override
   Widget build(BuildContext context) {
-    final int scheduleCount = Provider.of<CountProvider>(context).scheduleCount;
-    final int reviewCount = Provider.of<CountProvider>(context).reviewCount;
+    final int scheduleCount =
+        Provider.of<CountProvider>(context).scheduleCount;
+    final int reviewCount =
+        Provider.of<CountProvider>(context).reviewCount;
     int followerCount =
-        FollowUser.countFollowers(widget.user.userId, widget.followUsers);
+    FollowUser.countFollowers(widget.user.userId, widget.followUsers);
     int followingCount =
-        FollowUser.countFollowing(widget.user.userId, widget.followUsers);
+    FollowUser.countFollowing(widget.user.userId, widget.followUsers);
     bool isCurrentUser =
-        Provider.of<UserProvider>(context).isCurrentUser(displayedUser.userId);
+    Provider.of<UserProvider>(context).isCurrentUser(displayedUser.userId);
     final ScrollController _scrollController = ScrollController();
 
     // Listen to scroll events
@@ -76,7 +75,7 @@ class _AccountPageState extends State<AccountPage> {
           children: [
             const SizedBox(height: 16),
             _buildProfileSection(
-              widget.user,
+              displayedUser,
               scheduleCount,
               reviewCount,
               followerCount,
@@ -106,6 +105,7 @@ class _AccountPageState extends State<AccountPage> {
     );
   }
 
+  // Build Profile Section
   Widget _buildProfileSection(User user, int scheduleCount, int reviewCount,
       int followerCount, int followingCount) {
     return Container(
@@ -136,7 +136,7 @@ class _AccountPageState extends State<AccountPage> {
                     : null,
                 child: user.profilePictureUrl == null
                     ? const Icon(Icons.account_circle,
-                        size: 60, color: Colors.grey)
+                    size: 60, color: Colors.grey)
                     : null,
               ),
               const SizedBox(width: 16),
@@ -161,10 +161,6 @@ class _AccountPageState extends State<AccountPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      '0 posts created', // Placeholder for post count
-                      style: TextStyle(fontSize: 14),
-                    ),
                     Text(
                       '$scheduleCount schedules created',
                       style: const TextStyle(fontSize: 14),
@@ -218,6 +214,7 @@ class _AccountPageState extends State<AccountPage> {
     );
   }
 
+  // Build Personal Information Section
   Widget _buildPersonInfoSection() {
     return InkWell(
         onTap: () {
@@ -251,6 +248,7 @@ class _AccountPageState extends State<AccountPage> {
             )));
   }
 
+  // Build Settings Section
   Widget _buildSettingSection() {
     return InkWell(
         onTap: () {
@@ -284,6 +282,7 @@ class _AccountPageState extends State<AccountPage> {
             )));
   }
 
+  // Build Contact Section
   Widget _buildContactSection() {
     return Container(
         padding: const EdgeInsets.all(4.0),
@@ -308,6 +307,7 @@ class _AccountPageState extends State<AccountPage> {
         ));
   }
 
+  // Function to handle sending emails
   Future<void> _sendEmail() async {
     final Uri emailUri = Uri(
       scheme: 'mailto',
@@ -332,6 +332,7 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+  // Function to show error dialogs
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -350,38 +351,37 @@ class _AccountPageState extends State<AccountPage> {
     );
   }
 
-
-
+  // Build FAQ Section
   Widget _buildFAQSection() {
     return InkWell(
         onTap: () {
-      // Navigate to Setting Page when tapped
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const FAQPage(),
-        ),
-      );
-    },
-    child: Container(
-        padding: const EdgeInsets.all(4.0),
-        decoration: BoxDecoration(
-          border: Border.all(width: 1),
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.5),
-              spreadRadius: 2,
-              blurRadius: 5,
-              offset: const Offset(0, 3),
+          // Navigate to FAQ Page when tapped
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const FAQPage(),
             ),
-          ],
-        ),
-        child: const ListTile(
-          leading: Icon(Icons.question_answer),
-          title: Text('FAQ'),
-          subtitle: Text('Find answers to frequently asked questions'),
-        )));
+          );
+        },
+        child: Container(
+            padding: const EdgeInsets.all(4.0),
+            decoration: BoxDecoration(
+              border: Border.all(width: 1),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.5),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: const ListTile(
+              leading: Icon(Icons.question_answer),
+              title: Text('FAQ'),
+              subtitle: Text('Find answers to frequently asked questions'),
+            )));
   }
 }

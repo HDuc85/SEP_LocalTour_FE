@@ -1,8 +1,12 @@
 // lib/page/search_page.dart
 
 import 'dart:async';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:localtourapp/page/account/user_provider.dart';
+import 'package:localtourapp/page/detail_page/detail_page.dart';
+import 'package:provider/provider.dart';
 import '../../base/const.dart';
 import '../../base/filter_option.dart';
 import '../../base/place_card_info.dart';
@@ -30,6 +34,7 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
+  late String userId;
   List<Place> placeList = dummyPlaces;
   String searchText = "";
   List<CardInfo> cardInfoList = [];
@@ -101,7 +106,7 @@ class _SearchPageState extends State<SearchPage> {
 
     cardInfoList = dummyPlaces.map((place) {
       // Fetch translation
-      PlaceTranslation translation = translations.firstWhere(
+      PlaceTranslation translation = dummyTranslations.firstWhere(
         (trans) => trans.placeId == place.placeId,
         orElse: () => PlaceTranslation(
           placeTranslationId: 0,
@@ -188,6 +193,11 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    userId = Provider.of<UserProvider>(context).userId;
+
+    if (userId.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
     // Filter cardInfoList based on searchText and selectedTags
     List<CardInfo> filteredList = cardInfoList.where((card) {
       final matchesSearch =
@@ -207,25 +217,28 @@ class _SearchPageState extends State<SearchPage> {
           elevation: 0,
           backgroundColor: Colors.transparent,
           automaticallyImplyLeading: false,
-          title: Expanded(
-            child: TextField(
-              onChanged: (value) {
-                setState(() {
-                  searchText = value;
-                });
-              },
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search, color: Colors.black),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: const BorderSide(color: Colors.black),
+          title: Row(// Error: Expanded cannot be a direct child of AppBar
+              children: [
+            Expanded(
+              child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    searchText = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.search, color: Colors.black),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: const BorderSide(color: Colors.black),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
               ),
             ),
-          ),
+          ]),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -365,15 +378,15 @@ class _SearchPageState extends State<SearchPage> {
                         onTap: () {
                           _navigateToDetail(cardInfo.placeCardInfoId);
                         },
-                      child: SecondPlaceCard(
-                        placeCardId: cardInfo.placeCardInfoId,
-                        placeName: cardInfo.placeName,
-                        ward: cardInfo.wardId,
-                        photoDisplay: cardInfo.photoDisplay,
-                        iconUrl: cardInfo.iconUrl,
-                        score: cardInfo.score,
-                        distance: cardInfo.distance,
-                      ),
+                        child: SecondPlaceCard(
+                          placeCardId: cardInfo.placeCardInfoId,
+                          placeName: cardInfo.placeName,
+                          ward: cardInfo.wardId,
+                          photoDisplay: cardInfo.photoDisplay,
+                          iconUrl: cardInfo.iconUrl,
+                          score: cardInfo.score,
+                          distance: cardInfo.distance,
+                        ),
                       );
                     },
                   )
@@ -397,13 +410,12 @@ class _SearchPageState extends State<SearchPage> {
       ),
     );
   }
+
   void _navigateToDetail(int placeId) {
     // Fetch necessary data based on placeId if needed
-    Place? selectedPlace =
-    placeList.firstWhereOrNull((place) => place.placeId == placeId);
+    Place? selectedPlace = placeList.firstWhereOrNull((place) => place.placeId == placeId);
 
     if (selectedPlace == null) {
-      // Handle the case where the place is not found
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Place not found')),
       );
@@ -411,7 +423,7 @@ class _SearchPageState extends State<SearchPage> {
     }
 
     // Fetch translation
-    PlaceTranslation? selectedTranslation = translations.firstWhereOrNull(
+    PlaceTranslation? selectedTranslation = dummyTranslations.firstWhereOrNull(
           (trans) => trans.placeId == selectedPlace.placeId,
     );
 
@@ -420,27 +432,18 @@ class _SearchPageState extends State<SearchPage> {
         .where((media) => media.placeId == selectedPlace.placeId)
         .toList();
 
-    print('Navigating to DetailPage with placeId: $placeId and mediaList length: ${filteredMediaList.length}');
-
-    Navigator.pushNamed(
+    // Navigate to DetailPage
+    Navigator.push(
       context,
-      '/detail',
-      arguments: {
-        'place': selectedPlace,
-        'placeName': selectedTranslation?.placeName ?? 'Unknown Place',
-        'mediaList': filteredMediaList,
-        'placeId': selectedPlace.placeId,
-      },
+      MaterialPageRoute(
+        builder: (_) => DetailPage(
+          userId: userId, // Replace with actual userId
+          placeName: selectedTranslation?.placeName ?? 'Unknown Place',
+          placeId: selectedPlace.placeId,
+          mediaList: filteredMediaList,
+        ),
+      ),
     );
   }
-}
 
-// Extension method for firstWhereOrNull
-extension FirstWhereOrNullExtension<E> on Iterable<E> {
-  E? firstWhereOrNull(bool Function(E) test) {
-    for (var element in this) {
-      if (test(element)) return element;
-    }
-    return null;
-  }
 }

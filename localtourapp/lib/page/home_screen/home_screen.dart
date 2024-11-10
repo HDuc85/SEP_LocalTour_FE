@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:localtourapp/page/account/user_provider.dart';
+import 'package:provider/provider.dart';
 import '../../base/back_to_top_button.dart';
 import '../../base/const.dart';
 import '../../base/custom_button.dart';
@@ -17,6 +19,8 @@ import '../../base/search_bar_icon.dart';
 import '../detail_page/detail_page.dart';
 
 class HomeScreen extends StatefulWidget {
+
+
   const HomeScreen({super.key});
 
   @override
@@ -24,6 +28,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late String userId;
   final ScrollController _scrollController = ScrollController();
   bool _showBackToTopButton = false;
   final Map<int, GlobalKey> tagSectionKeys = {};
@@ -135,6 +140,12 @@ class _HomeScreenState extends State<HomeScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    userId = Provider.of<UserProvider>(context).userId;
+
+    if (userId.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Stack(
       children: [
         // Main Scrollable Content
@@ -144,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const NowLocation(),
               const SizedBox(height: 10),
-              SearchBarIcon(placeTranslations: translations),
+              SearchBarIcon(placeTranslations: dummyTranslations),
               const SizedBox(height: 10),
               _buildTagGrid(listTag),
               const SizedBox(height: 40),
@@ -310,7 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Place selectedPlace = placeList.firstWhere(
                               (placeItem) =>
                           placeItem.placeId == place.placeCardInfoId);
-                      PlaceTranslation? selectedTranslation = translations
+                      PlaceTranslation? selectedTranslation = dummyTranslations
                           .firstWhere((trans) =>
                       trans.placeId == selectedPlace.placeId);
                       List<PlaceMedia> filteredMediaList = mediaList
@@ -322,6 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => DetailPage(
+                            userId: userId,
                             placeName: selectedTranslation.placeName,
                             placeId: selectedPlace.placeId,
                             mediaList: filteredMediaList,
@@ -470,7 +482,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Place selectedPlace = placeList.firstWhere(
                                 (placeItem) =>
                             placeItem.placeId == place.placeCardInfoId);
-                        PlaceTranslation? selectedTranslation = translations
+                        PlaceTranslation? selectedTranslation = dummyTranslations
                             .firstWhere((trans) =>
                         trans.placeId == selectedPlace.placeId);
                         List<PlaceMedia> filteredMediaList = mediaList

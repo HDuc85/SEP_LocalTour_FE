@@ -49,4 +49,4 @@ List<ScheduleLike> generateFakeScheduleLikes(int count, List<Schedule> schedules
   });
 }
 
-List<ScheduleLike> dummyScheduleLikes = generateFakeScheduleLikes(500, dummySchedules, fakeUsers);
+List<ScheduleLike> dummyScheduleLikes = generateFakeScheduleLikes(1000, dummySchedules, fakeUsers);

@@ -4,7 +4,7 @@ import 'package:localtourapp/base/weather_icon_button.dart';
 import '../../../../models/places/placefeedback.dart';
 import '../../../models/places/placefeeedbackmedia.dart';
 import '../../models/users/users.dart';
-import 'detailcard/review_card.dart';
+import 'detail_card/review_card.dart';
 import '../../models/places/placefeedbackhelpful.dart';
 import 'detail_page_tab_bars/form/reportform.dart';
 

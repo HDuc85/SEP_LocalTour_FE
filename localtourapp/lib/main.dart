@@ -4,18 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:localtourapp/account/account_page.dart';
-import 'package:localtourapp/account/language_provider.dart';
-import 'package:localtourapp/account/user_provider.dart';
-import 'package:localtourapp/account/users_provider.dart';
 import 'package:localtourapp/base/base_page.dart';
 import 'package:localtourapp/base/const.dart';
+import 'package:localtourapp/base/destination_provider.dart';
+import 'package:localtourapp/base/schedule_destination_manager.dart';
+import 'package:localtourapp/base/schedule_provider.dart';
 import 'package:localtourapp/generated/l10n.dart';
 import 'package:localtourapp/models/schedule/destination.dart';
 import 'package:localtourapp/models/schedule/schedule.dart';
 import 'package:localtourapp/models/schedule/schedulelike.dart';
 import 'package:localtourapp/models/users/followuser.dart';
 import 'package:localtourapp/models/users/users.dart';
+import 'package:localtourapp/page/account/account_page.dart';
+import 'package:localtourapp/page/account/language_provider.dart';
+import 'package:localtourapp/page/account/user_provider.dart';
+import 'package:localtourapp/page/account/users_provider.dart';
 import 'package:localtourapp/page/bookmark/bookmark_manager.dart';
 import 'package:localtourapp/page/bookmark/bookmark_page.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
@@ -42,12 +45,10 @@ void main() async {
   await bookmarkManager.loadBookmarks();
 
   // Generate fake users
-  List<User> fakeUsers = generateFakeUsers(10); // Ensure generateFakeUsers is defined
   User myUser = fakeUsers.firstWhere(
         (user) => user.userId == 'anh-tuan-unique-id-1234',
     orElse: () => fakeUsers.first, // Fallback to first user if not found
   );
-
   runApp(
     MultiProvider(
       providers: [
@@ -55,9 +56,18 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => bookmarkManager),
         ChangeNotifierProvider(create: (_) => WeatherProvider()),
-        ChangeNotifierProvider(create: (_) => UserProvider()..setCurrentUser(myUser)),
+        ChangeNotifierProvider(create: (_) => UserProvider(initialUser: myUser)),
         ChangeNotifierProvider(create: (_) => UsersProvider(fakeUsers)),
         ChangeNotifierProvider(create: (_) => CountProvider()),
+        ChangeNotifierProvider(create: (_) => ScheduleProvider()),
+        ChangeNotifierProvider(create: (_) => DestinationProvider()),
+        ProxyProvider2<ScheduleProvider, DestinationProvider, ScheduleDestinationManager>(
+          update: (_, scheduleProvider, destinationProvider, __) =>
+              ScheduleDestinationManager(
+                scheduleProvider: scheduleProvider,
+                destinationProvider: destinationProvider,
+              ),
+        ),
       ],
       child: MyApp(myUser: myUser),
     ),
@@ -87,10 +97,9 @@ class _MyAppState extends State<MyApp> {
       const MapPage(),
       const BookmarkPage(),
       PlannedPage(
-        schedules: dummySchedules, // Ensure dummySchedules is defined
         scheduleLikes: dummyScheduleLikes, // Ensure dummyScheduleLikes is defined
         destinations: dummyDestinations, // Ensure dummyDestinations is defined
-        userId: 'anh-tuan-unique-id-1234',
+        userId: widget.myUser.userId,
         users: Provider.of<UsersProvider>(context, listen: false).users,
       ),
       AccountPage(user: widget.myUser, followUsers: dummyFollowUsers), // Ensure dummyFollowUsers is defined
@@ -160,6 +169,7 @@ class _MyAppState extends State<MyApp> {
                 placeName: args['placeName'],
                 placeId: args['placeId'],
                 mediaList: args['mediaList'],
+                userId: args['userId'],
               );
             },
           );
@@ -194,10 +204,9 @@ class _MyAppState extends State<MyApp> {
           case '/planned_page':
             return MaterialPageRoute(
               builder: (context) => PlannedPage(
-                schedules: dummySchedules,
                 scheduleLikes: dummyScheduleLikes,
                 destinations: dummyDestinations,
-                userId: 'anh-tuan-unique-id-1234',
+                userId: widget.myUser.userId,
                 users: Provider.of<UsersProvider>(context, listen: false).users,
               ),
             );

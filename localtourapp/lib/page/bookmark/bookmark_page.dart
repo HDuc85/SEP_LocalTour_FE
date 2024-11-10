@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/base/place_card_info.dart';
 import 'package:localtourapp/models/places/placemedia.dart';
+import 'package:localtourapp/page/account/user_provider.dart';
 import 'package:localtourapp/page/bookmark/bookmark_manager.dart';
+import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart'; // Import for firstWhereOrNull
 import '../../base/back_to_top_button.dart';
@@ -24,6 +26,8 @@ class BookmarkPage extends StatefulWidget {
 }
 
 class _BookmarkPageState extends State<BookmarkPage> {
+  List<Place> placeList = dummyPlaces;
+  late String userId;
   final ScrollController _scrollController = ScrollController();
   bool _showBackToTopButton = false;
 
@@ -140,6 +144,11 @@ class _BookmarkPageState extends State<BookmarkPage> {
 
   @override
   Widget build(BuildContext context) {
+    userId = Provider.of<UserProvider>(context).userId;
+
+    if (userId.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return Consumer<BookmarkManager>(
       builder: (context, bookmarkManager, child) {
         final List<int> bookmarkedPlaceIds = bookmarkManager.bookmarkedPlaceIds;
@@ -194,7 +203,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
 
                 // Fetch translation
                 PlaceTranslation? translation =
-                translations.firstWhereOrNull(
+                dummyTranslations.firstWhereOrNull(
                       (trans) => trans.placeId == place.placeId,
                 );
 
@@ -222,7 +231,6 @@ class _BookmarkPageState extends State<BookmarkPage> {
                         child: Row(
                           children: [
                             ClipRRect(
-                              borderRadius: BorderRadius.circular(8.0),
                               child: Image.network(
                                 place.photoDisplay,
                                 width: 75,
@@ -371,25 +379,26 @@ class _BookmarkPageState extends State<BookmarkPage> {
 
   // Navigation method to DetailPage using named routes
   void _navigateToDetail(int placeId, Place place, PlaceTranslation? translation, List<PlaceMedia> mediaList) {
-    if (translation == null) {
-      // Handle missing translation, optionally provide a default
-      translation = PlaceTranslation(
-        placeTranslationId: 0,
-        placeId: place.placeId,
-        languageCode: 'en',
-        placeName: 'Unknown Place',
-        address: '',
-      );
-    }
+    Place? selectedPlace = placeList.firstWhereOrNull((place) => place.placeId == placeId);
 
-    Navigator.pushNamed(
+    List<PlaceMedia> filteredMediaList = mediaList
+        .where((media) => media.placeId == place.placeId)
+        .toList();
+
+    PlaceTranslation? selectedTranslation = dummyTranslations.firstWhereOrNull(
+          (trans) => trans.placeId == selectedPlace?.placeId,
+    );
+
+    Navigator.push(
       context,
-      '/detail',
-      arguments: {
-        'placeName': translation.placeName,
-        'placeId': place.placeId,
-        'mediaList': mediaList.where((media) => media.placeId == place.placeId).toList(),
-      },
+      MaterialPageRoute(
+        builder: (_) => DetailPage(
+          userId: userId, // Replace with actual userId
+          placeName: selectedTranslation?.placeName ?? 'Unknown Place',
+          placeId: selectedPlace!.placeId,
+          mediaList: filteredMediaList,
+        ),
+      ),
     );
   }
 }

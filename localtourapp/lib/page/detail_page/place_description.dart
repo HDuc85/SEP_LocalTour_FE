@@ -24,9 +24,9 @@ class _PlaceDescriptionState extends State<PlaceDescription> {
 
   void _fetchDescription() {
     // Find the place translation using placeId
-    final placeTranslation = translations.firstWhere(
+    final placeTranslation = dummyTranslations.firstWhere(
           (t) => t.placeId == widget.placeId,
-      orElse: () => translations.first, // Return a default PlaceTranslation if not found
+      orElse: () => dummyTranslations.first, // Return a default PlaceTranslation if not found
     );
 
     setState(() {

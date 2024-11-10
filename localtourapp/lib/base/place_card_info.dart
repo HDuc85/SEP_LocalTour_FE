@@ -39,7 +39,7 @@ CardInfo mapPlaceToCardInfo(Place place, double latitude, double longitude) {
   double distance =
       calculateDistance(latitude, longitude, place.latitude, place.longitude);
 
-  PlaceTranslation translation = translations.firstWhere(
+  PlaceTranslation translation = dummyTranslations.firstWhere(
     (trans) => trans.placeId == place.placeId,
     orElse: () => PlaceTranslation(
       placeTranslationId: 0,

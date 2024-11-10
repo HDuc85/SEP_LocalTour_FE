@@ -4,7 +4,6 @@ import '../../../models/places/placefeedbackhelpful.dart';
 import '../../../models/places/placefeeedbackmedia.dart';
 import '../../../models/users/users.dart';
 import 'review_card.dart';
-// ReviewCardList.dart
 
 class ReviewCardList extends StatelessWidget {
   final List<int> favoritedFeedbackIds;

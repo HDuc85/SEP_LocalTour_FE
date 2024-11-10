@@ -1,18 +1,22 @@
+// lib/page/detail_page/detail_page_tab_bars/detail_tabbar.dart
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
+import 'package:localtourapp/base/schedule_destination_manager.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
 import '../../../base/custom_button.dart';
 import '../../../models/places/event.dart';
 import '../../../models/places/tag.dart';
-import '../detailcard/activity_card.dart';
-import '../detailcard/activity_card_info.dart';
-import '../detailcard/event_card.dart';
+import '../detail_card/activity_card.dart';
+import '../detail_card/activity_card_info.dart';
+import '../detail_card/event_card.dart';
 import '../../../models/places/place.dart';
 import '../../../models/places/placeactivity.dart';
 import '../../../models/places/placeactivitymedia.dart';
 import '../../../models/places/placeactivitytranslation.dart';
 import '../../../models/places/placetranslation.dart';
-import '../../../weather/widgets/weatherwidget.dart';
+import '../../../weather/widgets/weather_widget.dart';
 import '../all_product.dart';
 import '../place_description.dart';
 import 'form/activityformdialog.dart';
@@ -21,6 +25,7 @@ import 'form/schedule_form.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DetailTabbar extends StatefulWidget {
+  final String userId;
   final int placeId;
   final List<Tag> tags;
   final VoidCallback onAddPressed;
@@ -28,6 +33,7 @@ class DetailTabbar extends StatefulWidget {
 
   const DetailTabbar({
     super.key,
+    required this.userId,
     required this.placeId,
     required this.tags,
     required this.onAddPressed,
@@ -41,11 +47,10 @@ class DetailTabbar extends StatefulWidget {
 class _DetailTabbarState extends State<DetailTabbar> {
   final ScrollController _scrollController = ScrollController();
   bool _showBackToTopButton = false;
-  Place? place; // The place object
-  PlaceTranslation? placeTranslation; // The place translation object
-  bool isLoading = true; // Track loading state
+  Place? place;
+  PlaceTranslation? placeTranslation;
+  bool isLoading = true;
 
-  // List to hold ActivityCardInfo data
   List<ActivityCardInfo> activityCards = [];
   List<Event> placeEvents = [];
 
@@ -56,6 +61,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
     _fetchPlaceDetails();
     _filterEvents();
   }
+
   @override
   void dispose() {
     _scrollController.removeListener(_scrollListener);
@@ -63,7 +69,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
     super.dispose();
   }
 
-  // Listener to handle scroll events
   void _scrollListener() {
     if (_scrollController.offset >= 200 && !_showBackToTopButton) {
       setState(() {
@@ -76,12 +81,10 @@ class _DetailTabbarState extends State<DetailTabbar> {
     }
   }
 
-  // Function to navigate to the Weather page
   void _navigateToWeatherPage() {
     Navigator.pushNamed(context, '/weather');
   }
 
-  // Function to scroll back to the top
   void _scrollToTop() {
     _scrollController.animateTo(
       0,
@@ -90,38 +93,31 @@ class _DetailTabbarState extends State<DetailTabbar> {
     );
   }
 
-  // Function to fetch the corresponding place and place translation based on placeId
   void _fetchPlaceDetails() {
-    // Find the place from the dummy data using placeId
     place = dummyPlaces.firstWhere(
-      (p) => p.placeId == widget.placeId,
-      orElse: () => dummyPlaces.first, // Return a default Place if not found
+          (p) => p.placeId == widget.placeId,
+      orElse: () => dummyPlaces.first,
     );
 
-    // Find the place translation from the dummy translations using placeId
-    placeTranslation = translations.firstWhere(
-      (t) => t.placeId == widget.placeId,
-      orElse: () =>
-          translations.first, // Return a default PlaceTranslation if not found
+    placeTranslation = dummyTranslations.firstWhere(
+          (t) => t.placeId == widget.placeId,
+      orElse: () => dummyTranslations.first,
     );
-    // Now fetch activities
+
     _fetchActivities();
 
     setState(() {
-      isLoading = false; // Loading complete
+      isLoading = false;
     });
   }
 
   void _fetchActivities() {
-    activityCards = getActivityCards(widget.placeId, randomActivities,
-        placeActivityTranslations, mediaActivityList);
+    activityCards = getActivityCards(
+        widget.placeId, randomActivities, placeActivityTranslations, mediaActivityList);
 
-    setState(() {
-      // Trigger a rebuild after fetching the activity data
-    });
+    setState(() {});
   }
 
-  // Function to launch the URL in a browser
   Future<void> _launchURL(String? url) async {
     if (url != null && url.isNotEmpty) {
       final Uri uri = Uri.parse(url);
@@ -135,25 +131,16 @@ class _DetailTabbarState extends State<DetailTabbar> {
 
   void _filterEvents() {
     setState(() {
-      placeEvents = dummyEvents
-          .where((event) => event.placeId == widget.placeId)
-          .toList();
+      placeEvents = dummyEvents.where((event) => event.placeId == widget.placeId).toList();
     });
+  }
+
+  void _onAddToSchedulePressed() {
+    _showScheduleFormDialog(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (place == null) {
-      return const Center(child: Text('No place selected.'));
-    }
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (place == null || placeTranslation == null) {
-      return const Center(child: Text("Place details not available"));
-    }
-
     return Stack(
       children: [
         SingleChildScrollView(
@@ -177,11 +164,10 @@ class _DetailTabbarState extends State<DetailTabbar> {
                     Container(
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: Colors.black, // Border color
-                          width: 2, // Border width
+                          color: Colors.black,
+                          width: 2,
                         ),
-                        borderRadius: BorderRadius.circular(
-                            8), // Optional: Make the corners rounded
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: IconButton(
                         color: const Color(0xFF9DC183),
@@ -194,21 +180,23 @@ class _DetailTabbarState extends State<DetailTabbar> {
                     Container(
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: Colors.black, // Border color
-                          width: 2, // Border width
+                          color: Colors.black,
+                          width: 1,
                         ),
-                        borderRadius: BorderRadius.circular(
-                            8), // Optional: Make the corners rounded
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child:
-                    IconButton(
-                      color: Colors.red,
-                      onPressed: () {
-                        _showReportFormDialog(context);
-                      },
-                      icon: const Icon(Icons.flag, size: 20),
-                    ),
-                    )],
+                      child: Transform.scale(
+                        scale: 3,
+                        child: IconButton(
+                          color: Colors.red,
+                          onPressed: () {
+                            _showReportFormDialog(context);
+                          },
+                          icon: const Icon(Icons.flag, size: 10),
+                        ),
+                      ),
+                    )
+                  ],
                 ),
               ),
               Container(
@@ -227,7 +215,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
                     _buildPlaceUrl(),
                     const SizedBox(height: 10),
                     WeatherWidget(
-                      latitude: place!.latitude, // Pass the place's latitude
+                      latitude: place!.latitude,
                       longitude: place!.longitude,
                     ),
                     const SizedBox(height: 10),
@@ -247,21 +235,20 @@ class _DetailTabbarState extends State<DetailTabbar> {
                   ],
                 ),
               ),
+              const SizedBox(height: 50),
             ],
           ),
         ),
         Positioned(
-          bottom: 0,
-          left: 20,
+          bottom: 10,
+          left: 40,
           child: WeatherIconButton(
             onPressed: _navigateToWeatherPage,
             assetPath: 'assets/icons/weather.png',
           ),
         ),
-
-        // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
         Positioned(
-          bottom: 12,
+          bottom: 30,
           left: 110,
           child: AnimatedOpacity(
             opacity: _showBackToTopButton ? 1.0 : 0.0,
@@ -277,11 +264,10 @@ class _DetailTabbarState extends State<DetailTabbar> {
     );
   }
 
-  // TimeOpen and TimeClose section
   Widget _buildTimeStatus() {
     final timeNow = TimeOfDay.now();
     String statusText;
-    Color iconColor = Colors.grey; // Default icon color
+    Color iconColor = Colors.grey;
 
     if (place?.timeOpen != null && place?.timeClose != null) {
       final openTime = place!.timeOpen!;
@@ -297,21 +283,21 @@ class _DetailTabbarState extends State<DetailTabbar> {
       if (nowInMinutes >= openInMinutes && nowInMinutes < closeInMinutes) {
         statusText = "Open • Closes at ${_formatTimeOfDay(closeTime)}";
         if (nowInMinutes >= oneHourBeforeClose) {
-          iconColor = Colors.orange; // 1 hour before closing
+          iconColor = Colors.orange;
         } else {
-          iconColor = Colors.green; // Open
+          iconColor = Colors.green;
         }
       } else {
         statusText = "Closed • Opens at ${_formatTimeOfDay(openTime)}";
         if (nowInMinutes >= oneHourBeforeOpen && nowInMinutes < openInMinutes) {
-          iconColor = Colors.lightBlue; // 1 hour before opening
+          iconColor = Colors.lightBlue;
         } else {
-          iconColor = Colors.red; // Closed
+          iconColor = Colors.red;
         }
       }
     } else {
       statusText = "Operating hours not available";
-      iconColor = Colors.grey; // If time data is not available
+      iconColor = Colors.grey;
     }
 
     return Row(
@@ -323,17 +309,13 @@ class _DetailTabbarState extends State<DetailTabbar> {
     );
   }
 
-  // Helper function to format TimeOfDay in AM/PM format
   String _formatTimeOfDay(TimeOfDay timeOfDay) {
-    final hour = timeOfDay.hourOfPeriod == 0
-        ? 12
-        : timeOfDay.hourOfPeriod; // Convert 0 to 12 for AM
+    final hour = timeOfDay.hourOfPeriod == 0 ? 12 : timeOfDay.hourOfPeriod;
     final period = timeOfDay.period == DayPeriod.am ? "AM" : "PM";
     final minute = timeOfDay.minute.toString().padLeft(2, '0');
     return "$hour:$minute $period";
   }
 
-  // Address section
   Widget _buildAddressRow() {
     return Row(
       children: [
@@ -344,7 +326,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
     );
   }
 
-  // Map Image section (dummy image for now, replace later with API)
   Widget _buildMapImage() {
     final double latitude = place!.latitude;
     final double longitude = place!.longitude;
@@ -353,7 +334,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
       width: double.infinity,
       height: 150,
       child: Image.network(
-        'https://maps.vietmap.vn/maps/api/staticmap?center=$latitude,$longitude&zoom=15&size=400x300&key=9e37b843f972388f80a9e51612cad4c1bc3877c71c107e46', // Replace with your real API
+        'https://maps.vietmap.vn/maps/api/staticmap?center=$latitude,$longitude&zoom=15&size=400x300&key=YOUR_API_KEY', // Replace YOUR_API_KEY with your actual API key
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
           return const Center(child: Text('Map not available'));
@@ -362,7 +343,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
     );
   }
 
-  // Contact section
   Widget _buildContactRow() {
     return Row(
       children: [
@@ -373,7 +353,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
     );
   }
 
-  // Place URL section
   Widget _buildPlaceUrl() {
     return Row(
       children: [
@@ -395,7 +374,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
     );
   }
 
-  // Function to show the schedule form dialog
   void _showScheduleFormDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -412,14 +390,16 @@ class _DetailTabbarState extends State<DetailTabbar> {
               ),
             ),
             padding: const EdgeInsets.all(20.0),
-            child: const ScheduleForm(),
+            child: ScheduleForm(
+              userId: widget.userId,
+              placeId: widget.placeId,
+            ),
           ),
         );
       },
     );
   }
 
-  // Function to show the report form dialog
   void _showReportFormDialog(BuildContext context) {
     showGeneralDialog(
       context: context,
@@ -443,7 +423,9 @@ class _DetailTabbarState extends State<DetailTabbar> {
                   width: 2.0,
                 ),
               ),
-              child: const ReportForm(message: 'Have a problem with this place? Report it to us!',),
+              child: const ReportForm(
+                message: 'Have a problem with this place? Report it to us!',
+              ),
             ),
           ),
         );
@@ -451,11 +433,9 @@ class _DetailTabbarState extends State<DetailTabbar> {
     );
   }
 
-  // Function to build the list of tag chips
   List<Widget> _buildTagChips(List<Tag> tags) {
     List<Widget> tagChips = [];
 
-    // Show a maximum of 5 tags initially
     for (int i = 0; i < tags.length && i < 5; i++) {
       tagChips.add(
         Chip(
@@ -473,12 +453,11 @@ class _DetailTabbarState extends State<DetailTabbar> {
       );
     }
 
-    // If there are more than 5 tags, show "See more tags" button
     if (tags.length > 5) {
       tagChips.add(
         GestureDetector(
           onTap: () {
-            _showAllTagsDialog(context); // Pass context here instead of tags
+            _showAllTagsDialog(context);
           },
           child: const Chip(
             label: Text('See more tags'),
@@ -494,7 +473,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
     return tagChips;
   }
 
-// Function to show dialog with all tags
   void _showAllTagsDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -515,7 +493,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Display the place name
                 Text(
                   placeTranslation?.placeName ?? "All Tags",
                   style: const TextStyle(
@@ -523,7 +500,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 10), // Add space between place name and tags
+                const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -550,7 +527,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
     );
   }
 
-  // Activity section with ActivityCard
   Widget _buildActivitySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -563,7 +539,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
         ),
         const SizedBox(height: 20),
         SizedBox(
-          height: 200, // Height for activity cards
+          height: 200,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             clipBehavior: Clip.none,
@@ -573,12 +549,12 @@ class _DetailTabbarState extends State<DetailTabbar> {
               final activityCardInfo = activityCards[index];
               return ActivityCard(
                 activityName: activityCardInfo.activityName,
-                photoDisplay: activityCardInfo.photoDisplay ?? 'https://picsum.photos/250?image=9',
+                photoDisplay:
+                activityCardInfo.photoDisplay ?? 'https://picsum.photos/250?image=9',
                 price: activityCardInfo.price,
                 priceType: activityCardInfo.priceType,
                 discount: activityCardInfo.discount,
                 onTap: () {
-                  // Trigger the dialog on tap
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
@@ -588,11 +564,13 @@ class _DetailTabbarState extends State<DetailTabbar> {
                         priceType: activityCardInfo.priceType,
                         discount: activityCardInfo.discount,
                         description: activityCardInfo.description,
-                        mediaActivityList: mediaActivityList, placeActivityId: activityCardInfo.placeActivityId,
+                        mediaActivityList: mediaActivityList,
+                        placeActivityId: activityCardInfo.placeActivityId,
                       );
                     },
                   );
-                }, placeActivityId: activityCardInfo.placeActivityId,
+                },
+                placeActivityId: activityCardInfo.placeActivityId,
                 mediaActivityList: mediaActivityList,
               );
             },
@@ -606,8 +584,8 @@ class _DetailTabbarState extends State<DetailTabbar> {
               context,
               MaterialPageRoute(
                 builder: (context) => AllProductPage(
-                    placeId: widget.placeId,
-                    activityCards: activityCards,
+                  placeId: widget.placeId,
+                  activityCards: activityCards,
                   mediaActivityList: mediaActivityList,
                 ),
               ),
@@ -615,18 +593,16 @@ class _DetailTabbarState extends State<DetailTabbar> {
           },
         ),
         const SizedBox(height: 30),
-        // Add the Divider line
         const Divider(
-          color: Colors.black, // Customize the color as needed
-          thickness: 1.5, // Customize the thickness as needed
-          indent: 16, // Padding on the left side
-          endIndent: 16, // Padding on the right side
+          color: Colors.black,
+          thickness: 1.5,
+          indent: 16,
+          endIndent: 16,
         ),
       ],
     );
   }
 
-  // New event section
   Widget _buildEventSection() {
     if (placeEvents.isEmpty) {
       return const Center(child: Text('No events available for this place.'));
@@ -647,14 +623,14 @@ class _DetailTabbarState extends State<DetailTabbar> {
           children: placeEvents
               .where((event) => event.eventStatus != 'unapproved')
               .map((event) => FutureBuilder<Widget>(
-            future: buildEventCard(event), // Assuming buildEventCard returns a Future
+            future: buildEventCard(event),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator(); // Show a loading indicator
+                return const CircularProgressIndicator();
               } else if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}'); // Show error if any
+                return Text('Error: ${snapshot.error}');
               } else if (snapshot.hasData) {
-                return snapshot.data!; // Display the loaded event card
+                return snapshot.data!;
               } else {
                 return const Text('No data available');
               }
@@ -662,7 +638,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
           ))
               .toList(),
         ),
-
       ],
     );
   }

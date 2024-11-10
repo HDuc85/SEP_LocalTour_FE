@@ -12,6 +12,18 @@ class CountProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void incrementScheduleCount() {
+    _scheduleCount += 1;
+    notifyListeners();
+  }
+
+  void decrementScheduleCount() {
+    if (_scheduleCount > 0) {
+      _scheduleCount -= 1;
+      notifyListeners();
+    }
+  }
+
   void setReviewCount(int count) {
     _reviewCount = count;
     notifyListeners();

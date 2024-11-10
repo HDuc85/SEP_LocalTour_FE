@@ -101,4 +101,4 @@ List<PlaceTranslation> generatePlaceTranslations(List<Place> places) {
 }
 
 
-List<PlaceTranslation> translations = generatePlaceTranslations(dummyPlaces);
+List<PlaceTranslation> dummyTranslations = generatePlaceTranslations(dummyPlaces);

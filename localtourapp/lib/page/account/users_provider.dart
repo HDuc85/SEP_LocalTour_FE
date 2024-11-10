@@ -1,6 +1,6 @@
 // users_provider.dart
 import 'package:flutter/material.dart';
-import '../models/users/users.dart';
+import 'package:localtourapp/models/users/users.dart';
 
 class UsersProvider with ChangeNotifier {
   final List<User> _users;

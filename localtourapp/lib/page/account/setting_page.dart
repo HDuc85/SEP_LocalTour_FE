@@ -1,9 +1,8 @@
 // lib/page/setting_page.dart
 
 import 'package:flutter/material.dart';
-import 'package:localtourapp/account/language_provider.dart';
+import 'package:localtourapp/page/account/language_provider.dart';
 import 'package:provider/provider.dart';
-import '../generated/l10n.dart'; // Import generated localization if using
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});

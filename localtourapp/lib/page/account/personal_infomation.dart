@@ -1,10 +1,10 @@
-// lib/page/personal_information_page.dart
+// lib/page/account/personal_information_page.dart
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:localtourapp/models/users/users.dart';
 import 'package:provider/provider.dart';
-import '../account/user_provider.dart';
-import '../models/users/users.dart';
+import 'package:localtourapp/page/account/user_provider.dart';
+import 'package:intl/intl.dart'; // Ensure you have intl package in pubspec.yaml
 
 class PersonalInformationPage extends StatefulWidget {
   const PersonalInformationPage({Key? key}) : super(key: key);
@@ -170,8 +170,8 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                   padding: const EdgeInsets.all(16.0),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    border: Border.all(
-                        width: 1, color: Colors.grey.shade300),
+                    border:
+                    Border.all(width: 1, color: Colors.grey.shade300),
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(

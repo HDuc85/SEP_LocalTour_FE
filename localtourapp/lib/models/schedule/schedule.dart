@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import '../users/users.dart';
+import 'package:localtourapp/models/users/users.dart';
 
 class Schedule {
   final int id;
@@ -21,18 +21,7 @@ class Schedule {
     this.isPublic = false,
   });
 
-  factory Schedule.fromJson(Map<String, dynamic> json) {
-    return Schedule(
-      id: json['id'],
-      userId: json['userId'],
-      scheduleName: json['scheduleName'],
-      startDate: json['startDate'] != null ? DateTime.parse(json['startDate']) : null,
-      endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
-      createdDate: DateTime.parse(json['createdDate']),
-      isPublic: json['isPublic'] ?? false,
-    );
-  }
-
+  // Convert Schedule to JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -46,6 +35,7 @@ class Schedule {
   }
 }
 
+// Generates Schedules with valid userId mappings
 List<Schedule> generateFakeSchedules(int count, List<User> users) {
   final random = Random();
   return List.generate(count, (index) {
@@ -63,3 +53,5 @@ List<Schedule> generateFakeSchedules(int count, List<User> users) {
 }
 
 List<Schedule> dummySchedules = generateFakeSchedules(50, fakeUsers);
+
+

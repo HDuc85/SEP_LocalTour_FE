@@ -191,14 +191,22 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
     final topSchedules = _getTopSchedules();
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Top 10 Most Favorite Schedules", maxLines: 2,),
+        title: const Text(
+          "Top 10 Most Favorite Schedules",
+          maxLines: 2,
+        ),
       ),
       body: Stack(
         children: [
           ListView.builder(
             controller: _scrollController,
-            itemCount: topSchedules.length,
+            itemCount: topSchedules.length + 1, // Increased by 1
             itemBuilder: (context, index) {
+              if (index == topSchedules.length) {
+                // Extra SizedBox at the bottom
+                return const SizedBox(height: 100); // Adjust height as needed
+              }
+
               final schedule = topSchedules[index];
               final scheduleLikes = widget.scheduleLikes
                   .where((like) => like.scheduleId == schedule.id)
@@ -211,7 +219,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
 
               // Find the user who created the schedule
               final user = widget.users.firstWhere(
-                (u) => u.userId == schedule.userId,
+                    (u) => u.userId == schedule.userId,
                 orElse: () =>
                     User.minimal(userId: 'Unknown', userName: 'Unknown User'),
               );
@@ -254,7 +262,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                       "From Date",
                                       true,
                                       schedule.startDate,
-                                      (_) {},
+                                          (_) {},
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -263,7 +271,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                       "To Date",
                                       false,
                                       schedule.endDate,
-                                      (_) {},
+                                          (_) {},
                                     ),
                                   ),
                                 ],
@@ -277,10 +285,9 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                       favoritedScheduleIds.contains(schedule.id)
                                           ? Icons.favorite
                                           : Icons.favorite_border,
-                                      color:
-                                          favoritedScheduleIds.contains(schedule.id)
-                                              ? Colors.red
-                                              : Colors.grey,
+                                      color: favoritedScheduleIds.contains(schedule.id)
+                                          ? Colors.red
+                                          : Colors.grey,
                                     ),
                                     onPressed: () {
                                       _toggleFavorite(schedule.id);
@@ -304,7 +311,8 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                       builder: (BuildContext context) {
                                         return AlertDialog(
                                           title: const Text("Clone Schedule"),
-                                          content: const Text("Do you want to clone this schedule to yours?"),
+                                          content: const Text(
+                                              "Do you want to clone this schedule to yours?"),
                                           actions: [
                                             TextButton(
                                               onPressed: () {
@@ -338,7 +346,8 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                                 ))
                                                     .toList();
 
-                                                widget.onClone(clonedSchedule, clonedDestinations); // Call onClone with cloned schedule
+                                                widget.onClone(
+                                                    clonedSchedule, clonedDestinations); // Call onClone with cloned schedule
 
                                                 Navigator.of(context).pop(); // Close the dialog after cloning
                                               },
@@ -364,8 +373,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                             borderRadius: BorderRadius.circular(15),
                             border: Border.all(color: Colors.black, width: 1),
                           ),
-                          child:
-                              _buildDestinationList(scheduleDestinations, schedule),
+                          child: _buildDestinationList(scheduleDestinations, schedule),
                         ),
                     ],
                   ),
@@ -374,8 +382,8 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
             },
           ),
           Positioned(
-            bottom: 50,
-            left: 20,
+            bottom: 20,
+            left: 50,
             child: WeatherIconButton(
               onPressed: _navigateToWeatherPage,
               assetPath: 'assets/icons/weather.png',
@@ -433,7 +441,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
         final place =
             dummyPlaces.firstWhere((p) => p.placeId == destination.placeId);
         final placeTranslation =
-            translations.firstWhere((t) => t.placeId == destination.placeId);
+            dummyTranslations.firstWhere((t) => t.placeId == destination.placeId);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

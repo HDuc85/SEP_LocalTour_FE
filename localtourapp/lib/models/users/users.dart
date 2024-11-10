@@ -42,7 +42,7 @@ class User {
   // Named constructor for a minimal User with default values for non-nullable fields
   User.minimal({
     required this.userId,
-    this.userName,
+    required this.userName,
   })  : emailConfirmed = false,
         phoneNumberConfirmed = false,
         dateCreated = DateTime.now(),

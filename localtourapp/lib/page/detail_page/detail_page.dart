@@ -1,5 +1,7 @@
+// lib/page/detail_page/detail_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/places/placetranslation.dart';
 import 'package:localtourapp/page/bookmark/bookmark_manager.dart';
 import 'package:provider/provider.dart';
 import '../../fullmedia/full_place_media_viewer.dart';
@@ -12,17 +14,20 @@ import '../../models/places/tag.dart';
 import '../../models/users/users.dart';
 import 'detail_page_tab_bars/detail_tabbar.dart';
 import 'detail_page_tab_bars/review_tabbar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DetailPage extends StatefulWidget {
   final String placeName;
   final int placeId;
   final List<PlaceMedia> mediaList;
+  final String userId; // Add userId as a required parameter
 
   const DetailPage({
     Key? key,
     required this.placeName,
     required this.placeId,
     required this.mediaList,
+    required this.userId, // Initialize userId
   }) : super(key: key);
 
   @override
@@ -48,7 +53,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
       await bookmarkManager.addBookmark(
         MarkPlace(
           markPlaceId: widget.placeId,
-          userId: 'anh-tuan-unique-id-1234',
+          userId: widget.userId, // Use widget.userId instead of hardcoded ID
           placeId: widget.placeId,
           createdDate: DateTime.now(),
           isVisited: false,
@@ -77,10 +82,10 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
     final List<PlaceMedia> mediaList = widget.mediaList;
 
     // Get the corresponding tags for the placeId
-    // Ensure placeTags and listTag are accessible
+    // Ensure you have access to translations and listTag
     List<Tag> placeTagsForPlace = placeTags
         .where((placeTag) => placeTag.placeId == placeId)
-        .map((placeTag) => listTag.firstWhere((tag) => tag.tagId == placeTag.tagId))
+        .map((placeTag) => listTag.firstWhere((tag) => tag.tagId == placeTag.tagId, orElse: () => Tag(tagId: 0, tagPhotoUrl: '', tagName: 'Unknown')))
         .toList();
 
     return Scaffold(
@@ -237,6 +242,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
           controller: _tabController,
           children: [
             DetailTabbar(
+              userId: widget.userId, // Pass the userId here
               tags: placeTagsForPlace,
               onAddPressed: () {},
               onReportPressed: () {},
@@ -245,7 +251,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
             ReviewTabbar(
               feedbacks: feedbacks,
               users: fakeUsers,
-              userId: 'anh-tuan-unique-id-1234',
+              userId: widget.userId, // Use widget.userId
               placeId: placeId,
               feedbackMediaList: feedbackMediaList,
             ),
@@ -279,12 +285,5 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
     return false;
-  }
-}
-
-// Extension to format DateTime
-extension DateHelpers on DateTime {
-  String toShortDateString() {
-    return "${this.day}/${this.month}/${this.year}";
   }
 }
