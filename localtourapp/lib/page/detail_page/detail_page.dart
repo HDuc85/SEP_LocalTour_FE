@@ -8,7 +8,7 @@ import 'package:localtourapp/models/places/placemedia.dart';
 import 'package:localtourapp/models/places/placetag.dart';
 import 'package:localtourapp/models/places/tag.dart';
 import 'package:localtourapp/models/users/users.dart';
-import 'package:localtourapp/page/bookmark/bookmark_manager.dart';
+import 'package:localtourapp/page/bookmark/bookmark_provider.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/detail_tabbar.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/review_tabbar.dart';
 import 'package:provider/provider.dart';
@@ -18,13 +18,15 @@ class DetailPage extends StatefulWidget {
   final int placeId;
   final List<PlaceMedia> mediaList;
   final String userId; // Add userId as a required parameter
+  final String languageCode;
 
   const DetailPage({
     Key? key,
     required this.placeName,
     required this.placeId,
     required this.mediaList,
-    required this.userId, // Initialize userId
+    required this.userId,
+    required this.languageCode, // Initialize userId
   }) : super(key: key);
 
   @override
@@ -44,21 +46,21 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
     // Add a post frame callback to ensure the NestedScrollView is built before accessing its controller
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Access the innerController and add a listener
-      _nestedScrollViewKey.currentState?.innerController?.addListener(_nestedScrollListener);
+      _nestedScrollViewKey.currentState?.innerController.addListener(_nestedScrollListener);
     });
   }
 
   @override
   void dispose() {
     // Remove the listener to prevent memory leaks
-    _nestedScrollViewKey.currentState?.innerController?.removeListener(_nestedScrollListener);
+    _nestedScrollViewKey.currentState?.innerController.removeListener(_nestedScrollListener);
     _tabController.dispose();
     super.dispose();
   }
 
   void _nestedScrollListener() {
     // Get the current scroll offset
-    double offset = _nestedScrollViewKey.currentState?.innerController?.offset ?? 0;
+    double offset = _nestedScrollViewKey.currentState?.innerController.offset ?? 0;
 
     if (offset >= 200 && !_showBackToTopButton) {
       setState(() {
@@ -72,14 +74,14 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
   }
 
   void _scrollToTop() {
-    _nestedScrollViewKey.currentState?.innerController?.animateTo(
+    _nestedScrollViewKey.currentState?.innerController.animateTo(
       0,
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOut,
     );
   }
 
-  void _toggleBookmark(BookmarkManager bookmarkManager) async {
+  void _toggleBookmark(BookmarkProvider bookmarkManager) async {
     if (bookmarkManager.isBookmarked(widget.placeId)) {
       await bookmarkManager.removeBookmark(widget.placeId);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -103,7 +105,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final bookmarkManager = Provider.of<BookmarkManager>(context);
+    final bookmarkManager = Provider.of<BookmarkProvider>(context);
     bool isBookmarked = bookmarkManager.isBookmarked(widget.placeId);
 
     // Access widget properties directly
@@ -281,6 +283,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
               controller: _tabController,
               children: [
                 DetailTabbar(
+                  languageCode: 'en',
                   userId: widget.userId, // Pass the userId here
                   tags: placeTagsForPlace,
                   onAddPressed: () {},
@@ -288,7 +291,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
                   placeId: widget.placeId,
                 ),
                 ReviewTabbar(
-                  feedbacks: feedbacks,
+                  feedbacks: dummyFeedbacks,
                   users: fakeUsers,
                   userId: widget.userId, // Use widget.userId
                   placeId: placeId,

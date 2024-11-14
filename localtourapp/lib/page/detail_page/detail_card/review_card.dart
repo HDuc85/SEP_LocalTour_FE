@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:localtourapp/full_media/full_feedback_media_viewer.dart';
+import 'package:localtourapp/models/users/followuser.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../../models/places/placefeedback.dart';
 import '../../../base/const.dart';
@@ -8,6 +9,7 @@ import '../../../models/places/placefeedbackhelpful.dart';
 import '../../../models/places/placefeedbackmedia.dart';
 import '../../../models/users/users.dart';
 import '../../../video_player/video_thumbnail.dart';
+import '../../account/account_page.dart';
 
 class ReviewCard extends StatefulWidget {
   final List<int> favoritedFeedbackIds;
@@ -20,6 +22,7 @@ class ReviewCard extends StatefulWidget {
   final VoidCallback? onReport;
   final String userId;
   final List<PlaceFeedbackHelpful> feedbackHelpfuls;
+  final List<FollowUser>followUsers;
   final bool isInAllProductPage;
 
   const ReviewCard({
@@ -35,6 +38,7 @@ class ReviewCard extends StatefulWidget {
     required this.onFavoriteToggle,
     required this.feedbackHelpfuls,
     this.isInAllProductPage = false,
+    required this.followUsers,
   }) : super(key: key);
 
   @override
@@ -115,9 +119,23 @@ class _ReviewCardState extends State<ReviewCard> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        widget.user?.userName ?? "Anonymous",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AccountPage(
+                                user: widget.user!,
+                                isCurrentUser: widget.user!.userId == widget.userId,
+                                followUsers: widget.followUsers, // Replace with actual followUsers list if needed
+                              ),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          widget.user?.userName ?? "Anonymous",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                       Row(
                         children: List.generate(

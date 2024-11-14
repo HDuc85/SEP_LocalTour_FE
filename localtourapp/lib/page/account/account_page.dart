@@ -1,25 +1,36 @@
 // lib/page/account/account_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:localtourapp/base/follow_users_provider.dart';
+import 'package:localtourapp/base/schedule_provider.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
+import 'package:localtourapp/models/posts/post.dart';
+import 'package:localtourapp/models/schedule/schedule.dart';
+import 'package:localtourapp/models/users/followuser.dart';
 import 'package:localtourapp/models/users/users.dart';
 import 'package:localtourapp/page/account/faq.dart';
 import 'package:localtourapp/page/account/personal_infomation.dart';
+import 'package:localtourapp/page/account/review_provider.dart';
+import 'package:localtourapp/page/account/setting_page.dart';
+import 'package:localtourapp/page/account/user_preference.dart';
+import 'package:localtourapp/page/account/user_provider.dart';
+import 'package:localtourapp/page/account/users_provider.dart';
+import 'package:localtourapp/page/account/view_profile/post_provider.dart';
 import 'package:localtourapp/page/account/view_profile/view_profile.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:localtourapp/page/account/user_provider.dart';
-import 'package:localtourapp/page/account/users_provider.dart';
-import 'package:localtourapp/page/account/setting_page.dart';
-import 'package:localtourapp/models/users/followuser.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+// Import other necessary pages like ViewProfilePage, PersonalInformationPage, SettingPage, FAQPage
+
 class AccountPage extends StatefulWidget {
+  final bool isCurrentUser;
   final User user;
   final List<FollowUser> followUsers;
 
   const AccountPage({
     Key? key,
+    required this.isCurrentUser,
     required this.user,
     required this.followUsers,
   }) : super(key: key);
@@ -29,13 +40,43 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
+  late List<FollowUser> followers;
+  late List<FollowUser> followings;
   late User displayedUser;
+
+  // **Add these declarations:**
+  late int followerCount;
+  late int followingCount;
+
+  // Existing ScrollController declaration
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    final followUsersProvider =
+    Provider.of<FollowUsersProvider>(context, listen: false);
+    followers = followUsersProvider.getFollowers(widget.user.userId);
+    followings = followUsersProvider.getFollowings(widget.user.userId);
+    displayedUser = widget.user;
+
+    // Initialize followerCount and followingCount
+    followerCount =
+        FollowUser.countFollowers(widget.user.userId, widget.followUsers);
+    followingCount =
+        FollowUser.countFollowing(widget.user.userId, widget.followUsers);
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final usersProvider = Provider.of<UsersProvider>(context, listen: false);
+    final postProvider = Provider.of<PostProvider>(context, listen: false);
+    final scheduleProvider =
+    Provider.of<ScheduleProvider>(context, listen: false);
+    final reviewProvider =
+    Provider.of<ReviewProvider>(context, listen: false);
 
     if (userProvider.isCurrentUser(widget.user.userId)) {
       // Display current user's information
@@ -45,16 +86,51 @@ class _AccountPageState extends State<AccountPage> {
       displayedUser = usersProvider.getUserById(widget.user.userId) ??
           userProvider.currentUser;
     }
+
+    final userReviews =
+    reviewProvider.getReviewsByUserId(displayedUser.userId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CountProvider>(context, listen: false)
+          .setReviewCount(userReviews.length);
+    });
+    final userSchedules =
+    scheduleProvider.getSchedulesByUserId(displayedUser.userId);
+    // Use post-frame callback to set schedule count after initial build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CountProvider>(context, listen: false)
+          .setScheduleCount(userSchedules.length);
+    });
+
+    final userPosts = postProvider.getPostsByUserId(displayedUser.userId);
+    // Use post-frame callback to set post count after initial build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CountProvider>(context, listen: false)
+          .setPostCount(userPosts.length);
+    });
   }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _navigateToWeatherPage() {
     Navigator.pushNamed(context, '/weather');
   }
+
   @override
   Widget build(BuildContext context) {
+    final followUsersProvider =
+    Provider.of<FollowUsersProvider>(context, listen: true);
+    final userProvider = Provider.of<UserProvider>(context, listen: true);
+    // If viewing another user's profile, determine if the current user follows them
     final int scheduleCount =
         Provider.of<CountProvider>(context).scheduleCount;
     final int reviewCount =
         Provider.of<CountProvider>(context).reviewCount;
+    final int postCount =
+        Provider.of<CountProvider>(context).postCount;
     int followerCount =
     FollowUser.countFollowers(widget.user.userId, widget.followUsers);
     int followingCount =
@@ -68,6 +144,13 @@ class _AccountPageState extends State<AccountPage> {
       // Implement your logic here, e.g., show "Back to Top" button
     });
 
+    // Determine if the current user is following the displayed user
+    bool isFollowing = false;
+    if (!isCurrentUser) {
+      isFollowing = followUsersProvider.isFollowing(
+          userProvider.userId, displayedUser.userId);
+    }
+
     return Stack(
       children: [
         ListView(
@@ -79,10 +162,13 @@ class _AccountPageState extends State<AccountPage> {
               displayedUser,
               scheduleCount,
               reviewCount,
+              postCount,
               followerCount,
               followingCount,
             ),
             const SizedBox(height: 16),
+            if (!isCurrentUser)
+              _buildFollowButton(isFollowing, followUsersProvider, userProvider),
             if (isCurrentUser) ...[
               _buildPersonInfoSection(),
               const SizedBox(height: 12),
@@ -91,6 +177,9 @@ class _AccountPageState extends State<AccountPage> {
               _buildContactSection(),
               const SizedBox(height: 12),
               _buildFAQSection(),
+              const SizedBox(height: 12),
+              _buildUserPreference(),
+              const SizedBox(height: 36),
             ],
           ],
         ),
@@ -106,9 +195,52 @@ class _AccountPageState extends State<AccountPage> {
     );
   }
 
+  // Add this method inside _AccountPageState
+  Widget _buildFollowButton(bool isFollowing,
+      FollowUsersProvider followUsersProvider, UserProvider userProvider) {
+    return Center(
+      child: ElevatedButton(
+        onPressed: () {
+          if (isFollowing) {
+            followUsersProvider.removeFollowUser(
+                userProvider.userId, displayedUser.userId);
+          } else {
+            followUsersProvider.addFollowUser(FollowUser(
+              id: followUsersProvider.followUsers.length + 1,
+              userId: userProvider.userId,
+              userFollow: displayedUser.userId,
+              dateCreated: DateTime.now(),
+            ));
+          }
+
+          // Update follower and following counts after following/unfollowing
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            setState(() {
+              followerCount = FollowUser.countFollowers(
+                  displayedUser.userId, followUsersProvider.followUsers);
+              followingCount = FollowUser.countFollowing(
+                  displayedUser.userId, followUsersProvider.followUsers);
+            });
+          });
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isFollowing ? Colors.red : Colors.blue,
+        ),
+        child: Text(isFollowing ? "Unfollow" : "Follow"),
+      ),
+    );
+  }
+
   // Build Profile Section
   Widget _buildProfileSection(User user, int scheduleCount, int reviewCount,
-      int followerCount, int followingCount) {
+      int postCount, int followerCount, int followingCount) {
+    final scheduleProvider = Provider.of<ScheduleProvider>(context);
+    final List<Schedule> allSchedules = scheduleProvider.schedules;
+    final List<Schedule> userSchedules = allSchedules
+        .where((schedule) => schedule.userId == displayedUser.userId)
+        .toList();
+    final postProvider = Provider.of<PostProvider>(context);
+    final List<Post> userPosts = postProvider.getPostsByUserId(displayedUser.userId);
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -167,6 +299,10 @@ class _AccountPageState extends State<AccountPage> {
                       style: const TextStyle(fontSize: 14),
                     ),
                     Text(
+                      '$postCount posts created',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    Text(
                       '$reviewCount reviews',
                       style: const TextStyle(fontSize: 14),
                     ),
@@ -197,7 +333,13 @@ class _AccountPageState extends State<AccountPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ViewProfilePage(userId: displayedUser.userId),
+                    builder: (context) => ViewProfilePage(
+                      userId: displayedUser.userId,
+                      schedules: userSchedules,
+                      posts: userPosts,
+                      user: displayedUser,
+                      followUsers: widget.followUsers,
+                    ),
                   ),
                 );
               },
@@ -310,7 +452,8 @@ class _AccountPageState extends State<AccountPage> {
         child: ListTile(
           leading: const Icon(Icons.contact_mail),
           title: const Text('Contact Us'),
-          subtitle: const Text('Reach out with support requests or feedback'),
+          subtitle:
+          const Text('Reach out with support requests or feedback'),
           onTap: _sendEmail,
         ));
   }
@@ -390,6 +533,39 @@ class _AccountPageState extends State<AccountPage> {
               leading: Icon(Icons.question_answer),
               title: Text('FAQ'),
               subtitle: Text('Find answers to frequently asked questions'),
+            )));
+  }
+
+  Widget _buildUserPreference(){
+    return InkWell(
+        onTap: () {
+          // Navigate to FAQ Page when tapped
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const UserPreferencePage(),
+            ),
+          );
+        },
+        child: Container(
+            padding: const EdgeInsets.all(4.0),
+            decoration: BoxDecoration(
+              border: Border.all(width: 1),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.5),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: const ListTile(
+              leading: Icon(Icons.question_answer),
+              title: Text('Your Preference'),
+              subtitle: Text('Add or update your preference here'),
             )));
   }
 }

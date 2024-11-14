@@ -7,31 +7,25 @@ class ReportForm extends StatefulWidget {
 
   // Static method to display the ReportForm dialog
   static void show(BuildContext context, String message) {
-    showGeneralDialog(
+    showDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel:
-      MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 200),
-      pageBuilder: (BuildContext buildContext, Animation animation,
-          Animation secondaryAnimation) {
-        return Center(
-          child: Material(
-            type: MaterialType.transparency,
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.9,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30.0),
-                border: Border.all(
-                  color: Colors.black,
-                  width: 2.0,
-                ),
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30.0),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white, // Set the desired background color
+              borderRadius: BorderRadius.circular(30.0),
+              border: Border.all(
+                color: Colors.black,
+                width: 2.0,
               ),
-              child: ReportForm(message: message),
             ),
+            padding: const EdgeInsets.all(20),
+            child: ReportForm(message: message),
           ),
         );
       },

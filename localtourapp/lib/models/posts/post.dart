@@ -12,7 +12,7 @@ class Post {
   String title;
   DateTime createdAt;
   DateTime updatedAt;
-  String content;
+  String? content;
   bool isPublic;
 
   Post({
@@ -34,8 +34,8 @@ class Post {
     placeId: json['PlaceId'] != null ? json['PlaceId'] as int : null,
     scheduleId: json['ScheduleId'] != null ? json['ScheduleId'] as int : null,
     title: json['Title'] as String,
-    createdAt: DateTime.parse(json['createdAt'] as String),
-    updatedAt: DateTime.parse(json['updatedAt'] as String),
+    createdAt: DateTime.parse(json['CreatedDate'] as String),
+    updatedAt: DateTime.parse(json['UpdateDate'] as String),
     content: json['Content'] as String,
     isPublic: json['Public'] as bool,
   );
@@ -47,8 +47,8 @@ class Post {
     'PlaceId': placeId,
     'ScheduleId': scheduleId,
     'Title': title,
-    'createdAt': createdAt.toIso8601String(),
-    'updatedAt': updatedAt.toIso8601String(),
+    'CreatedAt': createdAt.toIso8601String(),
+    'UpdateAt': updatedAt.toIso8601String(),
     'Content': content,
     'Public': isPublic,
   };
@@ -71,12 +71,23 @@ List<Post> generateDummyPosts(int count, List<User> users, List<Place> places, L
       title: 'Post Title ${index + 1}',
       createdAt: DateTime.now().subtract(Duration(days: random.nextInt(365))),
       updatedAt: DateTime.now().subtract(Duration(days: random.nextInt(100))),
-      content: 'This is a sample content for post ${index + 1}.',
+      content: 'This is a sample content for postThis is a sample content for postThis is a sample content for post'
+          'This is a sample content for postThis is a sample content for postThis is a sample content for post'
+          'This is a sample content for postThis is a sample content for postThis is a sample content for post'
+          'This is a sample content for postThis is a sample content for postThis is a sample content for post'
+          'This is a sample content for postThis is a sample content for postThis is a sample content for post'
+          'This is a sample content for postThis is a sample content for postThis is a sample content for post'
+          'This is a sample content for postThis is a sample content for postThis is a sample content for post'
+          'This is a sample content for postThis is a sample content for postThis is a sample content for post'
+          'This is a sample content for postThis is a sample content for postThis is a sample content for post'
+          'This is a sample content for postThis is a sample content for postThis is a sample content for post'
+          'This is a sample content for postThis is a sample content for postThis is a sample content for post'
+          'This is a sample content for postThis is a sample content for postThis is a sample content for post'
+          'This is a sample content for postThis is a sample content for postThis is a sample content for post ${index + 1}.',
       isPublic: random.nextBool(),
     );
   });
 }
 
 // Generate 100 dummy posts using existing users, places, and schedules
-List<Post> dummyPosts = generateDummyPosts(50, fakeUsers, dummyPlaces, dummySchedules);
-
+List<Post> dummyPosts = generateDummyPosts(20, fakeUsers, dummyPlaces, dummySchedules);

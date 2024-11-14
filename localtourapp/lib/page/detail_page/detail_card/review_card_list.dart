@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/users/followuser.dart';
 import '../../../models/places/placefeedback.dart';
 import '../../../models/places/placefeedbackhelpful.dart';
 import '../../../models/places/placefeedbackmedia.dart';
@@ -10,15 +11,16 @@ class ReviewCardList extends StatelessWidget {
   final Function(int feedbackId, bool isFavorited) onFavoriteToggle;
   final List<PlaceFeedback> feedbacks;
   final List<User> users;
+  final List<FollowUser> followUsers;
   final List<PlaceFeedbackMedia> feedbackMediaList;
-  final List<PlaceFeedbackHelpful> feedbackHelpfuls; // Add this line
+  final List<PlaceFeedbackHelpful> feedbackHelpfuls;
   final String userId;
-  final int? limit; // Optional limit on the number of reviews to display
-  final VoidCallback? onSeeAll; // Callback for "See All" button
+  final int? limit;
+  final VoidCallback? onSeeAll;
   final Function(PlaceFeedback feedback)? onUpdate;
   final Function(PlaceFeedback feedback)? onDelete;
   final Function(PlaceFeedback feedback)? onReport;
-  final bool showUpdateDeleteForCurrentUser; // New parameter
+  final bool showUpdateDeleteForCurrentUser;
 
   const ReviewCardList({
     Key? key,
@@ -28,7 +30,8 @@ class ReviewCardList extends StatelessWidget {
     required this.users,
     required this.feedbackMediaList,
     required this.userId,
-    required this.feedbackHelpfuls, // Add this line to constructor
+    required this.feedbackHelpfuls,
+    required this.followUsers,
     this.limit,
     this.onSeeAll,
     this.onUpdate,
@@ -72,19 +75,14 @@ class ReviewCardList extends StatelessWidget {
             user: user,
             feedback: feedback,
             feedbackMediaList: mediaList,
-            feedbackHelpfuls: relevantHelpfuls, // Pass relevant helpfuls
+
+            feedbackHelpfuls: relevantHelpfuls,
             userId: userId,
-            onUpdate: (isCurrentUser && showUpdateDeleteForCurrentUser)
-                ? () => onUpdate?.call(feedback)
-                : null,
-            onDelete: (isCurrentUser && showUpdateDeleteForCurrentUser)
-                ? () => onDelete?.call(feedback)
-                : null,
             onReport: !isCurrentUser
                 ? () => onReport?.call(feedback)
                 : null,
             favoritedFeedbackIds: favoritedFeedbackIds,
-            onFavoriteToggle: onFavoriteToggle,
+            onFavoriteToggle: onFavoriteToggle, followUsers: followUsers,
           );
         }).toList(),
         if (onSeeAll != null && limit != null && feedbacks.length > limit!)

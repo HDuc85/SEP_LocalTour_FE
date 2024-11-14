@@ -185,9 +185,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                   child: Column(
                     children: [
                       // Full Name
-                      Align(
+                      const Align(
                         alignment: Alignment.centerLeft,
-                        child: const Text(
+                        child: Text(
                           'Full Name',
                           style: TextStyle(
                               fontSize: 16,
@@ -211,9 +211,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 16),
 
                       // Password
-                      Align(
+                      const Align(
                         alignment: Alignment.centerLeft,
-                        child: const Text(
+                        child: Text(
                           'Password',
                           style: TextStyle(
                               fontSize: 16,
@@ -255,9 +255,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 16),
 
                       // Email
-                      Align(
+                      const Align(
                         alignment: Alignment.centerLeft,
-                        child: const Text(
+                        child: Text(
                           'Email',
                           style: TextStyle(
                               fontSize: 16,
@@ -288,9 +288,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 16),
 
                       // Date of Birth
-                      Align(
+                      const Align(
                         alignment: Alignment.centerLeft,
-                        child: const Text(
+                        child: Text(
                           'Date of Birth',
                           style: TextStyle(
                               fontSize: 16,
@@ -319,9 +319,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 16),
 
                       // Phone Number
-                      Align(
+                      const Align(
                         alignment: Alignment.centerLeft,
-                        child: const Text(
+                        child: Text(
                           'Phone Number',
                           style: TextStyle(
                               fontSize: 16,
@@ -383,9 +383,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                   child: Column(
                     children: [
                       // Gender
-                      Align(
+                      const Align(
                         alignment: Alignment.centerLeft,
-                        child: const Text(
+                        child: Text(
                           'Gender',
                           style: TextStyle(
                               fontSize: 16,
@@ -420,9 +420,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 16),
 
                       // Address
-                      Align(
+                      const Align(
                         alignment: Alignment.centerLeft,
-                        child: const Text(
+                        child: Text(
                           'Address',
                           style: TextStyle(
                               fontSize: 16,
@@ -446,9 +446,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 16),
 
                       // Nickname
-                      Align(
+                      const Align(
                         alignment: Alignment.centerLeft,
-                        child: const Text(
+                        child: Text(
                           'Nickname',
                           style: TextStyle(
                               fontSize: 16,

@@ -76,5 +76,5 @@ List<PlaceFeedbackMedia> generatePlaceFeedbackMedias(int count, List<PlaceFeedba
 
 }
 
-  List<PlaceFeedbackMedia> feedbackMediaList = generatePlaceFeedbackMedias(200, feedbacks);
+  List<PlaceFeedbackMedia> feedbackMediaList = generatePlaceFeedbackMedias(200, dummyFeedbacks);
 

@@ -1,13 +1,12 @@
 // lib/bookmark_page.dart
 
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/base/place_card_info.dart';
 import 'package:localtourapp/models/places/placemedia.dart';
 import 'package:localtourapp/page/account/user_provider.dart';
-import 'package:localtourapp/page/bookmark/bookmark_manager.dart';
+import 'package:localtourapp/page/bookmark/bookmark_provider.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart'; // Import for firstWhereOrNull
@@ -149,9 +148,9 @@ class _BookmarkPageState extends State<BookmarkPage> {
     if (userId.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
-    return Consumer<BookmarkManager>(
-      builder: (context, bookmarkManager, child) {
-        final List<int> bookmarkedPlaceIds = bookmarkManager.bookmarkedPlaceIds;
+    return Consumer<BookmarkProvider>(
+      builder: (context, bookmarkProvider, child) {
+        final List<int> bookmarkedPlaceIds = bookmarkProvider.bookmarkedPlaceIds;
 
         if (bookmarkedPlaceIds.isEmpty) {
           return const Center(
@@ -174,7 +173,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                 int placeId = bookmarkedPlaceIds[index];
                 // Access MarkPlace associated with the placeId via the instance
                 MarkPlace? markPlace =
-                bookmarkManager.markPlaces.firstWhereOrNull(
+                bookmarkProvider.markPlaces.firstWhereOrNull(
                       (mp) => mp.placeId == placeId,
                 );
 
@@ -308,7 +307,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                               color: Colors.red,
                             ),
                             onPressed: () {
-                              bookmarkManager
+                              bookmarkProvider
                                   .removeBookmark(place.placeId);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -328,7 +327,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                               Checkbox(
                                 value: markPlace.isVisited,
                                 onChanged: (bool? value) {
-                                  bookmarkManager
+                                  bookmarkProvider
                                       .toggleVisited(place.placeId);
                                 },
                               ),
@@ -393,6 +392,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
       context,
       MaterialPageRoute(
         builder: (_) => DetailPage(
+          languageCode: 'en',
           userId: userId, // Replace with actual userId
           placeName: selectedTranslation?.placeName ?? 'Unknown Place',
           placeId: selectedPlace!.placeId,

@@ -22,11 +22,13 @@ import 'tags_modal.dart'; // Ensure correct path
 class SearchPage extends StatefulWidget {
   final FilterOption initialFilter;
   final List<int> initialTags;
+  final Function(Place)? onPlaceSelected;
 
   const SearchPage({
     Key? key,
     this.initialFilter = FilterOption.none,
     this.initialTags = const [],
+    this.onPlaceSelected,
   }) : super(key: key);
 
   @override
@@ -101,30 +103,20 @@ class _SearchPageState extends State<SearchPage> {
 
   void _generateCardInfoList() {
     if (_currentPosition == null) {
-      return; // Can't calculate distance without position.
+      return;
     }
 
-    cardInfoList = dummyPlaces.map((place) {
-      // Fetch translation
+    cardInfoList = dummyPlaces
+        .where((place) => dummyTranslations.any((trans) => trans.placeId == place.placeId))
+        .map((place) {
       PlaceTranslation translation = dummyTranslations.firstWhere(
-        (trans) => trans.placeId == place.placeId,
-        orElse: () => PlaceTranslation(
-          placeTranslationId: 0,
-          placeId: place.placeId,
-          languageCode: 'en',
-          placeName: 'Unknown Place',
-          address: '',
-        ),
+            (trans) => trans.placeId == place.placeId,
       );
 
-      // Fetch score
       double score = PlaceScoreManager.instance.getScore(place.placeId);
+      double distance = calculateDistance(
+          _currentPosition!.latitude, _currentPosition!.longitude, place.latitude, place.longitude);
 
-      // Calculate distance
-      double distance = calculateDistance(_currentPosition!.latitude,
-          _currentPosition!.longitude, place.latitude, place.longitude);
-
-      // Fetch associated tagIds from placeTags
       List<int> associatedTagIds = placeTags
           .where((pt) => pt.placeId == place.placeId)
           .map((pt) => pt.tagId)
@@ -135,10 +127,10 @@ class _SearchPageState extends State<SearchPage> {
         placeName: translation.placeName,
         wardId: place.wardId,
         photoDisplay: place.photoDisplay,
-        iconUrl: 'assets/icons/logo.png', // Or use place.iconUrl if available
+        iconUrl: 'assets/icons/logo.png',
         score: score,
-        distance: distance, // Assign the fetched distance
-        tagIds: associatedTagIds, // Assign the fetched tagIds
+        distance: distance,
+        tagIds: associatedTagIds,
       );
     }).toList();
 
@@ -412,38 +404,38 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _navigateToDetail(int placeId) {
-    // Fetch necessary data based on placeId if needed
     Place? selectedPlace = placeList.firstWhereOrNull((place) => place.placeId == placeId);
 
-    if (selectedPlace == null) {
+    if (selectedPlace != null) {
+      if (widget.onPlaceSelected != null) {
+        widget.onPlaceSelected!(selectedPlace);
+        Navigator.pop(context);
+      } else {
+        PlaceTranslation? selectedTranslation = dummyTranslations.firstWhereOrNull(
+              (trans) => trans.placeId == selectedPlace.placeId,
+        );
+
+        List<PlaceMedia> filteredMediaList = mediaList
+            .where((media) => media.placeId == selectedPlace.placeId)
+            .toList();
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => DetailPage(
+              userId: userId,
+              placeName: selectedTranslation?.placeName ?? 'Unknown Place',
+              placeId: selectedPlace.placeId,
+              mediaList: filteredMediaList,
+              languageCode: 'en',
+            ),
+          ),
+        );
+      }
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Place not found')),
       );
-      return;
     }
-
-    // Fetch translation
-    PlaceTranslation? selectedTranslation = dummyTranslations.firstWhereOrNull(
-          (trans) => trans.placeId == selectedPlace.placeId,
-    );
-
-    // Fetch media list
-    List<PlaceMedia> filteredMediaList = mediaList
-        .where((media) => media.placeId == selectedPlace.placeId)
-        .toList();
-
-    // Navigate to DetailPage
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DetailPage(
-          userId: userId, // Replace with actual userId
-          placeName: selectedTranslation?.placeName ?? 'Unknown Place',
-          placeId: selectedPlace.placeId,
-          mediaList: filteredMediaList,
-        ),
-      ),
-    );
   }
-
 }

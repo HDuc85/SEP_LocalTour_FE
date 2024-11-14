@@ -8,7 +8,7 @@ class Schedule {
   String scheduleName;
   DateTime? startDate;
   DateTime? endDate;
-  final DateTime createdDate;
+  final DateTime createdAt;
   bool isPublic;
 
   Schedule({
@@ -17,7 +17,7 @@ class Schedule {
     required this.scheduleName,
     this.startDate,
     this.endDate,
-    required this.createdDate,
+    required this.createdAt,
     this.isPublic = false,
   });
 
@@ -29,7 +29,7 @@ class Schedule {
       'scheduleName': scheduleName,
       'startDate': startDate?.toIso8601String(),
       'endDate': endDate?.toIso8601String(),
-      'createdDate': createdDate.toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
       'isPublic': isPublic,
     };
   }
@@ -46,7 +46,7 @@ List<Schedule> generateFakeSchedules(int count, List<User> users) {
       scheduleName: 'Schedule ${index + 1}',
       startDate: DateTime.now().add(Duration(days: random.nextInt(30))),
       endDate: DateTime.now().add(Duration(days: random.nextInt(60) + 30)),
-      createdDate: DateTime.now().subtract(Duration(days: random.nextInt(30))),
+      createdAt: DateTime.now().subtract(Duration(days: random.nextInt(30))),
       isPublic: random.nextBool(),
     );
   });

@@ -6,8 +6,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:localtourapp/base/base_page.dart';
 import 'package:localtourapp/base/const.dart';
-import 'package:localtourapp/base/destination_provider.dart';
-import 'package:localtourapp/base/schedule_destination_manager.dart';
+import 'package:localtourapp/base/follow_users_provider.dart';
 import 'package:localtourapp/base/schedule_provider.dart';
 import 'package:localtourapp/generated/l10n.dart';
 import 'package:localtourapp/models/places/place.dart';
@@ -24,10 +23,12 @@ import 'package:localtourapp/models/users/followuser.dart';
 import 'package:localtourapp/models/users/users.dart';
 import 'package:localtourapp/page/account/account_page.dart';
 import 'package:localtourapp/page/account/language_provider.dart';
+import 'package:localtourapp/page/account/review_provider.dart';
 import 'package:localtourapp/page/account/user_provider.dart';
 import 'package:localtourapp/page/account/users_provider.dart';
+import 'package:localtourapp/page/account/view_profile/auth_provider.dart';
 import 'package:localtourapp/page/account/view_profile/post_provider.dart';
-import 'package:localtourapp/page/bookmark/bookmark_manager.dart';
+import 'package:localtourapp/page/bookmark/bookmark_provider.dart';
 import 'package:localtourapp/page/bookmark/bookmark_page.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provider.dart';
@@ -35,10 +36,13 @@ import 'package:localtourapp/page/home_screen/home_screen.dart';
 import 'package:localtourapp/page/my_map/map_page.dart';
 import 'package:localtourapp/page/planned_page/planned_page.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/history_tab_bar.dart';
+import 'package:localtourapp/provider/favorited_feedback_provider.dart';
 import 'package:localtourapp/weather/providers/weather_provider.dart';
 import 'package:localtourapp/weather/weather_page.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+
+import 'models/places/placefeedback.dart';
 
 // Import your models and other dependencies as needed
 
@@ -48,9 +52,9 @@ void main() async {
   // Initialize Hive
   await Hive.initFlutter();
 
-  // Create an instance of BookmarkManager and load bookmarks
-  BookmarkManager bookmarkManager = BookmarkManager();
-  await bookmarkManager.loadBookmarks();
+  // Create an instance of bookmarkProvider and load bookmarks
+  BookmarkProvider bookmarkProvider = BookmarkProvider();
+  await bookmarkProvider.loadBookmarks();
 
   // Generate fake users
   User myUser = fakeUsers.firstWhere(
@@ -61,22 +65,26 @@ void main() async {
     MultiProvider(
       providers: [
         // Add LanguageProvider here
+        ChangeNotifierProvider(create: (_) => ReviewProvider(placeFeedbacks: dummyFeedbacks)),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
-        ChangeNotifierProvider(create: (_) => bookmarkManager),
+        ChangeNotifierProvider(create: (_) => bookmarkProvider),
         ChangeNotifierProvider(create: (_) => WeatherProvider()),
-        ChangeNotifierProvider(
-            create: (_) => UserProvider(initialUser: myUser)),
+        ChangeNotifierProvider(create: (_) => UserProvider(initialUser: myUser)),
         ChangeNotifierProvider(create: (_) => UsersProvider(fakeUsers)),
         ChangeNotifierProvider(create: (_) => CountProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => FavoritedFeedbackProvider()),
+        ChangeNotifierProvider(
+            create: (_) =>
+                FollowUsersProvider(initialFollowUsers: dummyFollowUsers)),
         ChangeNotifierProvider(
             create: (_) => ScheduleProvider(
+                  places: dummyPlaces,
+                  translations: dummyTranslations,
                   schedules: dummySchedules,
                   scheduleLikes: dummyScheduleLikes,
                   destinations: dummyDestinations,
-                  places: dummyPlaces,
-                  translations: dummyTranslations,
                 )),
-        ChangeNotifierProvider(create: (_) => DestinationProvider()),
         ChangeNotifierProvider(
             create: (_) => PostProvider(
                   posts: dummyPosts,
@@ -85,14 +93,6 @@ void main() async {
                   commentLikes: dummyPostCommentLikes,
                   media: dummyPostMedia,
                 )),
-        ProxyProvider2<ScheduleProvider, DestinationProvider,
-            ScheduleDestinationManager>(
-          update: (_, scheduleProvider, destinationProvider, __) =>
-              ScheduleDestinationManager(
-            scheduleProvider: scheduleProvider,
-            destinationProvider: destinationProvider,
-          ),
-        ),
       ],
       child: MyApp(myUser: myUser),
     ),
@@ -129,8 +129,10 @@ class _MyAppState extends State<MyApp> {
         users: Provider.of<UsersProvider>(context, listen: false).users,
       ),
       AccountPage(
-          user: widget.myUser,
-          followUsers: dummyFollowUsers), // Ensure dummyFollowUsers is defined
+        user: widget.myUser,
+        followUsers: dummyFollowUsers,
+        isCurrentUser: true,
+      ), // Ensure dummyFollowUsers is defined
     ];
 
     titles = [
@@ -195,10 +197,13 @@ class _MyAppState extends State<MyApp> {
           return MaterialPageRoute(
             builder: (context) {
               return DetailPage(
-                placeName: args['placeName'],
-                placeId: args['placeId'],
-                mediaList: args['mediaList'],
-                userId: args['userId'],
+                languageCode: args['languageCode'],
+                placeName: args['placeName'] ??
+                    'Unknown Place', // Provide a default name
+                placeId: args['placeId'] ?? -1, // Provide a default ID, if null
+                mediaList:
+                    args['mediaList'] ?? [], // Default to an empty list if null
+                userId: args['userId'] ?? 'unknown-user', // Default userId
               );
             },
           );
@@ -208,16 +213,18 @@ class _MyAppState extends State<MyApp> {
           // If no userId is passed, default to current user's account
           final userId = args != null && args.containsKey('userId')
               ? args['userId'] as String
-              : null;
-          final selectedUser = userId != null
-              ? Provider.of<UsersProvider>(context, listen: false)
-                      .getUserById(userId) ??
-                  widget.myUser
-              : widget.myUser;
-
+              : widget.myUser.userId;
+          final User selectedUser;
+          selectedUser = Provider.of<UsersProvider>(context, listen: false)
+                  .getUserById(userId) ??
+              widget.myUser;
+          final isCurrentUser = userId == widget.myUser.userId;
           return MaterialPageRoute(
-            builder: (context) =>
-                AccountPage(user: selectedUser, followUsers: dummyFollowUsers),
+            builder: (context) => AccountPage(
+              user: selectedUser,
+              followUsers: dummyFollowUsers,
+              isCurrentUser: isCurrentUser,
+            ),
           );
         }
         // Handle other routes...

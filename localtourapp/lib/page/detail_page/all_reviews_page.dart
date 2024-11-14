@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
+import 'package:localtourapp/models/users/followuser.dart';
 import '../../../../models/places/placefeedback.dart';
 import '../../../models/places/placefeedbackmedia.dart';
 import '../../models/users/users.dart';
@@ -12,6 +13,7 @@ class AllReviewsPage extends StatefulWidget {
   final List<int> favoritedFeedbackIds;
   final List<PlaceFeedback> feedbacks;
   final List<User> users;
+  final List<FollowUser> followUsers;
   final List<PlaceFeedbackMedia> feedbackMediaList;
   final List<PlaceFeedbackHelpful> feedbackHelpfuls;
   final String userId;
@@ -27,6 +29,7 @@ class AllReviewsPage extends StatefulWidget {
     required this.placeId,
     required this.feedbackHelpfuls,
     required this.userId,
+    required this.followUsers,
     required this.totalReviews,
   }) : super(key: key);
 
@@ -382,7 +385,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
                             context,
                             'Have a problem with this person? Report them to us!',
                           );
-                        },
+                        }, followUsers: widget.followUsers,
                       );
                     }).toList(),
                   ),

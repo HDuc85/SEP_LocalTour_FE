@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:localtourapp/base/follow_users_provider.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
+import 'package:localtourapp/page/account/user_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../models/users/users.dart';
 import '../detail_card/review_card_list.dart';
@@ -68,7 +70,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
   void addOrUpdateReview(
       int rating, String content, List<File> images, List<File> videos) {
     final existingFeedbackIndex = placeFeedbacks.indexWhere(
-      (feedback) => feedback.userId == widget.userId,
+          (feedback) => feedback.userId == widget.userId,
     );
 
     final feedback = PlaceFeedback(
@@ -165,7 +167,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
 
   User getUserDetails(String userId) {
     return widget.users.firstWhere(
-      (user) => user.userId == userId,
+          (user) => user.userId == userId,
       orElse: () => User(
         userId: 'default',
         userName: 'Unknown User',
@@ -196,14 +198,14 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
 
   @override
   Widget build(BuildContext context) {
+    final followUsersProvider = Provider.of<FollowUsersProvider>(context);
     final int totalReviews = placeFeedbacks.length;
     final bool userHasReviewed = hasUserReviewed();
-    final int totalReviewers = placeFeedbacks.length;
     final double score = calculateScore(placeFeedbacks);
 
     // Get current user's review
     PlaceFeedback? currentUserReview = placeFeedbacks.firstWhereOrNull(
-      (feedback) => feedback.userId == widget.userId,
+          (feedback) => feedback.userId == widget.userId,
     );
 
     // Get other users' reviews
@@ -254,7 +256,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                               userId: widget.userId,
                               favoritedFeedbackIds: favoritedFeedbackIds,
                               totalReviews: totalReviews,
-                              feedbackHelpfuls: feedbackHelpfuls,
+                              feedbackHelpfuls: feedbackHelpfuls, followUsers: followUsersProvider.followUsers,
                             ),
                           ),
                         );
@@ -329,14 +331,14 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                   feedback: currentUserReview,
                   feedbackMediaList: feedbackMediaList
                       .where((media) =>
-                          media.feedbackId == currentUserReview.placeFeedbackId)
+                  media.feedbackId == currentUserReview.placeFeedbackId)
                       .toList(),
                   favoritedFeedbackIds: favoritedFeedbackIds,
                   onFavoriteToggle: _handleFavoriteToggle,
                   feedbackHelpfuls: feedbackHelpfuls
                       .where((helpful) =>
-                          helpful.placeFeedbackId ==
-                          currentUserReview.placeFeedbackId)
+                  helpful.placeFeedbackId ==
+                      currentUserReview.placeFeedbackId)
                       .toList(),
                   onUpdate: () {
                     final parentContext = context;
@@ -393,10 +395,12 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                       MaterialPageRoute(
                         builder: (context) => const ReportForm(
                             message:
-                                'Have a problem with this person, please report them to us.'),
+                            'Have a problem with this person, please report them to us.'),
                       ),
                     );
                   },
+                  followUsers: followUsersProvider.getFollowers(currentUserReview.userId),
+                  isInAllProductPage: false,
                 ),
               ReviewCardList(
                 feedbacks: otherUserReviews,
@@ -419,7 +423,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                         userId: widget.userId,
                         feedbackHelpfuls: feedbackHelpfuls,
                         favoritedFeedbackIds: favoritedFeedbackIds,
-                        totalReviews: totalReviews,
+                        totalReviews: totalReviews, followUsers: followUsersProvider.followUsers,
                       ),
                     ),
                   );
@@ -429,7 +433,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                     context,
                     'Have a problem with this person? Report them to us!',
                   );
-                },
+                }, followUsers: [],
               ),
             ],
           ),

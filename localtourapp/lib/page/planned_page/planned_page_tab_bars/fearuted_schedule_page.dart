@@ -254,7 +254,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                 ),
                               ),
                               Text(
-                                  "Created date: ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}"),
+                                  "Created date: ${DateFormat('yyyy-MM-dd').format(schedule.createdAt)}"),
                               Row(
                                 children: [
                                   Flexible(
@@ -329,7 +329,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                                   scheduleName: schedule.scheduleName,
                                                   startDate: schedule.startDate,
                                                   endDate: schedule.endDate,
-                                                  createdDate: DateTime.now(),
+                                                  createdAt: DateTime.now(),
                                                   isPublic: false,
                                                 );
 

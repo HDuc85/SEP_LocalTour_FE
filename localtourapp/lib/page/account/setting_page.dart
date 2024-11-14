@@ -24,13 +24,6 @@ class _SettingPageState extends State<SettingPage> {
     final languageProvider = Provider.of<LanguageProvider>(context);
     String currentLanguageCode = languageProvider.currentLocale.languageCode;
 
-    // Find the current language name based on the code
-    String currentLanguageName = _languages
-        .firstWhere(
-            (lang) => lang['code'] == currentLanguageCode,
-        orElse: () => _languages[0])['name'] ??
-        'English';
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'), // Consider localizing this string

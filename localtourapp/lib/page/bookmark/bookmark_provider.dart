@@ -6,7 +6,7 @@ import 'dart:convert';
 import '../../models/places/markplace.dart';
 
 
-class BookmarkManager extends ChangeNotifier {
+class BookmarkProvider extends ChangeNotifier {
   final Set<int> _bookmarkedPlaces = {};
   final List<MarkPlace> _markPlaces = [];
 

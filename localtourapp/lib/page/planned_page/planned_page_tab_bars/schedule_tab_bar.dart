@@ -1,4 +1,3 @@
-
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart'; // Needed for TapGestureRecognizer
@@ -13,10 +12,10 @@ import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provider.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/add_schedule_dialog.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/fearuted_schedule_page.dart';
+import 'package:localtourapp/page/planned_page/planned_page_tab_bars/suggest_schedule_page.dart';
 import 'package:localtourapp/page/search_page/search_page.dart';
 import 'package:provider/provider.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
-import 'package:localtourapp/base/schedule_destination_manager.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
 import '../../../models/schedule/schedule.dart';
 import '../../../models/schedule/destination.dart';
@@ -32,6 +31,7 @@ class ScheduleTabbar extends StatefulWidget {
   final List<User> users;
   final List<Place> places; // Added
   final List<PlaceTranslation> translations; // Added
+  final bool isCurrentUser;
 
   const ScheduleTabbar({
     Key? key,
@@ -43,13 +43,18 @@ class ScheduleTabbar extends StatefulWidget {
     required this.users,
     required this.places, // Initialize
     required this.translations, // Initialize
+    this.isCurrentUser = true,
   }) : super(key: key);
 
   @override
   State<ScheduleTabbar> createState() => _ScheduleTabbarState();
 }
 
-class _ScheduleTabbarState extends State<ScheduleTabbar> {
+class _ScheduleTabbarState extends State<ScheduleTabbar>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   List<Place> placeList = dummyPlaces;
   late String userId;
   final ScrollController _scrollController = ScrollController();
@@ -64,7 +69,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _detailController = TextEditingController();
   Map<int, bool> scheduleVisibility = {};
-  final Set<int> favoritedScheduleIds = {};
   final Set<int> _editingScheduleIds = {};
 
   @override
@@ -72,15 +76,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
     super.initState();
     _scrollController.addListener(_scrollListener);
     _nameFocusNode.addListener(_onNameFieldFocusChange);
-    _initializeFavoriteSchedules();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Initialize visibility based on passed schedules
-      for (var schedule in widget.schedules) {
-        scheduleVisibility[schedule.id] = true;
-      }
-      Provider.of<CountProvider>(context, listen: false)
-          .setScheduleCount(widget.schedules.length);
-    });
   }
 
   @override
@@ -137,21 +132,13 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
           scheduleName: _nameController.text,
           startDate: schedule.startDate,
           endDate: schedule.endDate,
-          createdDate: schedule.createdDate,
+          createdAt: schedule.createdAt,
           isPublic: schedule.isPublic,
         );
         scheduleProvider.updateSchedule(updatedSchedule);
         setState(() {
           _editingScheduleIds.remove(scheduleId);
         });
-      }
-    }
-  }
-
-  void _initializeFavoriteSchedules() {
-    for (var like in widget.scheduleLikes) {
-      if (like.userId == widget.userId) {
-        favoritedScheduleIds.add(like.scheduleId);
       }
     }
   }
@@ -170,6 +157,25 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
           _nameFocusNode.requestFocus();
         }
       }
+    });
+  }
+
+  void _toggleFavorite(int scheduleId) {
+    final scheduleProvider =
+        Provider.of<ScheduleProvider>(context, listen: false);
+
+    bool isCurrentlyFavorited = scheduleProvider.scheduleLikes.any(
+      (like) => like.scheduleId == scheduleId && like.userId == widget.userId,
+    );
+
+    // Invoke the callback to update the provider
+    widget.onFavoriteToggle(scheduleId, !isCurrentlyFavorited);
+  }
+
+  void _toggleVisibility(int scheduleId) {
+    setState(() {
+      scheduleVisibility[scheduleId] =
+          !(scheduleVisibility[scheduleId] ?? true);
     });
   }
 
@@ -219,22 +225,21 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
 
   List<Schedule> getFilteredSchedules() {
     String searchText = searchController.text.toLowerCase();
-    final filtered = widget.schedules.where((schedule) {
+
+    return widget.schedules.where((schedule) {
       final matchesName =
           schedule.scheduleName.toLowerCase().contains(searchText);
-      final matchesDate = (_fromDate == null ||
-              (schedule.startDate != null &&
-                  schedule.startDate!.isAfter(_fromDate!))) &&
-          (_toDate == null ||
-              (schedule.endDate != null &&
-                  schedule.endDate!.isBefore(_toDate!)));
+      final matchesDate =
+          (_fromDate == null || schedule.createdAt.isAfter(_fromDate!)) &&
+              (_toDate == null || schedule.createdAt.isBefore(_toDate!));
+
       return matchesName && matchesDate;
     }).toList();
-    return filtered;
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     userId = Provider.of<UserProvider>(context).userId;
 
     if (userId.isEmpty) {
@@ -242,8 +247,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
     }
     final List<Schedule> filteredSchedules = getFilteredSchedules();
     // Fetch all schedules from ScheduleProvider
-    final List<Schedule> allSchedules =
-        Provider.of<ScheduleProvider>(context, listen: false).schedules;
+    final bool isCurrentUser = widget.isCurrentUser;
     return Stack(
       children: [
         GestureDetector(
@@ -261,8 +265,10 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
                   children: [
                     _buildFilterSection(),
                     const SizedBox(height: 20),
-                    _buildButtonsSection(),
-                    const SizedBox(height: 25),
+                    if (isCurrentUser) ...[
+                      _buildButtonsSection(), // Only show buttons for current user
+                      const SizedBox(height: 25),
+                    ],
                     _buildScheduleSection(filteredSchedules),
                     const SizedBox(height: 100),
                   ],
@@ -299,9 +305,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
   Widget _buildFilterSection() {
     return Column(
       children: [
-        const SizedBox(
-          height: 10,
-        ),
+        const SizedBox(height: 10),
         SizedBox(
           height: 40,
           width: 250,
@@ -313,7 +317,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
               border: OutlineInputBorder(),
             ),
             onChanged: (value) {
-              setState(() {});
+              setState(() {}); // Trigger filtering as user types
             },
           ),
         ),
@@ -322,43 +326,36 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _buildDateField(
-                "From Date",
-                true,
-                _fromDate,
-                (newDate) {
-                  _onDateSelected(newDate, true);
-                },
-                clearable: true,
-                onClear: () {
-                  _onDateSelected(null, true);
-                }),
+              "From Date",
+              true,
+              _fromDate,
+              (newDate) {
+                _onDateSelected(newDate, true);
+              },
+              clearable: true,
+              onClear: () {
+                _onDateSelected(null, true);
+              },
+            ),
             const SizedBox(width: 5),
             _buildDateField(
-                "To Date",
-                false,
-                _toDate,
-                (newDate) {
-                  _onDateSelected(newDate, false);
-                },
-                clearable: true,
-                onClear: () {
-                  _onDateSelected(null, false);
-                }),
+              "To Date",
+              false,
+              _toDate,
+              (newDate) {
+                _onDateSelected(newDate, false);
+              },
+              clearable: true,
+              onClear: () {
+                _onDateSelected(null, false);
+              },
+            ),
           ],
         ),
         const SizedBox(height: 10),
         ElevatedButton(
           onPressed: () {
-            if ((_fromDate != null && _toDate == null) ||
-                (_fromDate == null && _toDate != null)) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text(
-                        'Please choose both "From Date" and "To Date" for filtering.')),
-              );
-              return;
-            }
-            setState(() {});
+            setState(() {}); // Trigger the search with the current filters
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFDCA1A1),
@@ -379,6 +376,10 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
   }
 
   Widget _buildScheduleSection(List<Schedule> filteredSchedules) {
+    final scheduleProvider =
+        Provider.of<ScheduleProvider>(context, listen: false);
+    final bool isCurrentUser = widget.isCurrentUser;
+
     if (filteredSchedules.isEmpty) {
       return const Center(
         child: Text(
@@ -394,17 +395,11 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
         itemCount: filteredSchedules.length,
         itemBuilder: (context, index) {
           final schedule = filteredSchedules[index];
-          final userOwnsSchedule = schedule.userId == widget.userId;
           final isEditingName = _editingScheduleIds.contains(schedule.id);
-          final isExpanded = _expandedIndex == index;
-          final scheduleLikes = widget.scheduleLikes
-              .where((like) => like.scheduleId == schedule.id)
-              .toList();
-          final int likeCount = scheduleLikes.length;
+          bool isExpanded = _expandedIndex == index;
 
-          final scheduleDestinations = widget.destinations
-              .where((destination) => destination.scheduleId == schedule.id)
-              .toList();
+          // Initial states for visibility and favorites
+          bool isVisible = scheduleVisibility[schedule.id] ?? true;
 
           return GestureDetector(
             onTap: () {
@@ -426,6 +421,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Schedule name, editing, visibility, favorite toggling, and like count
                         GestureDetector(
                           onTap: () => _toggleEditing(schedule.id),
                           child: isEditingName
@@ -452,7 +448,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
                         Row(
                           children: [
                             Text(
-                                "Created date: ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}"),
+                                "Created date: ${DateFormat('yyyy-MM-dd hh:mm').format(schedule.createdAt)}"),
                           ],
                         ),
                         Row(
@@ -465,6 +461,13 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
                                 (newDate) {
                                   setState(() {
                                     schedule.startDate = newDate;
+                                  });
+                                },
+                                clearable: true,
+                                onClear: () {
+                                  setState(() {
+                                    schedule.startDate =
+                                        null; // Correctly clears startDate
                                   });
                                 },
                               ),
@@ -480,66 +483,79 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
                                     schedule.endDate = newDate;
                                   });
                                 },
+                                clearable: true,
+                                onClear: () {
+                                  setState(() {
+                                    schedule.endDate =
+                                        null; // Correctly clears endDate
+                                  });
+                                },
                               ),
                             ),
                           ],
                         ),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             IconButton(
                               icon: Icon(
-                                scheduleVisibility[schedule.id] == false
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
+                                isVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
                                 color: Colors.white,
                               ),
-                              onPressed: () {
-                                if (userOwnsSchedule) {
-                                  setState(() {
-                                    scheduleVisibility[schedule.id] =
-                                        !(scheduleVisibility[schedule.id] ??
-                                            true);
-                                  });
-                                }
+                              onPressed: () => _toggleVisibility(schedule.id),
+                            ),
+                            Consumer<ScheduleProvider>(
+                              builder: (context, scheduleProvider, child) {
+                                bool isFavorited =
+                                    scheduleProvider.scheduleLikes.any(
+                                  (like) =>
+                                      like.scheduleId == schedule.id &&
+                                      like.userId == widget.userId,
+                                );
+                                int likeCount = scheduleProvider
+                                    .getLikesForSchedule(schedule.id)
+                                    .length;
+
+                                return Row(
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(
+                                        isFavorited
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: isFavorited
+                                            ? Colors.red
+                                            : Colors.grey,
+                                      ),
+                                      onPressed: () =>
+                                          _toggleFavorite(schedule.id),
+                                    ),
+                                    Text(
+                                      likeCount.toString(),
+                                      style: const TextStyle(
+                                          color: Colors.black, fontSize: 12),
+                                    ),
+                                  ],
+                                );
                               },
                             ),
-                            IconButton(
-                              icon: Icon(
-                                favoritedScheduleIds.contains(schedule.id)
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color:
-                                    favoritedScheduleIds.contains(schedule.id)
-                                        ? Colors.red
-                                        : Colors.grey,
-                              ),
-                              onPressed: () {
-                                final isFavorited =
-                                    favoritedScheduleIds.contains(schedule.id);
-                                widget.onFavoriteToggle(
-                                    schedule.id, !isFavorited);
-                                setState(() {
-                                  _toggleFavorite(schedule.id);
-                                });
-                              },
-                            ),
-                            Text(
-                              likeCount.toString(),
-                              style: const TextStyle(
-                                  color: Colors.black, fontSize: 12),
-                            ),
-                            if (userOwnsSchedule)
-                              IconButton(
-                                icon: const Icon(Icons.delete,
-                                    color: Color(0xFF4F4F4F)),
-                                onPressed: () {
-                                  _showDeleteConfirmationDialog(
-                                      schedule.id, schedule.scheduleName);
-                                },
+                            if (isCurrentUser)
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.delete,
+                                        color: Color(0xFF4F4F4F)),
+                                    onPressed: () {
+                                      _showDeleteConfirmationDialog(
+                                          schedule.id, schedule.scheduleName);
+                                    },
+                                  ),
+                                ],
                               ),
                           ],
-                        ),
+                        )
                       ],
                     ),
                   ),
@@ -553,23 +569,15 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
                       borderRadius: BorderRadius.circular(15),
                       border: Border.all(color: Colors.black, width: 1),
                     ),
-                    child:
-                        _buildDestinationList(scheduleDestinations, schedule),
+                    child: _buildDestinationList(
+                        scheduleProvider
+                            .getDestinationsForSchedule(schedule.id),
+                        schedule),
                   ),
               ],
             ),
           );
         });
-  }
-
-  void _toggleFavorite(int scheduleId) {
-    setState(() {
-      if (favoritedScheduleIds.contains(scheduleId)) {
-        favoritedScheduleIds.remove(scheduleId);
-      } else {
-        favoritedScheduleIds.add(scheduleId);
-      }
-    });
   }
 
   void _showDeleteConfirmationDialog(int scheduleId, String scheduleName) {
@@ -600,8 +608,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
   }
 
   void _deleteSchedule(int scheduleId) {
-    final manager =
-        Provider.of<ScheduleDestinationManager>(context, listen: false);
+    final manager = Provider.of<ScheduleProvider>(context, listen: false);
     manager.removeSchedule(scheduleId);
     setState(() {
       widget.destinations
@@ -614,9 +621,19 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
 
   Widget _buildDestinationList(
       List<Destination> scheduleDestinations, Schedule schedule) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    void updateStartDate(Destination destination, DateTime? newDate) {
+      setState(() {
+        destination.startDate = newDate;
+      });
+    }
+
+    void updateEndDate(Destination destination, DateTime? newDate) {
+      setState(() {
+        destination.endDate = newDate;
+      });
+    }
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       ...scheduleDestinations.map((destination) {
         final placeTranslation = widget.translations
             .firstWhereOrNull((t) => t.placeId == destination.placeId);
@@ -671,9 +688,11 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
                   "Start Date",
                   true,
                   destination.startDate,
-                  (newDate) {
+                  (newDate) => updateStartDate(destination, newDate),
+                  clearable: true,
+                  onClear: () {
                     setState(() {
-                      destination.startDate = newDate;
+                      destination.startDate = null;
                     });
                   },
                 ),
@@ -682,9 +701,11 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
                   "End Date",
                   false,
                   destination.endDate,
-                  (newDate) {
+                  (newDate) => updateEndDate(destination, newDate),
+                  clearable: true,
+                  onClear: () {
                     setState(() {
-                      destination.endDate = newDate;
+                      destination.endDate = null;
                     });
                   },
                 ),
@@ -698,43 +719,59 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
               });
             }),
             if (schedule.userId == widget.userId)
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () {
-                  _showDeleteDestinationConfirmationDialog(destination);
-                },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // isArrived checkbox
+                  Checkbox(
+                    value: destination.isArrived,
+                    onChanged: (bool? value) {
+                      if (value != null) {
+                        Provider.of<ScheduleProvider>(context, listen: false)
+                            .toggleIsArrived(destination.id);
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () {
+                      _showDeleteDestinationConfirmationDialog(
+                          destination, placeTranslation!.placeName);
+                    },
+                  ),
+                ],
               ),
+
             const Divider(),
           ],
         );
       }).toList(),
-        // Add "Add More Place" button at the bottom
-        Center(
-          child: ElevatedButton(
-            onPressed: () {
-              // Navigate to SearchPage
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SearchPage(),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+      // Add "Add More Place" button at the bottom
+      Center(
+        child: ElevatedButton(
+          onPressed: () {
+            // Navigate to SearchPage
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SearchPage(),
               ),
-            ),
-            child: const Text(
-              'Add More Place',
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
           ),
+          child: const Text(
+            'Add More Place',
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
         ),
-]
-    );
+      ),
+    ]);
   }
 
   Widget _buildDetailSection(String detailText, Function(String) onSave) {
@@ -787,14 +824,14 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
     );
   }
 
-  void _showDeleteDestinationConfirmationDialog(Destination destination) {
+  void _showDeleteDestinationConfirmationDialog(
+      Destination destination, String placeName) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Delete Destination'),
-          content:
-              const Text('Are you sure you want to delete this destination?'),
+          content: Text('Are you sure you want to delete "$placeName"?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -818,15 +855,16 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
     );
   }
 
-  void _navigateToDetail(int placeId, Place place, PlaceTranslation? translation, List<PlaceMedia> mediaList) {
-    Place? selectedPlace = placeList.firstWhereOrNull((place) => place.placeId == placeId);
+  void _navigateToDetail(int placeId, Place place,
+      PlaceTranslation? translation, List<PlaceMedia> mediaList) {
+    Place? selectedPlace =
+        placeList.firstWhereOrNull((place) => place.placeId == placeId);
 
-    List<PlaceMedia> filteredMediaList = mediaList
-        .where((media) => media.placeId == place.placeId)
-        .toList();
+    List<PlaceMedia> filteredMediaList =
+        mediaList.where((media) => media.placeId == place.placeId).toList();
 
     PlaceTranslation? selectedTranslation = dummyTranslations.firstWhereOrNull(
-          (trans) => trans.placeId == selectedPlace!.placeId,
+      (trans) => trans.placeId == selectedPlace!.placeId,
     );
 
     Navigator.push(
@@ -837,6 +875,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
           placeName: selectedTranslation?.placeName ?? 'Unknown Place',
           placeId: selectedPlace!.placeId,
           mediaList: filteredMediaList,
+          languageCode: 'en',
         ),
       ),
     );
@@ -844,22 +883,43 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
 
   Widget _buildDateField(
     String labelText,
-    bool isFromDate,
+    bool isStartDate,
     DateTime? initialDate,
-    Function(DateTime) onDateChanged, {
+    Function(DateTime?) onDateChanged, {
     bool clearable = false,
     VoidCallback? onClear,
   }) {
     return GestureDetector(
       onTap: () async {
-        final DateTime? picked = await showDatePicker(
+        DateTime? selectedDate =
+            initialDate; // Temporarily store the initial date
+
+        // Date picker
+        final DateTime? date = await showDatePicker(
           context: context,
-          initialDate: initialDate ?? DateTime.now(),
+          initialDate: selectedDate ?? DateTime.now(),
           firstDate: DateTime(2000),
           lastDate: DateTime(2100),
         );
-        if (picked != null) {
-          onDateChanged(picked);
+
+        // If date is selected, proceed to time selection
+        if (date != null) {
+          selectedDate = DateTime(date.year, date.month, date.day,
+              selectedDate?.hour ?? 0, selectedDate?.minute ?? 0);
+
+          // Time picker
+          final TimeOfDay? time = await showTimePicker(
+            context: context,
+            initialTime: TimeOfDay.fromDateTime(selectedDate),
+          );
+
+          // If time is selected, update both date and time
+          if (time != null) {
+            selectedDate = DateTime(
+                date.year, date.month, date.day, time.hour, time.minute);
+            onDateChanged(
+                selectedDate); // Only update when both date and time are confirmed
+          }
         }
       },
       child: Stack(
@@ -871,7 +931,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
               child: TextFormField(
                 decoration: InputDecoration(
                   hintText: initialDate != null
-                      ? DateFormat('yyyy-MM-dd').format(initialDate)
+                      ? DateFormat('yyyy-MM-dd HH:mm').format(initialDate)
                       : labelText,
                   hintStyle: const TextStyle(fontSize: 12),
                   border: const OutlineInputBorder(),
@@ -897,93 +957,62 @@ class _ScheduleTabbarState extends State<ScheduleTabbar> {
   Widget _buildButtonsSection() {
     final scheduleProvider =
         Provider.of<ScheduleProvider>(context, listen: false);
-    final schedules = scheduleProvider.schedules;
-    return Center(
-      child: Column(
-        children: [
-          ElevatedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text("Recommended Schedule"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        ElevatedButton.icon(
+          onPressed: _showSuggestScheduleBottomSheet,
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: const Text("Suggest Schedule"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
           ),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FeaturedSchedulePage(
-                    allSchedules: schedules,
-                    scheduleLikes: widget.scheduleLikes,
-                    destinations: widget.destinations,
-                    users: widget.users,
-                    userId: widget.userId,
-                    onClone: (Schedule clonedSchedule,
-                        List<Destination> clonedDestinations) {
-                      setState(() {
-                        // Add cloned schedule to ScheduleProvider
-                        Provider.of<ScheduleProvider>(context, listen: false)
-                            .addSchedule(clonedSchedule);
-                        Provider.of<ScheduleProvider>(context, listen: false)
-                            .destinations
-                            .addAll(clonedDestinations);
-                      });
-                    },
-                  ),
-                ),
+        ),
+        ElevatedButton.icon(
+          onPressed: () {
+            showAddScheduleDialog(context, (scheduleName, startDate, endDate) {
+              final newSchedule = Schedule(
+                id: widget.schedules.length + 1,
+                userId: widget.userId,
+                scheduleName: scheduleName,
+                startDate: startDate,
+                endDate: endDate,
+                createdAt: DateTime.now(),
+                isPublic: false,
               );
-            },
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text("Most Schedule Like"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.lightBlue,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+
+              // Add schedule using ScheduleProvider
+              Provider.of<ScheduleProvider>(context, listen: false)
+                  .addSchedule(newSchedule);
+
+              // Increment schedule count in CountProvider
+              Provider.of<CountProvider>(context, listen: false)
+                  .incrementScheduleCount();
+            });
+          },
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: const Text("Add Schedule"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.grey,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
           ),
-          ElevatedButton.icon(
-            onPressed: () {
-              showAddScheduleDialog(context,
-                  (scheduleName, startDate, endDate) {
-                final newSchedule = Schedule(
-                  id: widget.schedules.length + 1,
-                  userId: widget.userId,
-                  scheduleName: scheduleName,
-                  startDate: startDate,
-                  endDate: endDate,
-                  createdDate: DateTime.now(),
-                  isPublic: false,
-                );
+        ),
+      ],
+    );
+  }
 
-                // Add schedule using ScheduleProvider
-                Provider.of<ScheduleProvider>(context, listen: false)
-                    .addSchedule(newSchedule);
-
-                // Increment schedule count in CountProvider
-                Provider.of<CountProvider>(context, listen: false)
-                    .incrementScheduleCount();
-              });
-            },
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text("Add Schedule"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            ),
-          ),
-        ],
-      ),
+  void _showSuggestScheduleBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return SuggestSchedulePage(userId: widget.userId);
+      },
     );
   }
 }

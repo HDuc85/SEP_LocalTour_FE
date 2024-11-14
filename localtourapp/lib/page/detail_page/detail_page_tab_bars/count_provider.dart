@@ -1,4 +1,7 @@
+// lib/providers/count_provider.dart
+
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/posts/post.dart';
 
 class CountProvider with ChangeNotifier {
   int _scheduleCount = 0;
@@ -9,9 +12,21 @@ class CountProvider with ChangeNotifier {
   int get reviewCount => _reviewCount;
   int get postCount => _postCount;
 
+  CountProvider();
+
+  void updatePostCount(List<Post> posts) {
+    final int newCount = posts.length;
+    if (_postCount != newCount) {
+      _postCount = newCount;
+      notifyListeners();
+    }
+  }
+
   void setScheduleCount(int count) {
-    _scheduleCount = count;
-    notifyListeners();
+    if (_scheduleCount != count) {
+      _scheduleCount = count;
+      notifyListeners();
+    }
   }
 
   void incrementScheduleCount() {
@@ -27,8 +42,10 @@ class CountProvider with ChangeNotifier {
   }
 
   void setReviewCount(int count) {
-    _reviewCount = count;
-    notifyListeners();
+    if (_reviewCount != count) {
+      _reviewCount = count;
+      notifyListeners();
+    }
   }
 
   void incrementReviewCount() {
@@ -44,8 +61,10 @@ class CountProvider with ChangeNotifier {
   }
 
   void setPostCount(int count) {
-    _postCount = count;
-    notifyListeners();
+    if (_postCount != count) {
+      _postCount = count;
+      notifyListeners();
+    }
   }
 
   void incrementPostCount() {

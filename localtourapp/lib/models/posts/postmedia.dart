@@ -1,20 +1,19 @@
 import 'dart:math';
-
 import 'package:localtourapp/models/posts/post.dart';
 
 class PostMedia {
   int id;
-  int postId; // Maps to id in Post
+  int? postId; // Maps to id in Post
   String type; // e.g., 'image', 'video'
   String url;
-  DateTime createdDate;
+  DateTime createdAt;
 
   PostMedia({
     required this.id,
-    required this.postId,
+    this.postId,
     required this.type,
     required this.url,
-    required this.createdDate,
+    required this.createdAt,
   });
 
   factory PostMedia.fromJson(Map<String, dynamic> json) {
@@ -23,7 +22,7 @@ class PostMedia {
       postId: json['postId'],
       type: json['type'],
       url: json['url'],
-      createdDate: DateTime.parse(json['createdDate']),
+      createdAt: DateTime.parse(json['createdDate']),
     );
   }
 
@@ -33,24 +32,29 @@ class PostMedia {
       'postId': postId,
       'type': type,
       'url': url,
-      'createdDate': createdDate.toIso8601String(),
+      'createdDate': createdAt.toIso8601String(),
     };
   }
 }
 
 List<PostMedia> generateDummyPostMedia(int count, List<Post> posts) {
   final random = Random();
-  List<String> mediaTypes = ['image', 'video'];
+  List<String> mediaTypes = ['photo', 'video'];
 
   return List.generate(count, (index) {
+    String type = mediaTypes[random.nextInt(mediaTypes.length)];
+    String url = (type == 'video')
+        ? 'assets/videos/video_${random.nextInt(3) + 1}.mp4'
+        : 'https://picsum.photos/seed/${random.nextInt(1000)}/600/400';
+
     return PostMedia(
       id: index + 1,
       postId: posts[random.nextInt(posts.length)].id,
-      type: mediaTypes[random.nextInt(mediaTypes.length)],
-      url: 'https://picsum.photos/seed/${random.nextInt(1000)}/600/400',
-      createdDate: DateTime.now().subtract(Duration(days: random.nextInt(365))),
+      type: type,
+      url: url,
+      createdAt: DateTime.now().subtract(Duration(days: random.nextInt(365))),
     );
   });
 }
 
-List<PostMedia> dummyPostMedia = generateDummyPostMedia(50, dummyPosts);
+List<PostMedia> dummyPostMedia = generateDummyPostMedia(200, dummyPosts);

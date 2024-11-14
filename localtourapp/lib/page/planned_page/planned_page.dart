@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:localtourapp/base/schedule_provider.dart';
 import 'package:localtourapp/models/places/place.dart';
 import 'package:localtourapp/models/places/placetranslation.dart';
-import 'package:localtourapp/page/account/user_provider.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/history_tab_bar.dart';
 import 'package:provider/provider.dart';
-
 import '../../models/schedule/destination.dart';
 import '../../models/schedule/schedule.dart';
 import '../../models/schedule/schedulelike.dart';
 import '../../models/users/users.dart';
-import 'planned_page_tab_bars/history_tab_bar.dart';
 import 'planned_page_tab_bars/schedule_tab_bar.dart';
 
 class PlannedPage extends StatefulWidget {
@@ -69,10 +66,10 @@ class _PlannedPageState extends State<PlannedPage> {
               scheduleLikes: userScheduleLikes,
               destinations: widget.destinations,
               onFavoriteToggle: (scheduleId, isFavorited) {
-                // Implement your favorite toggle logic here
+                final scheduleProvider = Provider.of<ScheduleProvider>(context, listen: false);
                 if (isFavorited) {
                   scheduleProvider.addScheduleLike(ScheduleLike(
-                    id: scheduleProvider.scheduleLikes.length + 1,
+                    id: DateTime.now().millisecondsSinceEpoch,
                     userId: widget.userId,
                     scheduleId: scheduleId,
                     createdDate: DateTime.now(),

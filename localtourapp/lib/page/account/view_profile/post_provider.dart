@@ -4,6 +4,8 @@ import 'package:localtourapp/models/posts/postcomment.dart';
 import 'package:localtourapp/models/posts/postcommentlike.dart';
 import 'package:localtourapp/models/posts/postlike.dart';
 import 'package:localtourapp/models/posts/postmedia.dart';
+import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provider.dart';
+import 'package:provider/provider.dart';
 
 class PostProvider with ChangeNotifier {
   List<Post> _posts = [];
@@ -27,6 +29,10 @@ class PostProvider with ChangeNotifier {
     _media = media ?? [];
   }
 
+  bool isMediaAttached(PostMedia media) {
+    return _media.any((existingMedia) => existingMedia.id == media.id);
+  }
+
   // Getters for each list
   List<Post> get posts => _posts;
   List<PostComment> get comments => _comments;
@@ -36,7 +42,7 @@ class PostProvider with ChangeNotifier {
 
   // Post methods
   void addPost(Post post) {
-    _posts.add(post);
+    _posts.insert(0, post); // Insert at the beginning for latest first
     notifyListeners();
   }
 
@@ -69,9 +75,12 @@ class PostProvider with ChangeNotifier {
   }
 
   // Post Like methods
-  void addPostLike(PostLike like) {
-    _postLikes.add(like);
-    notifyListeners();
+  void addPostLike(PostLike postLike) {
+    // Prevent duplicate likes
+    if (!_postLikes.any((like) => like.postId == postLike.postId && like.userId == postLike.userId)) {
+      _postLikes.add(postLike);
+      notifyListeners();
+    }
   }
 
   void removePostLike(int postId, String userId) {
@@ -107,7 +116,8 @@ class PostProvider with ChangeNotifier {
   }
 
   List<PostComment> getCommentsForPost(int postId) {
-    return _comments.where((comment) => comment.postId == postId).toList();
+    final postComments = _comments.where((comment) => comment.postId == postId).toList();
+    return postComments;
   }
 
   List<PostLike> getLikesForPost(int postId) {
@@ -120,5 +130,21 @@ class PostProvider with ChangeNotifier {
 
   List<PostMedia> getMediaForPost(int postId) {
     return _media.where((media) => media.postId == postId).toList();
+  }
+
+  // Notify CountProvider about post count changes
+  void _notifyCountProvider(BuildContext context) {
+    final countProvider = Provider.of<CountProvider>(context, listen: false);
+    final userPosts = getPostsByUserId('anh-tuan-unique-id-1234');
+    countProvider.updatePostCount(userPosts);
+  }
+
+  // Override notifyListeners to also notify CountProvider
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+    // Assuming you have access to the context here
+    // If not, consider passing context or refactoring
+    // _notifyCountProvider(context);
   }
 }

@@ -48,4 +48,4 @@ List<PostLike> generateDummyPostLikes(int count, List<Post> posts, List<User> us
   });
 }
 
-List<PostLike> dummyPostLikes = generateDummyPostLikes(100, dummyPosts, fakeUsers);
+List<PostLike> dummyPostLikes = generateDummyPostLikes(1000, dummyPosts, fakeUsers);

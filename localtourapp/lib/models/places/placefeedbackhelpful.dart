@@ -93,5 +93,5 @@ List<PlaceFeedbackHelpful> generatePlaceFeedbackHelpfuls(
   return feebBackHelpfuls;
 }
 
-  List<PlaceFeedbackHelpful> feebBackHelpfuls = generatePlaceFeedbackHelpfuls(1000, feedbacks, fakeUsers);
+  List<PlaceFeedbackHelpful> feebBackHelpfuls = generatePlaceFeedbackHelpfuls(1000, dummyFeedbacks, fakeUsers);
 

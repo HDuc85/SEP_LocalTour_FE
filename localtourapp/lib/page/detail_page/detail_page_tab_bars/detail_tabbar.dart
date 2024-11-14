@@ -23,6 +23,7 @@ import 'form/schedule_form.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DetailTabbar extends StatefulWidget {
+  final languageCode;
   final String userId;
   final int placeId;
   final List<Tag> tags;
@@ -31,6 +32,7 @@ class DetailTabbar extends StatefulWidget {
 
   const DetailTabbar({
     Key? key,
+    required this.languageCode,
     required this.userId,
     required this.placeId,
     required this.tags,
@@ -147,7 +149,19 @@ class _DetailTabbarState extends State<DetailTabbar> {
                     ),
                     child: IconButton(
                       color: const Color(0xFF9DC183),
-                      onPressed: widget.onAddPressed, // Use the callback
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return Dialog(
+                              child: ScheduleForm(
+                                userId: widget.userId, // Pass the required userId
+                                placeId: widget.placeId, // Pass the required placeId
+                              ),
+                            );
+                          },
+                        );
+                      },
                       icon: const Icon(Icons.add_circle, size: 40),
                     ),
                   ),
@@ -163,7 +177,12 @@ class _DetailTabbarState extends State<DetailTabbar> {
                       scale: 3,
                       child: IconButton(
                         color: Colors.red,
-                        onPressed: widget.onReportPressed, // Use the callback
+                        onPressed: () {
+                          ReportForm.show(
+                            context,
+                            'Have a problem with this place? Report it to us!',
+                          );
+                        },
                         icon: const Icon(Icons.flag, size: 10),
                       ),
                     ),
@@ -328,65 +347,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
           ),
         ),
       ],
-    );
-  }
-
-  void _showScheduleFormDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0E68C),
-              borderRadius: BorderRadius.circular(30.0),
-              border: Border.all(
-                color: Colors.black,
-                width: 2.0,
-              ),
-            ),
-            padding: const EdgeInsets.all(20.0),
-            child: ScheduleForm(
-              userId: widget.userId,
-              placeId: widget.placeId,
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showReportFormDialog(BuildContext context) {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 200),
-      pageBuilder: (BuildContext buildContext, Animation animation,
-          Animation secondaryAnimation) {
-        return Center(
-          child: Material(
-            type: MaterialType.transparency,
-            child: Container(
-              width: MediaQuery.of(context).size.width * 0.9,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30.0),
-                border: Border.all(
-                  color: Colors.black,
-                  width: 2.0,
-                ),
-              ),
-              child: const ReportForm(
-                message: 'Have a problem with this place? Report it to us!',
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 

@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:localtourapp/base/schedule_provider.dart';
+import 'package:localtourapp/models/schedule/destination.dart';
+import 'package:localtourapp/models/schedule/schedule.dart';
+import 'package:localtourapp/models/schedule/schedulelike.dart';
+import 'package:localtourapp/models/users/users.dart';
 import 'package:localtourapp/page/account/user_provider.dart';
+import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provider.dart';
+import 'package:localtourapp/page/planned_page/planned_page_tab_bars/fearuted_schedule_page.dart';
 import 'package:provider/provider.dart';
 import '../../base/back_to_top_button.dart';
 import '../../base/const.dart';
@@ -19,10 +26,7 @@ import '../../base/search_bar_icon.dart';
 import '../detail_page/detail_page.dart';
 
 class HomeScreen extends StatefulWidget {
-
-
   const HomeScreen({super.key});
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -206,16 +210,57 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // 3/ _buildTagGrid function to list all tags
   Widget _buildTagGrid(List<Tag> tags) {
-    // Calculate the width for each item to fit 3 items horizontally
     double screenWidth = MediaQuery.of(context).size.width;
     double containerHorizontalMargin = 30 * 2; // Left and right margins
     double itemHorizontalMargin = 10 * 2; // Left and right margins for each item
     double availableWidth = screenWidth - containerHorizontalMargin - (itemHorizontalMargin * 3);
     double itemWidth = availableWidth / 3;
 
+    // Prepend the "Schedule Page" item to the list of tags
+    List<Widget> gridItems = [
+      GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => FeaturedSchedulePage(
+                userId: userId, // Pass in the actual userId
+                allSchedules: dummySchedules,
+                scheduleLikes: dummyScheduleLikes,
+                destinations: dummyDestinations,
+                users: fakeUsers,
+                onClone: (Schedule clonedSchedule, List<Destination> clonedDestinations) {
+                  Provider.of<ScheduleProvider>(context, listen: false)
+                      .addSchedule(clonedSchedule);
+                  Provider.of<ScheduleProvider>(context, listen: false)
+                      .destinations
+                      .addAll(clonedDestinations);
+
+                  // Increment schedule count in CountProvider if necessary
+                  Provider.of<CountProvider>(context, listen: false)
+                      .incrementScheduleCount();
+                },
+              ),
+            ),
+          );
+        },
+        child: _buildTagItem('assets/images/Schedule.png', 'Schedule Page'), // Example image for "Schedule Page"
+      ),
+    ];
+
+    // Add the rest of the tags to the list
+    gridItems.addAll(tags.map((tag) {
+      return GestureDetector(
+        onTap: () {
+          _scrollToTagSection(tag.tagId);
+        },
+        child: _buildTagItem(tag.tagPhotoUrl, tag.tagName),
+      );
+    }).toList());
+
     return Center(
       child: Container(
-        height: 250, // Adjust the height to fit two tag items vertically
+        height: 262, // Adjust the height to fit two tag items vertically
         margin: const EdgeInsets.symmetric(horizontal: 30),
         decoration: BoxDecoration(
           color: Constants.tagGridBackground,
@@ -229,44 +274,27 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        child: ListView.builder(
+        child: GridView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: (tags.length / 2).ceil(),
+          itemCount: gridItems.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2, // Display two rows
+            childAspectRatio: itemWidth / 60, // Adjust for item height and width
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+          ),
           itemBuilder: (context, index) {
-            int firstTagIndex = index * 2;
-            int secondTagIndex = firstTagIndex + 1;
-
-            Tag firstTag = tags[firstTagIndex];
-            Tag? secondTag = secondTagIndex < tags.length ? tags[secondTagIndex] : null;
-
             return Container(
               width: itemWidth,
-              margin: const EdgeInsets.symmetric(horizontal: 10),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      _scrollToTagSection(firstTag.tagId);
-                    },
-                    child: _buildTagItem(firstTag.tagPhotoUrl, firstTag.tagName),
-                  ),
-                  const SizedBox(height: 10),
-                  if (secondTag != null)
-                    GestureDetector(
-                      onTap: () {
-                        _scrollToTagSection(secondTag.tagId);
-                      },
-                      child: _buildTagItem(secondTag.tagPhotoUrl, secondTag.tagName),
-                    ),
-                ],
-              ),
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              child: gridItems[index],
             );
           },
         ),
       ),
     );
   }
+
 
   // Scroll to the corresponding tag section when the tag icon is tapped
   void _scrollToTagSection(int tagId) {
@@ -333,6 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => DetailPage(
+                            languageCode: 'en',
                             userId: userId,
                             placeName: selectedTranslation.placeName,
                             placeId: selectedPlace.placeId,

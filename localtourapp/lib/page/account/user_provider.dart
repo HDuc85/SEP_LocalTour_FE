@@ -1,13 +1,10 @@
-// lib/page/account/user_provider.dart
-
 import 'package:flutter/material.dart';
 import 'package:localtourapp/models/users/users.dart';
 
 class UserProvider with ChangeNotifier {
-  // Private variable to hold the current user
   User _currentUser;
+  final Set<int> _preferredTagIds = {}; // Store preferred tag IDs independently
 
-  // Constructor to initialize the current user
   UserProvider({required User initialUser}) : _currentUser = initialUser;
 
   // Getter to access the current user
@@ -16,7 +13,34 @@ class UserProvider with ChangeNotifier {
   // Getter to access the userId directly
   String get userId => _currentUser.userId;
 
-  // Method to update the current user's information
+  // Add a tag to the preferred tags
+  void addTag(int tagId) {
+    if (!_preferredTagIds.contains(tagId)) {
+      _preferredTagIds.add(tagId);
+      notifyListeners();
+      _saveUserPreferencesToDatabase();
+    }
+  }
+
+  // Remove a tag from the preferred tags
+  void removeTag(int tagId) {
+    if (_preferredTagIds.contains(tagId)) {
+      _preferredTagIds.remove(tagId);
+      notifyListeners();
+      _saveUserPreferencesToDatabase();
+    }
+  }
+
+  // Check if a tag is selected
+  bool isTagSelected(int tagId) {
+    return _preferredTagIds.contains(tagId);
+  }
+
+  Future<void> _saveUserPreferencesToDatabase() async {
+    // Save _preferredTagIds to a database or shared preferences if needed
+  }
+
+  // Method to update user's information
   void updateUser(User updatedUser) {
     if (updatedUser.userId != _currentUser.userId) {
       throw ArgumentError(
@@ -25,24 +49,23 @@ class UserProvider with ChangeNotifier {
 
     _currentUser = updatedUser;
     notifyListeners();
-    _saveUserToDatabase(updatedUser);
   }
 
-  Future<void> _saveUserToDatabase(User user) async {
-    // Implement your database saving logic here
-  }
-
-  // Method to check if a given userId is the current user
+  // Check if a given userId is the current user
   bool isCurrentUser(String userId) {
     return _currentUser.userId == userId;
   }
 
-  // Optional: Method to set the current user by userId (if needed)
+  // Retrieve all user preferred tags
+  List<int> getUserPreferredTags() {
+    return _preferredTagIds.toList();
+  }
+
+// Optional: Set the current user by userId
   void setCurrentUserById(String userId, List<User> allUsers) {
-    // Assuming you have access to all users, find the user by userId
     User? user = allUsers.firstWhere(
           (user) => user.userId == userId,
-      orElse: () => _currentUser, // Fallback to current user if not found
+      orElse: () => _currentUser,
     );
     if (user.userId != _currentUser.userId) {
       _currentUser = user;
