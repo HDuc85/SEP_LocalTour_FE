@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:localtourapp/models/users/followuser.dart';
-import 'package:localtourapp/models/users/users.dart';
+import 'package:provider/provider.dart';
 
-class FollowListPage extends StatelessWidget {
+import '../../models/users/followuser.dart';
+import '../../models/users/users.dart';
+import '../../provider/follow_users_provider.dart';
+import '../../provider/user_provider.dart';
+import '../../provider/users_provider.dart';
+import 'account_page.dart';
+
+class FollowListPage extends StatefulWidget {
   final List<FollowUser> followers;
   final List<FollowUser> following;
   final List<User> allUsers;
@@ -14,6 +20,11 @@ class FollowListPage extends StatelessWidget {
     required this.allUsers,
   }) : super(key: key);
 
+  @override
+  State<FollowListPage> createState() => _FollowListPageState();
+}
+
+class _FollowListPageState extends State<FollowListPage> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -31,8 +42,8 @@ class FollowListPage extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            _buildUserList(followers, isFollowerTab: true),
-            _buildUserList(following, isFollowerTab: false),
+            _buildUserList(widget.followers, isFollowerTab: true),
+            _buildUserList(widget.following, isFollowerTab: false),
           ],
         ),
       ),
@@ -45,7 +56,22 @@ class FollowListPage extends StatelessWidget {
       itemCount: followList.length,
       itemBuilder: (context, index) {
         final followUser = followList[index];
-        final user = allUsers.firstWhere((u) => u.userId == followUser.userId);
+        // Determine whose profile to show based on isFollowerTab
+        final userIdToShow =
+            isFollowerTab ? followUser.userId : followUser.userFollow;
+
+        final user = widget.allUsers.firstWhere(
+          (u) => u.userId == userIdToShow,
+          orElse: () => User(
+            userId: 'default',
+            userName: 'Unknown User',
+            emailConfirmed: false,
+            phoneNumberConfirmed: false,
+            dateCreated: DateTime.now(),
+            dateUpdated: DateTime.now(),
+            reportTimes: 0,
+          ),
+        );
 
         return ListTile(
           leading: CircleAvatar(
@@ -56,7 +82,30 @@ class FollowListPage extends StatelessWidget {
                 ? const Icon(Icons.account_circle, color: Colors.grey)
                 : null,
           ),
-          title: Text(user.fullName ?? "Unknown User"),
+          title: GestureDetector(
+            onTap: () {
+              // Use UserProvider to get the user's details
+              final userProvider = Provider.of<UserProvider>(context, listen: false);
+              final usersProvider = Provider.of<UsersProvider>(context, listen: false);
+              final followUsersProvider = Provider.of<FollowUsersProvider>(context, listen: false);
+
+              final clickedUser = usersProvider.getUserById(user.userId);
+              final isCurrentUser = userProvider.isCurrentUser(user.userId);
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AccountPage(
+                    user: clickedUser ?? userProvider.currentUser,
+                    isCurrentUser: isCurrentUser,
+                    followUsers: followUsersProvider.followUsers,
+                  ),
+                ),
+              );
+            },
+            child: Text(user.userName ?? "Unknown User"),
+          ),
+
           subtitle: Text(
             isFollowerTab
                 ? 'Followed you at: ${followUser.dateCreated.toLocal().toString().split(' ')[0]}'

@@ -1,9 +1,10 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:localtourapp/models/posts/postmedia.dart';
 import 'package:video_player/video_player.dart';
 import 'package:intl/intl.dart';
+
+import '../models/posts/postmedia.dart';
 
 
 class FullScreenPostMediaViewer extends StatefulWidget {

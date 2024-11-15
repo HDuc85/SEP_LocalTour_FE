@@ -1,26 +1,26 @@
 // lib/page/account/account_page.dart
-
 import 'package:flutter/material.dart';
-import 'package:localtourapp/provider/follow_users_provider.dart';
-import 'package:localtourapp/provider/schedule_provider.dart';
-import 'package:localtourapp/base/weather_icon_button.dart';
-import 'package:localtourapp/models/posts/post.dart';
-import 'package:localtourapp/models/schedule/schedule.dart';
-import 'package:localtourapp/models/users/followuser.dart';
-import 'package:localtourapp/models/users/users.dart';
-import 'package:localtourapp/page/account/faq.dart';
-import 'package:localtourapp/page/account/followlistpage.dart';
-import 'package:localtourapp/page/account/personal_infomation.dart';
-import 'package:localtourapp/provider/review_provider.dart';
-import 'package:localtourapp/page/account/setting_page.dart';
-import 'package:localtourapp/page/account/user_preference.dart';
-import 'package:localtourapp/provider/user_provider.dart';
-import 'package:localtourapp/provider/users_provider.dart';
 import 'package:localtourapp/page/account/view_profile/post_provider.dart';
-import 'package:localtourapp/page/account/view_profile/view_profile.dart';
-import 'package:localtourapp/provider/count_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../../base/weather_icon_button.dart';
+import '../../models/posts/post.dart';
+import '../../models/schedule/schedule.dart';
+import '../../models/users/followuser.dart';
+import '../../models/users/users.dart';
+import '../../provider/count_provider.dart';
+import '../../provider/follow_users_provider.dart';
+import '../../provider/review_provider.dart';
+import '../../provider/schedule_provider.dart';
+import '../../provider/user_provider.dart';
+import '../../provider/users_provider.dart';
+import 'faq.dart';
+import 'followlistpage.dart';
+import 'personal_infomation.dart';
+import 'setting_page.dart';
+import 'user_preference.dart';
+import 'view_profile/view_profile.dart';
 
 // Import other necessary pages like ViewProfilePage, PersonalInformationPage, SettingPage, FAQPage
 

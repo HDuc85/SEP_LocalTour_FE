@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:localtourapp/models/users/users.dart';
 
+
 class FollowUser {
   int id;
   String userId; // The user who follows another user
@@ -66,4 +67,4 @@ List<FollowUser> generateDummyFollowUsers(int count, List<User> users) {
 }
 
 // Example usage
-List<FollowUser> dummyFollowUsers = generateDummyFollowUsers(10, fakeUsers);
+List<FollowUser> dummyFollowUsers = generateDummyFollowUsers(100, fakeUsers);

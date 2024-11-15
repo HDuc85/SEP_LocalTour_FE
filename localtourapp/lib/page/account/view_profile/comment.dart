@@ -12,18 +12,17 @@ import 'package:localtourapp/models/posts/postcomment.dart';
 import 'package:localtourapp/page/account/view_profile/post_provider.dart';
 import 'package:localtourapp/models/users/users.dart';
 
+import '../../../provider/follow_users_provider.dart';
+import '../../../provider/user_provider.dart';
+
 class CommentsBottomSheet extends StatefulWidget {
-  final User? user;
   final Post post;
   final String userId;
-  final List<FollowUser>followUsers;
 
   const CommentsBottomSheet({
     Key? key,
     required this.userId,
     required this.post,
-    required this.user,
-    required this.followUsers,
   }) : super(key: key);
 
   @override
@@ -37,18 +36,37 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   // For tracking which comment is being replied to
   int? _replyingToCommentId;
 
+  @override
+  void initState() {
+    super.initState();
+    _commentsScrollController.addListener(_scrollListener);
+  }
+
+  @override
+  void dispose() {
+    _commentsScrollController.removeListener(_scrollListener);
+    _commentsScrollController.dispose();
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    // Handle scroll events if needed
+  }
+
   void _addComment({int? parentId}) {
-    final String commentText = _commentController.text.trim();
+    final commentText = _commentController.text.trim();
     if (commentText.isEmpty) return;
 
     final postProvider = Provider.of<PostProvider>(context, listen: false);
-    final userProvider = Provider.of<UsersProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
 
-    // Obtain the current user's ID
-    final String currentUserId = 'anh-tuan-unique-id-1234';
+    // Obtain the current user's ID (from the UserProvider)
+    final currentUserId = userProvider.currentUser.userId;
 
     // Validate if the user exists
-    final User? user = userProvider.getUserById(currentUserId);
+    final user = Provider.of<UsersProvider>(context, listen: false)
+        .getUserById(currentUserId);
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User not found.')),
@@ -67,7 +85,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     );
 
     // Add the comment to the provider
-    postProvider.addComment(newComment); // Ensure this triggers `notifyListeners`
+    postProvider.addComment(newComment);
 
     // Clear the text field and reset replying state
     _commentController.clear();
@@ -75,7 +93,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
       _replyingToCommentId = null;
     });
 
-    // Scroll to the bottom to show the new comment, only after the list updates
+    // Scroll to the bottom to show the new comment, after the list updates
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _commentsScrollController.animateTo(
         _commentsScrollController.position.maxScrollExtent + 60,
@@ -84,7 +102,6 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
       );
     });
   }
-
 
   void _replyToComment(int commentId) {
     setState(() {
@@ -100,14 +117,15 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
 
   void _likeComment(int commentId) {
     final postProvider = Provider.of<PostProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
 
-    // Obtain the current user's ID. Replace this with your actual authentication logic.
-    final String currentUserId = 'anh-tuan-unique-id-1234'; // Replace with actual user ID
+    // Obtain the current user's ID from the UserProvider
+    final currentUserId = userProvider.currentUser.userId;
 
     // Check if the user has already liked the comment
     bool hasLiked = postProvider.getLikesForComment(commentId).any(
           (like) => like.userId == currentUserId,
-    );
+        );
 
     if (hasLiked) {
       // Unlike the comment
@@ -126,8 +144,18 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final postProvider = Provider.of<PostProvider>(context);
+    final usersProvider = Provider.of<UsersProvider>(context);
+    final followUsersProvider =
+        Provider.of<FollowUsersProvider>(context, listen: false);
+
+    final comments = postProvider.getCommentsForPost(widget.post.id);
+
+    // Flatten comments and sort by createdDate
+    comments.sort((a, b) => a.createdDate.compareTo(b.createdDate));
+
     return Container(
-      // Adjust the height as needed
       height: MediaQuery.of(context).size.height * 0.75,
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -147,7 +175,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
             ],
           ),
           const SizedBox(height: 10),
-          // If replying to a comment, show a banner
+          // Banner if replying to a comment
           if (_replyingToCommentId != null)
             Container(
               padding: const EdgeInsets.all(8.0),
@@ -158,32 +186,38 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                   Consumer<PostProvider>(
                     builder: (context, postProvider, _) {
                       final parentComment = postProvider.comments.firstWhere(
-                              (comment) => comment.id == _replyingToCommentId!,
-                          orElse: () => PostComment(
-                            id: 0,
-                            postId: widget.post.id,
-                            parentId: null,
-                            userId: '',
-                            content: '',
-                            createdDate: DateTime.now(),
-                          ));
-                      final user = Provider.of<UsersProvider>(context, listen: false)
-                          .getUserById(parentComment.userId);
-                      return user != null
+                        (comment) => comment.id == _replyingToCommentId!,
+                        orElse: () => PostComment(
+                          id: 0,
+                          postId: widget.post.id,
+                          parentId: null,
+                          userId: '',
+                          content: '',
+                          createdDate: DateTime.now(),
+                        ),
+                      );
+                      final parentUser =
+                          usersProvider.getUserById(parentComment.userId);
+                      return parentUser != null
                           ? GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AccountPage(
-                                  user: widget.user!,
-                                  isCurrentUser: widget.user!.userId == widget.userId,
-                                  followUsers: widget.followUsers, // Replace with actual followUsers list if needed
-                                ),
-                              ),
-                            );
-                          },
-                          child: Text('Replying to ${user.userName}'))
+                              onTap: () {
+                                final isCurrentUser = userProvider
+                                    .isCurrentUser(parentUser.userId);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AccountPage(
+                                      user: parentUser,
+                                      isCurrentUser: isCurrentUser,
+                                      followUsers:
+                                          followUsersProvider.followUsers,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                  'Replying to ${parentUser.userName ?? "Unknown User"}'),
+                            )
                           : const Text('Replying to Unknown User');
                     },
                   ),
@@ -197,240 +231,175 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
           const SizedBox(height: 10),
           // Comments List
           Expanded(
-            child: Consumer<PostProvider>(
-              builder: (context, postProvider, _) {
-                final List<PostComment> comments =
-                postProvider.getCommentsForPost(widget.post.id);
-
-                if (comments.isEmpty) {
-                  return const Center(
+            child: comments.isEmpty
+                ? const Center(
                     child: Text(
                       'No comments yet. Be the first to comment!',
                       style: TextStyle(color: Colors.grey),
                     ),
-                  );
-                }
+                  )
+                : ListView.builder(
+                    controller: _commentsScrollController,
+                    itemCount: comments.length,
+                    itemBuilder: (context, index) {
+                      final comment = comments[index];
+                      final commenter =
+                          usersProvider.getUserById(comment.userId);
 
-                // Filter top-level comments (parentId == null)
-                final topLevelComments = comments.where((comment) => comment.parentId == null).toList();
+                      if (commenter == null) {
+                        return const SizedBox
+                            .shrink(); // Skip if user not found
+                      }
 
-                return ListView.builder(
-                  controller: _commentsScrollController,
-                  itemCount: topLevelComments.length,
-                  itemBuilder: (context, index) {
-                    final PostComment comment = topLevelComments[index];
-                    final User? commenter = Provider.of<UsersProvider>(context).getUserById(comment.userId);
+                      final commentLikes =
+                          postProvider.getLikesForComment(comment.id);
+                      final currentUserId = userProvider.currentUser.userId;
+                      final bool hasLiked;
+                      hasLiked = commentLikes
+                          .any((like) => like.userId == currentUserId);
+                                          final likeCount = commentLikes.length;
 
-                    if (commenter == null) {
-                      return const SizedBox.shrink(); // Skip if user not found
-                    }
+                      // Determine if this comment is a reply by checking parentId
+                      String? parentUserName;
+                      if (comment.parentId != null) {
+                        final parentComment = postProvider.comments.firstWhere(
+                          (c) => c.id == comment.parentId,
+                          orElse: () => PostComment(
+                            id: 0,
+                            postId: comment.postId,
+                            parentId: null,
+                            userId: '',
+                            content: '',
+                            createdDate: DateTime.now(),
+                          ),
+                        );
+                        final parentUser =
+                            usersProvider.getUserById(parentComment.userId);
+                        parentUserName = parentUser?.userName;
+                      }
 
-                    // Fetch replies to this comment
-                    final List<PostComment> replies =
-                    comments.where((c) => c.parentId == comment.id).toList();
-
-                    final List<PostCommentLike> commentLikes =
-                    postProvider.getLikesForComment(comment.id);
-
-                    // Obtain current user ID
-                    final String currentUserId = 'anh-tuan-unique-id-1234'; // Replace with actual logic
-
-                    bool hasLiked =
-                    commentLikes.any((like) => like.userId == currentUserId);
-
-                    int likeCount = commentLikes.length;
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Column(
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Profile Picture
-                              CircleAvatar(
-                                backgroundImage:
-                                NetworkImage(commenter.profilePictureUrl!),
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Profile Picture
+                            GestureDetector(
+                              onTap: () {
+                                final isCurrentUser = userProvider
+                                    .isCurrentUser(commenter.userId);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AccountPage(
+                                      user: commenter,
+                                      isCurrentUser: isCurrentUser,
+                                      followUsers:
+                                          followUsersProvider.followUsers,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: CircleAvatar(
+                                backgroundImage: commenter.profilePictureUrl !=
+                                        null
+                                    ? NetworkImage(commenter.profilePictureUrl!)
+                                    : null,
+                                child: commenter.profilePictureUrl == null
+                                    ? const Icon(Icons.account_circle,
+                                        size: 40, color: Colors.grey)
+                                    : null,
                               ),
-                              const SizedBox(width: 10),
-                              // Comment Content
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Username and Timestamp
-                                    Row(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          commenter.userName!,
+                            ),
+                            const SizedBox(width: 10),
+                            // Comment Content
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Username and Timestamp
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () {
+                                          final isCurrentUser = userProvider
+                                              .isCurrentUser(commenter.userId);
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => AccountPage(
+                                                user: commenter,
+                                                isCurrentUser: isCurrentUser,
+                                                followUsers: followUsersProvider
+                                                    .followUsers,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          commenter.userName ?? "Unknown User",
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                        Text(
-                                          DateFormat('MM/dd/yyyy, hh:mm a')
-                                              .format(comment.createdDate),
-                                          style: const TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 12,
-                                          ),
+                                      ),
+                                      Text(
+                                        DateFormat('MM/dd/yyyy, hh:mm a')
+                                            .format(comment.createdDate),
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
                                         ),
-                                      ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 5),
+                                  if (comment.parentId != null &&
+                                      parentUserName != null)
+                                    Text(
+                                      'Reply to $parentUserName',
+                                      style: const TextStyle(
+                                        fontStyle: FontStyle.italic,
+                                        color: Colors.grey,
+                                      ),
                                     ),
+                                  if (comment.parentId != null &&
+                                      parentUserName != null)
                                     const SizedBox(height: 5),
-                                    Text(comment.content),
-                                    const SizedBox(height: 5),
-                                    // Action Buttons: Reply and Like
-                                    Row(
-                                      children: [
-                                        IconButton(
-                                          onPressed: () => _replyToComment(comment.id),
-                                          icon: Icon(Icons.comment),
+                                  // Comment Content
+                                  Text(comment.content),
+                                  const SizedBox(height: 5),
+                                  // Action Buttons: Reply and Like
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        onPressed: () =>
+                                            _replyToComment(comment.id),
+                                        icon: const Icon(Icons.comment),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          hasLiked
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
+                                          color: Colors.red,
                                         ),
-                                        IconButton(
-                                          icon: Icon(
-                                            hasLiked
-                                                ? Icons.favorite
-                                                : Icons.favorite_border,
-                                            color: Colors.red,
-                                          ),
-                                          onPressed: () => _likeComment(comment.id),
-                                        ),
-                                        Text('$likeCount'),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          // Display Replies
-                          if (replies.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 40.0, top: 5.0),
-                              child: ListView.builder(
-                                physics: const NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                itemCount: replies.length,
-                                itemBuilder: (context, replyIndex) {
-                                  final PostComment reply = replies[replyIndex];
-                                  final User? replier =
-                                  Provider.of<UsersProvider>(context)
-                                      .getUserById(reply.userId);
-
-                                  if (replier == null) {
-                                    return const SizedBox.shrink();
-                                  }
-
-                                  final List<PostCommentLike> replyLikes =
-                                  postProvider.getLikesForComment(reply.id);
-
-                                  bool hasLikedReply = replyLikes
-                                      .any((like) => like.userId == currentUserId);
-
-                                  int replyLikeCount = replyLikes.length;
-
-                                  // Get parent comment's userName
-                                  PostComment? parentComment;
-                                  try {
-                                    parentComment = postProvider.comments.firstWhere(
-                                            (comment) => comment.id == reply.parentId);
-                                  } catch (e) {
-                                    parentComment = null;
-                                  }
-
-                                  final String? parentUserName = parentComment != null
-                                      ? Provider.of<UsersProvider>(context, listen: false)
-                                      .getUserById(parentComment.userId)
-                                      ?.userName
-                                      : null;
-
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        CircleAvatar(
-                                          backgroundImage:
-                                          NetworkImage(replier.profilePictureUrl!),
-                                          radius: 12,
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                                children: [
-                                                  Text(
-                                                    replier.userName!,
-                                                    style: const TextStyle(
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    DateFormat('MM/dd/yyyy, hh:mm a')
-                                                        .format(reply.createdDate),
-                                                    style: const TextStyle(
-                                                      color: Colors.grey,
-                                                      fontSize: 12,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 5),
-                                              if (parentUserName != null)
-                                                Text(
-                                                  'Reply to $parentUserName',
-                                                  style: const TextStyle(
-                                                    fontStyle: FontStyle.italic,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                              if (parentUserName != null)
-                                                const SizedBox(height: 5),
-                                              Text(reply.content),
-                                              const SizedBox(height: 5),
-                                              Row(
-                                                children: [
-                                                  IconButton(
-                                                    onPressed: () => _replyToComment(reply.id),
-                                                    icon: Icon(Icons.comment),
-                                                  ),
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      hasLikedReply
-                                                          ? Icons.favorite
-                                                          : Icons.favorite_border,
-                                                      color: Colors.red,
-                                                      size: 18,
-                                                    ),
-                                                    onPressed: () => _likeComment(reply.id),
-                                                  ),
-                                                  Text('$replyLikeCount'),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
+                                        onPressed: () =>
+                                            _likeComment(comment.id),
+                                      ),
+                                      Text('$likeCount'),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ),
           const Divider(),
           // Input Field to Add Comment
@@ -448,13 +417,15 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                     ),
                   ),
                   onSubmitted: (_) => _addComment(
-                      parentId: _replyingToCommentId), // Pass parentId if replying
+                      parentId:
+                          _replyingToCommentId), // Pass parentId if replying
                 ),
               ),
               IconButton(
                 icon: const Icon(Icons.send, color: Colors.blue),
                 onPressed: () => _addComment(
-                    parentId: _replyingToCommentId), // Pass parentId if replying
+                    parentId:
+                        _replyingToCommentId), // Pass parentId if replying
               ),
             ],
           ),

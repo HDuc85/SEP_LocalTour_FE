@@ -1,12 +1,13 @@
 // lib/page/account/personal_information_page.dart
 
 import 'package:flutter/material.dart';
-import 'package:localtourapp/mock_firebase.dart';
-import 'package:localtourapp/models/users/users.dart';
-import 'package:localtourapp/page/account/view_profile/for_got_password.dart';
 import 'package:provider/provider.dart';
-import 'package:localtourapp/provider/user_provider.dart';
-import 'package:intl/intl.dart'; // Ensure you have intl package in pubspec.yaml
+import 'package:intl/intl.dart';
+
+import '../../mock_firebase.dart';
+import '../../models/users/users.dart';
+import '../../provider/user_provider.dart';
+import 'view_profile/for_got_password.dart'; // Ensure you have intl package in pubspec.yaml
 
 class PersonalInformationPage extends StatefulWidget {
   const PersonalInformationPage({Key? key}) : super(key: key);

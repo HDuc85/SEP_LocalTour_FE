@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:localtourapp/base/back_to_top_button.dart';
-import 'package:localtourapp/base/weather_icon_button.dart';
-import 'package:localtourapp/models/users/followuser.dart';
-import 'package:localtourapp/provider/review_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../models/places/placefeedback.dart';
 import '../../../models/places/placefeedbackmedia.dart';
+import '../../base/back_to_top_button.dart';
+import '../../base/weather_icon_button.dart';
+import '../../models/users/followuser.dart';
 import '../../models/users/users.dart';
+import '../../provider/review_provider.dart';
 import 'detail_card/review_card.dart';
 import '../../models/places/placefeedbackhelpful.dart';
 import 'detail_page_tab_bars/form/reportform.dart';
@@ -109,10 +109,17 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
   final ScrollController _scrollController = ScrollController();
   bool _showBackToTopButton = false;
 
+  late List<PlaceFeedbackMedia> relevantMediaList;
+
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+
+    relevantMediaList = widget.feedbackMediaList.where((media) {
+      return widget.feedbacks.any((feedback) =>
+      feedback.placeFeedbackId == media.feedbackId && feedback.placeId == widget.placeId);
+    }).toList();
   }
 
   @override
@@ -167,7 +174,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
     // Filter by media presence
     if (filterWithMedia) {
       filteredFeedbacks = filteredFeedbacks.where((feedback) {
-        return widget.feedbackMediaList.any((media) => media.feedbackId == feedback.placeFeedbackId);
+        return relevantMediaList.any((media) => media.feedbackId == feedback.placeFeedbackId);
       }).toList();
     }
 
@@ -366,14 +373,15 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
                       final relevantHelpfuls = widget.feedbackHelpfuls
                           .where((helpful) => helpful.placeFeedbackId == feedback.placeFeedbackId)
                           .toList();
+                      final mediaForFeedback = relevantMediaList
+                          .where((media) => media.feedbackId == feedback.placeFeedbackId)
+                          .toList();
 
                       return ReviewCard(
                         isInAllProductPage: true,
                         feedback: feedback,
                         user: getUserDetails(feedback.userId),
-                        feedbackMediaList: widget.feedbackMediaList
-                            .where((media) => media.feedbackId == feedback.placeFeedbackId)
-                            .toList(),
+                        feedbackMediaList: mediaForFeedback,
                         feedbackHelpfuls: relevantHelpfuls,
                         userId: widget.userId,
                         onFavoriteToggle: (feedbackId, isFavorited) {
@@ -425,8 +433,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
 
   // Count feedbacks with media
   int getMediaFeedbackCount() {
-    return widget.feedbacks.where((feedback) {
-      return widget.feedbackMediaList.any((media) => media.feedbackId == feedback.placeFeedbackId);
-    }).length;
+    return relevantMediaList.length;
   }
+
 }

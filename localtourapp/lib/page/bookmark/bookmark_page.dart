@@ -3,19 +3,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:localtourapp/base/place_card_info.dart';
-import 'package:localtourapp/models/places/placemedia.dart';
-import 'package:localtourapp/provider/place_provider.dart';
-import 'package:localtourapp/provider/user_provider.dart';
-import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart'; // Import for firstWhereOrNull
 import '../../base/back_to_top_button.dart';
+import '../../base/place_card_info.dart';
 import '../../base/weather_icon_button.dart';
 import '../../models/places/markplace.dart';
 import '../../models/places/place.dart';
+import '../../models/places/placemedia.dart';
 import '../../models/places/placetranslation.dart';
 import '../../base/place_score_manager.dart';
+import '../../provider/place_provider.dart';
+import '../../provider/user_provider.dart';
+import '../detail_page/detail_page.dart';
 
 class BookmarkPage extends StatefulWidget {
   const BookmarkPage({Key? key}) : super(key: key);
@@ -174,7 +174,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                 // Access MarkPlace associated with the placeId via the instance
                 MarkPlace? markPlace =
                 bookmarkProvider.markPlaces.firstWhereOrNull(
-                      (mp) => mp.placeId == placeId,
+                      (mp) => mp!.placeId == placeId,
                 );
 
                 if (markPlace == null) {

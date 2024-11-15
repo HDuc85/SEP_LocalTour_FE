@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:localtourapp/base/back_to_top_button.dart';
-import 'package:localtourapp/full_media/full_place_media_viewer.dart';
-import 'package:localtourapp/models/places/markplace.dart';
-import 'package:localtourapp/models/places/placefeedback.dart';
-import 'package:localtourapp/models/places/placefeedbackmedia.dart';
-import 'package:localtourapp/models/places/placemedia.dart';
-import 'package:localtourapp/models/places/placetag.dart';
-import 'package:localtourapp/models/places/tag.dart';
-import 'package:localtourapp/models/users/users.dart';
-import 'package:localtourapp/page/detail_page/detail_page_tab_bars/detail_tabbar.dart';
-import 'package:localtourapp/page/detail_page/detail_page_tab_bars/review_tabbar.dart';
-import 'package:localtourapp/provider/place_provider.dart';
 import 'package:provider/provider.dart';
+
+import '../../base/back_to_top_button.dart';
+import '../../full_media/full_place_media_viewer.dart';
+import '../../models/places/markplace.dart';
+import '../../models/places/placemedia.dart';
+import '../../models/places/placetag.dart';
+import '../../models/places/tag.dart';
+import '../../provider/place_provider.dart';
+import 'detail_page_tab_bars/detail_tabbar.dart';
+import 'detail_page_tab_bars/review_tabbar.dart';
 
 class DetailPage extends StatefulWidget {
   final String placeName;

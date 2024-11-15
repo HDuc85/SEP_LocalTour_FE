@@ -3,12 +3,13 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:localtourapp/provider/schedule_provider.dart';
-import 'package:localtourapp/models/schedule/destination.dart';
-import 'package:localtourapp/models/schedule/schedule.dart';
-import 'package:localtourapp/page/planned_page/planned_page_tab_bars/add_schedule_dialog.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
+
+import '../../../../models/schedule/destination.dart';
+import '../../../../models/schedule/schedule.dart';
+import '../../../../provider/schedule_provider.dart';
+import '../../../planned_page/planned_page_tab_bars/add_schedule_dialog.dart';
 
 class ScheduleForm extends StatefulWidget {
   final String userId;

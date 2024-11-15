@@ -1,6 +1,6 @@
 // event_card_widget.dart
 import 'package:flutter/material.dart';
-import 'package:localtourapp/base/scrollable_text_container.dart';
+import '../../../base/scrollable_text_container.dart';
 import '../../../models/places/event.dart';
 
 class EventCardWidget extends StatelessWidget {

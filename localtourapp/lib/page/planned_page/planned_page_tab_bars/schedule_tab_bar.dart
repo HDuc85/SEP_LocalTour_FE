@@ -955,7 +955,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           ),
           if (clearable && initialDate != null)
             Positioned(
-              right: 5,
+              right:0,
               top: 5,
               child: GestureDetector(
                 onTap: onClear,

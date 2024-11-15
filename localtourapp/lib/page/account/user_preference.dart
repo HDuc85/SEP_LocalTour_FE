@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:localtourapp/models/places/tag.dart';
-import 'package:localtourapp/provider/user_provider.dart';
+
+import '../../models/places/tag.dart';
+import '../../provider/user_provider.dart';
 
 class UserPreferencePage extends StatefulWidget {
   const UserPreferencePage({Key? key}) : super(key: key);

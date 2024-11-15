@@ -4,12 +4,13 @@ import 'dart:convert';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:localtourapp/models/places/markplace.dart';
-import 'package:localtourapp/models/places/placereport.dart';
-import 'package:localtourapp/models/places/placetag.dart';
-import 'package:localtourapp/models/places/placetranslation.dart';
-import 'package:localtourapp/models/places/place.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../models/places/markplace.dart';
+import '../models/places/place.dart';
+import '../models/places/placereport.dart';
+import '../models/places/placetag.dart';
+import '../models/places/placetranslation.dart';
 
 class PlaceProvider with ChangeNotifier {
   // Private lists to hold schedules, likes, destinations, places, and translations

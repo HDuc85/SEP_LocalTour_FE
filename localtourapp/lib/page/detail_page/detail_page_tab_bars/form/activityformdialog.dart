@@ -1,9 +1,8 @@
 // lib/page/detailpagetabbars/form/activityformdialog.dart
 
 import 'package:flutter/material.dart';
-import 'package:localtourapp/base/scrollable_text_container.dart';
-import 'package:localtourapp/full_media/full_activity_media_viewer.dart';
-import 'package:localtourapp/models/places/placeactivitytranslation.dart';
+import '../../../../base/scrollable_text_container.dart';
+import '../../../../full_media/full_activity_media_viewer.dart';
 import '../../../../models/places/placeactivitymedia.dart';
 
 class ActivityFormDialog extends StatelessWidget {

@@ -173,7 +173,8 @@ class _PostTabBarState extends State<PostTabBar> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => CommentsBottomSheet(post: post, userId: widget.userId, user: widget.user, followUsers: widget.followUsers,),
+      builder: (context) => CommentsBottomSheet(
+        post: post, userId: widget.userId,),
     );
   }
 

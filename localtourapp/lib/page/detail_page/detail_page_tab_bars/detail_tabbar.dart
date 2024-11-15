@@ -2,16 +2,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:localtourapp/base/back_to_top_button.dart';
-import 'package:localtourapp/base/filter_option.dart';
-import 'package:localtourapp/base/weather_icon_button.dart';
-import 'package:localtourapp/models/places/placereport.dart';
-import 'package:localtourapp/page/search_page/search_page.dart';
-import 'package:localtourapp/provider/place_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../base/custom_button.dart';
+import '../../../base/filter_option.dart';
+import '../../../base/weather_icon_button.dart';
 import '../../../models/places/event.dart';
+import '../../../models/places/placereport.dart';
 import '../../../models/places/tag.dart';
+import '../../../provider/place_provider.dart';
+import '../../search_page/search_page.dart';
 import '../detail_card/activity_card.dart';
 import '../detail_card/activity_card_info.dart';
 import '../detail_card/event_card.dart';

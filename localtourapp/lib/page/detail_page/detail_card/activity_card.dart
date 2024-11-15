@@ -1,7 +1,7 @@
 // lib/card/activity_card.dart
 
 import 'package:flutter/material.dart';
-import 'package:localtourapp/full_media/full_activity_media_viewer.dart';
+import '../../../full_media/full_activity_media_viewer.dart';
 import '../../../models/places/placeactivitymedia.dart';
 
 class ActivityCard extends StatelessWidget {

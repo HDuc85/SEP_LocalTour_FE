@@ -1,7 +1,5 @@
 import 'dart:math';
 
-import 'package:localtourapp/models/users/users.dart';
-
 class UserPreferenceTags {
   int id;
   int? tagId;
