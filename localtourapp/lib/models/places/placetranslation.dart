@@ -61,7 +61,7 @@ List<PlaceTranslation> generatePlaceTranslations(List<Place> places) {
     String languageCode = languageCodes[random.nextInt(languageCodes.length)];
 
     // Generate a random place name
-    String placeName = 'Place Name Place NamePlace NamePlace NamePlace NamePlace NamePlace NamePlace Name $placeTranslationId';
+    String placeName = 'Place Name Place NamePlace $placeTranslationId';
 
     // Optionally generate a description (nullable)
     String? description =
@@ -101,4 +101,4 @@ List<PlaceTranslation> generatePlaceTranslations(List<Place> places) {
 }
 
 
-List<PlaceTranslation> translations = generatePlaceTranslations(dummyPlaces);
+List<PlaceTranslation> dummyTranslations = generatePlaceTranslations(dummyPlaces);

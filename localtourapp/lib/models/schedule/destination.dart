@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:localtourvn/models/places/place.dart';
+import '../places/place.dart';
 import 'schedule.dart';
 
 class Destination {

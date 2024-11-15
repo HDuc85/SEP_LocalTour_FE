@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:localtourapp/config/appConfig.dart';
+=======
+
+import '../../config/appConfig.dart';
+>>>>>>> TuanNTA2k
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override

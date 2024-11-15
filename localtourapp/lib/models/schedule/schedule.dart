@@ -1,5 +1,6 @@
 import 'dart:math';
-import 'package:localtourvn/models/users/users.dart';
+
+import 'package:localtourapp/models/users/users.dart';
 
 class Schedule {
   final int id;
@@ -7,7 +8,7 @@ class Schedule {
   String scheduleName;
   DateTime? startDate;
   DateTime? endDate;
-  final DateTime createdDate;
+  final DateTime createdAt;
   bool isPublic;
 
   Schedule({
@@ -16,22 +17,11 @@ class Schedule {
     required this.scheduleName,
     this.startDate,
     this.endDate,
-    required this.createdDate,
+    required this.createdAt,
     this.isPublic = false,
   });
 
-  factory Schedule.fromJson(Map<String, dynamic> json) {
-    return Schedule(
-      id: json['id'],
-      userId: json['userId'],
-      scheduleName: json['scheduleName'],
-      startDate: json['startDate'] != null ? DateTime.parse(json['startDate']) : null,
-      endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
-      createdDate: DateTime.parse(json['createdDate']),
-      isPublic: json['isPublic'] ?? false,
-    );
-  }
-
+  // Convert Schedule to JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -39,12 +29,13 @@ class Schedule {
       'scheduleName': scheduleName,
       'startDate': startDate?.toIso8601String(),
       'endDate': endDate?.toIso8601String(),
-      'createdDate': createdDate.toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
       'isPublic': isPublic,
     };
   }
 }
 
+// Generates Schedules with valid userId mappings
 List<Schedule> generateFakeSchedules(int count, List<User> users) {
   final random = Random();
   return List.generate(count, (index) {
@@ -55,10 +46,12 @@ List<Schedule> generateFakeSchedules(int count, List<User> users) {
       scheduleName: 'Schedule ${index + 1}',
       startDate: DateTime.now().add(Duration(days: random.nextInt(30))),
       endDate: DateTime.now().add(Duration(days: random.nextInt(60) + 30)),
-      createdDate: DateTime.now().subtract(Duration(days: random.nextInt(30))),
+      createdAt: DateTime.now().subtract(Duration(days: random.nextInt(30))),
       isPublic: random.nextBool(),
     );
   });
 }
 
 List<Schedule> dummySchedules = generateFakeSchedules(50, fakeUsers);
+
+

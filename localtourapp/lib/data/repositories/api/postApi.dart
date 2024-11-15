@@ -1,7 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+<<<<<<< HEAD
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/data/models/post.dart';
+=======
+import '../../../config/appConfig.dart';
+import '../../../models/posts/post.dart';
+>>>>>>> TuanNTA2k
 
 class TourApi {
   Future<List<Post>> fetchTours() async {
