@@ -5,7 +5,7 @@ import '../../../models/posts/post.dart';
 
 class TourApi {
   Future<List<Post>> fetchTours() async {
-    final response = await http.get(Uri.parse('${AppConfig.apiBaseUrl}/posts'));
+    final response = await http.get(Uri.parse('${AppConfig.apiUrl}/posts'));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
