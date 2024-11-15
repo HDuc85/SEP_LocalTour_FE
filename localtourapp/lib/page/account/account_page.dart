@@ -1,23 +1,24 @@
 // lib/page/account/account_page.dart
 
 import 'package:flutter/material.dart';
-import 'package:localtourapp/base/follow_users_provider.dart';
-import 'package:localtourapp/base/schedule_provider.dart';
+import 'package:localtourapp/provider/follow_users_provider.dart';
+import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
 import 'package:localtourapp/models/posts/post.dart';
 import 'package:localtourapp/models/schedule/schedule.dart';
 import 'package:localtourapp/models/users/followuser.dart';
 import 'package:localtourapp/models/users/users.dart';
 import 'package:localtourapp/page/account/faq.dart';
+import 'package:localtourapp/page/account/followlistpage.dart';
 import 'package:localtourapp/page/account/personal_infomation.dart';
-import 'package:localtourapp/page/account/review_provider.dart';
+import 'package:localtourapp/provider/review_provider.dart';
 import 'package:localtourapp/page/account/setting_page.dart';
 import 'package:localtourapp/page/account/user_preference.dart';
-import 'package:localtourapp/page/account/user_provider.dart';
-import 'package:localtourapp/page/account/users_provider.dart';
+import 'package:localtourapp/provider/user_provider.dart';
+import 'package:localtourapp/provider/users_provider.dart';
 import 'package:localtourapp/page/account/view_profile/post_provider.dart';
 import 'package:localtourapp/page/account/view_profile/view_profile.dart';
-import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provider.dart';
+import 'package:localtourapp/provider/count_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -55,7 +56,7 @@ class _AccountPageState extends State<AccountPage> {
   void initState() {
     super.initState();
     final followUsersProvider =
-    Provider.of<FollowUsersProvider>(context, listen: false);
+        Provider.of<FollowUsersProvider>(context, listen: false);
     followers = followUsersProvider.getFollowers(widget.user.userId);
     followings = followUsersProvider.getFollowings(widget.user.userId);
     displayedUser = widget.user;
@@ -74,9 +75,8 @@ class _AccountPageState extends State<AccountPage> {
     final usersProvider = Provider.of<UsersProvider>(context, listen: false);
     final postProvider = Provider.of<PostProvider>(context, listen: false);
     final scheduleProvider =
-    Provider.of<ScheduleProvider>(context, listen: false);
-    final reviewProvider =
-    Provider.of<ReviewProvider>(context, listen: false);
+        Provider.of<ScheduleProvider>(context, listen: false);
+    final reviewProvider = Provider.of<ReviewProvider>(context, listen: false);
 
     if (userProvider.isCurrentUser(widget.user.userId)) {
       // Display current user's information
@@ -87,14 +87,13 @@ class _AccountPageState extends State<AccountPage> {
           userProvider.currentUser;
     }
 
-    final userReviews =
-    reviewProvider.getReviewsByUserId(displayedUser.userId);
+    final userReviews = reviewProvider.getReviewsByUserId(displayedUser.userId);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<CountProvider>(context, listen: false)
           .setReviewCount(userReviews.length);
     });
     final userSchedules =
-    scheduleProvider.getSchedulesByUserId(displayedUser.userId);
+        scheduleProvider.getSchedulesByUserId(displayedUser.userId);
     // Use post-frame callback to set schedule count after initial build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<CountProvider>(context, listen: false)
@@ -122,21 +121,18 @@ class _AccountPageState extends State<AccountPage> {
   @override
   Widget build(BuildContext context) {
     final followUsersProvider =
-    Provider.of<FollowUsersProvider>(context, listen: true);
+        Provider.of<FollowUsersProvider>(context, listen: true);
     final userProvider = Provider.of<UserProvider>(context, listen: true);
     // If viewing another user's profile, determine if the current user follows them
-    final int scheduleCount =
-        Provider.of<CountProvider>(context).scheduleCount;
-    final int reviewCount =
-        Provider.of<CountProvider>(context).reviewCount;
-    final int postCount =
-        Provider.of<CountProvider>(context).postCount;
+    final int scheduleCount = Provider.of<CountProvider>(context).scheduleCount;
+    final int reviewCount = Provider.of<CountProvider>(context).reviewCount;
+    final int postCount = Provider.of<CountProvider>(context).postCount;
     int followerCount =
-    FollowUser.countFollowers(widget.user.userId, widget.followUsers);
+        FollowUser.countFollowers(widget.user.userId, widget.followUsers);
     int followingCount =
-    FollowUser.countFollowing(widget.user.userId, widget.followUsers);
+        FollowUser.countFollowing(widget.user.userId, widget.followUsers);
     bool isCurrentUser =
-    Provider.of<UserProvider>(context).isCurrentUser(displayedUser.userId);
+        Provider.of<UserProvider>(context).isCurrentUser(displayedUser.userId);
     final ScrollController _scrollController = ScrollController();
 
     // Listen to scroll events
@@ -168,7 +164,8 @@ class _AccountPageState extends State<AccountPage> {
             ),
             const SizedBox(height: 16),
             if (!isCurrentUser)
-              _buildFollowButton(isFollowing, followUsersProvider, userProvider),
+              _buildFollowButton(
+                  isFollowing, followUsersProvider, userProvider),
             if (isCurrentUser) ...[
               _buildPersonInfoSection(),
               const SizedBox(height: 12),
@@ -240,7 +237,8 @@ class _AccountPageState extends State<AccountPage> {
         .where((schedule) => schedule.userId == displayedUser.userId)
         .toList();
     final postProvider = Provider.of<PostProvider>(context);
-    final List<Post> userPosts = postProvider.getPostsByUserId(displayedUser.userId);
+    final List<Post> userPosts =
+        postProvider.getPostsByUserId(displayedUser.userId);
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -269,7 +267,7 @@ class _AccountPageState extends State<AccountPage> {
                     : null,
                 child: user.profilePictureUrl == null
                     ? const Icon(Icons.account_circle,
-                    size: 60, color: Colors.grey)
+                        size: 60, color: Colors.grey)
                     : null,
               ),
               const SizedBox(width: 16),
@@ -309,14 +307,46 @@ class _AccountPageState extends State<AccountPage> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Text(
-                          '$followerCount followers',
-                          style: const TextStyle(fontSize: 14),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FollowListPage(
+                                  followers: followers,
+                                  following: followings,
+                                  allUsers: Provider.of<UsersProvider>(context,
+                                          listen: false)
+                                      .users, // List of all users
+                                ),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            '$followerCount followers',
+                            style: const TextStyle(fontSize: 14),
+                          ),
                         ),
                         const SizedBox(width: 16),
-                        Text(
-                          '$followingCount following',
-                          style: const TextStyle(fontSize: 14),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FollowListPage(
+                                  followers: followers,
+                                  following: followings,
+                                  allUsers: Provider.of<UsersProvider>(context,
+                                          listen: false)
+                                      .users, // List of all users
+                                ),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            '$followingCount following',
+                            style: const TextStyle(fontSize: 14),
+                          ),
                         ),
                       ],
                     ),
@@ -452,8 +482,7 @@ class _AccountPageState extends State<AccountPage> {
         child: ListTile(
           leading: const Icon(Icons.contact_mail),
           title: const Text('Contact Us'),
-          subtitle:
-          const Text('Reach out with support requests or feedback'),
+          subtitle: const Text('Reach out with support requests or feedback'),
           onTap: _sendEmail,
         ));
   }
@@ -536,7 +565,7 @@ class _AccountPageState extends State<AccountPage> {
             )));
   }
 
-  Widget _buildUserPreference(){
+  Widget _buildUserPreference() {
     return InkWell(
         onTap: () {
           // Navigate to FAQ Page when tapped

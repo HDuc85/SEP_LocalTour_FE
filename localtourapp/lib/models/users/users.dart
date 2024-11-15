@@ -153,7 +153,7 @@ List<User> generateFakeUsers(int count) {
     email: 'nguyenthanhanhtuan123@gmail.com',
     normalizedEmail: 'NGUYENTHANHANHTUAN123@GMAIL.COM',
     emailConfirmed: true,
-    passwordHash: null,
+    passwordHash: '1234567890',
     phoneNumber: '+84705543619',
     phoneNumberConfirmed: true,
     fullName: 'Nguyen Thanh Anh Tuan',

@@ -1,17 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/places/tag.dart';
+import 'package:localtourapp/models/users/userreport.dart';
 import 'package:localtourapp/models/users/users.dart';
 
 class UserProvider with ChangeNotifier {
   User _currentUser;
-  final Set<int> _preferredTagIds = {}; // Store preferred tag IDs independently
+  Set<int> _preferredTagIds = {}; // Store preferred tag IDs independently
+  List<UserReport> _userReports = [];
+  List<Tag> _tags = [];
 
-  UserProvider({required User initialUser}) : _currentUser = initialUser;
+  UserProvider({
+    required User initialUser,
+    List<Tag>? tags,
+    List<UserReport>? userReports,
+    Set<int>? preferredTagIds,
+  }) : _currentUser = initialUser,
+        _preferredTagIds = preferredTagIds ?? <int>{},
+  // Initialize as Set<int>
+        _userReports = userReports ?? [],
+        _tags = tags ?? [];
 
-  // Getter to access the current user
+  List<Tag> get tags => _tags;
+  List<UserReport> get userReport => _userReports;
+  Set<int> get preferredTagIds => _preferredTagIds;
   User get currentUser => _currentUser;
-
-  // Getter to access the userId directly
   String get userId => _currentUser.userId;
+
+  void addUserReport(UserReport report) {
+    _userReports.add(report);
+    notifyListeners();
+  }
 
   // Add a tag to the preferred tags
   void addTag(int tagId) {

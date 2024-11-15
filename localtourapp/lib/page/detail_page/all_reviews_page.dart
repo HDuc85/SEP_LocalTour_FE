@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
 import 'package:localtourapp/models/users/followuser.dart';
+import 'package:localtourapp/provider/review_provider.dart';
+import 'package:provider/provider.dart';
 import '../../../../models/places/placefeedback.dart';
 import '../../../models/places/placefeedbackmedia.dart';
 import '../../models/users/users.dart';
@@ -10,7 +12,6 @@ import '../../models/places/placefeedbackhelpful.dart';
 import 'detail_page_tab_bars/form/reportform.dart';
 
 class AllReviewsPage extends StatefulWidget {
-  final List<int> favoritedFeedbackIds;
   final List<PlaceFeedback> feedbacks;
   final List<User> users;
   final List<FollowUser> followUsers;
@@ -22,7 +23,6 @@ class AllReviewsPage extends StatefulWidget {
 
   const AllReviewsPage({
     Key? key,
-    required this.favoritedFeedbackIds,
     required this.feedbacks,
     required this.users,
     required this.feedbackMediaList,
@@ -102,7 +102,6 @@ class _FilterCellState extends State<FilterCell> {
 }
 
 class _AllReviewsPageState extends State<AllReviewsPage> {
-  List<int> favoritedFeedbackIds = [];
   String sortByStars = "All";
   String sortOrder = "Latest";
   Color sortOrderColor = Colors.green;
@@ -113,7 +112,6 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
   @override
   void initState() {
     super.initState();
-    favoritedFeedbackIds = widget.favoritedFeedbackIds;
     _scrollController.addListener(_scrollListener);
   }
 
@@ -285,9 +283,9 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
 
   @override
   Widget build(BuildContext context) {
-
     final filteredFeedbacks = getFilteredFeedbacks();
     final mediaFeedbackCount = getMediaFeedbackCount();
+    final reviewProvider = Provider.of<ReviewProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -377,15 +375,19 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
                             .where((media) => media.feedbackId == feedback.placeFeedbackId)
                             .toList(),
                         feedbackHelpfuls: relevantHelpfuls,
-                        favoritedFeedbackIds: favoritedFeedbackIds,
-                        onFavoriteToggle: _handleFavoriteToggle,
                         userId: widget.userId,
+                        onFavoriteToggle: (feedbackId, isFavorited) {
+                          reviewProvider.toggleFavorite(feedbackId, widget.userId);
+                          // Refresh the page to reflect changes.
+                          setState(() {});
+                        },
                         onReport: () {
                           ReportForm.show(
                             context,
                             'Have a problem with this person? Report them to us!',
                           );
-                        }, followUsers: widget.followUsers,
+                        },
+                        followUsers: widget.followUsers,
                       );
                     }).toList(),
                   ),
@@ -426,15 +428,5 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
     return widget.feedbacks.where((feedback) {
       return widget.feedbackMediaList.any((media) => media.feedbackId == feedback.placeFeedbackId);
     }).length;
-  }
-
-  void _handleFavoriteToggle(int feedbackId, bool isFavorited) {
-    setState(() {
-      if (isFavorited) {
-        favoritedFeedbackIds.add(feedbackId);
-      } else {
-        favoritedFeedbackIds.remove(feedbackId);
-      }
-    });
   }
 }

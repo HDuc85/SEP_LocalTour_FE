@@ -6,8 +6,11 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:localtourapp/base/base_page.dart';
 import 'package:localtourapp/base/const.dart';
-import 'package:localtourapp/base/follow_users_provider.dart';
-import 'package:localtourapp/base/schedule_provider.dart';
+import 'package:localtourapp/models/places/placefeedbackhelpful.dart';
+import 'package:localtourapp/models/places/placefeedbackmedia.dart';
+import 'package:localtourapp/provider/follow_users_provider.dart';
+import 'package:localtourapp/provider/place_provider.dart';
+import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/generated/l10n.dart';
 import 'package:localtourapp/models/places/place.dart';
 import 'package:localtourapp/models/places/placetranslation.dart';
@@ -22,21 +25,19 @@ import 'package:localtourapp/models/schedule/schedulelike.dart';
 import 'package:localtourapp/models/users/followuser.dart';
 import 'package:localtourapp/models/users/users.dart';
 import 'package:localtourapp/page/account/account_page.dart';
-import 'package:localtourapp/page/account/language_provider.dart';
-import 'package:localtourapp/page/account/review_provider.dart';
-import 'package:localtourapp/page/account/user_provider.dart';
-import 'package:localtourapp/page/account/users_provider.dart';
+import 'package:localtourapp/provider/language_provider.dart';
+import 'package:localtourapp/provider/review_provider.dart';
+import 'package:localtourapp/provider/user_provider.dart';
+import 'package:localtourapp/provider/users_provider.dart';
 import 'package:localtourapp/page/account/view_profile/auth_provider.dart';
 import 'package:localtourapp/page/account/view_profile/post_provider.dart';
-import 'package:localtourapp/page/bookmark/bookmark_provider.dart';
 import 'package:localtourapp/page/bookmark/bookmark_page.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
-import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provider.dart';
+import 'package:localtourapp/provider/count_provider.dart';
 import 'package:localtourapp/page/home_screen/home_screen.dart';
 import 'package:localtourapp/page/my_map/map_page.dart';
 import 'package:localtourapp/page/planned_page/planned_page.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/history_tab_bar.dart';
-import 'package:localtourapp/provider/favorited_feedback_provider.dart';
 import 'package:localtourapp/weather/providers/weather_provider.dart';
 import 'package:localtourapp/weather/weather_page.dart';
 import 'package:provider/provider.dart';
@@ -53,7 +54,7 @@ void main() async {
   await Hive.initFlutter();
 
   // Create an instance of bookmarkProvider and load bookmarks
-  BookmarkProvider bookmarkProvider = BookmarkProvider();
+  PlaceProvider bookmarkProvider = PlaceProvider();
   await bookmarkProvider.loadBookmarks();
 
   // Generate fake users
@@ -65,7 +66,7 @@ void main() async {
     MultiProvider(
       providers: [
         // Add LanguageProvider here
-        ChangeNotifierProvider(create: (_) => ReviewProvider(placeFeedbacks: dummyFeedbacks)),
+        ChangeNotifierProvider(create: (_) => ReviewProvider(placeFeedbacks: dummyFeedbacks, placeFeedbackMedia: feedbackMediaList, placeFeedbackHelpfuls: feebBackHelpfuls)),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => bookmarkProvider),
         ChangeNotifierProvider(create: (_) => WeatherProvider()),
@@ -73,7 +74,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => UsersProvider(fakeUsers)),
         ChangeNotifierProvider(create: (_) => CountProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => FavoritedFeedbackProvider()),
+        ChangeNotifierProvider(create: (_) => PlaceProvider()),
         ChangeNotifierProvider(
             create: (_) =>
                 FollowUsersProvider(initialFollowUsers: dummyFollowUsers)),

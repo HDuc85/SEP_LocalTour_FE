@@ -1,8 +1,14 @@
 // lib/page/detail_page/detail_page_tab_bars/detail_tabbar.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
+import 'package:localtourapp/base/filter_option.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
+import 'package:localtourapp/models/places/placereport.dart';
+import 'package:localtourapp/page/search_page/search_page.dart';
+import 'package:localtourapp/provider/place_provider.dart';
+import 'package:provider/provider.dart';
 import '../../../base/custom_button.dart';
 import '../../../models/places/event.dart';
 import '../../../models/places/tag.dart';
@@ -178,9 +184,19 @@ class _DetailTabbarState extends State<DetailTabbar> {
                       child: IconButton(
                         color: Colors.red,
                         onPressed: () {
+                          final placeProvider = Provider.of<PlaceProvider>(context, listen: false);
                           ReportForm.show(
                             context,
                             'Have a problem with this place? Report it to us!',
+                            onSubmit: (reportMessage) {
+                              final placeReport = PlaceReport(
+                                id: placeProvider.placeReports.length + 1, // Assuming sequential IDs
+                                placeId: widget.placeId, // Use the relevant placeId here
+                                reportDate: DateTime.now(),
+                                status: 'unprocessed',
+                              );
+                              placeProvider.addPlaceReport(placeReport);
+                            },
                           );
                         },
                         icon: const Icon(Icons.flag, size: 10),
@@ -305,12 +321,14 @@ class _DetailTabbarState extends State<DetailTabbar> {
   Widget _buildMapImage() {
     final double latitude = place!.latitude;
     final double longitude = place!.longitude;
+    final String apiKey = dotenv.get('VIETMAP_API_KEY');
+    final String mapStyleUrl = dotenv.get('VIETMAP_MAP_STYLE_URL');
 
     return SizedBox(
       width: double.infinity,
       height: 150,
       child: Image.network(
-        'https://maps.vietmap.vn/maps/api/staticmap?center=$latitude,$longitude&zoom=15&size=400x300&key=YOUR_API_KEY', // Replace YOUR_API_KEY with your actual API key
+        'https://maps.vietmap.vn/maps/api/staticmap?center=$latitude,$longitude&zoom=15&size=400x300&key=$apiKey&style=$mapStyleUrl',
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
           return const Center(child: Text('Map not available'));
@@ -355,17 +373,30 @@ class _DetailTabbarState extends State<DetailTabbar> {
 
     for (int i = 0; i < tags.length && i < 5; i++) {
       tagChips.add(
-        Chip(
-          label: Text(
-            tags[i].tagName,
-            style: const TextStyle(
-              color: Colors.green,
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SearchPage(
+                  initialFilter: FilterOption.none,
+                  initialTags: [tags[i].tagId], // Pass the selected tag ID
+                ),
+              ),
+            );
+          },
+          child: Chip(
+            label: Text(
+              tags[i].tagName,
+              style: const TextStyle(
+                color: Colors.green,
+              ),
             ),
+            shape: const StadiumBorder(
+              side: BorderSide(color: Colors.green),
+            ),
+            backgroundColor: Colors.transparent,
           ),
-          shape: const StadiumBorder(
-            side: BorderSide(color: Colors.green),
-          ),
-          backgroundColor: Colors.transparent,
         ),
       );
     }

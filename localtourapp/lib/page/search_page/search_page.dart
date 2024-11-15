@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:localtourapp/page/account/user_provider.dart';
+import 'package:localtourapp/provider/user_provider.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:provider/provider.dart';
 import '../../base/const.dart';

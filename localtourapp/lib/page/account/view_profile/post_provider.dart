@@ -4,7 +4,7 @@ import 'package:localtourapp/models/posts/postcomment.dart';
 import 'package:localtourapp/models/posts/postcommentlike.dart';
 import 'package:localtourapp/models/posts/postlike.dart';
 import 'package:localtourapp/models/posts/postmedia.dart';
-import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provider.dart';
+import 'package:localtourapp/provider/count_provider.dart';
 import 'package:provider/provider.dart';
 
 class PostProvider with ChangeNotifier {

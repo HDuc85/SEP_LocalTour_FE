@@ -198,7 +198,6 @@ class Assets {
   static const String postsPostcommentlike = 'lib/models/posts/postcommentlike.dart';
   static const String postsPostlike = 'lib/models/posts/postlike.dart';
   static const String postsPostmedia = 'lib/models/posts/postmedia.dart';
-  static const String providerFavoritedFeedbackProvider = 'lib/provider/favorited_feedback_provider.dart';
   static const String providersWeatherProvider = 'lib/weather/providers/weather_provider.dart';
   static const String routesAppRouter = 'lib/routes/appRouter.dart';
   static const String scheduleDestination = 'lib/models/schedule/destination.dart';

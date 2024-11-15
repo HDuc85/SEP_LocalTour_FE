@@ -1,15 +1,15 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart'; // Needed for TapGestureRecognizer
-import 'package:localtourapp/base/schedule_provider.dart';
+import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/models/places/placemedia.dart';
 import 'package:localtourapp/models/places/placetranslation.dart';
 import 'package:localtourapp/models/places/place.dart'; // Import Place
 import 'package:localtourapp/models/schedule/schedulelike.dart';
 import 'package:localtourapp/models/users/users.dart';
-import 'package:localtourapp/page/account/user_provider.dart';
+import 'package:localtourapp/provider/user_provider.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
-import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provider.dart';
+import 'package:localtourapp/provider/count_provider.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/add_schedule_dialog.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/fearuted_schedule_page.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/suggest_schedule_page.dart';
@@ -619,6 +619,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     });
   }
 
+
+
   Widget _buildDestinationList(
       List<Destination> scheduleDestinations, Schedule schedule) {
     void updateStartDate(Destination destination, DateTime? newDate) {
@@ -736,7 +738,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () {
                       _showDeleteDestinationConfirmationDialog(
-                          destination, placeTranslation!.placeName);
+                          destination, placeTranslation!.placeName, destination.id,);
                     },
                   ),
                 ],
@@ -825,7 +827,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   void _showDeleteDestinationConfirmationDialog(
-      Destination destination, String placeName) {
+      Destination destination, String placeName, int destinationId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -842,8 +844,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             TextButton(
               onPressed: () {
                 setState(() {
-                  widget.destinations
-                      .removeWhere((d) => d.id == destination.id);
+                  _deleteDestination(destinationId);
                 });
                 Navigator.of(context).pop();
               },
@@ -853,6 +854,18 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
         );
       },
     );
+  }
+
+  void _deleteDestination(int destinationId) {
+    final manager = Provider.of<ScheduleProvider>(context, listen: false);
+    manager.removeDestination(destinationId);
+    setState(() {
+      widget.destinations
+          .removeWhere((destination) => destination.scheduleId == destinationId);
+      widget.schedules.removeWhere((schedule) => schedule.id == destinationId);
+      Provider.of<CountProvider>(context, listen: false)
+          .decrementScheduleCount();
+    });
   }
 
   void _navigateToDetail(int placeId, Place place,
@@ -955,8 +968,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   Widget _buildButtonsSection() {
-    final scheduleProvider =
-        Provider.of<ScheduleProvider>(context, listen: false);
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [

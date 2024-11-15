@@ -143,33 +143,6 @@ class ScheduleProvider with ChangeNotifier {
     }
   }
 
-  // ----------------------------
-  // Methods to Manage Places and Translations
-  // ----------------------------
-
-  // Add a new place
-  void addPlace(Place place) {
-    _places.add(place);
-    notifyListeners();
-  }
-
-  // Remove a place by its ID
-  void removePlace(int placeId) {
-    _places.removeWhere((place) => place.placeId == placeId);
-    notifyListeners();
-  }
-
-  // Add a new place translation
-  void addPlaceTranslation(PlaceTranslation translation) {
-    _translations.add(translation);
-    notifyListeners();
-  }
-
-  // Remove a place translation by placeId
-  void removePlaceTranslation(int placeId) {
-    _translations.removeWhere((t) => t.placeId == placeId);
-    notifyListeners();
-  }
   // Retrieve all likes for a specific schedule
   List<ScheduleLike> getLikesForSchedule(int scheduleId) {
     return _scheduleLikes.where((like) => like.scheduleId == scheduleId).toList();
@@ -189,19 +162,6 @@ class ScheduleProvider with ChangeNotifier {
     return _places.firstWhereOrNull((place) => place.placeId == placeId);
   }
 
-  // Retrieve place translation by placeId
-  PlaceTranslation? getTranslationByPlaceId(int placeId) {
-    return _translations.firstWhereOrNull((t) => t.placeId == placeId);
-  }
-
-  PlaceTranslation? getPlaceTranslationById(int id) {
-    try {
-      return _translations.firstWhere((placeTranslation) => placeTranslation.placeTranslationId == id);
-    } catch (e) {
-      // If no place is found with the given ID, return null
-      return null;
-    }
-  }
 
   String getPlaceName(int placeId, String languageCode) {
     // Retrieve the Place object using placeId

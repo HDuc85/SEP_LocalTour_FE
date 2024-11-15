@@ -1,6 +1,7 @@
 // lib/providers/count_provider.dart
 
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/places/placefeedback.dart';
 import 'package:localtourapp/models/posts/post.dart';
 
 class CountProvider with ChangeNotifier {
@@ -14,13 +15,7 @@ class CountProvider with ChangeNotifier {
 
   CountProvider();
 
-  void updatePostCount(List<Post> posts) {
-    final int newCount = posts.length;
-    if (_postCount != newCount) {
-      _postCount = newCount;
-      notifyListeners();
-    }
-  }
+
 
   void setScheduleCount(int count) {
     if (_scheduleCount != count) {
@@ -63,6 +58,14 @@ class CountProvider with ChangeNotifier {
   void setPostCount(int count) {
     if (_postCount != count) {
       _postCount = count;
+      notifyListeners();
+    }
+  }
+
+  void updatePostCount(List<Post> posts) {
+    final int newCount = posts.length;
+    if (_postCount != newCount) {
+      _postCount = newCount;
       notifyListeners();
     }
   }

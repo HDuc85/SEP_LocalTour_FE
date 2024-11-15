@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 
 class ReportForm extends StatefulWidget {
   final String message;
+  final ValueChanged<String>? onSubmit; // Changing the callback to pass the report message
 
-  const ReportForm({Key? key, required this.message}) : super(key: key);
+  const ReportForm({
+    Key? key,
+    required this.message,
+    this.onSubmit,
+  }) : super(key: key);
 
   // Static method to display the ReportForm dialog
-  static void show(BuildContext context, String message) {
+  static void show(BuildContext context, String message, {ValueChanged<String>? onSubmit}) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -25,7 +30,7 @@ class ReportForm extends StatefulWidget {
               ),
             ),
             padding: const EdgeInsets.all(20),
-            child: ReportForm(message: message),
+            child: ReportForm(message: message, onSubmit: onSubmit),
           ),
         );
       },
@@ -56,6 +61,16 @@ class _ReportFormState extends State<ReportForm> {
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+
+  void _handleReportSubmission() {
+    if (_formKey.currentState?.validate() ?? false) {
+      // If the form is valid (text is not empty)
+      final reportMessage = _controller.text.trim();
+      widget.onSubmit?.call(reportMessage);
+      _showSnackbar('Your report has been sent, we will consider it.');
+      Navigator.pop(context); // Close the form after reporting
+    }
   }
 
   @override
@@ -95,27 +110,20 @@ class _ReportFormState extends State<ReportForm> {
         const SizedBox(height: 10),
         // Report button
         ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState?.validate() ?? false) {
-              // If the form is valid (text is not empty), proceed
-              // Display a snackbar notification
-              _showSnackbar('Your report has been sent, we will consider it.');
-              Navigator.pop(context); // Close the form after reporting
-            }
-          },
+          onPressed: _handleReportSubmission,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFDCA1A1),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
               side: const BorderSide(color: Colors.black, width: 2),
             ),
-            padding:
-            const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
           ),
           child: const Text(
             "Report",
             style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white
+            ),
           ),
         ),
       ],

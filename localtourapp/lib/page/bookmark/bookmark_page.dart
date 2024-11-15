@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/base/place_card_info.dart';
 import 'package:localtourapp/models/places/placemedia.dart';
-import 'package:localtourapp/page/account/user_provider.dart';
-import 'package:localtourapp/page/bookmark/bookmark_provider.dart';
+import 'package:localtourapp/provider/place_provider.dart';
+import 'package:localtourapp/provider/user_provider.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart'; // Import for firstWhereOrNull
@@ -148,7 +148,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
     if (userId.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
-    return Consumer<BookmarkProvider>(
+    return Consumer<PlaceProvider>(
       builder: (context, bookmarkProvider, child) {
         final List<int> bookmarkedPlaceIds = bookmarkProvider.bookmarkedPlaceIds;
 

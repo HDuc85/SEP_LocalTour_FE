@@ -1,7 +1,7 @@
 // lib/pages/view_profile.dart
 
 import 'package:flutter/material.dart';
-import 'package:localtourapp/base/schedule_provider.dart';
+import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/models/places/place.dart';
 import 'package:localtourapp/models/places/placefeedbackmedia.dart';
 import 'package:localtourapp/models/places/placetranslation.dart';
@@ -11,14 +11,14 @@ import 'package:localtourapp/models/schedule/schedule.dart';
 import 'package:localtourapp/models/schedule/schedulelike.dart';
 import 'package:localtourapp/models/users/followuser.dart';
 import 'package:localtourapp/models/users/users.dart';
-import 'package:localtourapp/page/account/review_provider.dart';
-import 'package:localtourapp/page/account/user_provider.dart';
-import 'package:localtourapp/page/account/users_provider.dart';
+import 'package:localtourapp/provider/review_provider.dart';
+import 'package:localtourapp/provider/user_provider.dart';
+import 'package:localtourapp/provider/users_provider.dart';
 import 'package:localtourapp/page/account/view_profile/create_post.dart';
 import 'package:localtourapp/page/account/view_profile/post_provider.dart';
 import 'package:localtourapp/page/account/view_profile/post_tab_bar.dart';
 import 'package:localtourapp/page/account/view_profile/reviewed_tab_bar.dart';
-import 'package:localtourapp/page/detail_page/detail_page_tab_bars/count_provider.dart';
+import 'package:localtourapp/provider/count_provider.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/schedule_tab_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:localtourapp/models/posts/post.dart';

@@ -8,9 +8,9 @@ import 'package:localtourapp/models/places/placemedia.dart';
 import 'package:localtourapp/models/places/placetag.dart';
 import 'package:localtourapp/models/places/tag.dart';
 import 'package:localtourapp/models/users/users.dart';
-import 'package:localtourapp/page/bookmark/bookmark_provider.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/detail_tabbar.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/review_tabbar.dart';
+import 'package:localtourapp/provider/place_provider.dart';
 import 'package:provider/provider.dart';
 
 class DetailPage extends StatefulWidget {
@@ -81,7 +81,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
     );
   }
 
-  void _toggleBookmark(BookmarkProvider bookmarkManager) async {
+  void _toggleBookmark(PlaceProvider bookmarkManager) async {
     if (bookmarkManager.isBookmarked(widget.placeId)) {
       await bookmarkManager.removeBookmark(widget.placeId);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -105,7 +105,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final bookmarkManager = Provider.of<BookmarkProvider>(context);
+    final bookmarkManager = Provider.of<PlaceProvider>(context);
     bool isBookmarked = bookmarkManager.isBookmarked(widget.placeId);
 
     // Access widget properties directly
@@ -291,11 +291,8 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
                   placeId: widget.placeId,
                 ),
                 ReviewTabbar(
-                  feedbacks: dummyFeedbacks,
-                  users: fakeUsers,
                   userId: widget.userId, // Use widget.userId
                   placeId: placeId,
-                  feedbackMediaList: feedbackMediaList,
                 ),
               ],
             ),

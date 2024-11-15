@@ -1,7 +1,7 @@
 // lib/page/setting_page.dart
 
 import 'package:flutter/material.dart';
-import 'package:localtourapp/page/account/language_provider.dart';
+import 'package:localtourapp/provider/language_provider.dart';
 import 'package:provider/provider.dart';
 
 class SettingPage extends StatefulWidget {

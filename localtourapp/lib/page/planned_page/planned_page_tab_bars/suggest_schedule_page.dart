@@ -1,13 +1,13 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:localtourapp/base/schedule_provider.dart';
+import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/models/schedule/destination.dart';
 import 'package:localtourapp/models/schedule/schedule.dart';
 import 'package:provider/provider.dart';
 
 // Import local classes and providers
-import 'package:localtourapp/page/account/user_provider.dart';
+import 'package:localtourapp/provider/user_provider.dart';
 import 'package:localtourapp/models/places/place.dart';
 
 class SuggestSchedulePage extends StatefulWidget {

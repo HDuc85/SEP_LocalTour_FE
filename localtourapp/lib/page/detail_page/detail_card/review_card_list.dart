@@ -7,7 +7,6 @@ import '../../../models/users/users.dart';
 import 'review_card.dart';
 
 class ReviewCardList extends StatelessWidget {
-  final List<int> favoritedFeedbackIds;
   final Function(int feedbackId, bool isFavorited) onFavoriteToggle;
   final List<PlaceFeedback> feedbacks;
   final List<User> users;
@@ -24,7 +23,6 @@ class ReviewCardList extends StatelessWidget {
 
   const ReviewCardList({
     Key? key,
-    required this.favoritedFeedbackIds,
     required this.onFavoriteToggle,
     required this.feedbacks,
     required this.users,
@@ -75,14 +73,13 @@ class ReviewCardList extends StatelessWidget {
             user: user,
             feedback: feedback,
             feedbackMediaList: mediaList,
-
             feedbackHelpfuls: relevantHelpfuls,
             userId: userId,
             onReport: !isCurrentUser
                 ? () => onReport?.call(feedback)
                 : null,
-            favoritedFeedbackIds: favoritedFeedbackIds,
-            onFavoriteToggle: onFavoriteToggle, followUsers: followUsers,
+            onFavoriteToggle: onFavoriteToggle,
+            followUsers: followUsers,
           );
         }).toList(),
         if (onSeeAll != null && limit != null && feedbacks.length > limit!)

@@ -1,9 +1,11 @@
 // lib/page/account/personal_information_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:localtourapp/mock_firebase.dart';
 import 'package:localtourapp/models/users/users.dart';
+import 'package:localtourapp/page/account/view_profile/for_got_password.dart';
 import 'package:provider/provider.dart';
-import 'package:localtourapp/page/account/user_provider.dart';
+import 'package:localtourapp/provider/user_provider.dart';
 import 'package:intl/intl.dart'; // Ensure you have intl package in pubspec.yaml
 
 class PersonalInformationPage extends StatefulWidget {
@@ -211,46 +213,160 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 16),
 
                       // Password
+                      // Password Section
                       const Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'Password',
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                         ),
                       ),
                       const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: !_isPasswordVisible,
-                        decoration: InputDecoration(
-                          border: const OutlineInputBorder(),
-                          hintText: 'Enter your password',
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _isPasswordVisible
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                            ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton(
                             onPressed: () {
-                              setState(() {
-                                _isPasswordVisible =
-                                !_isPasswordVisible;
-                              });
+                              showDialog(
+                                context: context,
+                                barrierDismissible: true, // Allow clicking outside to close the dialog
+                                builder: (BuildContext context) {
+                                  final TextEditingController currentPasswordController = TextEditingController();
+                                  final TextEditingController newPasswordController = TextEditingController();
+                                  final FocusNode currentPasswordFocus = FocusNode();
+                                  final FocusNode newPasswordFocus = FocusNode();
+                                  bool currentPasswordError = false;
+                                  bool newPasswordError = false;
+
+                                  // Helper function to validate the new password
+                                  bool validateNewPassword(String password) {
+                                    final passwordRegExp = RegExp(r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$');
+                                    return passwordRegExp.hasMatch(password);
+                                  }
+
+                                  return StatefulBuilder(
+                                    builder: (context, setState) {
+                                      return GestureDetector(
+                                        onTap: () => FocusScope.of(context).unfocus(), // Unfocus to close keyboard
+                                        child: AlertDialog(
+                                          title: const Text('Change Password'),
+                                          content: SingleChildScrollView(
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                // Current Password Field
+                                                const Align(
+                                                  alignment: Alignment.centerLeft,
+                                                  child: Text('Your Current Password:'),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                TextField(
+                                                  controller: currentPasswordController,
+                                                  focusNode: currentPasswordFocus,
+                                                  obscureText: true,
+                                                  decoration: InputDecoration(
+                                                    border: const OutlineInputBorder(),
+                                                    hintText: 'Enter your current password',
+                                                    errorText: currentPasswordError ? 'Wrong password' : null,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 16),
+
+                                                // New Password Field
+                                                const Align(
+                                                  alignment: Alignment.centerLeft,
+                                                  child: Text('Add New Password:'),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                TextField(
+                                                  controller: newPasswordController,
+                                                  focusNode: newPasswordFocus,
+                                                  obscureText: true,
+                                                  decoration: InputDecoration(
+                                                    border: const OutlineInputBorder(),
+                                                    hintText: 'Enter your new password',
+                                                    errorText: newPasswordError
+                                                        ? 'Password must have 1 uppercase letter, 1 special character, 1 number, and be at least 8 characters long'
+                                                        : null,
+                                                  ),
+                                                  onChanged: (value) {
+                                                    setState(() {
+                                                      newPasswordError = !validateNewPassword(value);
+                                                    });
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          actions: [
+                                            ElevatedButton(
+                                              onPressed: () async {
+                                                // Retrieve the current password from UserProvider
+                                                final userProvider = Provider.of<UserProvider>(context, listen: false);
+                                                final currentUser = userProvider.currentUser;
+                                                if (userProvider.currentUser.passwordHash == null) {
+                                                  print('No password is set for the current user.');
+                                                } else {
+                                                  print('Current Password: ${userProvider.currentUser.passwordHash}');
+                                                }
+
+                                                // Check if the current password is correct
+                                                if (currentPasswordController.text != currentUser.passwordHash) {
+                                                  setState(() {
+                                                    currentPasswordError = true;
+                                                  });
+                                                } else if (newPasswordError) {
+                                                  // If new password doesn't meet the criteria, show error
+                                                  setState(() {
+                                                    newPasswordFocus.requestFocus();
+                                                  });
+                                                } else {
+                                                  // Password update logic
+                                                  currentUser.passwordHash = newPasswordController.text;
+                                                  userProvider.updateUser(currentUser);
+
+                                                  // Close dialog and show success notification
+                                                  Navigator.of(context).pop();
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    const SnackBar(content: Text('Password changed successfully')),
+                                                  );
+                                                }
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.blue,
+                                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                ),
+                                              ),
+                                              child: const Text(
+                                                'Change Password',
+                                                style: TextStyle(color: Colors.white),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              );
                             },
+                            child: const Text(
+                              'Change Password',
+                              style: TextStyle(color: Colors.blue),
+                            ),
                           ),
-                        ),
-                        validator: (value) {
-                          // Password is required only if the user wants to change it
-                          // If not changing, allow empty
-                          if (value != null && value.isNotEmpty) {
-                            if (value.length < 6) {
-                              return 'Password must be at least 6 characters';
-                            }
-                          }
-                          return null;
-                        },
+                          TextButton(
+                            onPressed: () {
+                              ForgotPasswordDialog.show(context, firebaseAuth: MockFirebaseAuth());
+                            },
+                            child: const Text(
+                              'Forgot Password?',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
 

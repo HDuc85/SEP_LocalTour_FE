@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:localtourapp/models/posts/postcommentlike.dart';
 import 'package:localtourapp/models/users/followuser.dart';
 import 'package:localtourapp/page/account/account_page.dart';
-import 'package:localtourapp/page/account/users_provider.dart';
+import 'package:localtourapp/provider/users_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:localtourapp/models/posts/post.dart';
 import 'package:localtourapp/models/posts/postcomment.dart';

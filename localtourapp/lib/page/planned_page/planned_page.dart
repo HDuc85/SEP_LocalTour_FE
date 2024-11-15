@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:localtourapp/base/schedule_provider.dart';
+import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/models/places/place.dart';
 import 'package:localtourapp/models/places/placetranslation.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/history_tab_bar.dart';
