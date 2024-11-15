@@ -4,8 +4,6 @@ import 'package:localtourapp/models/posts/postcomment.dart';
 import 'package:localtourapp/models/posts/postcommentlike.dart';
 import 'package:localtourapp/models/posts/postlike.dart';
 import 'package:localtourapp/models/posts/postmedia.dart';
-import 'package:localtourapp/provider/count_provider.dart';
-import 'package:provider/provider.dart';
 
 class PostProvider with ChangeNotifier {
   List<Post> _posts = [];
@@ -130,21 +128,5 @@ class PostProvider with ChangeNotifier {
 
   List<PostMedia> getMediaForPost(int postId) {
     return _media.where((media) => media.postId == postId).toList();
-  }
-
-  // Notify CountProvider about post count changes
-  void _notifyCountProvider(BuildContext context) {
-    final countProvider = Provider.of<CountProvider>(context, listen: false);
-    final userPosts = getPostsByUserId('anh-tuan-unique-id-1234');
-    countProvider.updatePostCount(userPosts);
-  }
-
-  // Override notifyListeners to also notify CountProvider
-  @override
-  void notifyListeners() {
-    super.notifyListeners();
-    // Assuming you have access to the context here
-    // If not, consider passing context or refactoring
-    // _notifyCountProvider(context);
   }
 }

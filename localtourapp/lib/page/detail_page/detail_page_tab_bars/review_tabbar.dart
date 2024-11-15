@@ -156,9 +156,9 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
     return userReviews.isNotEmpty;
   }
 
-  User getUserDetails(String userId) {
+  User? getUserDetails(String userId) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    if (userProvider.currentUser.userId == userId) {
+    if (userProvider.currentUser!.userId == userId) {
       return userProvider.currentUser;
     }
     // If not current user, either retrieve from user list or return a default
@@ -286,12 +286,12 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                       CircleAvatar(
                         radius: 30,
                         backgroundImage: NetworkImage(
-                          getUserDetails(widget.userId).profilePictureUrl ?? '',
+                          getUserDetails(widget.userId)!.profilePictureUrl ?? '',
                         ),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        "${getUserDetails(widget.userId).userName}, you have no reviews yet, let's explore and review it!",
+                        "${getUserDetails(widget.userId)!.userName}, you have no reviews yet, let's explore and review it!",
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 16),
                       ),

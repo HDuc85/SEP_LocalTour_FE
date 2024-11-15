@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../models/users/users.dart';
+
 class AuthProvider with ChangeNotifier {
   String? _currentUserId;
 

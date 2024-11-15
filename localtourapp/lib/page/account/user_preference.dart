@@ -46,9 +46,18 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
       return GestureDetector(
         onTap: () {
           setState(() {
-            // Toggle the tag selection
+            // Toggle the tag selection with enforcement of minimum 5 selections
             if (isSelected) {
-              userProvider.removeTag(tag.tagId);
+              // Allow deselection only if more than 5 tags are selected
+              if (userProvider.preferredTagIds.length > 5) {
+                userProvider.removeTag(tag.tagId);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('You must select at least 5 preferences.'),
+                  ),
+                );
+              }
             } else {
               userProvider.addTag(tag.tagId);
             }

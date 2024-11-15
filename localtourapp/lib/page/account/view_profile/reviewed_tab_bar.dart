@@ -46,7 +46,7 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
   void initState() {
     super.initState();
     // Check if the current user is viewing their own reviews
-    isCurrentUserViewing = widget.userId == Provider.of<UserProvider>(context, listen: false).currentUser.userId;
+    isCurrentUserViewing = widget.userId == Provider.of<UserProvider>(context, listen: false).currentUser!.userId;
 
     // Fetch reviews specific to the userId
     userFeedbacks = Provider.of<ReviewProvider>(context, listen: false).getReviewsByUserId(widget.userId);

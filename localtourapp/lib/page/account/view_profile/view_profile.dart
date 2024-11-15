@@ -118,7 +118,6 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
                         context: context,
                         isScrollControlled: true,
                         builder: (context) => CreatePostOverlay(
-                          userId: widget.userId,
                           placeId: post.placeId,
                           existingPost: post,
                         ),

@@ -13,14 +13,14 @@ import 'package:localtourapp/page/account/view_profile/post_provider.dart';
 import 'package:localtourapp/page/search_page/search_page.dart';
 import 'package:provider/provider.dart';
 
+import '../../../provider/user_provider.dart';
+
 class CreatePostOverlay extends StatefulWidget {
-  final String userId;
   final int? placeId;
   final Post? existingPost;
 
   const CreatePostOverlay({
     Key? key,
-    required this.userId,
     this.placeId,
     this.existingPost,
   }) : super(key: key);
@@ -119,31 +119,40 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
     );
   }
 
-  Future<void> _pickImage() async {
-    final XFile? pickedFile =
-    await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      final file = File(pickedFile.path);
-      final fileSize = await file.length();
+  Future<void> _pickImages() async {
+    final List<XFile>? pickedFiles = await _picker.pickMultiImage();
+    if (pickedFiles != null && pickedFiles.isNotEmpty) {
+      int totalSize = _calculateTotalMediaSize();
+      List<PostMedia> newMediaList = [];
 
-      if (_calculateTotalMediaSize() + fileSize > 200 * 1024 * 1024) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Total media size exceeds 200 MB.')),
-        );
-        return;
-      }
+      for (XFile pickedFile in pickedFiles) {
+        final file = File(pickedFile.path);
+        final fileSize = await file.length();
 
-      setState(() {
-        mediaList.add(PostMedia(
+        // Check if adding this file exceeds the total limit
+        if (totalSize + fileSize > 200 * 1024 * 1024) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Total media size exceeds 200 MB.')),
+          );
+          break; // Stop adding more files
+        }
+
+        newMediaList.add(PostMedia(
           id: DateTime.now().millisecondsSinceEpoch,
           url: pickedFile.path,
           type: 'photo',
           createdAt: DateTime.now(),
           postId: widget.existingPost?.id ?? 0, // Temporary, updated later
         ));
+        totalSize += fileSize;
+      }
+
+      setState(() {
+        mediaList.addAll(newMediaList);
       });
     }
   }
+
 
   Future<void> _pickVideo() async {
     final XFile? pickedFile =
@@ -181,23 +190,27 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
   void _createOrUpdatePost() {
     final title = titleController.text.trim();
     final content = contentController.text.trim();
+    final scheduleId = _getSelectedScheduleId();
+    final hasContent = content.isNotEmpty;
+    final hasPlace = selectedPlace != null;
+    final hasMedia = mediaList.isNotEmpty;
+    final hasSchedule = scheduleId != null;
 
-    if (title.isEmpty || content.isEmpty) {
+    // Check if at least one of the required fields is provided
+    if (!hasContent && !hasPlace && !hasMedia && !hasSchedule) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Title and content cannot be empty.')),
+        const SnackBar(
+          content: Text('Please provide at least one of: Schedule, Place, Content, or Media.'),
+        ),
       );
       return;
     }
 
-    // Retrieve the selected schedule ID
-    final int? scheduleId = _getSelectedScheduleId();
+    final postProvider = Provider.of<PostProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
 
-    if (scheduleId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a schedule.')),
-      );
-      return;
-    }
+    // Obtain current user from UserProvider
+    final currentUserId = userProvider.currentUser!.userId;
 
     final newPost = Post(
       id: widget.existingPost?.id ?? DateTime.now().millisecondsSinceEpoch,
@@ -205,13 +218,11 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
       title: title,
       content: content,
       createdAt: widget.existingPost?.createdAt ?? DateTime.now(),
-      authorId: widget.userId,
+      authorId: currentUserId,
       updatedAt: DateTime.now(),
       isPublic: true,
       scheduleId: scheduleId,
     );
-
-    final postProvider = Provider.of<PostProvider>(context, listen: false);
 
     if (isUpdateMode) {
       postProvider.updatePost(newPost);
@@ -235,21 +246,36 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
     Navigator.pop(context);
   }
 
+
   int? _getSelectedScheduleId() {
-    final scheduleProvider =
-    Provider.of<ScheduleProvider>(context, listen: false);
+    final scheduleProvider = Provider.of<ScheduleProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false); // Fetch UserProvider
+    final String? currentUserId = userProvider.currentUser.userId; // Get current user's ID
+
+    if (currentUserId == null) {
+      return null; // Handle cases where the user ID is not available
+    }
+
     final schedule = scheduleProvider.schedules.firstWhereOrNull(
-          (s) =>
-      s.scheduleName == selectedSchedule && s.userId == widget.userId,
+          (s) => s.scheduleName == selectedSchedule && s.userId == currentUserId,
     );
+
     return schedule?.id;
   }
 
   @override
   Widget build(BuildContext context) {
     final scheduleProvider = Provider.of<ScheduleProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context, listen: false); // Fetch UserProvider
+    final String? currentUserId = userProvider.currentUser.userId; // Get current user's ID
+    if (currentUserId == null) {
+      return const Center(
+        child: Text('Unable to fetch user information.'),
+      );
+    }
+
     final List<Schedule> userSchedules = scheduleProvider.schedules
-        .where((s) => s.userId == widget.userId)
+        .where((s) => s.userId == currentUserId)
         .toList();
 
     return DraggableScrollableSheet(
@@ -427,7 +453,7 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
                       _buildMediaButton(
                         icon: Icons.photo_camera,
                         label: 'Add Photo',
-                        onPressed: _pickImage,
+                        onPressed: _pickImages,
                       ),
                       _buildMediaButton(
                         icon: Icons.videocam,

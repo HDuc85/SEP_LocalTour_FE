@@ -83,8 +83,8 @@ class _AccountPageState extends State<AccountPage> {
       displayedUser = userProvider.currentUser;
     } else {
       // Fetch the other user's information from UsersProvider
-      displayedUser = usersProvider.getUserById(widget.user.userId) ??
-          userProvider.currentUser;
+      displayedUser = (usersProvider.getUserById(widget.user.userId) ??
+          userProvider.currentUser);
     }
 
     final userReviews = reviewProvider.getReviewsByUserId(displayedUser.userId);

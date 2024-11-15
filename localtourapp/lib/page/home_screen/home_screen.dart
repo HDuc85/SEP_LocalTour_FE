@@ -211,9 +211,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // 3/ _buildTagGrid function to list all tags
   Widget _buildTagGrid(List<Tag> tags) {
     double screenWidth = MediaQuery.of(context).size.width;
-    double containerHorizontalMargin = 30 * 2; // Left and right margins
-    double itemHorizontalMargin = 10 * 2; // Left and right margins for each item
-    double availableWidth = screenWidth - containerHorizontalMargin - (itemHorizontalMargin * 3);
+    double containerHorizontalMargin = 40 * 2;
+    double itemHorizontalMargin = 5 * 2;
+    double availableWidth = screenWidth - containerHorizontalMargin - (itemHorizontalMargin * 1);
     double itemWidth = availableWidth / 3;
 
     // Prepend the "Schedule Page" item to the list of tags
@@ -260,8 +260,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Center(
       child: Container(
-        height: 262, // Adjust the height to fit two tag items vertically
-        margin: const EdgeInsets.symmetric(horizontal: 30),
+        height: 200, // Adjust the height to fit two tag items vertically
+        margin: const EdgeInsets.symmetric(horizontal: 40),
         decoration: BoxDecoration(
           color: Constants.tagGridBackground,
           borderRadius: BorderRadius.circular(30),
@@ -279,19 +279,58 @@ class _HomeScreenState extends State<HomeScreen> {
           itemCount: gridItems.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2, // Display two rows
-            childAspectRatio: itemWidth / 60, // Adjust for item height and width
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
+            childAspectRatio: itemWidth / 85, // Adjust for item height and width
           ),
           itemBuilder: (context, index) {
             return Container(
               width: itemWidth,
-              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
               child: gridItems[index],
             );
           },
         ),
       ),
+    );
+  }
+
+  // Build a single tag item in the grid
+  Widget _buildTagItem(String imagePath, String label) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.black, width: 1),
+          ),
+          child: ClipOval(
+            child: Image.asset(
+              imagePath,
+              width: 40,
+              height: 40,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: 80,
+          height: 24, // Set a fixed height for the text container
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              height: 1, // Adjust line height if needed
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            softWrap: true,
+          ),
+        ),
+      ],
     );
   }
 
@@ -570,45 +609,5 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Build a single tag item in the grid
-  Widget _buildTagItem(String imagePath, String label) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.black, width: 1),
-          ),
-          child: ClipOval(
-            child: Image.asset(
-              imagePath,
-              width: 60,
-              height: 60,
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: 75,
-          height: 35, // Set a fixed height for the text container
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 13.5,
-              fontWeight: FontWeight.bold,
-              height: 1.2, // Adjust line height if needed
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            softWrap: true,
-          ),
-        ),
-      ],
-    );
-  }
 
 }

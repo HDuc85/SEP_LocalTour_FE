@@ -407,7 +407,6 @@ class _PostTabBarState extends State<PostTabBar> {
             context: context,
             isScrollControlled: true,
             builder: (context) => CreatePostOverlay(
-              userId: widget.userId,
             ),
           ),
           icon: const Icon(Icons.add, color: Colors.white),
@@ -510,11 +509,11 @@ class _PostTabBarState extends State<PostTabBar> {
                       onPressed: () => _toggleVisibility(post.id),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.edit),
+                      icon: const Icon(Icons.edit, color: Colors.blue,),
                       onPressed: () => widget.onUpdatePressed(post),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete),
+                      icon: const Icon(Icons.delete,color: Colors.red,),
                       onPressed: () => _confirmDeletePost(post),
                     ),
                   ],
@@ -676,7 +675,7 @@ class _PostTabBarState extends State<PostTabBar> {
                     fit: BoxFit.cover,
                   )
                       : VideoThumbnail(videoPath: mediaForPost[index].url),
-                  if (index == 4 && mediaForPost.length > 5)
+                  if (index == 5 && mediaForPost.length > 6)
                     Container(
                       color: Colors.black54,
                       child: const Center(

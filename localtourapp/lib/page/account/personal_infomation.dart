@@ -31,7 +31,6 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
   late TextEditingController _nicknameController;
 
   // Variables for interactive fields
-  bool _isPasswordVisible = false;
   String? _selectedGender;
 
   @override

@@ -120,7 +120,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
 
     // Obtain the current user's ID from the UserProvider
-    final currentUserId = userProvider.currentUser.userId;
+    final currentUserId = userProvider.currentUser?.userId;
 
     // Check if the user has already liked the comment
     bool hasLiked = postProvider.getLikesForComment(commentId).any(
@@ -129,13 +129,13 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
 
     if (hasLiked) {
       // Unlike the comment
-      postProvider.removeCommentLike(commentId, currentUserId);
+      postProvider.removeCommentLike(commentId, currentUserId!);
     } else {
       // Like the comment
       final newLike = PostCommentLike(
         id: DateTime.now().millisecondsSinceEpoch,
         postCommentId: commentId,
-        userId: currentUserId,
+        userId: currentUserId!,
         createdDate: DateTime.now(),
       );
       postProvider.addCommentLike(newLike);
@@ -156,7 +156,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     comments.sort((a, b) => a.createdDate.compareTo(b.createdDate));
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
+      height: MediaQuery.of(context).size.height * 1,
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
@@ -253,7 +253,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
 
                       final commentLikes =
                           postProvider.getLikesForComment(comment.id);
-                      final currentUserId = userProvider.currentUser.userId;
+                      final currentUserId = userProvider.currentUser!.userId;
                       final bool hasLiked;
                       hasLiked = commentLikes
                           .any((like) => like.userId == currentUserId);
