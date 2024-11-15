@@ -39,11 +39,15 @@ import 'package:localtourapp/weather/providers/weather_provider.dart';
 import 'package:localtourapp/weather/weather_page.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 // Import your models and other dependencies as needed
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await dotenv.load(fileName: ".env");
   // Initialize Hive
   await Hive.initFlutter();
@@ -119,7 +123,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     screens = [
       const HomeScreen(),
-      const MapPage(),
+      const HomeScreen(),
       const BookmarkPage(),
       PlannedPage(
         scheduleLikes:
@@ -246,7 +250,7 @@ class _MyAppState extends State<MyApp> {
               ),
             );
           case '/map':
-            return MaterialPageRoute(builder: (context) => const MapPage());
+            return MaterialPageRoute(builder: (context) => const HomeScreen());
           case '/history':
             return MaterialPageRoute(
                 builder: (context) => const HistoryTabbar());
