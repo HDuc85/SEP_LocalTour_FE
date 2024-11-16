@@ -44,16 +44,13 @@ import 'package:localtourapp/weather/providers/weather_provider.dart';
 import 'package:localtourapp/weather/weather_page.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+
 import 'models/places/placefeedback.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+
 // Import your models and other dependencies as needed
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
   await dotenv.load(fileName: ".env");
   // Initialize Hive
   await Hive.initFlutter();
@@ -63,7 +60,8 @@ void main() async {
     SecureStorageHelper().saveValue(AppConfig.language, 'vi');
   }
   // Create an instance of bookmarkProvider and load bookmarks
-  PlaceProvider bookmarkProvider = PlaceProvider();
+  PlaceProvider bookmarkProvider = PlaceProvider(places: dummyPlaces,
+    translations: dummyTranslations,);
   await bookmarkProvider.loadBookmarks();
   // Fake Login in
   SecureStorageHelper()
@@ -71,7 +69,7 @@ void main() async {
 
   // Generate fake users
   User myUser = fakeUsers.firstWhere(
-    (user) => user.userId == 'anh-tuan-unique-id-1234',
+        (user) => user.userId == 'anh-tuan-unique-id-1234',
     orElse: () => fakeUsers.first, // Fallback to first user if not found
   );
 
@@ -80,13 +78,8 @@ void main() async {
       providers: [
         // Add LanguageProvider here
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(
-            create: (_) => UserProvider(initialUser: myUser)),
-        ChangeNotifierProvider(
-            create: (_) => ReviewProvider(
-                placeFeedbacks: dummyFeedbacks,
-                placeFeedbackMedia: feedbackMediaList,
-                placeFeedbackHelpfuls: feebBackHelpfuls)),
+        ChangeNotifierProvider(create: (_) => UserProvider(initialUser: myUser)),
+        ChangeNotifierProvider(create: (_) => ReviewProvider(placeFeedbacks: dummyFeedbacks, placeFeedbackMedia: feedbackMediaList, placeFeedbackHelpfuls: feebBackHelpfuls)),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => bookmarkProvider),
         ChangeNotifierProvider(create: (_) => WeatherProvider()),
@@ -98,20 +91,20 @@ void main() async {
                 FollowUsersProvider(initialFollowUsers: dummyFollowUsers)),
         ChangeNotifierProvider(
             create: (_) => ScheduleProvider(
-                  places: dummyPlaces,
-                  translations: dummyTranslations,
-                  schedules: dummySchedules,
-                  scheduleLikes: dummyScheduleLikes,
-                  destinations: dummyDestinations,
-                )),
+              places: dummyPlaces,
+              translations: dummyTranslations,
+              schedules: dummySchedules,
+              scheduleLikes: dummyScheduleLikes,
+              destinations: dummyDestinations,
+            )),
         ChangeNotifierProvider(
             create: (_) => PostProvider(
-                  posts: dummyPosts,
-                  comments: dummyComments,
-                  postLikes: dummyPostLikes,
-                  commentLikes: dummyPostCommentLikes,
-                  media: dummyPostMedia,
-                )),
+              posts: dummyPosts,
+              comments: dummyComments,
+              postLikes: dummyPostLikes,
+              commentLikes: dummyPostCommentLikes,
+              media: dummyPostMedia,
+            )),
       ],
       child: MyApp(myUser: myUser),
     ),
@@ -139,11 +132,11 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     screens = [
       const HomeScreen(),
-      const HomeScreen(),
+      const MapPage(),
       const BookmarkPage(),
       PlannedPage(
         scheduleLikes:
-            dummyScheduleLikes, // Ensure dummyScheduleLikes is defined
+        dummyScheduleLikes, // Ensure dummyScheduleLikes is defined
         destinations: dummyDestinations, // Ensure dummyDestinations is defined
         userId: widget.myUser.userId,
         users: Provider.of<UsersProvider>(context, listen: false).users,
@@ -213,7 +206,7 @@ class _MyAppState extends State<MyApp> {
       title: 'Local Tour',
       theme: ThemeData(
         primaryColor:
-            Constants.primaryColor, // Ensure Constants.primaryColor is defined
+        Constants.primaryColor, // Ensure Constants.primaryColor is defined
         scaffoldBackgroundColor: const Color(0xFFEDE8D0),
       ),
       // Assuming EasyLoading is set up correctly
@@ -229,7 +222,7 @@ class _MyAppState extends State<MyApp> {
                     'Unknown Place', // Provide a default name
                 placeId: args['placeId'] ?? -1, // Provide a default ID, if null
                 mediaList:
-                    args['mediaList'] ?? [], // Default to an empty list if null
+                args['mediaList'] ?? [], // Default to an empty list if null
                 userId: args['userId'] ?? 'unknown-user', // Default userId
               );
             },
@@ -243,7 +236,7 @@ class _MyAppState extends State<MyApp> {
               : widget.myUser.userId;
           final User selectedUser;
           selectedUser = Provider.of<UsersProvider>(context, listen: false)
-                  .getUserById(userId) ??
+              .getUserById(userId) ??
               widget.myUser;
           final isCurrentUser = userId == widget.myUser.userId;
           return MaterialPageRoute(
@@ -278,7 +271,7 @@ class _MyAppState extends State<MyApp> {
               ),
             );
           case '/map':
-            return MaterialPageRoute(builder: (context) => const HomeScreen());
+            return MaterialPageRoute(builder: (context) => const MapPage());
           case '/history':
             return MaterialPageRoute(
                 builder: (context) => const HistoryTabbar());

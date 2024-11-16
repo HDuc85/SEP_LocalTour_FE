@@ -104,11 +104,9 @@ class _AccountPageState extends State<AccountPage> {
       isCurrentUser = true;
     }
 
-    return Stack(
-      children: [
-        ListView(
-          controller: _scrollController,
-          padding: const EdgeInsets.all(8.0),
+    return Scaffold(
+      body: SafeArea(
+        child: Stack(
           children: [
             const SizedBox(height: 16),
             _buildProfileSection(userprofile),
@@ -128,15 +126,7 @@ class _AccountPageState extends State<AccountPage> {
             ],
           ],
         ),
-        Positioned(
-          bottom: 0,
-          left: 20,
-          child: WeatherIconButton(
-            onPressed: _navigateToWeatherPage,
-            assetPath: 'assets/icons/weather.png',
-          ),
-        ),
-      ],
+      ),
     );
   }
 
