@@ -155,12 +155,21 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
                       scheduleLikes: userScheduleLikes,
                       destinations: userDestinations,
                       onFavoriteToggle: (scheduleId, isFavorited) {
-                        // Handle favorite toggle
+                        final scheduleProvider = Provider.of<ScheduleProvider>(context, listen: false);
+                        if (isFavorited) {
+                          scheduleProvider.addScheduleLike(ScheduleLike(
+                            id: DateTime.now().millisecondsSinceEpoch,
+                            userId: widget.userId,
+                            scheduleId: scheduleId,
+                            createdDate: DateTime.now(),
+                          ));
+                        } else {
+                          scheduleProvider.removeScheduleLike(scheduleId, widget.userId);
+                        }
                       },
                       users: allUsers,
                       places: allPlaces,
                       translations: allTranslations,
-                      isCurrentUser: false, // Indicate it's not the current user
                     ),
                 ],
               ),
