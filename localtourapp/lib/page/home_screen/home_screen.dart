@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:localtourapp/constants/getListApi.dart';
+import 'package:localtourapp/models/HomePage/placeCard.dart';
 import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/models/schedule/destination.dart';
 import 'package:localtourapp/models/schedule/schedule.dart';
@@ -8,6 +10,8 @@ import 'package:localtourapp/models/users/users.dart';
 import 'package:localtourapp/provider/user_provider.dart';
 import 'package:localtourapp/provider/count_provider.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/fearuted_schedule_page.dart';
+import 'package:localtourapp/services/api_service.dart';
+import 'package:localtourapp/services/place_service.dart';
 import 'package:provider/provider.dart';
 import '../../base/back_to_top_button.dart';
 import '../../base/const.dart';
@@ -33,10 +37,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late String userId;
+  late PlaceService _placeService = PlaceService();
   final ScrollController _scrollController = ScrollController();
   bool _showBackToTopButton = false;
   final Map<int, GlobalKey> tagSectionKeys = {};
   List<Place> placeList = dummyPlaces;
+  List<Placecard> placecards = [];
   List<CardInfo> nearestLocation = [];
   List<CardInfo> featuredPlaces = [];
   Map<int, bool> tagToggleStates = {};
@@ -48,9 +54,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
+    _placeService = PlaceService();
     _scrollController.addListener(_scrollListener);
     super.initState();
 
+    _initializeData();
     // Generate mediaList
     mediaList = generatePlaceMediaForAllPlaces(dummyPlaces);
 
@@ -69,6 +77,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _initializeData() async {
+    final fetchedPlacecards = await _placeService.getListPlace(1, 1, 1, 5);
+    setState(() {
+      placecards = fetchedPlacecards;
+    });
   }
 
   // Listener to handle scroll events
@@ -108,8 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (permission != LocationPermission.whileInUse &&
             permission != LocationPermission.always) {
           // Permissions are denied, show a message
-          setState(() {
-          });
+          setState(() {});
           return;
         }
       }
@@ -121,8 +135,10 @@ class _HomeScreenState extends State<HomeScreen> {
         _currentPosition = position;
 
         // Update nearestLocation and featuredPlaces
-        nearestLocation = getNearestPlaces(dummyPlaces, position.latitude, position.longitude);
-        featuredPlaces = getFeaturedPlaces(dummyPlaces, position.latitude, position.longitude);
+        nearestLocation = getNearestPlaces(
+            dummyPlaces, position.latitude, position.longitude);
+        featuredPlaces = getFeaturedPlaces(
+            dummyPlaces, position.latitude, position.longitude);
 
         // For each tag, calculate nearest and featured places
         for (var tag in listTag) {
@@ -132,10 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
               tag.tagId, dummyPlaces, position.latitude, position.longitude);
         }
       });
-    } catch (e) {
-      setState(() {
-      });
-    }
+    } catch (e) {}
   }
 
   @override
@@ -164,10 +177,10 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildTagGrid(listTag),
               const SizedBox(height: 40),
               _buildNearFeaturedSection('assets/icons/Nearest Places.png',
-                  'Nearest Location', nearestLocation, FilterOption.nearest),
+                  'Nearest Location', placecards, FilterOption.nearest),
               const SizedBox(height: 40),
               _buildNearFeaturedSection('assets/icons/Featured Places.png',
-                  'Featured Places', featuredPlaces, FilterOption.featured),
+                  'Featured Places', placecards, FilterOption.featured),
               const SizedBox(height: 40),
               ...listTag.map((tag) {
                 return Padding(
@@ -199,8 +212,8 @@ class _HomeScreenState extends State<HomeScreen> {
             duration: const Duration(milliseconds: 300),
             child: _showBackToTopButton
                 ? BackToTopButton(
-              onPressed: _scrollToTop,
-            )
+                    onPressed: _scrollToTop,
+                  )
                 : const SizedBox.shrink(),
           ),
         ),
@@ -213,7 +226,8 @@ class _HomeScreenState extends State<HomeScreen> {
     double screenWidth = MediaQuery.of(context).size.width;
     double containerHorizontalMargin = 40 * 2;
     double itemHorizontalMargin = 5 * 2;
-    double availableWidth = screenWidth - containerHorizontalMargin - (itemHorizontalMargin * 1);
+    double availableWidth =
+        screenWidth - containerHorizontalMargin - (itemHorizontalMargin * 1);
     double itemWidth = availableWidth / 3;
 
     // Prepend the "Schedule Page" item to the list of tags
@@ -229,7 +243,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 scheduleLikes: dummyScheduleLikes,
                 destinations: dummyDestinations,
                 users: fakeUsers,
-                onClone: (Schedule clonedSchedule, List<Destination> clonedDestinations) {
+                onClone: (Schedule clonedSchedule,
+                    List<Destination> clonedDestinations) {
                   Provider.of<ScheduleProvider>(context, listen: false)
                       .addSchedule(clonedSchedule);
                   Provider.of<ScheduleProvider>(context, listen: false)
@@ -244,7 +259,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         },
-        child: _buildTagItem('assets/images/Schedule.png', 'Schedule Page'), // Example image for "Schedule Page"
+        child: _buildTagItem('assets/images/Schedule.png',
+            'Schedule Page'), // Example image for "Schedule Page"
       ),
     ];
 
@@ -279,7 +295,8 @@ class _HomeScreenState extends State<HomeScreen> {
           itemCount: gridItems.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2, // Display two rows
-            childAspectRatio: itemWidth / 85, // Adjust for item height and width
+            childAspectRatio:
+                itemWidth / 85, // Adjust for item height and width
           ),
           itemBuilder: (context, index) {
             return Container(
@@ -334,7 +351,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   // Scroll to the corresponding tag section when the tag icon is tapped
   void _scrollToTagSection(int tagId) {
     final keyContext = tagSectionKeys[tagId]?.currentContext;
@@ -351,8 +367,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // 4 and 5. Build Nearest Places and Featured Places section
-  Widget _buildNearFeaturedSection(
-      String iconPath, String title, List<CardInfo> places, FilterOption filterOption) {
+  Widget _buildNearFeaturedSection(String iconPath, String title,
+      List<Placecard> places, FilterOption filterOption) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -378,7 +394,7 @@ class _HomeScreenState extends State<HomeScreen> {
             scrollDirection: Axis.horizontal,
             itemCount: places.length,
             itemBuilder: (context, index) {
-              CardInfo place = places[index];
+              Placecard place = places[index];
               return Row(
                 children: [
                   if (index == 0) const SizedBox(width: 20),
@@ -386,14 +402,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     onTap: () {
                       // Navigate to DetailPage and pass the filtered data
                       Place selectedPlace = placeList.firstWhere(
-                              (placeItem) =>
-                          placeItem.placeId == place.placeCardInfoId);
-                      PlaceTranslation? selectedTranslation = dummyTranslations
-                          .firstWhere((trans) =>
-                      trans.placeId == selectedPlace.placeId);
+                          (placeItem) => placeItem.placeId == place.placeId);
+                      PlaceTranslation? selectedTranslation =
+                          dummyTranslations.firstWhere((trans) =>
+                              trans.placeId == selectedPlace.placeId);
                       List<PlaceMedia> filteredMediaList = mediaList
-                          .where((media) =>
-                      media.placeId == selectedPlace.placeId)
+                          .where(
+                              (media) => media.placeId == selectedPlace.placeId)
                           .toList();
 
                       Navigator.push(
@@ -410,13 +425,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                     child: PlaceCard(
-                      placeCardId: place.placeCardInfoId,
+                      placeCardId: place.placeId,
                       placeName: place.placeName,
-                      ward: 'Ward ${place.wardId}',
-                      photoDisplay: place.photoDisplay,
-                      iconUrl: place.iconUrl,
-                      score: place.score,
+                      ward: place.wardName,
+                      photoDisplay: place.photoDisplayUrl,
+                      score: place.rateStar,
                       distance: place.distance,
+                      countFeedback: place.countFeedback,
+                      timeClose: place.timeClose,
                     ),
                   ),
                   if (index == places.length - 1) const SizedBox(width: 20),
@@ -454,13 +470,11 @@ class _HomeScreenState extends State<HomeScreen> {
       return Container();
     }
 
-    List<CardInfo> nearestPlacesForTag =
-        nearestPlacesByTag[tag.tagId] ?? [];
-    List<CardInfo> featuredPlacesForTag =
-        featuredPlacesByTag[tag.tagId] ?? [];
+    List<CardInfo> nearestPlacesForTag = nearestPlacesByTag[tag.tagId] ?? [];
+    List<CardInfo> featuredPlacesForTag = featuredPlacesByTag[tag.tagId] ?? [];
 
     List<CardInfo> placesToDisplay =
-    isFeatured ? featuredPlacesForTag : nearestPlacesForTag;
+        isFeatured ? featuredPlacesForTag : nearestPlacesForTag;
 
     return Container(
       key: sectionKey,
@@ -548,14 +562,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     GestureDetector(
                       onTap: () {
                         Place selectedPlace = placeList.firstWhere(
-                                (placeItem) =>
-                            placeItem.placeId == place.placeCardInfoId);
-                        PlaceTranslation? selectedTranslation = dummyTranslations
-                            .firstWhere((trans) =>
-                        trans.placeId == selectedPlace.placeId);
+                            (placeItem) =>
+                                placeItem.placeId == place.placeCardInfoId);
+                        PlaceTranslation? selectedTranslation =
+                            dummyTranslations.firstWhere((trans) =>
+                                trans.placeId == selectedPlace.placeId);
                         List<PlaceMedia> filteredMediaList = mediaList
                             .where((media) =>
-                        media.placeId == selectedPlace.placeId)
+                                media.placeId == selectedPlace.placeId)
                             .toList();
 
                         Navigator.pushNamed(
@@ -574,9 +588,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         placeName: place.placeName,
                         ward: 'Ward ${place.wardId}',
                         photoDisplay: place.photoDisplay,
-                        iconUrl: place.iconUrl,
                         score: place.score,
                         distance: place.distance,
+                        countFeedback: index,
+                        timeClose: TimeOfDay(hour: 1, minute: 1),
                       ),
                     ),
                     if (index == placesToDisplay.length - 1)
@@ -592,7 +607,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               // Determine the filter based on toggle state
               FilterOption filterOption =
-              isFeatured ? FilterOption.featured : FilterOption.nearest;
+                  isFeatured ? FilterOption.featured : FilterOption.nearest;
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -608,6 +623,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-
 }

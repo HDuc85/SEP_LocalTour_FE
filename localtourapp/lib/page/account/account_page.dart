@@ -1,4 +1,3 @@
-// lib/page/account/account_page.dart
 import 'package:flutter/material.dart';
 import 'package:localtourapp/page/account/view_profile/post_provider.dart';
 import 'package:provider/provider.dart';
@@ -56,7 +55,7 @@ class _AccountPageState extends State<AccountPage> {
   void initState() {
     super.initState();
     final followUsersProvider =
-        Provider.of<FollowUsersProvider>(context, listen: false);
+    Provider.of<FollowUsersProvider>(context, listen: false);
     followers = followUsersProvider.getFollowers(widget.user.userId);
     followings = followUsersProvider.getFollowings(widget.user.userId);
     displayedUser = widget.user;
@@ -75,7 +74,7 @@ class _AccountPageState extends State<AccountPage> {
     final usersProvider = Provider.of<UsersProvider>(context, listen: false);
     final postProvider = Provider.of<PostProvider>(context, listen: false);
     final scheduleProvider =
-        Provider.of<ScheduleProvider>(context, listen: false);
+    Provider.of<ScheduleProvider>(context, listen: false);
     final reviewProvider = Provider.of<ReviewProvider>(context, listen: false);
 
     if (userProvider.isCurrentUser(widget.user.userId)) {
@@ -93,7 +92,7 @@ class _AccountPageState extends State<AccountPage> {
           .setReviewCount(userReviews.length);
     });
     final userSchedules =
-        scheduleProvider.getSchedulesByUserId(displayedUser.userId);
+    scheduleProvider.getSchedulesByUserId(displayedUser.userId);
     // Use post-frame callback to set schedule count after initial build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<CountProvider>(context, listen: false)
@@ -121,18 +120,18 @@ class _AccountPageState extends State<AccountPage> {
   @override
   Widget build(BuildContext context) {
     final followUsersProvider =
-        Provider.of<FollowUsersProvider>(context, listen: true);
+    Provider.of<FollowUsersProvider>(context, listen: true);
     final userProvider = Provider.of<UserProvider>(context, listen: true);
     // If viewing another user's profile, determine if the current user follows them
     final int scheduleCount = Provider.of<CountProvider>(context).scheduleCount;
     final int reviewCount = Provider.of<CountProvider>(context).reviewCount;
     final int postCount = Provider.of<CountProvider>(context).postCount;
     int followerCount =
-        FollowUser.countFollowers(widget.user.userId, widget.followUsers);
+    FollowUser.countFollowers(widget.user.userId, widget.followUsers);
     int followingCount =
-        FollowUser.countFollowing(widget.user.userId, widget.followUsers);
+    FollowUser.countFollowing(widget.user.userId, widget.followUsers);
     bool isCurrentUser =
-        Provider.of<UserProvider>(context).isCurrentUser(displayedUser.userId);
+    Provider.of<UserProvider>(context).isCurrentUser(displayedUser.userId);
     final ScrollController _scrollController = ScrollController();
 
     // Listen to scroll events
@@ -151,48 +150,48 @@ class _AccountPageState extends State<AccountPage> {
       body: SafeArea(
         child: Stack(
           children: [
-            ListView(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(8.0),
-              children: [
-                const SizedBox(height: 16),
-                _buildProfileSection(
-                  displayedUser,
-                  scheduleCount,
-                  reviewCount,
-                  postCount,
-                  followerCount,
-                  followingCount,
-                ),
-                const SizedBox(height: 16),
-                if (!isCurrentUser)
-                  _buildFollowButton(
-                      isFollowing, followUsersProvider, userProvider),
-                if (isCurrentUser) ...[
-                  _buildPersonInfoSection(),
-                  const SizedBox(height: 12),
-                  _buildSettingSection(),
-                  const SizedBox(height: 12),
-                  _buildContactSection(),
-                  const SizedBox(height: 12),
-                  _buildFAQSection(),
-                  const SizedBox(height: 12),
-                  _buildUserPreference(),
-                  const SizedBox(height: 36),
-                ],
-              ],
+          ListView(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(8.0),
+          children: [
+            const SizedBox(height: 16),
+            _buildProfileSection(
+              displayedUser,
+              scheduleCount,
+              reviewCount,
+              postCount,
+              followerCount,
+              followingCount,
             ),
-            Positioned(
-              bottom: 0,
-              left: 20,
-              child: WeatherIconButton(
-                onPressed: _navigateToWeatherPage,
-                assetPath: 'assets/icons/weather.png',
-              ),
-            ),
+            const SizedBox(height: 16),
+            if (!isCurrentUser)
+              _buildFollowButton(
+                  isFollowing, followUsersProvider, userProvider),
+            if (isCurrentUser) ...[
+              _buildPersonInfoSection(),
+              const SizedBox(height: 12),
+              _buildSettingSection(),
+              const SizedBox(height: 12),
+              _buildContactSection(),
+              const SizedBox(height: 12),
+              _buildFAQSection(),
+              const SizedBox(height: 12),
+              _buildUserPreference(),
+              const SizedBox(height: 36),
+            ],
           ],
         ),
-      ),
+        Positioned(
+          bottom: 0,
+          left: 20,
+          child: WeatherIconButton(
+            onPressed: _navigateToWeatherPage,
+            assetPath: 'assets/icons/weather.png',
+          ),
+        ),
+      ],
+    ),
+    ),
     );
   }
 
@@ -242,7 +241,7 @@ class _AccountPageState extends State<AccountPage> {
         .toList();
     final postProvider = Provider.of<PostProvider>(context);
     final List<Post> userPosts =
-        postProvider.getPostsByUserId(displayedUser.userId);
+    postProvider.getPostsByUserId(displayedUser.userId);
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -271,7 +270,7 @@ class _AccountPageState extends State<AccountPage> {
                     : null,
                 child: user.profilePictureUrl == null
                     ? const Icon(Icons.account_circle,
-                        size: 60, color: Colors.grey)
+                    size: 60, color: Colors.grey)
                     : null,
               ),
               const SizedBox(width: 16),
@@ -320,7 +319,7 @@ class _AccountPageState extends State<AccountPage> {
                                   followers: followers,
                                   following: followings,
                                   allUsers: Provider.of<UsersProvider>(context,
-                                          listen: false)
+                                      listen: false)
                                       .users, // List of all users
                                 ),
                               ),
@@ -341,7 +340,7 @@ class _AccountPageState extends State<AccountPage> {
                                   followers: followers,
                                   following: followings,
                                   allUsers: Provider.of<UsersProvider>(context,
-                                          listen: false)
+                                      listen: false)
                                       .users, // List of all users
                                 ),
                               ),

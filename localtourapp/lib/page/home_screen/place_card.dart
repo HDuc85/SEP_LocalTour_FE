@@ -7,9 +7,10 @@ class PlaceCard extends StatefulWidget {
   final String placeName;
   final String ward;
   final String photoDisplay;
-  final String iconUrl;
   final double score;
   final double distance;
+  final int countFeedback;
+  final TimeOfDay? timeClose;
 
   const PlaceCard({
     super.key,
@@ -17,9 +18,10 @@ class PlaceCard extends StatefulWidget {
     required this.placeName,
     required this.ward,
     required this.photoDisplay,
-    required this.iconUrl,
     required this.score,
     required this.distance,
+    required this.countFeedback,
+    required this.timeClose,
   });
 
   @override
@@ -27,37 +29,22 @@ class PlaceCard extends StatefulWidget {
 }
 
 class _PlaceCardState extends State<PlaceCard> {
-  late double score;
-  late int totalReviewers;
-  late StreamSubscription<int> _scoreSubscription;
+  late String iconUrl = "assets/icons/logo.png";
 
   @override
   void initState() {
     super.initState();
-    // Get the initial score
-    score = PlaceScoreManager.instance.getScore(widget.placeCardId);
-    totalReviewers = PlaceScoreManager.instance.getReviewCount(widget.placeCardId);
-
-    // Listen for score updates
-    _scoreSubscription = PlaceScoreManager.instance.scoreUpdates.listen((updatedPlaceId) {
-      if (updatedPlaceId == widget.placeCardId) {
-        setState(() {
-          score = PlaceScoreManager.instance.getScore(widget.placeCardId);
-          totalReviewers = PlaceScoreManager.instance.getReviewCount(widget.placeCardId);
-        });
-      }
-    });
   }
 
   @override
   void dispose() {
-    _scoreSubscription.cancel();
     super.dispose();
   }
 
   Widget buildStarRating(double score) {
     int fullStars = score.floor(); // Full stars
-    bool hasHalfStar = (score - fullStars) >= 0.5; // Determine if there’s a half-star
+    bool hasHalfStar =
+        (score - fullStars) >= 0.5; // Determine if there’s a half-star
 
     return Row(
       children: List.generate(5, (index) {
@@ -74,10 +61,7 @@ class _PlaceCardState extends State<PlaceCard> {
 
   @override
   Widget build(BuildContext context) {
-    // Format distance: If it's greater than 1000m, convert to km and limit to 2 decimal places
-    String formattedDistance = widget.distance > 1000
-        ? '${(widget.distance / 1000).toStringAsFixed(2)} km'
-        : '${widget.distance.toStringAsFixed(2)} m';
+    String formattedDistance = '${widget.distance.toStringAsFixed(1)} km';
 
     return SizedBox(
       width: 140,
@@ -169,23 +153,26 @@ class _PlaceCardState extends State<PlaceCard> {
                         Row(
                           children: [
                             Image.asset(
-                              widget.iconUrl,
+                              iconUrl,
                               width: 16,
                               height: 16,
                             ),
                             const SizedBox(width: 4),
-                            buildStarRating(score / 2), // Display the score as stars
+                            buildStarRating(
+                                widget.score / 2), // Display the score as stars
                           ],
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '(${totalReviewers.toString()})', // Display totalReviewers as text
-                          style: const TextStyle(fontSize: 12), // Optional styling
+                          '(${widget.countFeedback.toString()})', // Display totalReviewers as text
+                          style:
+                              const TextStyle(fontSize: 12), // Optional styling
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.location_on, color: Colors.red, size: 16),
+                            const Icon(Icons.location_on,
+                                color: Colors.red, size: 16),
                             const SizedBox(width: 4),
                             Text(formattedDistance),
                           ],

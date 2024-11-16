@@ -6,6 +6,8 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:localtourapp/base/base_page.dart';
 import 'package:localtourapp/base/const.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/places/placefeedbackhelpful.dart';
 import 'package:localtourapp/models/places/placefeedbackmedia.dart';
 import 'package:localtourapp/provider/follow_users_provider.dart';
@@ -53,16 +55,24 @@ void main() async {
   // Initialize Hive
   await Hive.initFlutter();
 
+  // Load language code
+  if (await SecureStorageHelper().readValue(AppConfig.language) == null) {
+    SecureStorageHelper().saveValue(AppConfig.language, 'vi');
+  }
   // Create an instance of bookmarkProvider and load bookmarks
   PlaceProvider bookmarkProvider = PlaceProvider(places: dummyPlaces,
     translations: dummyTranslations,);
   await bookmarkProvider.loadBookmarks();
+  // Fake Login in
+  SecureStorageHelper()
+      .saveValue(AppConfig.userId, '00000000-0000-0000-0000-000000000000');
 
   // Generate fake users
   User myUser = fakeUsers.firstWhere(
         (user) => user.userId == 'anh-tuan-unique-id-1234',
     orElse: () => fakeUsers.first, // Fallback to first user if not found
   );
+
   runApp(
     MultiProvider(
       providers: [
@@ -115,6 +125,7 @@ class _MyAppState extends State<MyApp> {
   late final List<Widget> screens;
   late final List<String?> titles;
   final ScrollController scrollController = ScrollController();
+  String userId = '00000000-0000-0000-0000-000000000000';
 
   @override
   void initState() {
@@ -131,9 +142,7 @@ class _MyAppState extends State<MyApp> {
         users: Provider.of<UsersProvider>(context, listen: false).users,
       ),
       AccountPage(
-        user: widget.myUser,
-        followUsers: dummyFollowUsers,
-        isCurrentUser: true,
+        userId: userId,
       ), // Ensure dummyFollowUsers is defined
     ];
 
@@ -144,6 +153,16 @@ class _MyAppState extends State<MyApp> {
       null,
       "${widget.myUser.fullName}'s Account Page",
     ];
+  }
+
+  Future<void> readUserId() async {
+    final userIdStorage =
+        await SecureStorageHelper().readValue(AppConfig.userId);
+    if (userIdStorage != null) {
+      setState(() {
+        userId = userIdStorage;
+      });
+    }
   }
 
   @override
@@ -168,7 +187,6 @@ class _MyAppState extends State<MyApp> {
       supportedLocales: const [
         Locale('en'),
         Locale('vn'),
-        Locale('cn'),
       ],
       localizationsDelegates: const [
         S.delegate,
@@ -223,9 +241,7 @@ class _MyAppState extends State<MyApp> {
           final isCurrentUser = userId == widget.myUser.userId;
           return MaterialPageRoute(
             builder: (context) => AccountPage(
-              user: selectedUser,
-              followUsers: dummyFollowUsers,
-              isCurrentUser: isCurrentUser,
+              userId: userId,
             ),
           );
         }

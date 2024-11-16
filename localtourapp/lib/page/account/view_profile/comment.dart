@@ -9,7 +9,6 @@ import 'package:provider/provider.dart';
 import 'package:localtourapp/models/posts/post.dart';
 import 'package:localtourapp/models/posts/postcomment.dart';
 import 'package:localtourapp/page/account/view_profile/post_provider.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import '../../../provider/follow_users_provider.dart';
 import '../../../provider/user_provider.dart';
 
@@ -248,9 +247,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => AccountPage(
-                    user: commenter,
-                    isCurrentUser: isCurrentUser,
-                    followUsers: followUsersProvider.followUsers,
+                    userId: "",
                   ),
                 ),
               );
@@ -283,9 +280,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => AccountPage(
-                              user: commenter,
-                              isCurrentUser: isCurrentUser,
-                              followUsers: followUsersProvider.followUsers,
+                              userId: "",
                             ),
                           ),
                         );
@@ -299,7 +294,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                     ),
                     // Time difference
                     Text(
-                      timeago.format(comment.createdDate),
+                      "Time Ago",
                       style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 12,
