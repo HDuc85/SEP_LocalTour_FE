@@ -147,48 +147,52 @@ class _AccountPageState extends State<AccountPage> {
           userProvider.userId, displayedUser.userId);
     }
 
-    return Stack(
-      children: [
-        ListView(
-          controller: _scrollController,
-          padding: const EdgeInsets.all(8.0),
+    return Scaffold(
+      body: SafeArea(
+        child: Stack(
           children: [
-            const SizedBox(height: 16),
-            _buildProfileSection(
-              displayedUser,
-              scheduleCount,
-              reviewCount,
-              postCount,
-              followerCount,
-              followingCount,
+            ListView(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(8.0),
+              children: [
+                const SizedBox(height: 16),
+                _buildProfileSection(
+                  displayedUser,
+                  scheduleCount,
+                  reviewCount,
+                  postCount,
+                  followerCount,
+                  followingCount,
+                ),
+                const SizedBox(height: 16),
+                if (!isCurrentUser)
+                  _buildFollowButton(
+                      isFollowing, followUsersProvider, userProvider),
+                if (isCurrentUser) ...[
+                  _buildPersonInfoSection(),
+                  const SizedBox(height: 12),
+                  _buildSettingSection(),
+                  const SizedBox(height: 12),
+                  _buildContactSection(),
+                  const SizedBox(height: 12),
+                  _buildFAQSection(),
+                  const SizedBox(height: 12),
+                  _buildUserPreference(),
+                  const SizedBox(height: 36),
+                ],
+              ],
             ),
-            const SizedBox(height: 16),
-            if (!isCurrentUser)
-              _buildFollowButton(
-                  isFollowing, followUsersProvider, userProvider),
-            if (isCurrentUser) ...[
-              _buildPersonInfoSection(),
-              const SizedBox(height: 12),
-              _buildSettingSection(),
-              const SizedBox(height: 12),
-              _buildContactSection(),
-              const SizedBox(height: 12),
-              _buildFAQSection(),
-              const SizedBox(height: 12),
-              _buildUserPreference(),
-              const SizedBox(height: 36),
-            ],
+            Positioned(
+              bottom: 0,
+              left: 20,
+              child: WeatherIconButton(
+                onPressed: _navigateToWeatherPage,
+                assetPath: 'assets/icons/weather.png',
+              ),
+            ),
           ],
         ),
-        Positioned(
-          bottom: 0,
-          left: 20,
-          child: WeatherIconButton(
-            onPressed: _navigateToWeatherPage,
-            assetPath: 'assets/icons/weather.png',
-          ),
-        ),
-      ],
+      ),
     );
   }
 

@@ -12,6 +12,7 @@ import 'package:localtourapp/models/users/followuser.dart';
 import 'package:localtourapp/page/account/view_profile/comment.dart';
 import 'package:localtourapp/page/account/view_profile/create_post.dart';
 import 'package:localtourapp/provider/count_provider.dart';
+import 'package:localtourapp/provider/user_provider.dart';
 import 'package:localtourapp/video_player/video_thumbnail.dart';
 import 'package:provider/provider.dart';
 import 'package:localtourapp/models/posts/post.dart';
@@ -28,7 +29,7 @@ class PostTabBar extends StatefulWidget {
   final User user;
   final bool isCurrentUser;
   final Function(int postId, bool isFavorited) onFavoriteToggle;
-  final Function() onCommentPressed;
+  final Function(Post post) onCommentPressed;
   final Function(Post post) onUpdatePressed; // Accepts Post
   final Function(Post post) onDeletePressed; // Accepts Post
 
@@ -169,20 +170,16 @@ class _PostTabBarState extends State<PostTabBar> {
     );
   }
 
-  void _openCommentsBottomSheet(Post post) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => CommentsBottomSheet(
-        post: post, userId: widget.userId,),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<PostProvider>(
       builder: (context, postProvider, _) {
         final List<Post> userPosts = postProvider.getPostsByUserId(widget.userId);
+        // Use post-frame callback to avoid modifying provider during build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Provider.of<CountProvider>(context, listen: false)
+              .setPostCount(userPosts.length);
+        });
         final List<Post> filteredPosts = getFilteredPosts(userPosts);
 
         // Initialize or update postVisibility and expandedPosts if necessary
@@ -190,8 +187,6 @@ class _PostTabBarState extends State<PostTabBar> {
           postVisibility.putIfAbsent(post.id, () => true);
           expandedPosts.putIfAbsent(post.id, () => false); // Initialize as not expanded
         }
-        Provider.of<CountProvider>(context, listen: false)
-            .setPostCount(userPosts.length);
 
         return Stack(
           children: [
@@ -398,6 +393,12 @@ class _PostTabBarState extends State<PostTabBar> {
   }
 
   Widget _buildButtonsSection() {
+    final currentUser = Provider.of<UserProvider>(context, listen: false).currentUser;
+
+    // Check if the current user matches the userId
+    if (currentUser.userId != widget.userId) {
+      return const SizedBox.shrink(); // Return an empty widget if not the current user
+    }
     return Center(
       child: SizedBox(
         height: 40,
@@ -453,7 +454,7 @@ class _PostTabBarState extends State<PostTabBar> {
             (like) => like.postId == post.id && like.userId == widget.user.userId);
     int likeCount = likes;
 
-    final int commentCount = postProvider.getCommentsForPost(post.id).length;
+    final int commentCount = postProvider.getCommentCountForPost(post.id);
 
     bool isExpandedLocal = expandedPosts[post.id] ?? false;
 
@@ -620,7 +621,7 @@ class _PostTabBarState extends State<PostTabBar> {
                   color: Color(0xFF9DC183), // Comment background color
                 ),
                 child: TextButton.icon(
-                  onPressed: () => _openCommentsBottomSheet(post),
+                  onPressed: () => widget.onCommentPressed(post),
                   icon: const Icon(
                     Icons.comment,
                     color: Color(0xFF008080),

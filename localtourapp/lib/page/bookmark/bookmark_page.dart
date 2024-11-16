@@ -210,14 +210,6 @@ class _BookmarkPageState extends State<BookmarkPage> {
                 double score =
                 PlaceScoreManager.instance.getScore(place.placeId);
 
-                // Calculate distance from current location
-                double distance = calculateDistance(
-                  _currentPosition!.latitude,
-                  _currentPosition!.longitude,
-                  place.latitude,
-                  place.longitude,
-                );
-
                 return GestureDetector(
                   onTap: () {
                     _navigateToDetail(placeId, place, translation, mediaList);
@@ -283,12 +275,6 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                       const Spacer(),
                                       const Icon(Icons.location_on,
                                           color: Colors.red, size: 16),
-                                      const SizedBox(width: 8.0),
-                                      Text(
-                                        '${distance.toStringAsFixed(2)} km',
-                                        style:
-                                        const TextStyle(fontSize: 12),
-                                      ),
                                     ],
                                   ),
                                 ],

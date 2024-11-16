@@ -11,7 +11,6 @@ import 'package:localtourapp/provider/user_provider.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:localtourapp/provider/count_provider.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/add_schedule_dialog.dart';
-import 'package:localtourapp/page/planned_page/planned_page_tab_bars/fearuted_schedule_page.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/suggest_schedule_page.dart';
 import 'package:localtourapp/page/search_page/search_page.dart';
 import 'package:provider/provider.dart';
@@ -54,7 +53,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
-
   List<Place> placeList = dummyPlaces;
   late String userId;
   final ScrollController _scrollController = ScrollController();
@@ -240,14 +238,21 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    userId = Provider.of<UserProvider>(context).userId;
+    userId = Provider.of<UserProvider>(context, listen: false).userId;
 
     if (userId.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
+
     final List<Schedule> filteredSchedules = getFilteredSchedules();
+
+    // Define isOwner based on the current user and the owner of the schedules
+    final bool isCurrentUser = userId == widget.userId;
+
+    if (userId.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
     // Fetch all schedules from ScheduleProvider
-    final bool isCurrentUser = widget.isCurrentUser;
     return Stack(
       children: [
         GestureDetector(
@@ -377,8 +382,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
 
   Widget _buildScheduleSection(List<Schedule> filteredSchedules) {
     final scheduleProvider =
-        Provider.of<ScheduleProvider>(context, listen: false);
-    final bool isCurrentUser = widget.isCurrentUser;
+    Provider.of<ScheduleProvider>(context, listen: false);
 
     if (filteredSchedules.isEmpty) {
       return const Center(
@@ -398,8 +402,15 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           final isEditingName = _editingScheduleIds.contains(schedule.id);
           bool isExpanded = _expandedIndex == index;
 
+          // Define isOwner for each schedule
+          final bool isOwner = schedule.userId == userId;
+
           // Initial states for visibility and favorites
-          bool isVisible = scheduleVisibility[schedule.id] ?? true;
+          bool isVisible = schedule.isPublic || schedule.userId == userId;
+          // If the schedule is not visible, skip rendering it
+          if (!isVisible) {
+            return const SizedBox.shrink();
+          }
 
           return GestureDetector(
             onTap: () {
@@ -422,6 +433,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Schedule name, editing, visibility, favorite toggling, and like count
+                        if (isOwner)
                         GestureDetector(
                           onTap: () => _toggleEditing(schedule.id),
                           child: isEditingName
@@ -470,6 +482,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                         null; // Correctly clears startDate
                                   });
                                 },
+                                isOwner: isOwner,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -490,6 +503,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                         null; // Correctly clears endDate
                                   });
                                 },
+                                isOwner: isOwner,
                               ),
                             ),
                           ],
@@ -497,6 +511,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
+                            if (isOwner)
                             IconButton(
                               icon: Icon(
                                 isVisible
@@ -544,6 +559,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                             if (isCurrentUser)
                               Row(
                                 children: [
+                                  if (isOwner)
                                   IconButton(
                                     icon: const Icon(Icons.delete,
                                         color: Color(0xFF4F4F4F)),
@@ -697,6 +713,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                       destination.startDate = null;
                     });
                   },
+                  isOwner: isOwner,
                 ),
                 const SizedBox(width: 6),
                 _buildDateField(
@@ -710,6 +727,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                       destination.endDate = null;
                     });
                   },
+                  isOwner: isOwner,
                 ),
               ],
             ),
@@ -720,7 +738,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                 destination.detail = newDetail;
               });
             }),
-            if (schedule.userId == widget.userId)
+            if (schedule.userId == userId)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -894,47 +912,49 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     );
   }
 
-  Widget _buildDateField(
-    String labelText,
-    bool isStartDate,
-    DateTime? initialDate,
-    Function(DateTime?) onDateChanged, {
-    bool clearable = false,
-    VoidCallback? onClear,
+  Widget  _buildDateField(
+      String labelText,
+      bool isStartDate,
+      DateTime? initialDate,
+      Function(DateTime?) onDateChanged, {
+        bool clearable = false,
+        VoidCallback? onClear,
+        required bool isOwner,
   }) {
     return GestureDetector(
-      onTap: () async {
+      onTap: isOwner ? () async {
         DateTime? selectedDate =
             initialDate; // Temporarily store the initial date
-
-        // Date picker
-        final DateTime? date = await showDatePicker(
-          context: context,
-          initialDate: selectedDate ?? DateTime.now(),
-          firstDate: DateTime(2000),
-          lastDate: DateTime(2100),
-        );
-
-        // If date is selected, proceed to time selection
-        if (date != null) {
-          selectedDate = DateTime(date.year, date.month, date.day,
-              selectedDate?.hour ?? 0, selectedDate?.minute ?? 0);
-
-          // Time picker
-          final TimeOfDay? time = await showTimePicker(
+        if (widget.isCurrentUser) {
+          // Date picker
+          final DateTime? date = await showDatePicker(
             context: context,
-            initialTime: TimeOfDay.fromDateTime(selectedDate),
+            initialDate: selectedDate ?? DateTime.now(),
+            firstDate: DateTime(2000),
+            lastDate: DateTime(2100),
           );
 
-          // If time is selected, update both date and time
-          if (time != null) {
-            selectedDate = DateTime(
-                date.year, date.month, date.day, time.hour, time.minute);
-            onDateChanged(
-                selectedDate); // Only update when both date and time are confirmed
+          // If date is selected, proceed to time selection
+          if (date != null) {
+            selectedDate = DateTime(date.year, date.month, date.day,
+                selectedDate?.hour ?? 0, selectedDate?.minute ?? 0);
+
+            // Time picker
+            final TimeOfDay? time = await showTimePicker(
+              context: context,
+              initialTime: TimeOfDay.fromDateTime(selectedDate),
+            );
+
+            // If time is selected, update both date and time
+            if (time != null) {
+              selectedDate = DateTime(
+                  date.year, date.month, date.day, time.hour, time.minute);
+              onDateChanged(
+                  selectedDate); // Only update when both date and time are confirmed
+            }
           }
         }
-      },
+      } : null,
       child: Stack(
         children: [
           AbsorbPointer(
@@ -953,7 +973,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               ),
             ),
           ),
-          if (clearable && initialDate != null)
+          if (clearable && initialDate != null && isOwner)
             Positioned(
               right:0,
               top: 5,

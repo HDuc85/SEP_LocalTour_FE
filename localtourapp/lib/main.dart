@@ -54,7 +54,8 @@ void main() async {
   await Hive.initFlutter();
 
   // Create an instance of bookmarkProvider and load bookmarks
-  PlaceProvider bookmarkProvider = PlaceProvider();
+  PlaceProvider bookmarkProvider = PlaceProvider(places: dummyPlaces,
+    translations: dummyTranslations,);
   await bookmarkProvider.loadBookmarks();
 
   // Generate fake users
