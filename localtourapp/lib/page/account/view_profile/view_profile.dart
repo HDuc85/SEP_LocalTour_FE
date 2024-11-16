@@ -24,17 +24,11 @@ import 'package:provider/provider.dart';
 import 'package:localtourapp/models/posts/post.dart';
 
 class ViewProfilePage extends StatefulWidget {
-  final List<FollowUser> followUsers;
   final String userId;
-  final List<Schedule> schedules;
-  final List<Post> posts;
   final User user;
 
   const ViewProfilePage({
     Key? key,
-    required this.followUsers,
-    required this.schedules,
-    required this.posts,
     required this.user,
     required this.userId,
   }) : super(key: key);
@@ -46,9 +40,9 @@ class ViewProfilePage extends StatefulWidget {
 class _ViewProfilePageState extends State<ViewProfilePage> {
   @override
   Widget build(BuildContext context) {
-    final scheduleNames = {
-      for (var schedule in widget.schedules) schedule.id: schedule.scheduleName
-    };
+    // final scheduleNames = {
+    //   for (var schedule in widget.schedules) schedule.id: schedule.scheduleName
+    // };
     final reviewProvider = Provider.of<ReviewProvider>(context);
     final userReviews = reviewProvider.getReviewsByUserId(widget.userId);
 
@@ -56,16 +50,21 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
     final bool isCurrentUser = currentUserId == widget.userId;
 
     final scheduleProvider = Provider.of<ScheduleProvider>(context);
-    final List<Schedule> userSchedules = scheduleProvider.getSchedulesByUserId(widget.userId);
-    final List<ScheduleLike> userScheduleLikes = scheduleProvider.getScheduleLikesByUserId(widget.userId);
-    final List<Destination> userDestinations = scheduleProvider.getDestinationsByUserId(widget.userId);
+    final List<Schedule> userSchedules =
+        scheduleProvider.getSchedulesByUserId(widget.userId);
+    final List<ScheduleLike> userScheduleLikes =
+        scheduleProvider.getScheduleLikesByUserId(widget.userId);
+    final List<Destination> userDestinations =
+        scheduleProvider.getDestinationsByUserId(widget.userId);
     final List<User> allUsers = Provider.of<UsersProvider>(context).users;
     final List<Place> allPlaces = scheduleProvider.places;
-    final List<PlaceTranslation> allTranslations = scheduleProvider.translations;
+    final List<PlaceTranslation> allTranslations =
+        scheduleProvider.translations;
 
     // Collect all media associated with the user's reviews
     final List<PlaceFeedbackMedia> userFeedbackMedia = userReviews
-        .map((feedback) => reviewProvider.getMediaByReviewId(feedback.placeFeedbackId))
+        .map((feedback) =>
+            reviewProvider.getMediaByReviewId(feedback.placeFeedbackId))
         .expand((mediaList) => mediaList)
         .toList();
 
@@ -92,11 +91,12 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
                 children: [
                   PostTabBar(
                     userId: widget.userId,
-                    scheduleNames: scheduleNames,
+                    scheduleNames: null,
                     user: widget.user,
                     isCurrentUser: isCurrentUser,
                     onFavoriteToggle: (postId, isFavorited) {
-                      final postProvider = Provider.of<PostProvider>(context, listen: false);
+                      final postProvider =
+                          Provider.of<PostProvider>(context, listen: false);
                       if (isFavorited) {
                         postProvider.addPostLike(PostLike(
                           id: DateTime.now().millisecondsSinceEpoch,
@@ -125,19 +125,22 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
                     },
                     onDeletePressed: (Post post) {
                       // Handle delete press action, i.e., delete the post via provider
-                      Provider.of<PostProvider>(context, listen: false).deletePost(post.id);
-                      Provider.of<CountProvider>(context, listen: false).decrementPostCount();
+                      Provider.of<PostProvider>(context, listen: false)
+                          .deletePost(post.id);
+                      Provider.of<CountProvider>(context, listen: false)
+                          .decrementPostCount();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Post deleted successfully!')),
+                        const SnackBar(
+                            content: Text('Post deleted successfully!')),
                       );
-                    }, followUsers: widget.followUsers,
+                    },
+                    followUsers: new List.empty(),
                   ),
                   ReviewedTabbar(
-                    userId: widget.userId,
-                    users: allUsers,
-                    feedbackMediaList: userFeedbackMedia,
-                    favoritedFeedbackIds: favoritedFeedbackIds
-                  ),
+                      userId: widget.userId,
+                      users: allUsers,
+                      feedbackMediaList: userFeedbackMedia,
+                      favoritedFeedbackIds: favoritedFeedbackIds),
                   if (!isCurrentUser)
                     ScheduleTabbar(
                       userId: widget.userId,
@@ -150,7 +153,8 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
                       users: allUsers,
                       places: allPlaces,
                       translations: allTranslations,
-                      isCurrentUser: false, // Indicate it's not the current user
+                      isCurrentUser:
+                          false, // Indicate it's not the current user
                     ),
                 ],
               ),

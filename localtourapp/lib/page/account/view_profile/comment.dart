@@ -207,10 +207,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => AccountPage(
-                                      user: parentUser,
-                                      isCurrentUser: isCurrentUser,
-                                      followUsers:
-                                          followUsersProvider.followUsers,
+                                      userId: '',
                                     ),
                                   ),
                                 );
@@ -257,7 +254,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                       final bool hasLiked;
                       hasLiked = commentLikes
                           .any((like) => like.userId == currentUserId);
-                                          final likeCount = commentLikes.length;
+                      final likeCount = commentLikes.length;
 
                       // Determine if this comment is a reply by checking parentId
                       String? parentUserName;
@@ -292,10 +289,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => AccountPage(
-                                      user: commenter,
-                                      isCurrentUser: isCurrentUser,
-                                      followUsers:
-                                          followUsersProvider.followUsers,
+                                      userId: '',
                                     ),
                                   ),
                                 );
@@ -330,10 +324,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) => AccountPage(
-                                                user: commenter,
-                                                isCurrentUser: isCurrentUser,
-                                                followUsers: followUsersProvider
-                                                    .followUsers,
+                                                userId: '',
                                               ),
                                             ),
                                           );

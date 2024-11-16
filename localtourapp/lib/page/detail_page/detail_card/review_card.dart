@@ -49,7 +49,7 @@ class _ReviewCardState extends State<ReviewCard> {
   // Check if the current feedback is marked as "favorite" or "helpful"
   bool isFavorite() {
     return widget.feedbackHelpfuls.any((helpful) =>
-    helpful.placeFeedbackId == widget.feedback.placeFeedbackId &&
+        helpful.placeFeedbackId == widget.feedback.placeFeedbackId &&
         helpful.userId == widget.userId);
   }
 
@@ -93,7 +93,8 @@ class _ReviewCardState extends State<ReviewCard> {
   Widget build(BuildContext context) {
     bool favoriteStatus = isFavorite();
     final mediaList = widget.feedbackMediaList;
-    int helpfulCount = Provider.of<ReviewProvider>(context, listen: false).getHelpfulCount(widget.feedback.placeFeedbackId);
+    int helpfulCount = Provider.of<ReviewProvider>(context, listen: false)
+        .getHelpfulCount(widget.feedback.placeFeedbackId);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -110,14 +111,17 @@ class _ReviewCardState extends State<ReviewCard> {
           _buildUserInfoRow(favoriteStatus, helpfulCount),
           const SizedBox(height: 5),
           Text(
-            widget.feedback.createdAt.toLocal().toIso8601String().split('T').first,
+            widget.feedback.createdAt
+                .toLocal()
+                .toIso8601String()
+                .split('T')
+                .first,
             style: const TextStyle(color: Colors.grey, fontSize: 12),
           ),
           const SizedBox(height: 5),
           Text(widget.feedback.content ?? "No content"),
           const SizedBox(height: 10),
-          if (mediaList.isNotEmpty)
-            _buildMediaRow(mediaList),
+          if (mediaList.isNotEmpty) _buildMediaRow(mediaList),
         ],
       ),
     );
@@ -143,7 +147,7 @@ class _ReviewCardState extends State<ReviewCard> {
                 Row(
                   children: List.generate(
                     5,
-                        (index) => Icon(
+                    (index) => Icon(
                       Icons.star,
                       color: index < widget.feedback.rating
                           ? Constants.starColor
@@ -159,7 +163,8 @@ class _ReviewCardState extends State<ReviewCard> {
         // Action buttons
         Row(
           children: [
-            if (widget.isInAllProductPage && widget.feedback.userId == widget.userId) ...[
+            if (widget.isInAllProductPage &&
+                widget.feedback.userId == widget.userId) ...[
               // Show favorite icon and helpful count if in AllProductPage and feedback belongs to current user
               Column(
                 children: [
@@ -224,9 +229,7 @@ class _ReviewCardState extends State<ReviewCard> {
           context,
           MaterialPageRoute(
             builder: (context) => AccountPage(
-              user: widget.user!,
-              isCurrentUser: widget.user!.userId == widget.userId,
-              followUsers: widget.followUsers,
+              userId: widget.userId,
             ),
           ),
         );
@@ -240,7 +243,8 @@ class _ReviewCardState extends State<ReviewCard> {
 
   ImageProvider _getUserProfileImage() {
     // Provide a default image if profilePictureUrl is empty or null
-    if (widget.user?.profilePictureUrl == null || widget.user!.profilePictureUrl!.isEmpty) {
+    if (widget.user?.profilePictureUrl == null ||
+        widget.user!.profilePictureUrl!.isEmpty) {
       return const AssetImage('assets/images/default_profile_picture.png');
     } else {
       return NetworkImage(widget.user!.profilePictureUrl!);
@@ -330,5 +334,3 @@ class _ReviewCardState extends State<ReviewCard> {
     }
   }
 }
-
-

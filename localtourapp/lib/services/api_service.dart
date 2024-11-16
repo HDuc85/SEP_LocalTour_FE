@@ -6,20 +6,22 @@ import '../config/appConfig.dart';
 class ApiService {
   static final storage = SecureStorageHelper();
   Future<bool> tryAutoLogin() async {
-    String? refreshToken = await storage.readToken(AppConfig.refreshToken);
+    String? refreshToken = await storage.readValue(AppConfig.refreshToken);
     if (refreshToken != null) {
       return await _refreshAccessToken(refreshToken);
     }
     return false;
   }
 
-  Future<http.Response> makeRequest(
-      String endpoint, String method, String body) async {
-    String? accessToken = await storage.readToken(AppConfig.accessToken);
+  Future<http.Response> makeRequest(String endpoint, String method,
+      [String? body]) async {
+    String? accessToken = await storage.readValue(AppConfig.accessToken);
     final uri = Uri.parse('${AppConfig.apiUrl}$endpoint');
     Map<String, String>? headers = {};
     ;
-    headers['Authorization'] = 'Bearer $accessToken';
+    //headers['Authorization'] = 'Bearer $accessToken';
+    headers['Authorization'] =
+        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyNTkzNzE1NC1jY2E1LTQ4ZDYtOWZkMi1jOGVmNjhjYWM5M2MiLCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo3Mjc0IiwiaWF0IjoxNzMxNzQ3MjE4LCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3Q6NzI3NCIsImh0dHBzOi8vbG9jYWxob3N0OjcyNzQiXSwiZXhwIjoxNzMxNzQ5NjE4LCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL21vYmlsZXBob25lIjoiMDEyMzQ1Njc4OSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InVzZXJAZXhhbXBsZS5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJWaXNpdG9yIiwibmJmIjoxNzMxNzQ3MjE4fQ.jycghlVSxSkOiVPC0Iw-RKEyD-Px2-BCwKsnip2NQAc';
 
     late http.Response response;
 
@@ -38,7 +40,7 @@ class ApiService {
     }
 
     if (response.statusCode == 401) {
-      String? refreshToken = await storage.readToken(AppConfig.refreshToken);
+      String? refreshToken = await storage.readValue(AppConfig.refreshToken);
       bool refreshed = await _refreshAccessToken(refreshToken);
       if (refreshed) {
         return makeRequest(endpoint, method, body);
@@ -67,9 +69,11 @@ class ApiService {
   }
 
   Future<void> _storeTokens(Map<String, dynamic> tokens) async {
-    await storage.clearAll();
-    await storage.saveToken(AppConfig.accessToken, tokens['accessToken']);
-    await storage.saveToken(AppConfig.refreshToken, tokens['refreshToken']);
+    await storage.deleteValue(AppConfig.accessToken);
+    await storage.deleteValue(AppConfig.refreshToken);
+
+    await storage.saveValue(AppConfig.accessToken, tokens['accessToken']);
+    await storage.saveValue(AppConfig.refreshToken, tokens['refreshToken']);
   }
 
   Future<(bool, bool)> sendFirebaseTokenToBackend(String idToken) async {
@@ -85,8 +89,8 @@ class ApiService {
         String firebaseAuthToken = data['firebaseAuthToken'];
         firstTime = data["firstTime"];
         isSuccess = true;
-        await storage.deleteToken(AppConfig.accessToken);
-        await storage.saveToken(AppConfig.accessToken, firebaseAuthToken);
+        await storage.deleteValue(AppConfig.accessToken);
+        await storage.saveValue(AppConfig.accessToken, firebaseAuthToken);
         return (isSuccess, firstTime);
       } else {
         return (isSuccess, firstTime);

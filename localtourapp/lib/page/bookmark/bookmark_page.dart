@@ -1,21 +1,11 @@
-// lib/bookmark_page.dart
-
-
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:localtourapp/models/markPlace/markPlaceModel.dart';
+import 'package:localtourapp/services/mark_place_service.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart'; // Import for firstWhereOrNull
 import '../../base/back_to_top_button.dart';
-import '../../base/place_card_info.dart';
 import '../../base/weather_icon_button.dart';
-import '../../models/places/markplace.dart';
-import '../../models/places/place.dart';
-import '../../models/places/placemedia.dart';
-import '../../models/places/placetranslation.dart';
-import '../../base/place_score_manager.dart';
-import '../../provider/place_provider.dart';
-import '../../provider/user_provider.dart';
-import '../detail_page/detail_page.dart';
 
 class BookmarkPage extends StatefulWidget {
   const BookmarkPage({Key? key}) : super(key: key);
@@ -25,7 +15,8 @@ class BookmarkPage extends StatefulWidget {
 }
 
 class _BookmarkPageState extends State<BookmarkPage> {
-  List<Place> placeList = dummyPlaces;
+  final MarkplaceService _markplaceService = MarkplaceService();
+  List<markPlaceModel> markPlaces = [];
   late String userId;
   final ScrollController _scrollController = ScrollController();
   bool _showBackToTopButton = false;
@@ -36,6 +27,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
   void initState() {
     _scrollController.addListener(_scrollListener);
     _fetchCurrentPosition();
+    _fetchMarkPlaceData();
     super.initState();
   }
 
@@ -72,6 +64,13 @@ class _BookmarkPageState extends State<BookmarkPage> {
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOut,
     );
+  }
+
+  Future<void> _fetchMarkPlaceData() async {
+    final fetchedmarkData = await _markplaceService.getAllMarkPlace();
+    setState(() {
+      markPlaces = fetchedmarkData;
+    });
   }
 
   // Method to fetch the current location once
@@ -143,263 +142,173 @@ class _BookmarkPageState extends State<BookmarkPage> {
 
   @override
   Widget build(BuildContext context) {
-    userId = Provider.of<UserProvider>(context).userId;
-
-    if (userId.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+    if (markPlaces.isEmpty) {
+      return const Center(
+        child: Text(
+          "No bookmarks yet.",
+          style: TextStyle(fontSize: 18),
+        ),
+      );
     }
-    return Consumer<PlaceProvider>(
-      builder: (context, bookmarkProvider, child) {
-        final List<int> bookmarkedPlaceIds = bookmarkProvider.bookmarkedPlaceIds;
 
-        if (bookmarkedPlaceIds.isEmpty) {
-          return const Center(
-            child: Text(
-              "No bookmarks yet.",
-              style: TextStyle(fontSize: 18),
-            ),
-          );
-        }
-
-        return Stack(
-          children: [
-            _currentPosition == null
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.separated(
-              controller: _scrollController,
-              padding: const EdgeInsets.only(bottom: 16.0),
-              itemCount: bookmarkedPlaceIds.length,
-              itemBuilder: (context, index) {
-                int placeId = bookmarkedPlaceIds[index];
-                // Access MarkPlace associated with the placeId via the instance
-                MarkPlace? markPlace =
-                bookmarkProvider.markPlaces.firstWhereOrNull(
-                      (mp) => mp!.placeId == placeId,
-                );
-
-                if (markPlace == null) {
-                  // Handle missing MarkPlace
-                  return ListTile(
-                    leading: const Icon(Icons.error, color: Colors.red),
-                    title: Text('Place ID $placeId not found'),
-                    subtitle:
-                    const Text('This place may have been removed.'),
-                  );
-                }
-                // Find the corresponding Place
-                Place? place = dummyPlaces
-                    .firstWhereOrNull((p) => p.placeId == placeId);
-
-                if (place == null) {
-                  // Handle missing Place
-                  return ListTile(
-                    leading: const Icon(Icons.error, color: Colors.red),
-                    title: Text('Place ID $placeId not found'),
-                    subtitle:
-                    const Text('This place may have been removed.'),
-                  );
-                }
-
-                // Fetch translation
-                PlaceTranslation? translation =
-                dummyTranslations.firstWhereOrNull(
-                      (trans) => trans.placeId == place.placeId,
-                );
-
-                // Fetch score
-                double score =
-                PlaceScoreManager.instance.getScore(place.placeId);
-
-                // Calculate distance from current location
-                double distance = calculateDistance(
-                  _currentPosition!.latitude,
-                  _currentPosition!.longitude,
-                  place.latitude,
-                  place.longitude,
-                );
-
-                return GestureDetector(
-                  onTap: () {
-                    _navigateToDetail(placeId, place, translation, mediaList);
-                  },
-                  child: Column(
-                    children: [
-                      // Place Image and Details
-                      Container(
-                        color: Colors.white,
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              child: Image.network(
-                                place.photoDisplay,
-                                width: 75,
-                                height: 75,
-                                fit: BoxFit.cover,
-                                errorBuilder:
-                                    (context, error, stackTrace) =>
-                                    Container(
-                                      width: 75,
-                                      height: 75,
-                                      color: Colors.grey,
-                                      child: const Icon(Icons.image,
-                                          color: Colors.white),
-                                    ),
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 8,
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    translation?.placeName ??
-                                        "Unknown Place",
-                                    style: const TextStyle(
-                                      fontSize: 16.0,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    'Ward ${place.wardId}',
-                                    style: const TextStyle(
-                                        color: Colors.grey, fontSize: 14),
-                                  ),
-                                  Row(
-                                    children: [
-                                      Image.asset(
-                                        'assets/icons/logo.png',
-                                        width: 16,
-                                        height: 16,
-                                      ),
-                                      const SizedBox(
-                                        width: 8,
-                                      ),
-                                      Text('$score'),
-                                      const Spacer(),
-                                      const Icon(Icons.location_on,
-                                          color: Colors.red, size: 16),
-                                      const SizedBox(width: 8.0),
-                                      Text(
-                                        '${distance.toStringAsFixed(2)} km',
-                                        style:
-                                        const TextStyle(fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      // Bookmark Actions Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.bookmark,
-                              color: Colors.red,
-                            ),
-                            onPressed: () {
-                              bookmarkProvider
-                                  .removeBookmark(place.placeId);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Bookmark removed')),
-                              );
-                            },
-                          ),
-                          Text(
-                            'Added on: ${markPlace.createdDate.toLocal().toShortDateString()}',
-                            style: const TextStyle(
-                                fontSize: 12.0, color: Colors.black),
-                          ),
-                          Row(
+    return Stack(
+      children: [
+        _currentPosition == null
+            ? const Center(child: CircularProgressIndicator())
+            : ListView.separated(
+                controller: _scrollController,
+                padding: const EdgeInsets.only(bottom: 16.0),
+                itemCount: markPlaces.length,
+                itemBuilder: (context, index) {
+                  final place = markPlaces[index];
+                  return GestureDetector(
+                    onTap: () {
+                      _navigateToDetail(place.placeId);
+                    },
+                    child: Column(
+                      children: [
+                        // Place Image and Details
+                        Container(
+                          color: Colors.white,
+                          child: Row(
                             children: [
-                              const Text('Visited',
-                                  style: TextStyle(fontSize: 12.0)),
-                              Checkbox(
-                                value: markPlace.isVisited,
-                                onChanged: (bool? value) {
-                                  bookmarkProvider
-                                      .toggleVisited(place.placeId);
-                                },
+                              ClipRRect(
+                                child: Image.network(
+                                  place.photoDisplay,
+                                  width: 75,
+                                  height: 75,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                    width: 75,
+                                    height: 75,
+                                    color: Colors.grey,
+                                    child: const Icon(Icons.image,
+                                        color: Colors.white),
+                                  ),
+                                ),
                               ),
+                              const SizedBox(
+                                width: 8,
+                              ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      place.placeName,
+                                      style: const TextStyle(
+                                        fontSize: 16.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Row(
+                                      children: [
+                                        Image.asset(
+                                          'assets/icons/logo.png',
+                                          width: 16,
+                                          height: 16,
+                                        ),
+                                        const SizedBox(
+                                          width: 8,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              )
                             ],
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-              separatorBuilder: (context, index) => const Divider(
-                color: Colors.black, // Divider color
-                thickness: 2,
-                height: 2, // Divider thickness
+                        ),
+                        // Bookmark Actions Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.bookmark,
+                                color: Colors.red,
+                              ),
+                              onPressed: () {
+                                // xóa bookmark Fuction
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Bookmark removed')),
+                                );
+                              },
+                            ),
+                            Text(
+                              'Added on: ${place.createdDate.toLocal().toShortDateString()}',
+                              style: const TextStyle(
+                                  fontSize: 12.0, color: Colors.black),
+                            ),
+                            Row(
+                              children: [
+                                const Text('Visited',
+                                    style: TextStyle(fontSize: 12.0)),
+                                Checkbox(
+                                  value: place.isVisited,
+                                  onChanged: (bool? value) {
+                                    // Update isVisited Function
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                separatorBuilder: (context, index) => const Divider(
+                  color: Colors.black, // Divider color
+                  thickness: 2,
+                  height: 2, // Divider thickness
+                ),
               ),
-            ),
 
-            // Positioned Weather Icon Button (Bottom Left)
-            Positioned(
-              bottom: 0,
-              left: 20,
-              child: WeatherIconButton(
-                onPressed: _navigateToWeatherPage,
-                assetPath: 'assets/icons/weather.png',
-              ),
-            ),
+        // Positioned Weather Icon Button (Bottom Left)
+        Positioned(
+          bottom: 0,
+          left: 20,
+          child: WeatherIconButton(
+            onPressed: _navigateToWeatherPage,
+            assetPath: 'assets/icons/weather.png',
+          ),
+        ),
 
-            // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
-            Positioned(
-              bottom: 12,
-              left: 110,
-              child: AnimatedOpacity(
-                opacity: _showBackToTopButton ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 300),
-                child: _showBackToTopButton
-                    ? BackToTopButton(
-                  onPressed: _scrollToTop,
-                )
-                    : const SizedBox.shrink(),
-              ),
-            ),
-          ],
-        );
-      },
+        // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
+        Positioned(
+          bottom: 12,
+          left: 110,
+          child: AnimatedOpacity(
+            opacity: _showBackToTopButton ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 300),
+            child: _showBackToTopButton
+                ? BackToTopButton(
+                    onPressed: _scrollToTop,
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ),
+      ],
     );
   }
 
   // Navigation method to DetailPage using named routes
-  void _navigateToDetail(int placeId, Place place, PlaceTranslation? translation, List<PlaceMedia> mediaList) {
-    Place? selectedPlace = placeList.firstWhereOrNull((place) => place.placeId == placeId);
-
-    List<PlaceMedia> filteredMediaList = mediaList
-        .where((media) => media.placeId == place.placeId)
-        .toList();
-
-    PlaceTranslation? selectedTranslation = dummyTranslations.firstWhereOrNull(
-          (trans) => trans.placeId == selectedPlace?.placeId,
-    );
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DetailPage(
-          languageCode: 'en',
-          userId: userId, // Replace with actual userId
-          placeName: selectedTranslation?.placeName ?? 'Unknown Place',
-          placeId: selectedPlace!.placeId,
-          mediaList: filteredMediaList,
-        ),
-      ),
-    );
+  void _navigateToDetail(int placeId) {
+    final selectedPlace =
+        markPlaces.firstWhereOrNull((place) => place.placeId == placeId);
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (_) => DetailPage(
+    //       placeId: selectedPlace!.placeId,
+    //     ),
+    //   ),
+    // );
   }
 }
 

@@ -17,4 +17,6 @@ class AppConfig {
 
   static const String appName = 'localtourapp';
   static const String appVersion = '1.0.0';
+  static const String language = 'languageCode';
+  static const String userId = 'userid';
 }

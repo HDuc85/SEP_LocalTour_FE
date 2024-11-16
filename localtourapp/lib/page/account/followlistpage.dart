@@ -85,9 +85,12 @@ class _FollowListPageState extends State<FollowListPage> {
           title: GestureDetector(
             onTap: () {
               // Use UserProvider to get the user's details
-              final userProvider = Provider.of<UserProvider>(context, listen: false);
-              final usersProvider = Provider.of<UsersProvider>(context, listen: false);
-              final followUsersProvider = Provider.of<FollowUsersProvider>(context, listen: false);
+              final userProvider =
+                  Provider.of<UserProvider>(context, listen: false);
+              final usersProvider =
+                  Provider.of<UsersProvider>(context, listen: false);
+              final followUsersProvider =
+                  Provider.of<FollowUsersProvider>(context, listen: false);
 
               final clickedUser = usersProvider.getUserById(user.userId);
               final isCurrentUser = userProvider.isCurrentUser(user.userId);
@@ -96,16 +99,13 @@ class _FollowListPageState extends State<FollowListPage> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => AccountPage(
-                    user: clickedUser ?? userProvider.currentUser!,
-                    isCurrentUser: isCurrentUser,
-                    followUsers: followUsersProvider.followUsers,
+                    userId: "",
                   ),
                 ),
               );
             },
             child: Text(user.userName ?? "Unknown User"),
           ),
-
           subtitle: Text(
             isFollowerTab
                 ? 'Followed you at: ${followUser.dateCreated.toLocal().toString().split(' ')[0]}'

@@ -1,6 +1,10 @@
 // lib/page/account/account_page.dart
 import 'package:flutter/material.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
+import 'package:localtourapp/models/users/userProfile.dart';
 import 'package:localtourapp/page/account/view_profile/post_provider.dart';
+import 'package:localtourapp/services/user_service.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -25,15 +29,11 @@ import 'view_profile/view_profile.dart';
 // Import other necessary pages like ViewProfilePage, PersonalInformationPage, SettingPage, FAQPage
 
 class AccountPage extends StatefulWidget {
-  final bool isCurrentUser;
-  final User user;
-  final List<FollowUser> followUsers;
+  final String userId;
 
   const AccountPage({
     Key? key,
-    required this.isCurrentUser,
-    required this.user,
-    required this.followUsers,
+    required this.userId,
   }) : super(key: key);
 
   @override
@@ -41,76 +41,49 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
+  late UserService _userService = UserService();
+
   late List<FollowUser> followers;
   late List<FollowUser> followings;
+  late Userprofile userprofile;
   late User displayedUser;
-
-  // **Add these declarations:**
-  late int followerCount;
-  late int followingCount;
-
-  // Existing ScrollController declaration
+  late String myUserId = '';
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
+    readUserId();
+    readUserProfile(widget.userId);
     super.initState();
-    final followUsersProvider =
-        Provider.of<FollowUsersProvider>(context, listen: false);
-    followers = followUsersProvider.getFollowers(widget.user.userId);
-    followings = followUsersProvider.getFollowings(widget.user.userId);
-    displayedUser = widget.user;
-
-    // Initialize followerCount and followingCount
-    followerCount =
-        FollowUser.countFollowers(widget.user.userId, widget.followUsers);
-    followingCount =
-        FollowUser.countFollowing(widget.user.userId, widget.followUsers);
   }
 
+  Future<void> readUserId() async {
+    final userIdStorage =
+        await SecureStorageHelper().readValue(AppConfig.userId);
+    if (userIdStorage != null) {
+      setState(() {
+        myUserId = userIdStorage;
+      });
+    }
+  }
+
+  Future<void> readUserProfile(String userId) async {
+    final reponse = await _userService.getUserProfile(userId);
+    setState(() {
+      userprofile = reponse;
+    });
+  }
+
+  Future<void> _FollowButtonFn() async {}
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final usersProvider = Provider.of<UsersProvider>(context, listen: false);
-    final postProvider = Provider.of<PostProvider>(context, listen: false);
-    final scheduleProvider =
-        Provider.of<ScheduleProvider>(context, listen: false);
-    final reviewProvider = Provider.of<ReviewProvider>(context, listen: false);
-
-    if (userProvider.isCurrentUser(widget.user.userId)) {
-      // Display current user's information
-      displayedUser = userProvider.currentUser;
-    } else {
-      // Fetch the other user's information from UsersProvider
-      displayedUser = (usersProvider.getUserById(widget.user.userId) ??
-          userProvider.currentUser);
-    }
-
-    final userReviews = reviewProvider.getReviewsByUserId(displayedUser.userId);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<CountProvider>(context, listen: false)
-          .setReviewCount(userReviews.length);
-    });
-    final userSchedules =
-        scheduleProvider.getSchedulesByUserId(displayedUser.userId);
-    // Use post-frame callback to set schedule count after initial build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<CountProvider>(context, listen: false)
-          .setScheduleCount(userSchedules.length);
-    });
-
-    final userPosts = postProvider.getPostsByUserId(displayedUser.userId);
-    // Use post-frame callback to set post count after initial build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<CountProvider>(context, listen: false)
-          .setPostCount(userPosts.length);
-    });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+
     super.dispose();
   }
 
@@ -120,31 +93,15 @@ class _AccountPageState extends State<AccountPage> {
 
   @override
   Widget build(BuildContext context) {
-    final followUsersProvider =
-        Provider.of<FollowUsersProvider>(context, listen: true);
-    final userProvider = Provider.of<UserProvider>(context, listen: true);
-    // If viewing another user's profile, determine if the current user follows them
-    final int scheduleCount = Provider.of<CountProvider>(context).scheduleCount;
-    final int reviewCount = Provider.of<CountProvider>(context).reviewCount;
-    final int postCount = Provider.of<CountProvider>(context).postCount;
-    int followerCount =
-        FollowUser.countFollowers(widget.user.userId, widget.followUsers);
-    int followingCount =
-        FollowUser.countFollowing(widget.user.userId, widget.followUsers);
-    bool isCurrentUser =
-        Provider.of<UserProvider>(context).isCurrentUser(displayedUser.userId);
     final ScrollController _scrollController = ScrollController();
-
+    bool isCurrentUser = false;
     // Listen to scroll events
     _scrollController.addListener(() {
       // Implement your logic here, e.g., show "Back to Top" button
     });
 
-    // Determine if the current user is following the displayed user
-    bool isFollowing = false;
-    if (!isCurrentUser) {
-      isFollowing = followUsersProvider.isFollowing(
-          userProvider.userId, displayedUser.userId);
+    if (widget.userId == myUserId) {
+      isCurrentUser = true;
     }
 
     return Stack(
@@ -154,18 +111,9 @@ class _AccountPageState extends State<AccountPage> {
           padding: const EdgeInsets.all(8.0),
           children: [
             const SizedBox(height: 16),
-            _buildProfileSection(
-              displayedUser,
-              scheduleCount,
-              reviewCount,
-              postCount,
-              followerCount,
-              followingCount,
-            ),
+            _buildProfileSection(userprofile),
             const SizedBox(height: 16),
-            if (!isCurrentUser)
-              _buildFollowButton(
-                  isFollowing, followUsersProvider, userProvider),
+            if (!isCurrentUser) _buildFollowButton(userprofile.isFollowed),
             if (isCurrentUser) ...[
               _buildPersonInfoSection(),
               const SizedBox(height: 12),
@@ -193,52 +141,22 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   // Add this method inside _AccountPageState
-  Widget _buildFollowButton(bool isFollowing,
-      FollowUsersProvider followUsersProvider, UserProvider userProvider) {
+  Widget _buildFollowButton(bool isFollowed) {
     return Center(
       child: ElevatedButton(
         onPressed: () {
-          if (isFollowing) {
-            followUsersProvider.removeFollowUser(
-                userProvider.userId, displayedUser.userId);
-          } else {
-            followUsersProvider.addFollowUser(FollowUser(
-              id: followUsersProvider.followUsers.length + 1,
-              userId: userProvider.userId,
-              userFollow: displayedUser.userId,
-              dateCreated: DateTime.now(),
-            ));
-          }
-
-          // Update follower and following counts after following/unfollowing
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            setState(() {
-              followerCount = FollowUser.countFollowers(
-                  displayedUser.userId, followUsersProvider.followUsers);
-              followingCount = FollowUser.countFollowing(
-                  displayedUser.userId, followUsersProvider.followUsers);
-            });
-          });
+          _FollowButtonFn();
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: isFollowing ? Colors.red : Colors.blue,
+          backgroundColor: isFollowed ? Colors.red : Colors.blue,
         ),
-        child: Text(isFollowing ? "Unfollow" : "Follow"),
+        child: Text(isFollowed ? "Unfollow" : "Follow"),
       ),
     );
   }
 
   // Build Profile Section
-  Widget _buildProfileSection(User user, int scheduleCount, int reviewCount,
-      int postCount, int followerCount, int followingCount) {
-    final scheduleProvider = Provider.of<ScheduleProvider>(context);
-    final List<Schedule> allSchedules = scheduleProvider.schedules;
-    final List<Schedule> userSchedules = allSchedules
-        .where((schedule) => schedule.userId == displayedUser.userId)
-        .toList();
-    final postProvider = Provider.of<PostProvider>(context);
-    final List<Post> userPosts =
-        postProvider.getPostsByUserId(displayedUser.userId);
+  Widget _buildProfileSection(Userprofile userProfile) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -262,10 +180,10 @@ class _AccountPageState extends State<AccountPage> {
               // Profile picture on the left
               CircleAvatar(
                 radius: 30,
-                backgroundImage: user.profilePictureUrl != null
-                    ? NetworkImage(user.profilePictureUrl!)
+                backgroundImage: userProfile.userProfileImage != ''
+                    ? NetworkImage(userProfile.userProfileImage)
                     : null,
-                child: user.profilePictureUrl == null
+                child: userProfile.userProfileImage == ''
                     ? const Icon(Icons.account_circle,
                         size: 60, color: Colors.grey)
                     : null,
@@ -278,30 +196,25 @@ class _AccountPageState extends State<AccountPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      user.fullName ?? "Unknown User",
+                      userProfile.userName == ''
+                          ? "Empty Name"
+                          : userProfile.userName,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(height: 12),
                     Text(
-                      '(${user.userName})',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '$scheduleCount schedules created',
+                      '${userProfile.totalSchedules} schedules created',
                       style: const TextStyle(fontSize: 14),
                     ),
                     Text(
-                      '$postCount posts created',
+                      '${userProfile.totalPosteds} posts created',
                       style: const TextStyle(fontSize: 14),
                     ),
                     Text(
-                      '$reviewCount reviews',
+                      '${userProfile.totalReviews} reviews',
                       style: const TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 8),
@@ -323,7 +236,7 @@ class _AccountPageState extends State<AccountPage> {
                             );
                           },
                           child: Text(
-                            '$followerCount followers',
+                            '${userProfile.totalFollowed} followers',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
@@ -344,7 +257,7 @@ class _AccountPageState extends State<AccountPage> {
                             );
                           },
                           child: Text(
-                            '$followingCount following',
+                            '${userProfile.totalFollowers} following',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
@@ -365,10 +278,7 @@ class _AccountPageState extends State<AccountPage> {
                   MaterialPageRoute(
                     builder: (context) => ViewProfilePage(
                       userId: displayedUser.userId,
-                      schedules: userSchedules,
-                      posts: userPosts,
                       user: displayedUser,
-                      followUsers: widget.followUsers,
                     ),
                   ),
                 );
