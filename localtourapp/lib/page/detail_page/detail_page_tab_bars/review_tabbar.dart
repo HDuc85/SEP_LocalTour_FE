@@ -11,7 +11,6 @@ import '../../../provider/users_provider.dart';
 import '../detail_card/review_card_list.dart';
 import '../detail_card/review_card.dart';
 import '../../../models/places/placefeedback.dart';
-import '../../../models/places/placefeedbackhelpful.dart';
 import '../../../models/places/placefeedbackmedia.dart';
 import '../all_reviews_page.dart';
 import '../../../provider/count_provider.dart';
@@ -158,7 +157,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
 
   User? getUserDetails(String userId) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    if (userProvider.currentUser!.userId == userId) {
+    if (userProvider.currentUser.userId == userId) {
       return userProvider.currentUser;
     }
     // If not current user, either retrieve from user list or return a default

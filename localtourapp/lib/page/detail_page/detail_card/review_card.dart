@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
 import '../../../../../models/places/placefeedback.dart';
 import '../../../base/const.dart';
 import '../../../full_media/full_feedback_media_viewer.dart';

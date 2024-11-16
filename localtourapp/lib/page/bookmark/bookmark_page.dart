@@ -6,7 +6,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart'; // Import for firstWhereOrNull
 import '../../base/back_to_top_button.dart';
-import '../../base/place_card_info.dart';
 import '../../base/weather_icon_button.dart';
 import '../../models/places/markplace.dart';
 import '../../models/places/place.dart';

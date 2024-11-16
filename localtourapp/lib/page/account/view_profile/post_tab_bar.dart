@@ -4,12 +4,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
-import 'package:localtourapp/provider/place_provider.dart';
 import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
 import 'package:localtourapp/full_media/full_screen_post_media_viewer.dart';
 import 'package:localtourapp/models/users/followuser.dart';
-import 'package:localtourapp/page/account/view_profile/comment.dart';
 import 'package:localtourapp/page/account/view_profile/create_post.dart';
 import 'package:localtourapp/provider/count_provider.dart';
 import 'package:localtourapp/provider/user_provider.dart';
@@ -17,9 +15,7 @@ import 'package:localtourapp/video_player/video_thumbnail.dart';
 import 'package:provider/provider.dart';
 import 'package:localtourapp/models/posts/post.dart';
 import 'package:localtourapp/models/posts/postmedia.dart';
-import 'package:localtourapp/models/posts/postlike.dart';
 import 'package:localtourapp/models/users/users.dart';
-import 'package:localtourapp/models/schedule/schedule.dart';
 import 'package:localtourapp/page/account/view_profile/post_provider.dart';
 
 class PostTabBar extends StatefulWidget {
