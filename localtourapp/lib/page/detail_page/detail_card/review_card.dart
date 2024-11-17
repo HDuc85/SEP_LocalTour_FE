@@ -228,7 +228,9 @@ class _ReviewCardState extends State<ReviewCard> {
           context,
           MaterialPageRoute(
             builder: (context) => AccountPage(
-              userId: widget.userId,
+              user: widget.user!,
+              isCurrentUser: widget.user!.userId == widget.userId,
+              followUsers: widget.followUsers,
             ),
           ),
         );

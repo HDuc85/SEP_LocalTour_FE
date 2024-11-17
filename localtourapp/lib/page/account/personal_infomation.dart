@@ -283,6 +283,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                   focusNode: newPasswordFocus,
                                                   obscureText: true,
                                                   decoration: InputDecoration(
+                                                    errorMaxLines: 3,
                                                     border: const OutlineInputBorder(),
                                                     hintText: 'Enter your new password',
                                                     errorText: newPasswordError
@@ -359,7 +360,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                           ),
                           TextButton(
                             onPressed: () {
-                              ForgotPasswordDialog.show(context, firebaseAuth: MockFirebaseAuth());
+                              ForgotPasswordDialog.show(context);
                             },
                             child: const Text(
                               'Forgot Password?',

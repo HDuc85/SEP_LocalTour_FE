@@ -1,5 +1,3 @@
-// lib/pages/view_profile.dart
-
 import 'package:flutter/material.dart';
 import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/models/places/place.dart';
@@ -143,10 +141,10 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
                     }, followUsers: widget.followUsers,
                   ),
                   ReviewedTabbar(
-                    userId: widget.userId,
-                    users: allUsers,
-                    feedbackMediaList: userFeedbackMedia,
-                    favoritedFeedbackIds: favoritedFeedbackIds
+                      userId: widget.userId,
+                      users: allUsers,
+                      feedbackMediaList: userFeedbackMedia,
+                      favoritedFeedbackIds: favoritedFeedbackIds
                   ),
                   if (!isCurrentUser)
                     ScheduleTabbar(
@@ -155,6 +153,7 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
                       scheduleLikes: userScheduleLikes,
                       destinations: userDestinations,
                       onFavoriteToggle: (scheduleId, isFavorited) {
+                        // Handle favorite toggle
                         final scheduleProvider = Provider.of<ScheduleProvider>(context, listen: false);
                         if (isFavorited) {
                           scheduleProvider.addScheduleLike(ScheduleLike(

@@ -770,7 +770,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             ),
             if (isCurrentUser)
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   // isArrived checkbox
                   Checkbox(
@@ -968,22 +968,20 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
 
           // If date is selected, proceed to time selection
           if (date != null) {
-            selectedDate = DateTime(date.year, date.month, date.day,
-                selectedDate?.hour ?? 0, selectedDate?.minute ?? 0);
+            selectedDate = DateTime(date.year, date.month, date.day, selectedDate?.hour ?? 0, selectedDate?.minute ?? 0);
 
-            // Time picker
             final TimeOfDay? time = await showTimePicker(
               context: context,
               initialTime: TimeOfDay.fromDateTime(selectedDate),
             );
 
-            // If time is selected, update both date and time
             if (time != null) {
-              selectedDate = DateTime(
-                  date.year, date.month, date.day, time.hour, time.minute);
-              onDateChanged(
-                  selectedDate); // Only update when both date and time are confirmed
+              selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+            } else {
+              selectedDate = DateTime(date.year, date.month, date.day, 0, 0); // Default time
             }
+
+            onDateChanged(selectedDate);
           }
         }
       } : null,

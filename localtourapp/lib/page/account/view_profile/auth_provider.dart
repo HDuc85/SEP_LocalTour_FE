@@ -9,6 +9,8 @@ class AuthProvider with ChangeNotifier {
 
   String? get currentUserId => _currentUserId;
 
+  bool get isLoggedIn => _currentUserId != null;
+
   // Simulated login method
   void login(String userId) {
     _currentUserId = userId;

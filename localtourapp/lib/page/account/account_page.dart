@@ -19,6 +19,7 @@ import 'followlistpage.dart';
 import 'personal_infomation.dart';
 import 'setting_page.dart';
 import 'user_preference.dart';
+import 'view_profile/auth_provider.dart';
 import 'view_profile/view_profile.dart';
 
 // Import other necessary pages like ViewProfilePage, PersonalInformationPage, SettingPage, FAQPage
@@ -132,7 +133,8 @@ class _AccountPageState extends State<AccountPage> {
     FollowUser.countFollowing(widget.user.userId, widget.followUsers);
     bool isCurrentUser =
     Provider.of<UserProvider>(context).isCurrentUser(displayedUser.userId);
-    final ScrollController _scrollController = ScrollController();
+    // Remove the redundant ScrollController declaration
+    // final ScrollController _scrollController = ScrollController();
 
     // Listen to scroll events
     _scrollController.addListener(() {
@@ -150,48 +152,50 @@ class _AccountPageState extends State<AccountPage> {
       body: SafeArea(
         child: Stack(
           children: [
-          ListView(
-          controller: _scrollController,
-          padding: const EdgeInsets.all(8.0),
-          children: [
-            const SizedBox(height: 16),
-            _buildProfileSection(
-              displayedUser,
-              scheduleCount,
-              reviewCount,
-              postCount,
-              followerCount,
-              followingCount,
+            ListView(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(8.0),
+              children: [
+                const SizedBox(height: 16),
+                _buildProfileSection(
+                  displayedUser,
+                  scheduleCount,
+                  reviewCount,
+                  postCount,
+                  followerCount,
+                  followingCount,
+                ),
+                const SizedBox(height: 16),
+                if (!isCurrentUser)
+                  _buildFollowButton(
+                      isFollowing, followUsersProvider, userProvider),
+                if (isCurrentUser) ...[
+                  _buildPersonInfoSection(),
+                  const SizedBox(height: 12),
+                  _buildSettingSection(),
+                  const SizedBox(height: 12),
+                  _buildContactSection(),
+                  const SizedBox(height: 12),
+                  _buildFAQSection(),
+                  const SizedBox(height: 12),
+                  _buildUserPreference(),
+                  const SizedBox(height: 12), // Adjust spacing if needed
+                  _buildLogoutButton(), // Add the Logout button here
+                  const SizedBox(height: 36),
+                ],
+              ],
             ),
-            const SizedBox(height: 16),
-            if (!isCurrentUser)
-              _buildFollowButton(
-                  isFollowing, followUsersProvider, userProvider),
-            if (isCurrentUser) ...[
-              _buildPersonInfoSection(),
-              const SizedBox(height: 12),
-              _buildSettingSection(),
-              const SizedBox(height: 12),
-              _buildContactSection(),
-              const SizedBox(height: 12),
-              _buildFAQSection(),
-              const SizedBox(height: 12),
-              _buildUserPreference(),
-              const SizedBox(height: 36),
-            ],
+            Positioned(
+              bottom: 0,
+              left: 20,
+              child: WeatherIconButton(
+                onPressed: _navigateToWeatherPage,
+                assetPath: 'assets/icons/weather.png',
+              ),
+            ),
           ],
         ),
-        Positioned(
-          bottom: 0,
-          left: 20,
-          child: WeatherIconButton(
-            onPressed: _navigateToWeatherPage,
-            assetPath: 'assets/icons/weather.png',
-          ),
-        ),
-      ],
-    ),
-    ),
+      ),
     );
   }
 
@@ -568,10 +572,11 @@ class _AccountPageState extends State<AccountPage> {
             )));
   }
 
+  // Build User Preference Section
   Widget _buildUserPreference() {
     return InkWell(
         onTap: () {
-          // Navigate to FAQ Page when tapped
+          // Navigate to User Preference Page when tapped
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -597,7 +602,52 @@ class _AccountPageState extends State<AccountPage> {
             child: const ListTile(
               leading: Icon(Icons.question_answer),
               title: Text('Your Preference'),
-              subtitle: Text('Add or update your preference here'),
+              subtitle: Text('Add or update your preferences here'),
             )));
+  }
+
+  // Build Logout Button
+  Widget _buildLogoutButton() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      child: ElevatedButton(
+        onPressed: () {
+          // Trigger the logout process
+          _logout();
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red, // Choose a color that signifies logout
+          padding: const EdgeInsets.symmetric(vertical: 12.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+        ),
+        child: const Text(
+          'Logout',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Function to handle logout
+  void _logout() {
+    // Access the AuthProvider
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    authProvider.logout();
+
+    // Navigate to the login screen or any desired screen after logout
+    Navigator.pushReplacementNamed(context, '/login'); // Adjust the route as needed
+
+    // Optionally, show a confirmation message
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Logged out successfully'),
+      ),
+    );
   }
 }

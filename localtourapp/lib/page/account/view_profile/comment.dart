@@ -247,7 +247,9 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => AccountPage(
-                    userId: "",
+                    user: commenter,
+                    isCurrentUser: isCurrentUser,
+                    followUsers: followUsersProvider.followUsers,
                   ),
                 ),
               );
@@ -280,7 +282,9 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => AccountPage(
-                              userId: "",
+                              user: commenter,
+                              isCurrentUser: isCurrentUser,
+                              followUsers: followUsersProvider.followUsers,
                             ),
                           ),
                         );

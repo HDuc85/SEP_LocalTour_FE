@@ -1,27 +1,50 @@
+// forgot_password_dialog.dart
+
 import 'package:flutter/material.dart';
-import 'package:localtourapp/mock_firebase.dart';
-import 'package:localtourapp/provider/user_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:localtourapp/provider/user_provider.dart';
+import '../../../mock_firebase.dart';
 
 class ForgotPasswordDialog {
   static void show(BuildContext context, {FirebaseAuth? firebaseAuth}) {
-    final auth = firebaseAuth ?? MockFirebaseAuth(); // Switch between real and mock Firebase
+    final auth = firebaseAuth ?? MockFirebaseAuth(); // Use MockFirebaseAuth for testing
     final TextEditingController phoneController = TextEditingController();
+    final TextEditingController smsCodeController = TextEditingController();
     final TextEditingController newPasswordController = TextEditingController();
     final FocusNode newPasswordFocus = FocusNode();
-    bool isPhoneVerified = false;
+
+    // Validation flags and messages
     bool newPasswordError = false;
+    bool phoneError = false;
+    String phoneErrorText = '';
+    bool smsError = false;
+    String smsErrorText = '';
+    int step = 1; // Steps: 1 - Phone, 2 - SMS, 3 - New Password
+    String verificationId = '';
 
     // Helper function to validate the new password
     bool validateNewPassword(String password) {
-      final passwordRegExp = RegExp(r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$');
+      final passwordRegExp =
+      RegExp(r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$');
       return passwordRegExp.hasMatch(password);
+    }
+
+    // Helper function to validate the phone number
+    bool validatePhoneNumber(String phone) {
+      final phoneRegExp = RegExp(r'^\+?\d{10}$'); // Simple regex for phone numbers
+      return phoneRegExp.hasMatch(phone);
+    }
+
+    // Helper function to validate the SMS code
+    bool validateSMSCode(String code) {
+      final smsRegExp = RegExp(r'^\d{6}$'); // Assuming 6-digit code
+      return smsRegExp.hasMatch(code);
     }
 
     showDialog(
       context: context,
-      barrierDismissible: true,
+      barrierDismissible: true, // Allow dialog dismissal by tapping outside
       builder: (BuildContext context) {
         return GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(), // Unfocus to close keyboard
@@ -29,116 +52,240 @@ class ForgotPasswordDialog {
             builder: (context, setState) {
               return AlertDialog(
                 title: const Text('Forgot Password'),
-                content: isPhoneVerified
-                    ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Add New Password:'),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: newPasswordController,
-                      focusNode: newPasswordFocus,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        hintText: 'Enter your new password',
-                        errorText: newPasswordError
-                            ? 'Password must have 1 uppercase letter, 1 special character, 1 number, and be at least 8 characters long'
-                            : null,
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          newPasswordError = !validateNewPassword(value);
-                        });
-                      },
-                    ),
-                  ],
-                )
-                    : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Input your phone number to reset password:'),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: phoneController,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Phone number',
-                      ),
-                    ),
-                  ],
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (step == 1) ...[
+                        const Text(
+                          'Input your phone number to reset password:',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: phoneController,
+                          keyboardType: TextInputType.phone,
+                          decoration: InputDecoration(
+                            border: const OutlineInputBorder(),
+                            hintText: 'Phone number',
+                            errorText: phoneError ? phoneErrorText : null,
+                          ),
+                        ),
+                      ] else if (step == 2) ...[
+                        const Text(
+                          'Enter the SMS Code sent to your phone:',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: smsCodeController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            border: const OutlineInputBorder(),
+                            hintText: 'SMS Code',
+                            errorText: smsError ? smsErrorText : null,
+                          ),
+                        ),
+                      ] else if (step == 3) ...[
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Add New Password:',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: newPasswordController,
+                          focusNode: newPasswordFocus,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'Enter your new password',
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              newPasswordError = !validateNewPassword(value);
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 4),
+                        if (newPasswordError)
+                          const Text(
+                            'Password must have 1 uppercase letter, 1 special character, 1 number, and be at least 8 characters long',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                            ),
+                            maxLines: 3,
+                          ),
+                      ],
+                    ],
+                  ),
                 ),
                 actions: [
-                  if (!isPhoneVerified)
+                  if (step == 1) ...[
                     ElevatedButton(
                       onPressed: () async {
-                        FocusScope.of(context).unfocus(); // Close keyboard after phone number input
+                        FocusScope.of(context).unfocus(); // Close keyboard
+                        String phoneNumber = phoneController.text.trim();
+                        if (phoneNumber.isEmpty) {
+                          setState(() {
+                            phoneError = true;
+                            phoneErrorText = 'Please enter your phone number.';
+                          });
+                          return;
+                        } else if (!validatePhoneNumber(phoneNumber)) {
+                          setState(() {
+                            phoneError = true;
+                            phoneErrorText = 'Please enter a valid phone number.';
+                          });
+                          return;
+                        } else {
+                          setState(() {
+                            phoneError = false;
+                            phoneErrorText = '';
+                          });
+                        }
+
                         try {
                           await auth.verifyPhoneNumber(
-                            phoneNumber: phoneController.text,
-                            verificationCompleted: (PhoneAuthCredential credential) async {
-                              await auth.signInWithCredential(credential);
+                            phoneNumber: phoneNumber,
+                            verificationCompleted:
+                                (PhoneAuthCredential credential) async {
+                              // For testing, we'll skip auto-verification to require SMS code input
+                              // However, you can simulate auto-verification if desired
+                            },
+                            verificationFailed:
+                                (FirebaseAuthException e) {
                               setState(() {
-                                isPhoneVerified = true;
+                                phoneError = true;
+                                phoneErrorText = e.message ?? 'Phone verification failed.';
                               });
                             },
-                            verificationFailed: (FirebaseAuthException e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Phone verification failed: ${e.message}')),
-                              );
+                            codeSent:
+                                (String verificationIdParam, int? resendToken) async {
+                              verificationId = verificationIdParam;
+                              setState(() {
+                                step = 2; // Move to SMS code input
+                              });
                             },
-                            codeSent: (String verificationId, int? resendToken) async {
-                              final String smsCode = await _promptUserForSMSCode(context);
-                              final credential = PhoneAuthProvider.credential(
-                                  verificationId: verificationId, smsCode: smsCode);
-
-                              try {
-                                await auth.signInWithCredential(credential);
-                                FocusScope.of(context).unfocus(); // Close keyboard after successful authentication
-                                setState(() {
-                                  isPhoneVerified = true;
-                                });
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Error: Invalid verification code.')),
-                                );
-                              }
+                            codeAutoRetrievalTimeout:
+                                (String verificationIdParam) {
+                              verificationId = verificationIdParam;
+                              // Optionally, handle auto-retrieval timeout
                             },
-                            codeAutoRetrievalTimeout: (String verificationId) {},
                           );
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: ${e.toString()}')),
+                            SnackBar(
+                              content: Text('Error: ${e.toString()}'),
+                            ),
                           );
                         }
                       },
                       child: const Text('Authenticate'),
                     ),
-                  if (isPhoneVerified)
+                  ] else if (step == 2) ...[
                     ElevatedButton(
                       onPressed: () async {
-                        if (!validateNewPassword(newPasswordController.text)) {
+                        FocusScope.of(context).unfocus(); // Close keyboard
+                        String smsCode = smsCodeController.text.trim();
+                        if (smsCode.isEmpty) {
+                          setState(() {
+                            smsError = true;
+                            smsErrorText = 'Please enter the SMS code.';
+                          });
+                          return;
+                        } else if (!validateSMSCode(smsCode)) {
+                          setState(() {
+                            smsError = true;
+                            smsErrorText = 'Please enter a valid 6-digit SMS code.';
+                          });
+                          return;
+                        } else {
+                          setState(() {
+                            smsError = false;
+                            smsErrorText = '';
+                          });
+                        }
+
+                        try {
+                          // Create PhoneAuthCredential with the code
+                          PhoneAuthCredential credential = PhoneAuthProvider.credential(
+                            verificationId: verificationId,
+                            smsCode: smsCode,
+                          );
+
+                          // Attempt to sign in
+                          await auth.signInWithCredential(credential);
+
+                          // If successful, move to setting new password
+                          setState(() {
+                            step = 3;
+                          });
+                        } catch (e) {
+                          setState(() {
+                            smsError = true;
+                            smsErrorText = 'Invalid SMS code. Please try again.';
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Error: Invalid verification code.'),
+                            ),
+                          );
+                        }
+                      },
+                      child: const Text('Verify'),
+                    ),
+                  ] else if (step == 3) ...[
+                    ElevatedButton(
+                      onPressed: () async {
+                        FocusScope.of(context).unfocus(); // Close keyboard
+                        String newPassword = newPasswordController.text.trim();
+                        if (!validateNewPassword(newPassword)) {
                           setState(() {
                             newPasswordError = true;
                           });
                           return;
                         }
 
-                        final userProvider = Provider.of<UserProvider>(context, listen: false);
-                        userProvider.currentUser.passwordHash = newPasswordController.text;
-                        userProvider.updateUser(userProvider.currentUser);
+                        try {
+                          // Update the password in Firebase
+                          if (auth.currentUser != null) {
+                            await auth.currentUser!.updatePassword(newPassword);
 
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Password reset successfully')),
-                        );
+                            // Update locally if needed
+                            final userProvider =
+                            Provider.of<UserProvider>(context, listen: false);
+                            userProvider.currentUser.passwordHash = newPassword;
+                            userProvider.updateUser(userProvider.currentUser);
+
+                            Navigator.of(context).pop(); // Close the dialog
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Password reset successfully'),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Error: User is not signed in.'),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Error updating password: ${e.toString()}'),
+                            ),
+                          );
+                        }
                       },
                       child: const Text('Set New Password'),
                     ),
+                  ],
                 ],
               );
             },
@@ -146,34 +293,5 @@ class ForgotPasswordDialog {
         );
       },
     );
-  }
-
-  // Helper function to show an input dialog for SMS code
-  static Future<String> _promptUserForSMSCode(BuildContext context) async {
-    String smsCode = '';
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Enter SMS Code'),
-          content: TextField(
-            onChanged: (value) {
-              smsCode = value;
-            },
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(hintText: "SMS Code"),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-    return smsCode;
   }
 }

@@ -6,8 +6,6 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:localtourapp/base/base_page.dart';
 import 'package:localtourapp/base/const.dart';
-import 'package:localtourapp/config/appConfig.dart';
-import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/places/placefeedbackhelpful.dart';
 import 'package:localtourapp/models/places/placefeedbackmedia.dart';
 import 'package:localtourapp/provider/follow_users_provider.dart';
@@ -45,27 +43,25 @@ import 'package:localtourapp/weather/weather_page.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import 'login_page.dart';
 import 'models/places/placefeedback.dart';
+import 'register_page.dart';
+import 'welcome_page.dart';
 
 // Import your models and other dependencies as needed
-
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   // Initialize Hive
   await Hive.initFlutter();
 
-  // Load language code
-  if (await SecureStorageHelper().readValue(AppConfig.language) == null) {
-    SecureStorageHelper().saveValue(AppConfig.language, 'vi');
-  }
   // Create an instance of bookmarkProvider and load bookmarks
-  PlaceProvider bookmarkProvider = PlaceProvider(places: dummyPlaces,
-    translations: dummyTranslations,);
+  PlaceProvider bookmarkProvider = PlaceProvider(
+    places: dummyPlaces,
+    translations: dummyTranslations,
+  );
   await bookmarkProvider.loadBookmarks();
-  // Fake Login in
-  SecureStorageHelper()
-      .saveValue(AppConfig.userId, '00000000-0000-0000-0000-000000000000');
 
   // Generate fake users
   User myUser = fakeUsers.firstWhere(
@@ -76,10 +72,14 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        // Add LanguageProvider here
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider(initialUser: myUser)),
-        ChangeNotifierProvider(create: (_) => ReviewProvider(placeFeedbacks: dummyFeedbacks, placeFeedbackMedia: feedbackMediaList, placeFeedbackHelpfuls: feebBackHelpfuls)),
+        ChangeNotifierProvider(
+            create: (_) => ReviewProvider(
+              placeFeedbacks: dummyFeedbacks,
+              placeFeedbackMedia: feedbackMediaList,
+              placeFeedbackHelpfuls: feebBackHelpfuls,
+            )),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => bookmarkProvider),
         ChangeNotifierProvider(create: (_) => WeatherProvider()),
@@ -125,7 +125,9 @@ class _MyAppState extends State<MyApp> {
   late final List<Widget> screens;
   late final List<String?> titles;
   final ScrollController scrollController = ScrollController();
-  String userId = '00000000-0000-0000-0000-000000000000';
+
+  bool _showWelcomePage = true;
+  bool _showLoginPage = false; // New flag for LoginPage
 
   @override
   void initState() {
@@ -135,15 +137,16 @@ class _MyAppState extends State<MyApp> {
       const MapPage(),
       const BookmarkPage(),
       PlannedPage(
-        scheduleLikes:
-        dummyScheduleLikes, // Ensure dummyScheduleLikes is defined
-        destinations: dummyDestinations, // Ensure dummyDestinations is defined
+        scheduleLikes: dummyScheduleLikes,
+        destinations: dummyDestinations,
         userId: widget.myUser.userId,
         users: Provider.of<UsersProvider>(context, listen: false).users,
       ),
       AccountPage(
-        userId: userId,
-      ), // Ensure dummyFollowUsers is defined
+        user: widget.myUser,
+        followUsers: dummyFollowUsers,
+        isCurrentUser: true,
+      ),
     ];
 
     titles = [
@@ -153,16 +156,6 @@ class _MyAppState extends State<MyApp> {
       null,
       "${widget.myUser.fullName}'s Account Page",
     ];
-  }
-
-  Future<void> readUserId() async {
-    final userIdStorage =
-        await SecureStorageHelper().readValue(AppConfig.userId);
-    if (userIdStorage != null) {
-      setState(() {
-        userId = userIdStorage;
-      });
-    }
   }
 
   @override
@@ -177,120 +170,184 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  // Callback when the WelcomePage animation completes
+  void _onAnimationComplete() {
+    setState(() {
+      _showWelcomePage = false; // Hide the WelcomePage
+      _showLoginPage = true; // Show the LoginPage
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final languageProvider = Provider.of<LanguageProvider>(context);
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      locale: languageProvider.currentLocale,
-      supportedLocales: const [
-        Locale('en'),
-        Locale('vn'),
-      ],
-      localizationsDelegates: const [
-        S.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      localeResolutionCallback: (locale, supportedLocales) {
-        if (locale == null) return supportedLocales.first;
-        for (var supportedLocale in supportedLocales) {
-          if (supportedLocale.languageCode == locale.languageCode) {
-            return supportedLocale;
-          }
-        }
-        return supportedLocales.first;
-      },
-      title: 'Local Tour',
-      theme: ThemeData(
-        primaryColor:
-        Constants.primaryColor, // Ensure Constants.primaryColor is defined
-        scaffoldBackgroundColor: const Color(0xFFEDE8D0),
-      ),
-      // Assuming EasyLoading is set up correctly
-      builder: EasyLoading.init(),
-      onGenerateRoute: (settings) {
-        if (settings.name == '/detail') {
-          final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (context) {
-              return DetailPage(
-                languageCode: args['languageCode'],
-                placeName: args['placeName'] ??
-                    'Unknown Place', // Provide a default name
-                placeId: args['placeId'] ?? -1, // Provide a default ID, if null
-                mediaList:
-                args['mediaList'] ?? [], // Default to an empty list if null
-                userId: args['userId'] ?? 'unknown-user', // Default userId
-              );
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        return MaterialApp(
+          navigatorKey: navigatorKey,
+          debugShowCheckedModeBanner: false,
+          locale: languageProvider.currentLocale,
+          supportedLocales: const [
+            Locale('en'),
+            Locale('vn'),
+          ],
+          localizationsDelegates: const [
+            // Ensure you have generated localization delegates
+            // Replace 'S.delegate' with your localization delegate
+            S.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          localeResolutionCallback: (locale, supportedLocales) {
+            if (locale == null) return supportedLocales.first;
+            for (var supportedLocale in supportedLocales) {
+              if (supportedLocale.languageCode == locale.languageCode) {
+                return supportedLocale;
+              }
+            }
+            return supportedLocales.first;
+          },
+          title: 'Local Tour',
+          theme: ThemeData(
+            primaryColor: Constants.primaryColor,
+            scaffoldBackgroundColor: const Color(0xFFEDE8D0),
+          ),
+          builder: EasyLoading.init(),
+          home: _showWelcomePage
+              ? WelcomePage(onAnimationComplete: _onAnimationComplete)
+              : (_showLoginPage
+              ? LoginPage(
+            onLogin: () {
+              // Simulate a successful login
+              authProvider.login(widget.myUser.userId);
+              setState(() {
+                _showLoginPage = false; // Hide LoginPage
+              });
             },
-          );
-        } else if (settings.name == '/account') {
-          final args = settings.arguments as Map<String, dynamic>?;
-
-          // If no userId is passed, default to current user's account
-          final userId = args != null && args.containsKey('userId')
-              ? args['userId'] as String
-              : widget.myUser.userId;
-          final User selectedUser;
-          selectedUser = Provider.of<UsersProvider>(context, listen: false)
-              .getUserById(userId) ??
-              widget.myUser;
-          final isCurrentUser = userId == widget.myUser.userId;
-          return MaterialPageRoute(
-            builder: (context) => AccountPage(
-              userId: userId,
-            ),
-          );
-        }
-        // Handle other routes...
-        switch (settings.name) {
-          case '/':
-            return MaterialPageRoute(
-              builder: (context) => BasePage(
-                body: screens[currentIndex],
-                title: titles[currentIndex],
-                currentIndex: currentIndex,
-                onTabTapped: onTabTapped,
-              ),
-            );
-          case '/weather':
-            return MaterialPageRoute(builder: (context) => const WeatherPage());
-          case '/bookmark':
-            return MaterialPageRoute(
-                builder: (context) => const BookmarkPage());
-          case '/planned_page':
-            return MaterialPageRoute(
-              builder: (context) => PlannedPage(
-                scheduleLikes: dummyScheduleLikes,
-                destinations: dummyDestinations,
-                userId: widget.myUser.userId,
-                users: Provider.of<UsersProvider>(context, listen: false).users,
-              ),
-            );
-          case '/map':
-            return MaterialPageRoute(builder: (context) => const MapPage());
-          case '/history':
-            return MaterialPageRoute(
-                builder: (context) => const HistoryTabbar());
-          default:
-            return MaterialPageRoute(
-              builder: (context) => Scaffold(
-                body: Center(
-                  child: Text('No route defined for ${settings.name}'),
+            onRegister: () {
+              // Handle Register Button Press
+              Navigator.pushNamed(context, '/register');
+            },
+          )
+              : (authProvider.isLoggedIn
+              ? BasePage(
+            body: screens[currentIndex],
+            title: titles[currentIndex],
+            currentIndex: currentIndex,
+            onTabTapped: onTabTapped,
+          )
+              : LoginPage(
+            onLogin: () {
+              // Simulate a successful login
+              authProvider.login(widget.myUser.userId);
+              setState(() {
+                _showLoginPage = false; // Hide LoginPage
+              });
+            },
+            onRegister: () {
+              // Handle Register Button Press
+              // Navigate to RegisterPage or perform other actions
+              Navigator.pushNamed(context, '/register');
+            },
+          ))),
+          onGenerateRoute: (settings) {
+            if (settings.name == '/login') {
+              return MaterialPageRoute(
+                builder: (context) => LoginPage(
+                  onLogin: () {
+                    // Handle successful login
+                    authProvider.login(widget.myUser.userId);
+                    setState(() {
+                      _showLoginPage = false; // Hide LoginPage
+                    });
+                  },
+                  onRegister: () {
+                    // Handle registration navigation
+                    // Navigate to RegisterPage
+                    Navigator.pushNamed(context, '/register');
+                  },
                 ),
-              ),
-            );
-        }
+              );
+            }
+            if (settings.name == '/register') {
+              return MaterialPageRoute(
+                builder: (context) => const RegisterPage(), // Ensure you have RegisterPage
+              );
+            }
+            if (settings.name == '/detail') {
+              final args = settings.arguments as Map<String, dynamic>;
+              return MaterialPageRoute(
+                builder: (context) {
+                  return DetailPage(
+                    languageCode: args['languageCode'],
+                    placeName: args['placeName'] ?? 'Unknown Place',
+                    placeId: args['placeId'] ?? -1,
+                    mediaList: args['mediaList'] ?? [],
+                    userId: args['userId'] ?? 'unknown-user',
+                  );
+                },
+              );
+            } else if (settings.name == '/account') {
+              final args = settings.arguments as Map<String, dynamic>?;
+
+              final userId = args != null && args.containsKey('userId')
+                  ? args['userId'] as String
+                  : widget.myUser.userId;
+              final User selectedUser = Provider.of<UsersProvider>(context, listen: false)
+                  .getUserById(userId) ??
+                  widget.myUser;
+              final isCurrentUser = userId == widget.myUser.userId;
+              return MaterialPageRoute(
+                builder: (context) => AccountPage(
+                  user: selectedUser,
+                  followUsers: dummyFollowUsers,
+                  isCurrentUser: isCurrentUser,
+                ),
+              );
+            }
+            // Handle other routes...
+            switch (settings.name) {
+              case '/':
+                return MaterialPageRoute(
+                  builder: (context) => BasePage(
+                    body: screens[currentIndex],
+                    title: titles[currentIndex],
+                    currentIndex: currentIndex,
+                    onTabTapped: onTabTapped,
+                  ),
+                );
+              case '/weather':
+                return MaterialPageRoute(builder: (context) => const WeatherPage());
+              case '/bookmark':
+                return MaterialPageRoute(builder: (context) => const BookmarkPage());
+              case '/planned_page':
+                return MaterialPageRoute(
+                  builder: (context) => PlannedPage(
+                    scheduleLikes: dummyScheduleLikes,
+                    destinations: dummyDestinations,
+                    userId: widget.myUser.userId,
+                    users: Provider.of<UsersProvider>(context, listen: false).users,
+                  ),
+                );
+              case '/map':
+                return MaterialPageRoute(builder: (context) => const MapPage());
+              case '/history':
+                return MaterialPageRoute(builder: (context) => const HistoryTabbar());
+              default:
+                return MaterialPageRoute(
+                  builder: (context) => Scaffold(
+                    body: Center(
+                      child: Text('No route defined for ${settings.name}'),
+                    ),
+                  ),
+                );
+            }
+          },
+        );
       },
-      home: BasePage(
-        body: screens[currentIndex],
-        title: titles[currentIndex],
-        currentIndex: currentIndex,
-        onTabTapped: onTabTapped,
-      ),
     );
   }
 }
+
