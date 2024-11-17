@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:localtourapp/models/places/tag.dart';
 import 'package:localtourapp/provider/user_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -18,6 +19,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   // Controllers for input fields
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController smsCodeController = TextEditingController(); // New Controller
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
   TextEditingController();
@@ -25,6 +27,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   // FocusNodes for input fields
   final FocusNode phoneFocusNode = FocusNode();
+  final FocusNode smsCodeFocusNode = FocusNode(); // New FocusNode
   final FocusNode passwordFocusNode = FocusNode();
   final FocusNode confirmPasswordFocusNode = FocusNode();
   final FocusNode usernameFocusNode = FocusNode();
@@ -32,12 +35,23 @@ class _RegisterPageState extends State<RegisterPage> {
   // Validation flags and messages
   bool phoneError = false;
   String phoneErrorText = '';
+  bool smsError = false; // New Error Flags
+  String smsErrorText = '';
   bool passwordError = false;
   String passwordErrorText = '';
   bool confirmPasswordError = false;
   String confirmPasswordErrorText = '';
   bool usernameError = false;
   String usernameErrorText = '';
+
+  // Authentication state
+  bool isSmsSent = false; // Indicates if SMS code has been sent
+  String verificationId = ''; // Stores the verification ID from FirebaseAuth
+  bool isAuthenticating = false; // Indicates if authentication is in progress
+
+  // FirebaseAuth instance (use MockFirebaseAuth for testing if needed)
+  final FirebaseAuth auth = FirebaseAuth.instance;
+  // final FirebaseAuth auth = MockFirebaseAuth(); // Uncomment for testing
 
   @override
   void initState() {
@@ -52,11 +66,13 @@ class _RegisterPageState extends State<RegisterPage> {
   void dispose() {
     // Dispose controllers and focus nodes to free resources
     phoneController.dispose();
+    smsCodeController.dispose(); // Dispose new controller
     passwordController.dispose();
     confirmPasswordController.dispose();
     usernameController.dispose();
 
     phoneFocusNode.dispose();
+    smsCodeFocusNode.dispose(); // Dispose new FocusNode
     passwordFocusNode.dispose();
     confirmPasswordFocusNode.dispose();
     usernameFocusNode.dispose();
@@ -68,6 +84,11 @@ class _RegisterPageState extends State<RegisterPage> {
   bool validatePhoneNumber(String phone) {
     final phoneRegExp = RegExp(r'^\+?\d{10}$'); // Adjust regex as needed
     return phoneRegExp.hasMatch(phone);
+  }
+
+  bool validateSMSCode(String code) {
+    final smsRegExp = RegExp(r'^\d{6}$'); // Assuming 6-digit code
+    return smsRegExp.hasMatch(code);
   }
 
   bool validatePassword(String password) {
@@ -84,11 +105,133 @@ class _RegisterPageState extends State<RegisterPage> {
     return username.isNotEmpty;
   }
 
+  // Function to handle phone number authentication
+  void _authenticatePhoneNumber() async {
+    FocusScope.of(context).unfocus(); // Close keyboard
+    String phoneNumber = phoneController.text.trim();
+    if (phoneNumber.isEmpty) {
+      setState(() {
+        phoneError = true;
+        phoneErrorText = 'Please enter your phone number.';
+      });
+      return;
+    } else if (!validatePhoneNumber(phoneNumber)) {
+      setState(() {
+        phoneError = true;
+        phoneErrorText = 'Please enter a valid phone number.';
+      });
+      return;
+    } else {
+      setState(() {
+        phoneError = false;
+        phoneErrorText = '';
+        isAuthenticating = true; // Show loading indicator
+      });
+    }
+
+    try {
+      await auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // Auto-verification (optional)
+          // For registration, you might want to skip auto-verification
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          setState(() {
+            isAuthenticating = false;
+            phoneError = true;
+            phoneErrorText = e.message ?? 'Phone verification failed.';
+          });
+        },
+        codeSent: (String verificationIdParam, int? resendToken) {
+          setState(() {
+            isSmsSent = true;
+            verificationId = verificationIdParam;
+            isAuthenticating = false;
+          });
+          FocusScope.of(context).requestFocus(smsCodeFocusNode);
+        },
+        codeAutoRetrievalTimeout: (String verificationIdParam) {
+          setState(() {
+            verificationId = verificationIdParam;
+            isAuthenticating = false;
+          });
+        },
+      );
+    } catch (e) {
+      setState(() {
+        isAuthenticating = false;
+        phoneError = true;
+        phoneErrorText = 'Error sending SMS code. Please try again.';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+        ),
+      );
+    }
+  }
+
+  // Function to verify SMS code
+  void _verifySmsCode() async {
+    FocusScope.of(context).unfocus(); // Close keyboard
+    String smsCode = smsCodeController.text.trim();
+    if (smsCode.isEmpty) {
+      setState(() {
+        smsError = true;
+        smsErrorText = 'Please enter the SMS code.';
+      });
+      return;
+    } else if (!validateSMSCode(smsCode)) {
+      setState(() {
+        smsError = true;
+        smsErrorText = 'Please enter a valid 6-digit SMS code.';
+      });
+      return;
+    } else {
+      setState(() {
+        smsError = false;
+        smsErrorText = '';
+        isAuthenticating = true; // Show loading indicator
+      });
+    }
+
+    try {
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: smsCode,
+      );
+
+      // Sign in the user with the credential
+      await auth.signInWithCredential(credential);
+
+      setState(() {
+        isSmsSent = false; // Reset SMS sent flag
+        isAuthenticating = false;
+        _nextStep(); // Proceed to the next step
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Phone number verified successfully.'),
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        isAuthenticating = false;
+        smsError = true;
+        smsErrorText = 'Invalid SMS code. Please try again.';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: Invalid verification code.'),
+        ),
+      );
+    }
+  }
+
   // Function to proceed to the next step
   void _nextStep() {
-    // Unfocus the current input field
-    FocusScope.of(context).unfocus();
-
     setState(() {
       if (currentStep < 4) {
         currentStep += 1;
@@ -105,7 +248,6 @@ class _RegisterPageState extends State<RegisterPage> {
           FocusScope.of(context).requestFocus(usernameFocusNode);
           break;
         case 4:
-        // No TextField in preferences, so just unfocus all
           FocusScope.of(context).unfocus();
           break;
         default:
@@ -218,7 +360,7 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 24),
 
               // Step Content
-              if (currentStep == 1) _buildPhoneInput(),
+              if (currentStep == 1) _buildPhoneAuthenticationStep(),
               if (currentStep == 2) _buildPasswordInput(),
               if (currentStep == 3) _buildUsernameInput(),
               if (currentStep == 4) _buildUserPreferences(userProvider),
@@ -229,56 +371,83 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // Step 1: Phone Number Input
-  Widget _buildPhoneInput() {
+  // Step 1: Phone Authentication (Phone Number Input & SMS Code Verification)
+  Widget _buildPhoneAuthenticationStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Step 1: Enter Your Phone Number',
+          'Step 1: Verify Your Phone Number',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        TextField(
-          controller: phoneController,
-          focusNode: phoneFocusNode,
-          keyboardType: TextInputType.phone,
-          decoration: InputDecoration(
-            labelText: 'Phone Number',
-            prefixIcon: const Icon(Icons.phone),
-            border: const OutlineInputBorder(),
-            errorText: phoneError ? phoneErrorText : null,
-          ),
-        ),
-        const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                String phone = phoneController.text.trim();
-                if (phone.isEmpty) {
-                  setState(() {
-                    phoneError = true;
-                    phoneErrorText = 'Please enter your phone number.';
-                  });
-                } else if (!validatePhoneNumber(phone)) {
-                  setState(() {
-                    phoneError = true;
-                    phoneErrorText = 'Please enter a valid phone number.';
-                  });
-                } else {
-                  setState(() {
-                    phoneError = false;
-                    phoneErrorText = '';
-                  });
-                  _nextStep();
-                }
-              },
-              child: const Text('Agree'),
+        if (!isSmsSent) ...[
+          // Phone Number Input
+          TextField(
+            controller: phoneController,
+            focusNode: phoneFocusNode,
+            keyboardType: TextInputType.phone,
+            decoration: InputDecoration(
+              labelText: 'Phone Number',
+              prefixIcon: const Icon(Icons.phone),
+              border: const OutlineInputBorder(),
+              errorText: phoneError ? phoneErrorText : null,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 24),
+          // Authenticate Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              ElevatedButton(
+                onPressed: isAuthenticating ? null : _authenticatePhoneNumber,
+                child: isAuthenticating
+                    ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                    : const Text('Authenticate'),
+              ),
+            ],
+          ),
+        ] else ...[
+          // SMS Code Input
+          TextField(
+            controller: smsCodeController,
+            focusNode: smsCodeFocusNode,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: 'SMS Code',
+              prefixIcon: const Icon(Icons.sms),
+              border: const OutlineInputBorder(),
+              errorText: smsError ? smsErrorText : null,
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Verify Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              ElevatedButton(
+                onPressed: isAuthenticating ? null : _verifySmsCode,
+                child: isAuthenticating
+                    ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                    : const Text('Verify'),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

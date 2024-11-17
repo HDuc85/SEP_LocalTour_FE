@@ -50,6 +50,7 @@ import 'welcome_page.dart';
 
 // Import your models and other dependencies as needed
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
@@ -85,7 +86,6 @@ void main() async {
         ChangeNotifierProvider(create: (_) => WeatherProvider()),
         ChangeNotifierProvider(create: (_) => UsersProvider(fakeUsers)),
         ChangeNotifierProvider(create: (_) => CountProvider()),
-        ChangeNotifierProvider(create: (_) => PlaceProvider()),
         ChangeNotifierProvider(
             create: (_) =>
                 FollowUsersProvider(initialFollowUsers: dummyFollowUsers)),
@@ -127,7 +127,7 @@ class _MyAppState extends State<MyApp> {
   final ScrollController scrollController = ScrollController();
 
   bool _showWelcomePage = true;
-  bool _showLoginPage = false; // New flag for LoginPage
+  // Removed: bool _showLoginPage = false; // No longer needed
 
   @override
   void initState() {
@@ -174,7 +174,7 @@ class _MyAppState extends State<MyApp> {
   void _onAnimationComplete() {
     setState(() {
       _showWelcomePage = false; // Hide the WelcomePage
-      _showLoginPage = true; // Show the LoginPage
+      // No longer setting _showLoginPage
     });
   }
 
@@ -193,8 +193,6 @@ class _MyAppState extends State<MyApp> {
             Locale('vn'),
           ],
           localizationsDelegates: const [
-            // Ensure you have generated localization delegates
-            // Replace 'S.delegate' with your localization delegate
             S.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
@@ -217,41 +215,12 @@ class _MyAppState extends State<MyApp> {
           builder: EasyLoading.init(),
           home: _showWelcomePage
               ? WelcomePage(onAnimationComplete: _onAnimationComplete)
-              : (_showLoginPage
-              ? LoginPage(
-            onLogin: () {
-              // Simulate a successful login
-              authProvider.login(widget.myUser.userId);
-              setState(() {
-                _showLoginPage = false; // Hide LoginPage
-              });
-            },
-            onRegister: () {
-              // Handle Register Button Press
-              Navigator.pushNamed(context, '/register');
-            },
-          )
-              : (authProvider.isLoggedIn
-              ? BasePage(
+              : BasePage(
             body: screens[currentIndex],
             title: titles[currentIndex],
             currentIndex: currentIndex,
             onTabTapped: onTabTapped,
-          )
-              : LoginPage(
-            onLogin: () {
-              // Simulate a successful login
-              authProvider.login(widget.myUser.userId);
-              setState(() {
-                _showLoginPage = false; // Hide LoginPage
-              });
-            },
-            onRegister: () {
-              // Handle Register Button Press
-              // Navigate to RegisterPage or perform other actions
-              Navigator.pushNamed(context, '/register');
-            },
-          ))),
+          ),
           onGenerateRoute: (settings) {
             if (settings.name == '/login') {
               return MaterialPageRoute(
@@ -260,12 +229,11 @@ class _MyAppState extends State<MyApp> {
                     // Handle successful login
                     authProvider.login(widget.myUser.userId);
                     setState(() {
-                      _showLoginPage = false; // Hide LoginPage
+                      // Optionally, perform additional state updates
                     });
                   },
                   onRegister: () {
                     // Handle registration navigation
-                    // Navigate to RegisterPage
                     Navigator.pushNamed(context, '/register');
                   },
                 ),
@@ -350,4 +318,5 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
+
 
