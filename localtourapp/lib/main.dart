@@ -65,7 +65,7 @@ void main() async {
 
   // Generate fake users
   User myUser = fakeUsers.firstWhere(
-        (user) => user.userId == 'anh-tuan-unique-id-1234',
+    (user) => user.userId == 'anh-tuan-unique-id-1234',
     orElse: () => fakeUsers.first, // Fallback to first user if not found
   );
 
@@ -73,13 +73,14 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => UserProvider(initialUser: myUser)),
+        ChangeNotifierProvider(
+            create: (_) => UserProvider(initialUser: myUser)),
         ChangeNotifierProvider(
             create: (_) => ReviewProvider(
-              placeFeedbacks: dummyFeedbacks,
-              placeFeedbackMedia: feedbackMediaList,
-              placeFeedbackHelpfuls: feebBackHelpfuls,
-            )),
+                  placeFeedbacks: dummyFeedbacks,
+                  placeFeedbackMedia: feedbackMediaList,
+                  placeFeedbackHelpfuls: feebBackHelpfuls,
+                )),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => bookmarkProvider),
         ChangeNotifierProvider(create: (_) => WeatherProvider()),
@@ -91,20 +92,20 @@ void main() async {
                 FollowUsersProvider(initialFollowUsers: dummyFollowUsers)),
         ChangeNotifierProvider(
             create: (_) => ScheduleProvider(
-              places: dummyPlaces,
-              translations: dummyTranslations,
-              schedules: dummySchedules,
-              scheduleLikes: dummyScheduleLikes,
-              destinations: dummyDestinations,
-            )),
+                  places: dummyPlaces,
+                  translations: dummyTranslations,
+                  schedules: dummySchedules,
+                  scheduleLikes: dummyScheduleLikes,
+                  destinations: dummyDestinations,
+                )),
         ChangeNotifierProvider(
             create: (_) => PostProvider(
-              posts: dummyPosts,
-              comments: dummyComments,
-              postLikes: dummyPostLikes,
-              commentLikes: dummyPostCommentLikes,
-              media: dummyPostMedia,
-            )),
+                  posts: dummyPosts,
+                  comments: dummyComments,
+                  postLikes: dummyPostLikes,
+                  commentLikes: dummyPostCommentLikes,
+                  media: dummyPostMedia,
+                )),
       ],
       child: MyApp(myUser: myUser),
     ),
@@ -134,7 +135,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     screens = [
       const HomeScreen(),
-      const MapPage(),
+      const HomeScreen(),
       const BookmarkPage(),
       PlannedPage(
         scheduleLikes: dummyScheduleLikes,
@@ -218,40 +219,40 @@ class _MyAppState extends State<MyApp> {
           home: _showWelcomePage
               ? WelcomePage(onAnimationComplete: _onAnimationComplete)
               : (_showLoginPage
-              ? LoginPage(
-            onLogin: () {
-              // Simulate a successful login
-              authProvider.login(widget.myUser.userId);
-              setState(() {
-                _showLoginPage = false; // Hide LoginPage
-              });
-            },
-            onRegister: () {
-              // Handle Register Button Press
-              Navigator.pushNamed(context, '/register');
-            },
-          )
-              : (authProvider.isLoggedIn
-              ? BasePage(
-            body: screens[currentIndex],
-            title: titles[currentIndex],
-            currentIndex: currentIndex,
-            onTabTapped: onTabTapped,
-          )
-              : LoginPage(
-            onLogin: () {
-              // Simulate a successful login
-              authProvider.login(widget.myUser.userId);
-              setState(() {
-                _showLoginPage = false; // Hide LoginPage
-              });
-            },
-            onRegister: () {
-              // Handle Register Button Press
-              // Navigate to RegisterPage or perform other actions
-              Navigator.pushNamed(context, '/register');
-            },
-          ))),
+                  ? LoginPage(
+                      onLogin: () {
+                        // Simulate a successful login
+                        authProvider.login(widget.myUser.userId);
+                        setState(() {
+                          _showLoginPage = false; // Hide LoginPage
+                        });
+                      },
+                      onRegister: () {
+                        // Handle Register Button Press
+                        Navigator.pushNamed(context, '/register');
+                      },
+                    )
+                  : (authProvider.isLoggedIn
+                      ? BasePage(
+                          body: screens[currentIndex],
+                          title: titles[currentIndex],
+                          currentIndex: currentIndex,
+                          onTabTapped: onTabTapped,
+                        )
+                      : LoginPage(
+                          onLogin: () {
+                            // Simulate a successful login
+                            authProvider.login(widget.myUser.userId);
+                            setState(() {
+                              _showLoginPage = false; // Hide LoginPage
+                            });
+                          },
+                          onRegister: () {
+                            // Handle Register Button Press
+                            // Navigate to RegisterPage or perform other actions
+                            Navigator.pushNamed(context, '/register');
+                          },
+                        ))),
           onGenerateRoute: (settings) {
             if (settings.name == '/login') {
               return MaterialPageRoute(
@@ -273,7 +274,8 @@ class _MyAppState extends State<MyApp> {
             }
             if (settings.name == '/register') {
               return MaterialPageRoute(
-                builder: (context) => const RegisterPage(), // Ensure you have RegisterPage
+                builder: (context) =>
+                    const RegisterPage(), // Ensure you have RegisterPage
               );
             }
             if (settings.name == '/detail') {
@@ -295,9 +297,10 @@ class _MyAppState extends State<MyApp> {
               final userId = args != null && args.containsKey('userId')
                   ? args['userId'] as String
                   : widget.myUser.userId;
-              final User selectedUser = Provider.of<UsersProvider>(context, listen: false)
-                  .getUserById(userId) ??
-                  widget.myUser;
+              final User selectedUser =
+                  Provider.of<UsersProvider>(context, listen: false)
+                          .getUserById(userId) ??
+                      widget.myUser;
               final isCurrentUser = userId == widget.myUser.userId;
               return MaterialPageRoute(
                 builder: (context) => AccountPage(
@@ -319,22 +322,27 @@ class _MyAppState extends State<MyApp> {
                   ),
                 );
               case '/weather':
-                return MaterialPageRoute(builder: (context) => const WeatherPage());
+                return MaterialPageRoute(
+                    builder: (context) => const WeatherPage());
               case '/bookmark':
-                return MaterialPageRoute(builder: (context) => const BookmarkPage());
+                return MaterialPageRoute(
+                    builder: (context) => const BookmarkPage());
               case '/planned_page':
                 return MaterialPageRoute(
                   builder: (context) => PlannedPage(
                     scheduleLikes: dummyScheduleLikes,
                     destinations: dummyDestinations,
                     userId: widget.myUser.userId,
-                    users: Provider.of<UsersProvider>(context, listen: false).users,
+                    users: Provider.of<UsersProvider>(context, listen: false)
+                        .users,
                   ),
                 );
               case '/map':
-                return MaterialPageRoute(builder: (context) => const MapPage());
+                return MaterialPageRoute(
+                    builder: (context) => const HomeScreen());
               case '/history':
-                return MaterialPageRoute(builder: (context) => const HistoryTabbar());
+                return MaterialPageRoute(
+                    builder: (context) => const HistoryTabbar());
               default:
                 return MaterialPageRoute(
                   builder: (context) => Scaffold(
@@ -350,4 +358,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-
