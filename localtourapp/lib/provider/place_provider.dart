@@ -93,18 +93,20 @@ class PlaceProvider with ChangeNotifier {
   }
 
   String getPlaceName(int placeId, String languageCode) {
+    // Retrieve the Place object using placeId
     final Place? place = getPlaceById(placeId);
     if (place == null) {
-      return 'Unknown Place';
+      return 'Unknown Place'; // Fallback if Place is not found
     }
 
+    // Retrieve the PlaceTranslation for the given languageCode
     final PlaceTranslation? translation = getTranslationByPlaceIdAndLanguage(placeId, languageCode);
     if (translation == null) {
-      return 'Unknown Place';
+      return 'Unknown Place'; // Fallback if Translation is not found
     }
-    return translation.placeName;
-  }
 
+    return translation.placeName; // Return the translated place name
+  }
 
   // Method to add a place tag relationship
   void addPlaceTag(PlaceTag placeTag) {
@@ -142,13 +144,10 @@ class PlaceProvider with ChangeNotifier {
 
   // Method to retrieve the place translation for a given placeId and language code
   PlaceTranslation? getTranslationByPlaceIdAndLanguage(int placeId, String languageCode) {
-    return _translations.firstWhereOrNull((translation) =>
-    translation.placeId == placeId && translation.languageCode == languageCode
-    ) ?? _translations.firstWhereOrNull((translation) =>
-    translation.placeId == placeId
-    ); // Fallback to any available translation
+    return _translations.firstWhereOrNull(
+          (translation) => translation.placeId == placeId && translation.languageCode == languageCode,
+    );
   }
-
 
   /// Retrieves the photo URL for a given [placeId].
   /// If the [photoDisplay] is invalid or empty, returns a default image URL.

@@ -8,14 +8,13 @@ import 'package:localtourapp/models/places/placefeedback.dart';
 import 'package:localtourapp/models/places/placefeedbackhelpful.dart';
 import 'package:localtourapp/models/places/placefeedbackmedia.dart';
 import 'package:localtourapp/models/users/users.dart';
-import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:localtourapp/provider/review_provider.dart';
 import 'package:localtourapp/provider/user_provider.dart';
 import 'package:localtourapp/page/detail_page/detail_card/review_card.dart';
 import 'package:localtourapp/provider/count_provider.dart';
+import 'package:localtourapp/page/detail_page/detail_page_tab_bars/form/reportform.dart';
+import 'package:localtourapp/page/detail_page/detail_page_tab_bars/review_tabbar.dart';
 import 'package:provider/provider.dart';
-
-import '../../../provider/place_provider.dart';
 
 class ReviewedTabbar extends StatefulWidget {
   final List<int> favoritedFeedbackIds;
@@ -96,7 +95,6 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
   @override
   Widget build(BuildContext context) {
     final reviewProvider = Provider.of<ReviewProvider>(context);
-    final placeProvider = Provider.of<PlaceProvider>(context);
     userFeedbacks = reviewProvider.getReviewsByUserId(widget.userId);
 
     return Stack(
@@ -136,7 +134,7 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
                   ),
                 );
 
-                final feedbackMediaList = widget.feedbackMediaList
+                final mediaList = widget.feedbackMediaList
                     .where((media) => media.feedbackId == feedback.placeFeedbackId)
                     .toList();
 
@@ -144,59 +142,43 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
                     .where((helpful) => helpful.placeFeedbackId == feedback.placeFeedbackId)
                     .toList();
 
-                final placeName = placeProvider.getPlaceName(
-                  feedback.placeId,
-                  Localizations.localeOf(context).languageCode,
-                );
-                print('Feedback ID: ${feedback.placeFeedbackId}, Place ID: ${feedback.placeId}, Place Name: $placeName');
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        // Navigate to ReviewTabbar with the selected placeId
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => DetailPage(
-                              placeId: feedback.placeId,
-                              userId: widget.userId,
-                              placeName: placeName,
-                              mediaList: [],
-                              languageCode: 'en',
-                            ),
-                          ),
-                        );
-                      },
-                      child: ReviewCard(
-                        user: user,
-                        feedback: feedback,
-                        feedbackMediaList: feedbackMediaList,
-                        feedbackHelpfuls: relevantHelpfuls,
-                        userId: widget.userId,
-                        followUsers: [],
-                      ),
-                    ),
-                    // Display the place name below the ReviewCard
-                    Padding(
-                      padding: const EdgeInsets.only(left: 16.0, top: 8.0),
-                      child: Text(
-                        placeName,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                return GestureDetector(
+                  onTap: () {
+                    // Navigate to ReviewTabbar with the selected placeId
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReviewTabbar(
+                          placeId: feedback.placeId,
+                          userId: widget.userId,
                         ),
                       ),
-                    ),
-                    const Divider(
-                      thickness: 1,
-                      color: Colors.black,
-                      indent: 16,
-                      endIndent: 16,
-                    ),
-                  ],
+                    );
+                  },
+                  child: ReviewCard(
+                    user: user,
+                    feedback: feedback,
+                    feedbackMediaList: mediaList,
+                    feedbackHelpfuls: relevantHelpfuls,
+                    userId: widget.userId,
+                    onUpdate: isCurrentUserViewing ? () {
+                      // Open ReviewDialog to update
+                    } : null,
+                    onDelete: isCurrentUserViewing ? () {
+                      // Handle deletion within ReviewCard
+                    } : null,
+                    onReport: () {
+                      ReportForm.show(
+                        context,
+                        'Have a problem with this person? Report them to us!',
+                      );
+                    },
+                    onFavoriteToggle: (feedbackId, isFavorited) {
+                      // Implement favorite toggle logic via a provider or state management
+                    },
+                    isInAllProductPage: false,
+                    followUsers: [],
+                  ),
                 );
               }).toList(),
             ],
@@ -226,7 +208,6 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
       ],
     );
   }
-
 }
 
 

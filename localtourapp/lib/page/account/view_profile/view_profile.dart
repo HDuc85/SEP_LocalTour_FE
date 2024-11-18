@@ -21,8 +21,6 @@ import 'package:localtourapp/page/planned_page/planned_page_tab_bars/schedule_ta
 import 'package:provider/provider.dart';
 import 'package:localtourapp/models/posts/post.dart';
 
-import 'comment.dart';
-
 class ViewProfilePage extends StatefulWidget {
   final List<FollowUser> followUsers;
   final String userId;
@@ -108,17 +106,9 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
                         postProvider.removePostLike(postId, widget.userId);
                       }
                     },
-                    onCommentPressed: (Post post) {
-                      // Handle the comment press action
-                      // For example, open the CommentsBottomSheet for that post
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        builder: (context) => CommentsBottomSheet(
-                          post: post,
-                          userId: widget.userId,
-                        ),
-                      );
+                    onCommentPressed: () {
+                      // Define the function to handle comment press action
+                      // For example, navigate to a comments page or open a comments section
                     },
                     onUpdatePressed: (Post post) {
                       // Handle update press action, i.e., open CreatePostOverlay with the post

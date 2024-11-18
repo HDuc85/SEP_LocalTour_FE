@@ -67,30 +67,9 @@ class PostProvider with ChangeNotifier {
   }
 
   void deleteComment(int commentId) {
-    // Find all comments (parent and children) to be deleted
-    final commentsToDelete = getCommentsToDelete(commentId);
-
-    // Remove all found comments
-    _comments.removeWhere((comment) => commentsToDelete.contains(comment.id));
-
-    // Remove likes associated with the deleted comments
-    _commentLikes.removeWhere((like) => commentsToDelete.contains(like.postCommentId));
-
-    // Notify listeners
+    _comments.removeWhere((comment) => comment.id == commentId);
+    _commentLikes.removeWhere((like) => like.postCommentId == commentId);
     notifyListeners();
-  }
-
-  List<int> getCommentsToDelete(int parentId) {
-    List<int> commentsToDelete = [parentId]; // Start with the parent comment
-    void findChildComments(int id) {
-      for (var child in _comments.where((comment) => comment.parentId == id)) {
-        commentsToDelete.add(child.id);
-        findChildComments(child.id); // Recursively find nested child comments
-      }
-    }
-
-    findChildComments(parentId);
-    return commentsToDelete;
   }
 
   // Post Like methods
@@ -124,20 +103,15 @@ class PostProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void removeMedia(int mediaId) {
+    _media.removeWhere((media) => media.id == mediaId);
+    notifyListeners();
+  }
+
   // Utility methods
   List<Post> getPostsByUserId(String userId) {
     return _posts.where((post) => post.authorId == userId).toList();
   }
-
-  int getCommentCountForPost(int postId) {
-    return _comments.where((comment) => comment.postId == postId).length;
-  }
-
-  void updateCommentCount(int postId, int delta) {
-    // No need to modify any stored property, as we calculate comment count dynamically
-    notifyListeners(); // Notify listeners so UI can refresh based on recalculated values
-  }
-
 
   List<PostComment> getCommentsForPost(int postId) {
     final postComments = _comments.where((comment) => comment.postId == postId).toList();

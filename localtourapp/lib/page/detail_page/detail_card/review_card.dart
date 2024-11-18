@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../../models/places/placefeedback.dart';
 import '../../../base/const.dart';
 import '../../../full_media/full_feedback_media_viewer.dart';
@@ -13,7 +14,7 @@ import '../../../video_player/video_thumbnail.dart';
 import '../../account/account_page.dart';
 
 class ReviewCard extends StatefulWidget {
-  final Function(int feedbackId, bool isFavorited)? onFavoriteToggle;
+  final Function(int feedbackId, bool isFavorited) onFavoriteToggle;
   final User? user;
   final PlaceFeedback feedback;
   final List<PlaceFeedbackMedia> feedbackMediaList;
@@ -34,7 +35,7 @@ class ReviewCard extends StatefulWidget {
     this.onDelete,
     this.onReport,
     required this.userId,
-    this.onFavoriteToggle,
+    required this.onFavoriteToggle,
     required this.feedbackHelpfuls,
     this.isInAllProductPage = false,
     required this.followUsers,
@@ -57,7 +58,7 @@ class _ReviewCardState extends State<ReviewCard> {
 
     setState(() {
       // Call the callback to toggle favorite in the parent
-      widget.onFavoriteToggle!(
+      widget.onFavoriteToggle(
           widget.feedback.placeFeedbackId, !isCurrentlyFavorited);
     });
   }

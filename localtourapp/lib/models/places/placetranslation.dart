@@ -4,7 +4,7 @@ import 'place.dart';
 class PlaceTranslation {
   int placeTranslationId;
   int placeId; // Maps to placeId in Place
-  String languageCode; // 'vn', 'en'
+  String languageCode; // 'vn', 'en', 'cn'
   String placeName;
   String? description; // Nullable field
   String address;

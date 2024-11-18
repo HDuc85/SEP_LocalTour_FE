@@ -25,15 +25,11 @@ import 'view_profile/view_profile.dart';
 // Import other necessary pages like ViewProfilePage, PersonalInformationPage, SettingPage, FAQPage
 
 class AccountPage extends StatefulWidget {
-  final bool isCurrentUser;
-  final User user;
-  final List<FollowUser> followUsers;
+  final String userId;
 
   const AccountPage({
     Key? key,
-    required this.isCurrentUser,
-    required this.user,
-    required this.followUsers,
+    required this.userId,
   }) : super(key: key);
 
   @override
@@ -55,57 +51,11 @@ class _AccountPageState extends State<AccountPage> {
   @override
   void initState() {
     super.initState();
-    final followUsersProvider =
-    Provider.of<FollowUsersProvider>(context, listen: false);
-    followers = followUsersProvider.getFollowers(widget.user.userId);
-    followings = followUsersProvider.getFollowings(widget.user.userId);
-    displayedUser = widget.user;
-
-    // Initialize followerCount and followingCount
-    followerCount =
-        FollowUser.countFollowers(widget.user.userId, widget.followUsers);
-    followingCount =
-        FollowUser.countFollowing(widget.user.userId, widget.followUsers);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final usersProvider = Provider.of<UsersProvider>(context, listen: false);
-    final postProvider = Provider.of<PostProvider>(context, listen: false);
-    final scheduleProvider =
-    Provider.of<ScheduleProvider>(context, listen: false);
-    final reviewProvider = Provider.of<ReviewProvider>(context, listen: false);
-
-    if (userProvider.isCurrentUser(widget.user.userId)) {
-      // Display current user's information
-      displayedUser = userProvider.currentUser;
-    } else {
-      // Fetch the other user's information from UsersProvider
-      displayedUser = (usersProvider.getUserById(widget.user.userId) ??
-          userProvider.currentUser);
-    }
-
-    final userReviews = reviewProvider.getReviewsByUserId(displayedUser.userId);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<CountProvider>(context, listen: false)
-          .setReviewCount(userReviews.length);
-    });
-    final userSchedules =
-    scheduleProvider.getSchedulesByUserId(displayedUser.userId);
-    // Use post-frame callback to set schedule count after initial build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<CountProvider>(context, listen: false)
-          .setScheduleCount(userSchedules.length);
-    });
-
-    final userPosts = postProvider.getPostsByUserId(displayedUser.userId);
-    // Use post-frame callback to set post count after initial build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<CountProvider>(context, listen: false)
-          .setPostCount(userPosts.length);
-    });
   }
 
   @override
@@ -120,22 +70,6 @@ class _AccountPageState extends State<AccountPage> {
 
   @override
   Widget build(BuildContext context) {
-    final followUsersProvider =
-    Provider.of<FollowUsersProvider>(context, listen: true);
-    final userProvider = Provider.of<UserProvider>(context, listen: true);
-    // If viewing another user's profile, determine if the current user follows them
-    final int scheduleCount = Provider.of<CountProvider>(context).scheduleCount;
-    final int reviewCount = Provider.of<CountProvider>(context).reviewCount;
-    final int postCount = Provider.of<CountProvider>(context).postCount;
-    int followerCount =
-    FollowUser.countFollowers(widget.user.userId, widget.followUsers);
-    int followingCount =
-    FollowUser.countFollowing(widget.user.userId, widget.followUsers);
-    bool isCurrentUser =
-    Provider.of<UserProvider>(context).isCurrentUser(displayedUser.userId);
-    // Remove the redundant ScrollController declaration
-    // final ScrollController _scrollController = ScrollController();
-
     // Listen to scroll events
     _scrollController.addListener(() {
       // Implement your logic here, e.g., show "Back to Top" button
@@ -143,14 +77,12 @@ class _AccountPageState extends State<AccountPage> {
 
     // Determine if the current user is following the displayed user
     bool isFollowing = false;
-    if (!isCurrentUser) {
-      isFollowing = followUsersProvider.isFollowing(
-          userProvider.userId, displayedUser.userId);
-    }
 
-    return Scaffold(
-      body: SafeArea(
-        child: Stack(
+    return Stack(
+      children: [
+        ListView(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(8.0),
           children: [
             ListView(
               controller: _scrollController,
@@ -159,9 +91,6 @@ class _AccountPageState extends State<AccountPage> {
                 const SizedBox(height: 16),
                 _buildProfileSection(
                   displayedUser,
-                  scheduleCount,
-                  reviewCount,
-                  postCount,
                   followerCount,
                   followingCount,
                 ),
@@ -195,7 +124,15 @@ class _AccountPageState extends State<AccountPage> {
             ),
           ],
         ),
-      ),
+        Positioned(
+          bottom: 0,
+          left: 20,
+          child: WeatherIconButton(
+            onPressed: _navigateToWeatherPage,
+            assetPath: 'assets/icons/weather.png',
+          ),
+        ),
+      ],
     );
   }
 
@@ -245,7 +182,7 @@ class _AccountPageState extends State<AccountPage> {
         .toList();
     final postProvider = Provider.of<PostProvider>(context);
     final List<Post> userPosts =
-    postProvider.getPostsByUserId(displayedUser.userId);
+        postProvider.getPostsByUserId(displayedUser.userId);
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -274,7 +211,7 @@ class _AccountPageState extends State<AccountPage> {
                     : null,
                 child: user.profilePictureUrl == null
                     ? const Icon(Icons.account_circle,
-                    size: 60, color: Colors.grey)
+                        size: 60, color: Colors.grey)
                     : null,
               ),
               const SizedBox(width: 16),
@@ -323,7 +260,7 @@ class _AccountPageState extends State<AccountPage> {
                                   followers: followers,
                                   following: followings,
                                   allUsers: Provider.of<UsersProvider>(context,
-                                      listen: false)
+                                          listen: false)
                                       .users, // List of all users
                                 ),
                               ),
@@ -344,7 +281,7 @@ class _AccountPageState extends State<AccountPage> {
                                   followers: followers,
                                   following: followings,
                                   allUsers: Provider.of<UsersProvider>(context,
-                                      listen: false)
+                                          listen: false)
                                       .users, // List of all users
                                 ),
                               ),
@@ -641,7 +578,8 @@ class _AccountPageState extends State<AccountPage> {
     authProvider.logout();
 
     // Navigate to the login screen or any desired screen after logout
-    Navigator.pushReplacementNamed(context, '/login'); // Adjust the route as needed
+    Navigator.pushReplacementNamed(
+        context, '/login'); // Adjust the route as needed
 
     // Optionally, show a confirmation message
     ScaffoldMessenger.of(context).showSnackBar(

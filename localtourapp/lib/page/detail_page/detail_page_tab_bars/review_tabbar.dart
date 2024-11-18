@@ -11,6 +11,7 @@ import '../../../provider/users_provider.dart';
 import '../detail_card/review_card_list.dart';
 import '../detail_card/review_card.dart';
 import '../../../models/places/placefeedback.dart';
+import '../../../models/places/placefeedbackhelpful.dart';
 import '../../../models/places/placefeedbackmedia.dart';
 import '../all_reviews_page.dart';
 import '../../../provider/count_provider.dart';
@@ -157,7 +158,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
 
   User? getUserDetails(String userId) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    if (userProvider.currentUser.userId == userId) {
+    if (userProvider.currentUser!.userId == userId) {
       return userProvider.currentUser;
     }
     // If not current user, either retrieve from user list or return a default
@@ -225,272 +226,268 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
       }
     }
 
-    return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              child: Column(
-                children: [
-                  Container(
-                    margin:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: Colors.black, width: 1),
-                      borderRadius: BorderRadius.circular(50),
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          child: Column(
+            children: [
+              Container(
+                margin:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.black, width: 1),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Text(
+                      "reviewers: ${formatNumber(totalReviewers)}",
+                      style: const TextStyle(fontSize: 10),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Text(
-                          "reviewers: ${formatNumber(totalReviewers)}",
-                          style: const TextStyle(fontSize: 10),
-                        ),
-                        buildStarRating(score),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AllReviewsPage(
-                                  feedbacks: reviewProvider.placeFeedbacks,
-                                  users: usersProvider.users, // You can pass the list of users if needed
-                                  feedbackMediaList:
-                                  reviewProvider.placeFeedbackMedia,
-                                  placeId: widget.placeId,
-                                  userId: widget.userId,
-                                  totalReviews: placeFeedbacks.length,
-                                  feedbackHelpfuls: reviewProvider.placeFeedbackHelpful,
-                                  followUsers: followUsersProvider.followUsers,
-                                ),
-                              ),
-                            );
-                          },
-                          child: const Text("See all"),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (!userHasReviewed)
-                    Container(
-                      margin:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-                      padding: const EdgeInsets.all(15),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: Colors.black, width: 1),
-                      ),
-                      child: Column(
-                        children: [
-                          CircleAvatar(
-                            radius: 30,
-                            backgroundImage: NetworkImage(
-                              getUserDetails(widget.userId)!.profilePictureUrl ?? '',
+                    buildStarRating(score),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AllReviewsPage(
+                              feedbacks: reviewProvider.placeFeedbacks,
+                              users: usersProvider.users, // You can pass the list of users if needed
+                              feedbackMediaList:
+                              reviewProvider.placeFeedbackMedia,
+                              placeId: widget.placeId,
+                              userId: widget.userId,
+                              totalReviews: placeFeedbacks.length,
+                              feedbackHelpfuls: reviewProvider.placeFeedbackHelpful,
+                              followUsers: followUsersProvider.followUsers,
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          Text(
-                            "${getUserDetails(widget.userId)!.userName}, you have no reviews yet, let's explore and review it!",
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          const SizedBox(height: 10),
-                          ElevatedButton(
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return ReviewDialog(
-                                    onSubmit: (int rating, String content,
-                                        List<File> images, List<File> videos) {
-                                      addOrUpdateUserReview(
-                                          rating, content, images, videos);
-                                    },
-                                  );
+                        );
+                      },
+                      child: const Text("See all"),
+                    ),
+                  ],
+                ),
+              ),
+              if (!userHasReviewed)
+                Container(
+                  margin:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.black, width: 1),
+                  ),
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundImage: NetworkImage(
+                          getUserDetails(widget.userId)!.profilePictureUrl ?? '',
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        "${getUserDetails(widget.userId)!.userName}, you have no reviews yet, let's explore and review it!",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return ReviewDialog(
+                                onSubmit: (int rating, String content,
+                                    List<File> images, List<File> videos) {
+                                  addOrUpdateUserReview(
+                                      rating, content, images, videos);
                                 },
                               );
                             },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.pinkAccent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 12, horizontal: 30),
-                              elevation: 2,
-                              side: const BorderSide(color: Colors.black, width: 1),
-                            ),
-                            child: const Text(
-                              'Review !!!',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (userHasReviewed && userReview != null)
-                    ReviewCard(
-                      userId: widget.userId,
-                      user: getUserDetails(userReview.userId),
-                      feedback: userReview,
-                      feedbackMediaList: reviewProvider
-                          .getMediaByReviewId(userReview.placeFeedbackId),
-                      onFavoriteToggle: (feedbackId, isFavorited) {
-                        Provider.of<ReviewProvider>(context, listen: false)
-                            .toggleFavorite(feedbackId, widget.userId);
-                        setState(() {});
-                      },
-                      feedbackHelpfuls: reviewProvider
-                          .getHelpfulsByFeedbackId(userReview.placeFeedbackId),
-                      onUpdate: () {
-                        final parentContext = context;
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            final existingImages = reviewProvider
-                                .getMediaByReviewId(userReview.placeFeedbackId)
-                                .where((media) => media.type == 'photo')
-                                .map((media) => File(media.url))
-                                .toList();
-                            final existingVideos = reviewProvider
-                                .getMediaByReviewId(userReview.placeFeedbackId)
-                                .where((media) => media.type == 'video')
-                                .map((media) => File(media.url))
-                                .toList();
-                            return ReviewDialog(
-                              initialRating: userReview.rating.toInt(),
-                              initialContent: userReview.content ?? '',
-                              initialImages: existingImages,
-                              initialVideos: existingVideos,
-                              onSubmit: (int rating, String content,
-                                  List<File> images, List<File> videos) {
-                                if (rating != userReview.rating.toInt() ||
-                                    content != userReview.content ||
-                                    !_areListsEqual(images, existingImages) ||
-                                    !_areListsEqual(videos, existingVideos)) {
-                                  addOrUpdateUserReview(
-                                      rating, content, images, videos);
-                                  ScaffoldMessenger.of(parentContext).showSnackBar(
-                                    const SnackBar(
-                                        content:
-                                        Text('Your review has been updated.')),
-                                  );
-                                } else {
-                                  ScaffoldMessenger.of(parentContext).showSnackBar(
-                                    const SnackBar(
-                                        content:
-                                        Text('You have not changed anything.')),
-                                  );
-                                }
-                              },
-                            );
-                          },
-                        );
-                      },
-                      onDelete: deleteUserReview,
-                      // Updated onReport callback to open the report form and use UserProvider to record a new user report.
-                      onReport: () {
-                        ReportForm.show(
-                          context,
-                          'Have a problem with this person? Please report them to us.',
-                          onSubmit: (reportMessage) {
-                            userProvider.addUserReport(
-                              UserReport(
-                                id: userProvider.userReport.length +
-                                    1, // Example ID generation
-                                userId: userReview
-                                    .userId, // Storing the reported user's ID
-                                reportDate: DateTime.now(), // Current date
-                                status:
-                                reportMessage, // Storing the report message in 'status'
-                              ),
-                            );
-                            Navigator.of(context).pop(); // Close the dialog
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Your report has been submitted.')),
-                            );
-                          },
-                        );
-                      },
-                      followUsers:
-                      followUsersProvider.getFollowers(userReview.userId),
-                      isInAllProductPage: false,
-                    ),
-                  ReviewCardList(
-                    feedbacks: otherUserReviews,
-                    users: usersProvider.users, // Provide a list of users if needed
-                    feedbackMediaList: feedbackMediaList,
-                    userId: widget.userId,
-                    onFavoriteToggle: (feedbackId, isFavorited) {
-                      Provider.of<ReviewProvider>(context, listen: false)
-                          .toggleFavorite(feedbackId, widget.userId);
-                      setState(() {});
-                    },
-                    feedbackHelpfuls: reviewProvider
-                        .placeFeedbackHelpful, // You can filter as needed
-                    limit: 2,
-                    onSeeAll: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AllReviewsPage(
-                            feedbacks: reviewProvider.placeFeedbacks,
-                            users: usersProvider.users, // Provide a list of users if needed
-                            feedbackMediaList: reviewProvider.placeFeedbackMedia,
-                            placeId: widget.placeId,
-                            userId: widget.userId,
-                            feedbackHelpfuls: reviewProvider.placeFeedbackHelpful,
-                            totalReviews: otherUserReviews.length,
-                            followUsers: followUsersProvider.followUsers,
-                          ),
-                        ),
-                      );
-                    },
-                    // Updated onReport callback for other user reviews
-                    onReport: (feedback) {
-                      ReportForm.show(
-                        context,
-                        'Have a problem with this person’s feedback? Please report it to us.',
-                        onSubmit: (reportMessage) {
-                          userProvider.addUserReport(
-                            UserReport(
-                              id: userProvider.userReport.length +
-                                  1, // Example ID generation
-                              userId:
-                              feedback.userId, // Storing the reported user's ID
-                              reportDate: DateTime.now(),
-                              status:
-                              reportMessage, // Storing the report message in 'status'
-                            ),
-                          );
-                          Navigator.of(context).pop(); // Close the dialog
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Your report has been submitted.')),
                           );
                         },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.pinkAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 30),
+                          elevation: 2,
+                          side: const BorderSide(color: Colors.black, width: 1),
+                        ),
+                        child: const Text(
+                          'Review !!!',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (userHasReviewed && userReview != null)
+                ReviewCard(
+                  userId: widget.userId,
+                  user: getUserDetails(userReview.userId),
+                  feedback: userReview,
+                  feedbackMediaList: reviewProvider
+                      .getMediaByReviewId(userReview.placeFeedbackId),
+                  onFavoriteToggle: (feedbackId, isFavorited) {
+                    Provider.of<ReviewProvider>(context, listen: false)
+                        .toggleFavorite(feedbackId, widget.userId);
+                    setState(() {});
+                  },
+                  feedbackHelpfuls: reviewProvider
+                      .getHelpfulsByFeedbackId(userReview.placeFeedbackId),
+                  onUpdate: () {
+                    final parentContext = context;
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        final existingImages = reviewProvider
+                            .getMediaByReviewId(userReview.placeFeedbackId)
+                            .where((media) => media.type == 'photo')
+                            .map((media) => File(media.url))
+                            .toList();
+                        final existingVideos = reviewProvider
+                            .getMediaByReviewId(userReview.placeFeedbackId)
+                            .where((media) => media.type == 'video')
+                            .map((media) => File(media.url))
+                            .toList();
+                        return ReviewDialog(
+                          initialRating: userReview.rating.toInt(),
+                          initialContent: userReview.content ?? '',
+                          initialImages: existingImages,
+                          initialVideos: existingVideos,
+                          onSubmit: (int rating, String content,
+                              List<File> images, List<File> videos) {
+                            if (rating != userReview.rating.toInt() ||
+                                content != userReview.content ||
+                                !_areListsEqual(images, existingImages) ||
+                                !_areListsEqual(videos, existingVideos)) {
+                              addOrUpdateUserReview(
+                                  rating, content, images, videos);
+                              ScaffoldMessenger.of(parentContext).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                    Text('Your review has been updated.')),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(parentContext).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                    Text('You have not changed anything.')),
+                              );
+                            }
+                          },
+                        );
+                      },
+                    );
+                  },
+                  onDelete: deleteUserReview,
+                  // Updated onReport callback to open the report form and use UserProvider to record a new user report.
+                  onReport: () {
+                    ReportForm.show(
+                      context,
+                      'Have a problem with this person? Please report them to us.',
+                      onSubmit: (reportMessage) {
+                        userProvider.addUserReport(
+                          UserReport(
+                            id: userProvider.userReport.length +
+                                1, // Example ID generation
+                            userId: userReview
+                                .userId, // Storing the reported user's ID
+                            reportDate: DateTime.now(), // Current date
+                            status:
+                            reportMessage, // Storing the report message in 'status'
+                          ),
+                        );
+                        Navigator.of(context).pop(); // Close the dialog
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Your report has been submitted.')),
+                        );
+                      },
+                    );
+                  },
+                  followUsers:
+                  followUsersProvider.getFollowers(userReview.userId),
+                  isInAllProductPage: false,
+                ),
+              ReviewCardList(
+                feedbacks: otherUserReviews,
+                users: usersProvider.users, // Provide a list of users if needed
+                feedbackMediaList: feedbackMediaList,
+                userId: widget.userId,
+                onFavoriteToggle: (feedbackId, isFavorited) {
+                  Provider.of<ReviewProvider>(context, listen: false)
+                      .toggleFavorite(feedbackId, widget.userId);
+                  setState(() {});
+                },
+                feedbackHelpfuls: reviewProvider
+                    .placeFeedbackHelpful, // You can filter as needed
+                limit: 2,
+                onSeeAll: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AllReviewsPage(
+                        feedbacks: reviewProvider.placeFeedbacks,
+                        users: usersProvider.users, // Provide a list of users if needed
+                        feedbackMediaList: reviewProvider.placeFeedbackMedia,
+                        placeId: widget.placeId,
+                        userId: widget.userId,
+                        feedbackHelpfuls: reviewProvider.placeFeedbackHelpful,
+                        totalReviews: otherUserReviews.length,
+                        followUsers: followUsersProvider.followUsers,
+                      ),
+                    ),
+                  );
+                },
+                // Updated onReport callback for other user reviews
+                onReport: (feedback) {
+                  ReportForm.show(
+                    context,
+                    'Have a problem with this person’s feedback? Please report it to us.',
+                    onSubmit: (reportMessage) {
+                      userProvider.addUserReport(
+                        UserReport(
+                          id: userProvider.userReport.length +
+                              1, // Example ID generation
+                          userId:
+                          feedback.userId, // Storing the reported user's ID
+                          reportDate: DateTime.now(),
+                          status:
+                          reportMessage, // Storing the report message in 'status'
+                        ),
+                      );
+                      Navigator.of(context).pop(); // Close the dialog
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Your report has been submitted.')),
                       );
                     },
-                    followUsers: followUsersProvider.followUsers, // Provide actual data if needed
-                  ),
-                ],
+                  );
+                },
+                followUsers: followUsersProvider.followUsers, // Provide actual data if needed
               ),
-            ),
-            Positioned(
-              bottom: 10,
-              left: 40,
-              child: WeatherIconButton(
-                onPressed: _navigateToWeatherPage,
-                assetPath: 'assets/icons/weather.png',
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
+        Positioned(
+          bottom: 10,
+          left: 40,
+          child: WeatherIconButton(
+            onPressed: _navigateToWeatherPage,
+            assetPath: 'assets/icons/weather.png',
+          ),
+        ),
+      ],
     );
   }
 

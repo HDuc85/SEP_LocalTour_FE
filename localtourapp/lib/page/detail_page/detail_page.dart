@@ -140,178 +140,176 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
           ),
         ],
       ),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            NestedScrollView(
-              key: _nestedScrollViewKey, // Assign the GlobalKey here
-              headerSliverBuilder: (context, innerBoxIsScrolled) {
-                return [
-                  SliverToBoxAdapter(
-                    child: Column(
-                      children: [
-                        // Media List Section
-                        Stack(
-                          children: [
-                            mediaList.isNotEmpty
-                                ? GestureDetector(
+      body: Stack(
+        children: [
+          NestedScrollView(
+            key: _nestedScrollViewKey, // Assign the GlobalKey here
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      // Media List Section
+                      Stack(
+                        children: [
+                          mediaList.isNotEmpty
+                              ? GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => FullScreenPlaceMediaViewer(
+                                    mediaList: mediaList,
+                                    initialIndex: 0,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Image.network(
+                              mediaList[0].placeMediaUrl,
+                              width: double.infinity,
+                              height: 250, // Adjust height as needed
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                              const Center(child: Text('No media available')),
+                            ),
+                          )
+                              : const Center(child: Text('No media available')),
+                          // Positioned WeatherIconButton
+                        ],
+                      ),
+                      const SizedBox(height: 1),
+                      // Thumbnails Section
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: mediaList.length > 1
+                            ? mediaList.skip(1).take(4).toList().asMap().entries.map((entry) {
+                          int index = entry.key;
+                          PlaceMedia media = entry.value;
+
+                          return Expanded(
+                            child: GestureDetector(
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => FullScreenPlaceMediaViewer(
+                                    builder: (context) => FullScreenPlaceMediaViewer(
                                       mediaList: mediaList,
-                                      initialIndex: 0,
+                                      initialIndex: index + 1,
                                     ),
                                   ),
                                 );
                               },
-                              child: Image.network(
-                                mediaList[0].placeMediaUrl,
-                                width: double.infinity,
-                                height: 250, // Adjust height as needed
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                const Center(child: Text('No media available')),
-                              ),
-                            )
-                                : const Center(child: Text('No media available')),
-                            // Positioned WeatherIconButton
-                          ],
-                        ),
-                        const SizedBox(height: 1),
-                        // Thumbnails Section
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: mediaList.length > 1
-                              ? mediaList.skip(1).take(4).toList().asMap().entries.map((entry) {
-                            int index = entry.key;
-                            PlaceMedia media = entry.value;
-        
-                            return Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => FullScreenPlaceMediaViewer(
-                                        mediaList: mediaList,
-                                        initialIndex: index + 1,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: Stack(
-                                  children: [
-                                    Image.network(
-                                      media.placeMediaUrl,
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
+                              child: Stack(
+                                children: [
+                                  Image.network(
+                                    media.placeMediaUrl,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: 77.5,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        Container(
+                                          width: double.infinity,
+                                          height: 77.5,
+                                          color: Colors.grey,
+                                          child: const Icon(Icons.image, color: Colors.white),
+                                        ),
+                                  ),
+                                  if (index == 3 && mediaList.length > 5)
+                                    Container(
+                                      color: Colors.black.withOpacity(0.5),
                                       height: 77.5,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          Container(
-                                            width: double.infinity,
-                                            height: 77.5,
-                                            color: Colors.grey,
-                                            child: const Icon(Icons.image, color: Colors.white),
-                                          ),
-                                    ),
-                                    if (index == 3 && mediaList.length > 5)
-                                      Container(
-                                        color: Colors.black.withOpacity(0.5),
-                                        height: 77.5,
-                                        child: const Center(
-                                          child: Text(
-                                            'See more',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                      child: const Center(
+                                        child: Text(
+                                          'See more',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                       ),
-                                  ],
-                                ),
+                                    ),
+                                ],
                               ),
-                            );
-                          }).toList()
-                              : [],
+                            ),
+                          );
+                        }).toList()
+                            : [],
+                      ),
+                      Container(
+                        width: double.infinity,
+                        height: 3,
+                        color: const Color(0xFFDCA1A1),
+                      ),
+                    ],
+                  ),
+                ),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _SliverAppBarDelegate(
+                    TabBar(
+                      controller: _tabController,
+                      labelColor: Colors.black,
+                      indicatorColor: const Color(0xFF008080),
+                      labelStyle: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      tabs: [
+                        Container(
+                          color: Colors.blue[100], // Background color for 'Detail' tab
+                          child: const Tab(
+                            icon: Icon(Icons.details),
+                            text: '          Detail          ',
+                          ),
                         ),
                         Container(
-                          width: double.infinity,
-                          height: 3,
-                          color: const Color(0xFFDCA1A1),
+                          color: Colors.green[100], // Background color for 'Review' tab
+                          child: const Tab(
+                            icon: Icon(Icons.reviews),
+                            text: '          Review          ',
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _SliverAppBarDelegate(
-                      TabBar(
-                        controller: _tabController,
-                        labelColor: Colors.black,
-                        indicatorColor: const Color(0xFF008080),
-                        labelStyle: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        tabs: [
-                          Container(
-                            color: Colors.blue[100], // Background color for 'Detail' tab
-                            child: const Tab(
-                              icon: Icon(Icons.details),
-                              text: '          Detail          ',
-                            ),
-                          ),
-                          Container(
-                            color: Colors.green[100], // Background color for 'Review' tab
-                            child: const Tab(
-                              icon: Icon(Icons.reviews),
-                              text: '          Review          ',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ];
-              },
-              body: TabBarView(
-                controller: _tabController,
-                children: [
-                  DetailTabbar(
-                    languageCode: 'en',
-                    userId: widget.userId, // Pass the userId here
-                    tags: placeTagsForPlace,
-                    onAddPressed: () {},
-                    onReportPressed: () {},
-                    placeId: widget.placeId,
-                  ),
-                  ReviewTabbar(
-                    userId: widget.userId, // Use widget.userId
-                    placeId: placeId,
-                  ),
-                ],
-              ),
+                ),
+              ];
+            },
+            body: TabBarView(
+              controller: _tabController,
+              children: [
+                DetailTabbar(
+                  languageCode: 'en',
+                  userId: widget.userId, // Pass the userId here
+                  tags: placeTagsForPlace,
+                  onAddPressed: () {},
+                  onReportPressed: () {},
+                  placeId: widget.placeId,
+                ),
+                ReviewTabbar(
+                  userId: widget.userId, // Use widget.userId
+                  placeId: placeId,
+                ),
+              ],
             ),
-            // Positioned BackToTopButton
-            Positioned(
-              bottom: 30,
-              left: 110,
-              child: AnimatedOpacity(
-                opacity: _showBackToTopButton ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 300),
-                child: _showBackToTopButton
-                    ? BackToTopButton(
-                  onPressed: _scrollToTop, // Link to the scrollToTop method
-                )
-                    : const SizedBox.shrink(),
-              ),
+          ),
+          // Positioned BackToTopButton
+          Positioned(
+            bottom: 30,
+            left: 110,
+            child: AnimatedOpacity(
+              opacity: _showBackToTopButton ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 300),
+              child: _showBackToTopButton
+                  ? BackToTopButton(
+                onPressed: _scrollToTop, // Link to the scrollToTop method
+              )
+                  : const SizedBox.shrink(),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

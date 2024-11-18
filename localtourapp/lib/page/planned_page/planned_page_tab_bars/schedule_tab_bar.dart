@@ -11,6 +11,7 @@ import 'package:localtourapp/provider/user_provider.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:localtourapp/provider/count_provider.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/add_schedule_dialog.dart';
+import 'package:localtourapp/page/planned_page/planned_page_tab_bars/fearuted_schedule_page.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/suggest_schedule_page.dart';
 import 'package:localtourapp/page/search_page/search_page.dart';
 import 'package:provider/provider.dart';
@@ -51,6 +52,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
+
   List<Place> placeList = dummyPlaces;
   late String userId;
   final ScrollController _scrollController = ScrollController();
@@ -256,12 +258,11 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    userId = Provider.of<UserProvider>(context, listen: false).userId;
+    userId = Provider.of<UserProvider>(context).userId;
 
     if (userId.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
-
     final List<Schedule> filteredSchedules = getFilteredSchedules();
 
     // Use the existing isCurrentUser method from UserProvider
@@ -272,6 +273,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       return const Center(child: CircularProgressIndicator());
     }
     // Fetch all schedules from ScheduleProvider
+    final bool isCurrentUser = widget.isCurrentUser;
     return Stack(
       children: [
         GestureDetector(
@@ -401,7 +403,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
 
   Widget _buildScheduleSection(List<Schedule> filteredSchedules) {
     final scheduleProvider =
-    Provider.of<ScheduleProvider>(context, listen: false);
+        Provider.of<ScheduleProvider>(context, listen: false);
+    final bool isCurrentUser = widget.isCurrentUser;
 
     if (filteredSchedules.isEmpty) {
       return const Center(
@@ -451,7 +454,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Schedule name, editing, visibility, favorite toggling, and like count
-                        if (isOwner)
                         GestureDetector(
                           onTap: () => _toggleEditing(schedule.id),
                           child: isEditingName
@@ -581,7 +583,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                             ),
                               Row(
                                 children: [
-                                  if (isOwner)
                                   IconButton(
                                     icon: const Icon(Icons.delete,
                                         color: Color(0xFF4F4F4F)),
@@ -954,7 +955,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
         bool isOwner = true,
   }) {
     return GestureDetector(
-      onTap: isOwner ? () async {
+      onTap: () async {
         DateTime? selectedDate =
             initialDate; // Temporarily store the initial date
         if (isOwner) {
@@ -1003,7 +1004,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               ),
             ),
           ),
-          if (clearable && initialDate != null && isOwner)
+          if (clearable && initialDate != null)
             Positioned(
               right:0,
               top: 5,
