@@ -7,7 +7,7 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final apiService = ApiService();
 
-  Future<User?> signInWithGoogle() async {
+  Future<OAuthCredential?> signInWithGoogle() async {
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn();
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
@@ -20,8 +20,7 @@ class AuthService {
           idToken: googleAuth.idToken,
         );
 
-        final userCredential = await _auth.signInWithCredential(credential);
-        return userCredential.user;
+       return credential;
       }
     } catch (e) {
       print('Google Sign-In Error: $e');
@@ -29,38 +28,7 @@ class AuthService {
     return null;
   }
 
-  Future<User?> signInWithFacebook() async {
-    try {
-      final LoginResult result = await FacebookAuth.instance.login();
 
-      if (result.status == LoginStatus.success) {
-        final OAuthCredential credential =
-            FacebookAuthProvider.credential(result.accessToken!.tokenString);
-        final userCredential = await _auth.signInWithCredential(credential);
-        return userCredential.user;
-      }
-    } catch (e) {
-      print('Facebook Sign-In Error: $e');
-    }
-    return null;
-  }
-
-  Future<void> signInWithPhone(
-      String phone, Function(String) onCodeSent) async {
-    await _auth.verifyPhoneNumber(
-      phoneNumber: phone,
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await _auth.signInWithCredential(credential);
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        print('Phone verification failed: ${e.message}');
-      },
-      codeSent: (String verificationId, int? resendToken) {
-        onCodeSent(verificationId);
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {},
-    );
-  }
 
   Future<void> verifyCode(String verificationId, String smsCode) async {
     final credential = PhoneAuthProvider.credential(

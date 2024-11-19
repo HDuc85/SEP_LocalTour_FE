@@ -1,4 +1,5 @@
 class Userprofile {
+  String fullName;
   String userName;
   String userProfileImage;
   String email;
@@ -12,8 +13,10 @@ class Userprofile {
   int totalFollowed;
   int totalFollowers;
   bool isFollowed;
+  bool isHasPassword;
 
   Userprofile({
+    required this.fullName,
     required this.userName,
     required this.userProfileImage,
     required this.email,
@@ -27,25 +30,27 @@ class Userprofile {
     required this.totalFollowed,
     required this.totalFollowers,
     required this.isFollowed,
+    required this.isHasPassword,
   });
 
   factory Userprofile.fromJson(Map<String, dynamic> json) {
     return Userprofile(
-      userName: json['userName'] ?? '',
-      userProfileImage: json['userProfileImage'] ?? '',
-      email: json['email'] ?? '',
-      gender: json['gender'] ?? '',
-      address: json['address'] ?? '',
-      phoneNumber: json['phoneNumber'] ?? '',
-      dateOfBirth: json['dateOfBirth'] != null
-          ? DateTime.tryParse(json['dateOfBirth'])
-          : null,
-      totalSchedules: json['totalSchedules'] ?? 0,
-      totalPosteds: json['totalPosteds'] ?? 0,
-      totalReviews: json['totalReviews'] ?? 0,
-      totalFollowed: json['totalFollowed'] ?? 0,
-      totalFollowers: json['totalFollowers'] ?? 0,
-      isFollowed: json['isFollowed'] ?? false,
-    );
+        fullName: json['fullName'] ?? '',
+        userName: json['userName'] ?? '',
+        userProfileImage: json['userProfileImage'] ?? '',
+        email: json['email'] ?? '',
+        gender: json['gender'] ?? '',
+        address: json['address'] ?? '',
+        phoneNumber: json['phoneNumber'] ?? '',
+        dateOfBirth: json['dateOfBirth'] != null
+            ? DateTime.tryParse(json['dateOfBirth'])
+            : null,
+        totalSchedules: json['totalSchedules'] ?? 0,
+        totalPosteds: json['totalPosteds'] ?? 0,
+        totalReviews: json['totalReviews'] ?? 0,
+        totalFollowed: json['totalFollowed'] ?? 0,
+        totalFollowers: json['totalFollowers'] ?? 0,
+        isFollowed: json['isFollowed'] ?? false,
+        isHasPassword: json['isHasPassword'] ?? true);
   }
 }

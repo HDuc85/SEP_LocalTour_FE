@@ -14,26 +14,30 @@ class ApiService {
   }
 
   Future<http.Response> makeRequest(String endpoint, String method,
-      [String? body]) async {
+      [Map<String, dynamic>? body]) async {
     String? accessToken = await storage.readValue(AppConfig.accessToken);
     final uri = Uri.parse('${AppConfig.apiUrl}$endpoint');
     Map<String, String>? headers = {};
     ;
     //headers['Authorization'] = 'Bearer $accessToken';
     headers['Authorization'] =
-        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyNTkzNzE1NC1jY2E1LTQ4ZDYtOWZkMi1jOGVmNjhjYWM5M2MiLCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo3Mjc0IiwiaWF0IjoxNzMxNzQ3MjE4LCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3Q6NzI3NCIsImh0dHBzOi8vbG9jYWxob3N0OjcyNzQiXSwiZXhwIjoxNzMxNzQ5NjE4LCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL21vYmlsZXBob25lIjoiMDEyMzQ1Njc4OSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InVzZXJAZXhhbXBsZS5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJWaXNpdG9yIiwibmJmIjoxNzMxNzQ3MjE4fQ.jycghlVSxSkOiVPC0Iw-RKEyD-Px2-BCwKsnip2NQAc';
+        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmNmI2MzFiZi1jMzYwLTRjYzgtYmY5Zi02OGZkMjAzODkwOGMiLCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo3Mjc0IiwiaWF0IjoxNzMxOTEyNTI0LCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3Q6NzI3NCIsImh0dHBzOi8vbG9jYWxob3N0OjcyNzQiXSwiZXhwIjoxNzMxOTE0OTI0LCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL21vYmlsZXBob25lIjoiMDEyMzQ1Njc4OSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InVzZXJAZXhhbXBsZS5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJWaXNpdG9yIiwibmJmIjoxNzMxOTEyNTI0fQ.hl9GGJUBJlD18TzIQAJkwQfmeoPc6Ubur88--pd86tA';
+    headers['Content-Type'] = 'application/json';
 
     late http.Response response;
 
     switch (method.toUpperCase()) {
       case 'POST':
-        response = await http.post(uri, headers: headers, body: body);
+        response =
+            await http.post(uri, headers: headers, body: json.encode(body));
         break;
       case 'PUT':
-        response = await http.put(uri, headers: headers, body: body);
+        response =
+            await http.put(uri, headers: headers, body: json.encode(body));
         break;
       case 'DELETE':
-        response = await http.delete(uri, headers: headers, body: body);
+        response =
+            await http.delete(uri, headers: headers, body: json.encode(body));
         break;
       default:
         response = await http.get(uri, headers: headers);
@@ -79,9 +83,13 @@ class ApiService {
   Future<(bool, bool)> sendFirebaseTokenToBackend(String idToken) async {
     bool firstTime = false;
     bool isSuccess = false;
+
     try {
-      final response =
-          await makeRequest("Authen/verifyTokenFirebase", "POST", idToken);
+      var response = await http.post(
+        Uri.parse('${AppConfig.apiUrl}/Authen/verifyTokenFirebase'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({idToken}),
+      );
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);

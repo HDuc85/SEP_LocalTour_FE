@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:localtourapp/page/account/view_profile/post_provider.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
+import 'package:localtourapp/models/users/userProfile.dart';
+import 'package:localtourapp/services/user_service.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import '../../base/weather_icon_button.dart';
-import '../../models/posts/post.dart';
-import '../../models/schedule/schedule.dart';
 import '../../models/users/followuser.dart';
 import '../../models/users/users.dart';
-import '../../provider/count_provider.dart';
-import '../../provider/follow_users_provider.dart';
-import '../../provider/review_provider.dart';
-import '../../provider/schedule_provider.dart';
-import '../../provider/user_provider.dart';
 import '../../provider/users_provider.dart';
 import 'faq.dart';
 import 'followlistpage.dart';
@@ -37,20 +32,69 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
+  late UserService _userService = UserService();
+  final storage = SecureStorageHelper();
   late List<FollowUser> followers;
   late List<FollowUser> followings;
+  late Userprofile userprofile = Userprofile(
+      fullName: "Unknown Full Name",
+      userName: "Unknown",
+      userProfileImage: "",
+      email: "Unknown Email",
+      gender: '',
+      address: "Unknown Address",
+      phoneNumber: "zero Number",
+      dateOfBirth: DateTime(2000, 1, 1),
+      totalSchedules: 0,
+      totalPosteds: 0,
+      totalReviews: 0,
+      totalFollowed: 0,
+      totalFollowers: 0,
+      isFollowed: true,
+      isHasPassword: true);
   late User displayedUser;
-
-  // **Add these declarations:**
-  late int followerCount;
-  late int followingCount;
+  String myUserId = '';
+  late bool isLogin = false;
 
   // Existing ScrollController declaration
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
+    readUserId();
+    readUserProfile(widget.userId);
     super.initState();
+  }
+
+  Future<void> readUserId() async {
+    try {
+      String? userIdStorage = await storage.readValue(AppConfig.userId);
+      bool isLoginStorage = await storage.readBoolValue(AppConfig.isLogin);
+
+      if(isLoginStorage){
+        setState(() {
+          isLogin = isLoginStorage;
+        });
+      }
+
+      if (userIdStorage != null && userIdStorage.isNotEmpty) {
+        setState(() {
+          myUserId = userIdStorage;
+        });
+      }
+    } catch (e) {
+      print("Error in readUserId: $e");
+    }
+  }
+
+  Future<void> readUserProfile(String userId) async {
+    if (userId == '') {
+      userId = (await storage.readValue(AppConfig.userId))!;
+    }
+    final reponse = await _userService.getUserProfile(userId);
+    setState(() {
+      userprofile = reponse;
+    });
   }
 
   @override
@@ -70,34 +114,28 @@ class _AccountPageState extends State<AccountPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    bool isCurrentUser = false;
     // Listen to scroll events
     _scrollController.addListener(() {
       // Implement your logic here, e.g., show "Back to Top" button
     });
-
     // Determine if the current user is following the displayed user
-    bool isFollowing = false;
-
+    if (widget.userId == myUserId) {
+      isCurrentUser = true;
+    }
     return Stack(
       children: [
-        ListView(
-          controller: _scrollController,
-          padding: const EdgeInsets.all(8.0),
-          children: [
+
             ListView(
               controller: _scrollController,
               padding: const EdgeInsets.all(8.0),
+
               children: [
                 const SizedBox(height: 16),
-                _buildProfileSection(
-                  displayedUser,
-                  followerCount,
-                  followingCount,
-                ),
+                _buildProfileSection(userprofile),
                 const SizedBox(height: 16),
-                if (!isCurrentUser)
-                  _buildFollowButton(
-                      isFollowing, followUsersProvider, userProvider),
+                if (!isCurrentUser && isLogin) _buildFollowButton(userprofile.isFollowed),
                 if (isCurrentUser) ...[
                   _buildPersonInfoSection(),
                   const SizedBox(height: 12),
@@ -109,9 +147,11 @@ class _AccountPageState extends State<AccountPage> {
                   const SizedBox(height: 12),
                   _buildUserPreference(),
                   const SizedBox(height: 12), // Adjust spacing if needed
+                ],
+
                   _buildLogoutButton(), // Add the Logout button here
                   const SizedBox(height: 36),
-                ],
+
               ],
             ),
             Positioned(
@@ -123,46 +163,19 @@ class _AccountPageState extends State<AccountPage> {
               ),
             ),
           ],
-        ),
-        Positioned(
-          bottom: 0,
-          left: 20,
-          child: WeatherIconButton(
-            onPressed: _navigateToWeatherPage,
-            assetPath: 'assets/icons/weather.png',
-          ),
-        ),
-      ],
-    );
+        );
+
+
   }
 
   // Add this method inside _AccountPageState
-  Widget _buildFollowButton(bool isFollowing,
-      FollowUsersProvider followUsersProvider, UserProvider userProvider) {
+  Widget _buildFollowButton(
+    bool isFollowing,
+  ) {
     return Center(
       child: ElevatedButton(
         onPressed: () {
-          if (isFollowing) {
-            followUsersProvider.removeFollowUser(
-                userProvider.userId, displayedUser.userId);
-          } else {
-            followUsersProvider.addFollowUser(FollowUser(
-              id: followUsersProvider.followUsers.length + 1,
-              userId: userProvider.userId,
-              userFollow: displayedUser.userId,
-              dateCreated: DateTime.now(),
-            ));
-          }
-
           // Update follower and following counts after following/unfollowing
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            setState(() {
-              followerCount = FollowUser.countFollowers(
-                  displayedUser.userId, followUsersProvider.followUsers);
-              followingCount = FollowUser.countFollowing(
-                  displayedUser.userId, followUsersProvider.followUsers);
-            });
-          });
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: isFollowing ? Colors.red : Colors.blue,
@@ -173,16 +186,7 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   // Build Profile Section
-  Widget _buildProfileSection(User user, int scheduleCount, int reviewCount,
-      int postCount, int followerCount, int followingCount) {
-    final scheduleProvider = Provider.of<ScheduleProvider>(context);
-    final List<Schedule> allSchedules = scheduleProvider.schedules;
-    final List<Schedule> userSchedules = allSchedules
-        .where((schedule) => schedule.userId == displayedUser.userId)
-        .toList();
-    final postProvider = Provider.of<PostProvider>(context);
-    final List<Post> userPosts =
-        postProvider.getPostsByUserId(displayedUser.userId);
+  Widget _buildProfileSection(Userprofile userProfile) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -203,18 +207,24 @@ class _AccountPageState extends State<AccountPage> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start, // Changed to start
             children: [
+              SizedBox(width: 10,),
               // Profile picture on the left
-              CircleAvatar(
-                radius: 30,
-                backgroundImage: user.profilePictureUrl != null
-                    ? NetworkImage(user.profilePictureUrl!)
-                    : null,
-                child: user.profilePictureUrl == null
-                    ? const Icon(Icons.account_circle,
-                        size: 60, color: Colors.grey)
-                    : null,
+              Column(
+                children: [
+                  SizedBox(height: 10,),
+                  CircleAvatar(
+                    radius: 60,
+                    backgroundImage: userProfile.userProfileImage != ''
+                        ? NetworkImage(userProfile.userProfileImage)
+                        : null,
+                    child: userProfile.userProfileImage == ''
+                        ? const Icon(Icons.account_circle,
+                            size: 60, color: Colors.grey)
+                        : null,
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 25),
 
               // User details on the right
               Expanded(
@@ -222,14 +232,14 @@ class _AccountPageState extends State<AccountPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      user.fullName ?? "Unknown User",
+                      userProfile.fullName,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      '(${user.userName})',
+                      '(${userProfile.userName})',
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.grey,
@@ -237,15 +247,15 @@ class _AccountPageState extends State<AccountPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '$scheduleCount schedules created',
+                      '${userProfile.totalSchedules} schedules created',
                       style: const TextStyle(fontSize: 14),
                     ),
                     Text(
-                      '$postCount posts created',
+                      '${userProfile.totalPosteds} posts created',
                       style: const TextStyle(fontSize: 14),
                     ),
                     Text(
-                      '$reviewCount reviews',
+                      '${userProfile.totalReviews} reviews',
                       style: const TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 8),
@@ -267,11 +277,11 @@ class _AccountPageState extends State<AccountPage> {
                             );
                           },
                           child: Text(
-                            '$followerCount followers',
+                            '${userProfile.totalFollowed} followers',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 24),
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -288,7 +298,7 @@ class _AccountPageState extends State<AccountPage> {
                             );
                           },
                           child: Text(
-                            '$followingCount following',
+                            '${userProfile.totalFollowers} following',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
@@ -300,19 +310,19 @@ class _AccountPageState extends State<AccountPage> {
             ],
           ),
           Container(
-            margin: const EdgeInsets.only(top: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 50),
+            margin: const EdgeInsets.only(top: 15),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => ViewProfilePage(
-                      userId: displayedUser.userId,
-                      schedules: userSchedules,
-                      posts: userPosts,
+                      followUsers: [],
+                      posts: [],
+                      schedules: [],
                       user: displayedUser,
-                      followUsers: widget.followUsers,
+                      userId: myUserId,
                     ),
                   ),
                 );
@@ -321,7 +331,7 @@ class _AccountPageState extends State<AccountPage> {
                 backgroundColor: const Color(0xFFD6B588),
                 minimumSize: const Size(double.infinity, 36),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(15),
                 ),
               ),
               child: const Text(
@@ -552,14 +562,20 @@ class _AccountPageState extends State<AccountPage> {
           // Trigger the logout process
           _logout();
         },
-        style: ElevatedButton.styleFrom(
+        style: !isLogin? ElevatedButton.styleFrom(
+          backgroundColor: Colors.blueAccent, // Choose a color that signifies logout
+          padding: const EdgeInsets.symmetric(vertical: 12.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          )) : ElevatedButton.styleFrom(
           backgroundColor: Colors.red, // Choose a color that signifies logout
           padding: const EdgeInsets.symmetric(vertical: 12.0),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
           ),
         ),
-        child: const Text(
+        child: Text(
+          !isLogin ?'Login':
           'Logout',
           style: TextStyle(
             color: Colors.white,
@@ -576,7 +592,13 @@ class _AccountPageState extends State<AccountPage> {
     // Access the AuthProvider
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     authProvider.logout();
+    if(isLogin){
+      storage.deleteValue(AppConfig.isLogin);
+      storage.deleteValue(AppConfig.userId);
+      storage.deleteValue(AppConfig.accessToken);
+      storage.deleteValue(AppConfig.refreshToken);
 
+    }
     // Navigate to the login screen or any desired screen after logout
     Navigator.pushReplacementNamed(
         context, '/login'); // Adjust the route as needed

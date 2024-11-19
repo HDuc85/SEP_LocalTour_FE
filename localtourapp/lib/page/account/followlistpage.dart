@@ -99,9 +99,7 @@ class _FollowListPageState extends State<FollowListPage> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => AccountPage(
-                    user: clickedUser ?? userProvider.currentUser,
-                    isCurrentUser: isCurrentUser,
-                    followUsers: followUsersProvider.followUsers,
+                    userId: '',
                   ),
                 ),
               );

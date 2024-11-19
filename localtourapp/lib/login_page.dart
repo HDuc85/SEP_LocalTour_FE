@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:localtourapp/page/account/view_profile/for_got_password.dart';
+import 'package:localtourapp/services/auth_service.dart';
 
 import 'main.dart';
 
@@ -17,6 +18,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final AuthService _authService = AuthService();
   // Controllers for input fields
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -116,7 +118,7 @@ class _LoginPageState extends State<LoginPage> {
                   TextField(
                     controller: phoneController,
                     decoration: InputDecoration(
-                      labelText: 'Phone Number',
+                      labelText: 'Phone Number or Email',
                       prefixIcon: const Icon(Icons.phone),
                       border: const OutlineInputBorder(),
                       errorText: phoneError ? phoneErrorText : null,
@@ -177,9 +179,9 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 10),
                   GestureDetector(
-                    onTap: () {
-                      print('Google Login Clicked!');
-                      // Add your Google login logic here
+                    onTap: () async {
+                      var credential = await _authService.signInWithGoogle();
+
                     },
                     child: Container(
                       padding: const EdgeInsets.all(5), // Adjust spacing

@@ -1,11 +1,15 @@
 // lib/main.dart
 
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:localtourapp/base/base_page.dart';
 import 'package:localtourapp/base/const.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/places/placefeedbackhelpful.dart';
 import 'package:localtourapp/models/places/placefeedbackmedia.dart';
 import 'package:localtourapp/provider/follow_users_provider.dart';
@@ -43,6 +47,7 @@ import 'package:localtourapp/weather/weather_page.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import 'firebase_options.dart';
 import 'login_page.dart';
 import 'models/places/placefeedback.dart';
 import 'register_page.dart';
@@ -52,6 +57,12 @@ import 'welcome_page.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
+  final storage = SecureStorageHelper();
+  WidgetsFlutterBinding.ensureInitialized();
+  final app = await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  auth.FirebaseAuth.instanceFor(app: app);
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   // Initialize Hive
@@ -63,10 +74,12 @@ void main() async {
     translations: dummyTranslations,
   );
   await bookmarkProvider.loadBookmarks();
+  await storage.saveValue(
+      AppConfig.userId, "00000000-0000-0000-0000-000000000000");
 
   // Generate fake users
   User myUser = fakeUsers.firstWhere(
-        (user) => user.userId == 'anh-tuan-unique-id-1234',
+    (user) => user.userId == 'anh-tuan-unique-id-1234',
     orElse: () => fakeUsers.first, // Fallback to first user if not found
   );
 
@@ -74,13 +87,14 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => UserProvider(initialUser: myUser)),
+        ChangeNotifierProvider(
+            create: (_) => UserProvider(initialUser: myUser)),
         ChangeNotifierProvider(
             create: (_) => ReviewProvider(
-              placeFeedbacks: dummyFeedbacks,
-              placeFeedbackMedia: feedbackMediaList,
-              placeFeedbackHelpfuls: feebBackHelpfuls,
-            )),
+                  placeFeedbacks: dummyFeedbacks,
+                  placeFeedbackMedia: feedbackMediaList,
+                  placeFeedbackHelpfuls: feebBackHelpfuls,
+                )),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => bookmarkProvider),
         ChangeNotifierProvider(create: (_) => WeatherProvider()),
@@ -91,20 +105,20 @@ void main() async {
                 FollowUsersProvider(initialFollowUsers: dummyFollowUsers)),
         ChangeNotifierProvider(
             create: (_) => ScheduleProvider(
-              places: dummyPlaces,
-              translations: dummyTranslations,
-              schedules: dummySchedules,
-              scheduleLikes: dummyScheduleLikes,
-              destinations: dummyDestinations,
-            )),
+                  places: dummyPlaces,
+                  translations: dummyTranslations,
+                  schedules: dummySchedules,
+                  scheduleLikes: dummyScheduleLikes,
+                  destinations: dummyDestinations,
+                )),
         ChangeNotifierProvider(
             create: (_) => PostProvider(
-              posts: dummyPosts,
-              comments: dummyComments,
-              postLikes: dummyPostLikes,
-              commentLikes: dummyPostCommentLikes,
-              media: dummyPostMedia,
-            )),
+                  posts: dummyPosts,
+                  comments: dummyComments,
+                  postLikes: dummyPostLikes,
+                  commentLikes: dummyPostCommentLikes,
+                  media: dummyPostMedia,
+                )),
       ],
       child: MyApp(myUser: myUser),
     ),
@@ -134,7 +148,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     screens = [
       const HomeScreen(),
-      const MapPage(),
+      const HomeScreen(),
       const BookmarkPage(),
       PlannedPage(
         scheduleLikes: dummyScheduleLikes,
@@ -143,9 +157,7 @@ class _MyAppState extends State<MyApp> {
         users: Provider.of<UsersProvider>(context, listen: false).users,
       ),
       AccountPage(
-        user: widget.myUser,
-        followUsers: dummyFollowUsers,
-        isCurrentUser: true,
+        userId: '',
       ),
     ];
 
@@ -216,11 +228,11 @@ class _MyAppState extends State<MyApp> {
           home: _showWelcomePage
               ? WelcomePage(onAnimationComplete: _onAnimationComplete)
               : BasePage(
-            body: screens[currentIndex],
-            title: titles[currentIndex],
-            currentIndex: currentIndex,
-            onTabTapped: onTabTapped,
-          ),
+                  body: screens[currentIndex],
+                  title: titles[currentIndex],
+                  currentIndex: currentIndex,
+                  onTabTapped: onTabTapped,
+                ),
           onGenerateRoute: (settings) {
             if (settings.name == '/login') {
               return MaterialPageRoute(
@@ -241,7 +253,8 @@ class _MyAppState extends State<MyApp> {
             }
             if (settings.name == '/register') {
               return MaterialPageRoute(
-                builder: (context) => const RegisterPage(), // Ensure you have RegisterPage
+                builder: (context) =>
+                    const RegisterPage(), // Ensure you have RegisterPage
               );
             }
             if (settings.name == '/detail') {
@@ -263,15 +276,14 @@ class _MyAppState extends State<MyApp> {
               final userId = args != null && args.containsKey('userId')
                   ? args['userId'] as String
                   : widget.myUser.userId;
-              final User selectedUser = Provider.of<UsersProvider>(context, listen: false)
-                  .getUserById(userId) ??
-                  widget.myUser;
+              final User selectedUser =
+                  Provider.of<UsersProvider>(context, listen: false)
+                          .getUserById(userId) ??
+                      widget.myUser;
               final isCurrentUser = userId == widget.myUser.userId;
               return MaterialPageRoute(
                 builder: (context) => AccountPage(
-                  user: selectedUser,
-                  followUsers: dummyFollowUsers,
-                  isCurrentUser: isCurrentUser,
+                  userId: '',
                 ),
               );
             }
@@ -287,22 +299,27 @@ class _MyAppState extends State<MyApp> {
                   ),
                 );
               case '/weather':
-                return MaterialPageRoute(builder: (context) => const WeatherPage());
+                return MaterialPageRoute(
+                    builder: (context) => const WeatherPage());
               case '/bookmark':
-                return MaterialPageRoute(builder: (context) => const BookmarkPage());
+                return MaterialPageRoute(
+                    builder: (context) => const BookmarkPage());
               case '/planned_page':
                 return MaterialPageRoute(
                   builder: (context) => PlannedPage(
                     scheduleLikes: dummyScheduleLikes,
                     destinations: dummyDestinations,
                     userId: widget.myUser.userId,
-                    users: Provider.of<UsersProvider>(context, listen: false).users,
+                    users: Provider.of<UsersProvider>(context, listen: false)
+                        .users,
                   ),
                 );
               case '/map':
-                return MaterialPageRoute(builder: (context) => const MapPage());
+                return MaterialPageRoute(
+                    builder: (context) => const HomeScreen());
               case '/history':
-                return MaterialPageRoute(builder: (context) => const HistoryTabbar());
+                return MaterialPageRoute(
+                    builder: (context) => const HistoryTabbar());
               default:
                 return MaterialPageRoute(
                   builder: (context) => Scaffold(
@@ -318,5 +335,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-
-

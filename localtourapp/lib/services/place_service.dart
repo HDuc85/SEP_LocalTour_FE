@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/constants/getListApi.dart';
 import 'package:localtourapp/generated/intl/messages_en.dart';
 import 'package:localtourapp/models/HomePage/placeCard.dart';
@@ -20,10 +22,11 @@ class PlaceService {
     }
     String sortByStr = SortBy != null ? sortByToString(SortBy) : '';
     String sortOrderStr = SortOrder != null ? sortOrderToString(SortOrder) : '';
+    final languageCode =
+        await SecureStorageHelper().readValue(AppConfig.language);
     final response = await apiService.makeRequest(
-        "Place/getAll?CurrentLatitude=$CurrentLatitude&CurrentLongitude=$CurrentLongitude&Page=$Page&Size=$Size&SearchTerm=$SearchTerm&SortBy=$sortByStr&SortOrder=$sortOrderStr",
+        "Place/getAll?LanguageCode=${languageCode.toString()}&CurrentLatitude=$CurrentLatitude&CurrentLongitude=$CurrentLongitude&Page=$Page&Size=$Size&SearchTerm=$SearchTerm&SortBy=$sortByStr&SortOrder=$sortOrderStr",
         "GET");
-
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(response.body);
       if (jsonResponse['items'] == null || jsonResponse['items'].isEmpty) {

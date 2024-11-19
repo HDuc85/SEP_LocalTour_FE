@@ -1,6 +1,9 @@
 // register_page.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:localtourapp/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:localtourapp/models/places/tag.dart';
 import 'package:localtourapp/provider/user_provider.dart';
@@ -16,7 +19,7 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   // Step control
   int currentStep = 1;
-
+  final AuthService _authService = AuthService();
   // Controllers for input fields
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController smsCodeController = TextEditingController(); // New Controller
@@ -53,6 +56,11 @@ class _RegisterPageState extends State<RegisterPage> {
   final FirebaseAuth auth = FirebaseAuth.instance;
   // final FirebaseAuth auth = MockFirebaseAuth(); // Uncomment for testing
 
+  int resendCountdown = 60;
+  Timer? countdownTimer;
+  bool isCountdownActive = false;
+
+
   @override
   void initState() {
     super.initState();
@@ -76,7 +84,7 @@ class _RegisterPageState extends State<RegisterPage> {
     passwordFocusNode.dispose();
     confirmPasswordFocusNode.dispose();
     usernameFocusNode.dispose();
-
+    countdownTimer?.cancel();
     super.dispose();
   }
 
@@ -104,9 +112,10 @@ class _RegisterPageState extends State<RegisterPage> {
   bool validateUsername(String username) {
     return username.isNotEmpty;
   }
-
   // Function to handle phone number authentication
   void _authenticatePhoneNumber() async {
+
+
     FocusScope.of(context).unfocus(); // Close keyboard
     String phoneNumber = phoneController.text.trim();
     if (phoneNumber.isEmpty) {
@@ -131,10 +140,9 @@ class _RegisterPageState extends State<RegisterPage> {
 
     try {
       await auth.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
+        phoneNumber: formatPhoneNumber(phoneNumber),
         verificationCompleted: (PhoneAuthCredential credential) async {
-          // Auto-verification (optional)
-          // For registration, you might want to skip auto-verification
+
         },
         verificationFailed: (FirebaseAuthException e) {
           setState(() {
@@ -158,6 +166,25 @@ class _RegisterPageState extends State<RegisterPage> {
           });
         },
       );
+
+     setState(() {
+       isSmsSent = true;
+       isCountdownActive = true;
+       resendCountdown = 60;
+     });
+
+     countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+       if (resendCountdown == 0) {
+         timer.cancel();
+         setState(() {
+           isCountdownActive = false;
+         });
+       } else {
+         setState(() {
+           resendCountdown--;
+         });
+       }
+     });
     } catch (e) {
       setState(() {
         isAuthenticating = false;
@@ -171,7 +198,12 @@ class _RegisterPageState extends State<RegisterPage> {
       );
     }
   }
-
+  String formatPhoneNumber(String phoneNumber) {
+    if (phoneNumber.startsWith('0')) {
+      return '+84${phoneNumber.substring(1)}';
+    }
+    return phoneNumber;
+  }
   // Function to verify SMS code
   void _verifySmsCode() async {
     FocusScope.of(context).unfocus(); // Close keyboard
@@ -197,13 +229,13 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     try {
-      PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: verificationId,
-        smsCode: smsCode,
-      );
+      await _authService.verifyCode(verificationId, smsCode);
 
-      // Sign in the user with the credential
-      await auth.signInWithCredential(credential);
+      // PhoneAuthCredential credential = PhoneAuthProvider.credential(
+      //   verificationId: verificationId,
+      //   smsCode: smsCode,
+      // );
+
 
       setState(() {
         isSmsSent = false; // Reset SMS sent flag
@@ -229,7 +261,55 @@ class _RegisterPageState extends State<RegisterPage> {
       );
     }
   }
+  // Function to resend SMS Code
+  void _resendOtp() async {
+    setState(() {
+      isCountdownActive = true;
+      resendCountdown = 60;
+    });
 
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (resendCountdown == 0) {
+        timer.cancel();
+        setState(() {
+          isCountdownActive = false;
+        });
+      } else {
+        setState(() {
+          resendCountdown--;
+        });
+      }
+    });
+    String phoneNumber = phoneController.text;
+    await auth.verifyPhoneNumber(
+      phoneNumber: formatPhoneNumber(phoneNumber),
+      verificationCompleted: (PhoneAuthCredential credential) async {
+
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        setState(() {
+          isAuthenticating = false;
+          phoneError = true;
+          phoneErrorText = e.message ?? 'Phone verification failed.';
+        });
+      },
+      codeSent: (String verificationIdParam, int? resendToken) {
+        setState(() {
+          isSmsSent = true;
+          verificationId = verificationIdParam;
+          isAuthenticating = false;
+        });
+        FocusScope.of(context).requestFocus(smsCodeFocusNode);
+      },
+      codeAutoRetrievalTimeout: (String verificationIdParam) {
+        setState(() {
+          verificationId = verificationIdParam;
+          isAuthenticating = false;
+        });
+      },
+    );
+
+  }
   // Function to proceed to the next step
   void _nextStep() {
     setState(() {
@@ -255,7 +335,6 @@ class _RegisterPageState extends State<RegisterPage> {
       }
     });
   }
-
   // Function to go back to the previous step
   void _previousStep() {
     setState(() {
@@ -281,12 +360,10 @@ class _RegisterPageState extends State<RegisterPage> {
       }
     });
   }
-
   // Function to handle registration completion
   void _completeRegistration() {
     // Implement your registration logic here (e.g., save user to database)
     // For demonstration, we'll simply show a success message
-
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Registration Successful!'),
@@ -430,8 +507,26 @@ class _RegisterPageState extends State<RegisterPage> {
           const SizedBox(height: 24),
           // Verify Button
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isCountdownActive)
+                    Text(
+                      "Resend OTP in $resendCountdown seconds",
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    )
+                  else
+                    TextButton(
+                      onPressed: () {
+                        _resendOtp();
+                      },
+                      child: const Text('Resend OTP'),
+                    ),
+                ],
+              ),
+
               ElevatedButton(
                 onPressed: isAuthenticating ? null : _verifySmsCode,
                 child: isAuthenticating
@@ -451,6 +546,8 @@ class _RegisterPageState extends State<RegisterPage> {
       ],
     );
   }
+
+
 
   // Step 2: Password and Confirm Password Input
   Widget _buildPasswordInput() {

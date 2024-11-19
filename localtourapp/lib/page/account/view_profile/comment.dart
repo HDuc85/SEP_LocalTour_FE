@@ -184,12 +184,8 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
               Navigator.of(context).pop(); // Close the dialog
               final postProvider =
                   Provider.of<PostProvider>(context, listen: false);
-              final commentsToDelete =
-                  postProvider.getCommentsToDelete(commentId);
 
               // Update the comment count for the post
-              postProvider.updateCommentCount(
-                  widget.post.id, -commentsToDelete.length);
 
               // Delete the comments
               postProvider.deleteComment(commentId);
@@ -247,9 +243,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => AccountPage(
-                    user: commenter,
-                    isCurrentUser: isCurrentUser,
-                    followUsers: followUsersProvider.followUsers,
+                    userId: '',
                   ),
                 ),
               );
@@ -282,9 +276,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => AccountPage(
-                              user: commenter,
-                              isCurrentUser: isCurrentUser,
-                              followUsers: followUsersProvider.followUsers,
+                              userId: '',
                             ),
                           ),
                         );

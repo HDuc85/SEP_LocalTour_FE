@@ -173,21 +173,23 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   void _toggleVisibility(int scheduleId) {
     setState(() {
       // Update visibility in the map
-      scheduleVisibility[scheduleId] = !(scheduleVisibility[scheduleId] ?? true);
+      scheduleVisibility[scheduleId] =
+          !(scheduleVisibility[scheduleId] ?? true);
 
       // Update the schedule's isPublic field if needed
       final scheduleProvider =
-      Provider.of<ScheduleProvider>(context, listen: false);
+          Provider.of<ScheduleProvider>(context, listen: false);
       final schedule = scheduleProvider.getScheduleById(scheduleId);
       if (schedule != null) {
         schedule.isPublic = scheduleVisibility[scheduleId]!;
-        scheduleProvider.updateSchedule(schedule); // Save changes to the provider
+        scheduleProvider
+            .updateSchedule(schedule); // Save changes to the provider
       }
     });
   }
 
-
-  void _showDetailDialog(String initialText, Function(String) onSave, bool isCurrentUser) {
+  void _showDetailDialog(
+      String initialText, Function(String) onSave, bool isCurrentUser) {
     _detailController.text = initialText;
     showDialog(
       context: context,
@@ -196,22 +198,22 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           title: Text(isCurrentUser ? 'Edit Detail' : 'Detail'),
           content: isCurrentUser
               ? TextFormField(
-            controller: _detailController,
-            maxLines: 10,
-            maxLength: 500,
-            decoration: const InputDecoration(
-              hintText: "Enter detail (max 500 words)",
-              border: OutlineInputBorder(),
-            ),
-          )
-              :TextFormField(
-              controller: _detailController,
-              readOnly: true,
-              maxLines: 10,
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-              ),
-            ),
+                  controller: _detailController,
+                  maxLines: 10,
+                  maxLength: 500,
+                  decoration: const InputDecoration(
+                    hintText: "Enter detail (max 500 words)",
+                    border: OutlineInputBorder(),
+                  ),
+                )
+              : TextFormField(
+                  controller: _detailController,
+                  readOnly: true,
+                  maxLines: 10,
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -273,7 +275,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       return const Center(child: CircularProgressIndicator());
     }
     // Fetch all schedules from ScheduleProvider
-    final bool isCurrentUser = widget.isCurrentUser;
     return Stack(
       children: [
         GestureDetector(
@@ -404,7 +405,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   Widget _buildScheduleSection(List<Schedule> filteredSchedules) {
     final scheduleProvider =
         Provider.of<ScheduleProvider>(context, listen: false);
-    final bool isCurrentUser = widget.isCurrentUser;
 
     if (filteredSchedules.isEmpty) {
       return const Center(
@@ -502,7 +502,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                         null; // Correctly clears startDate
                                   });
                                 },
-                                isOwner: Provider.of<UserProvider>(context, listen: false)
+                                isOwner: Provider.of<UserProvider>(context,
+                                        listen: false)
                                     .isCurrentUser(widget.userId),
                               ),
                             ),
@@ -524,7 +525,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                         null; // Correctly clears endDate
                                   });
                                 },
-                                isOwner: Provider.of<UserProvider>(context, listen: false)
+                                isOwner: Provider.of<UserProvider>(context,
+                                        listen: false)
                                     .isCurrentUser(widget.userId),
                               ),
                             ),
@@ -536,7 +538,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                             if (isOwner)
                               IconButton(
                                 icon: Icon(
-                                  scheduleVisibility[schedule.id] ?? schedule.isPublic
+                                  scheduleVisibility[schedule.id] ??
+                                          schedule.isPublic
                                       ? Icons.visibility
                                       : Icons.visibility_off,
                                   color: Colors.white,
@@ -545,7 +548,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                     ? () => _toggleVisibility(schedule.id)
                                     : null, // Ensure only the owner can toggle visibility
                               ),
-
                             Consumer<ScheduleProvider>(
                               builder: (context, scheduleProvider, child) {
                                 bool isFavorited =
@@ -581,18 +583,18 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                 );
                               },
                             ),
-                              Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.delete,
-                                        color: Color(0xFF4F4F4F)),
-                                    onPressed: () {
-                                      _showDeleteConfirmationDialog(
-                                          schedule.id, schedule.scheduleName);
-                                    },
-                                  ),
-                                ],
-                              ),
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: Color(0xFF4F4F4F)),
+                                  onPressed: () {
+                                    _showDeleteConfirmationDialog(
+                                        schedule.id, schedule.scheduleName);
+                                  },
+                                ),
+                              ],
+                            ),
                           ],
                         )
                       ],
@@ -658,12 +660,10 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     });
   }
 
-
-
   Widget _buildDestinationList(
       List<Destination> scheduleDestinations, Schedule schedule) {
-    final bool isCurrentUser =
-    Provider.of<UserProvider>(context, listen: false).isCurrentUser(schedule.userId);
+    final bool isCurrentUser = Provider.of<UserProvider>(context, listen: false)
+        .isCurrentUser(schedule.userId);
 
     void updateStartDate(Destination destination, DateTime? newDate) {
       setState(() {
@@ -732,7 +732,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   "Start Date",
                   true,
                   destination.startDate,
-                      (newDate) => updateStartDate(destination, newDate),
+                  (newDate) => updateStartDate(destination, newDate),
                   clearable: isCurrentUser,
                   onClear: () {
                     setState(() {
@@ -746,7 +746,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   "End Date",
                   false,
                   destination.endDate,
-                      (newDate) => updateEndDate(destination, newDate),
+                  (newDate) => updateEndDate(destination, newDate),
                   clearable: isCurrentUser,
                   onClear: () {
                     setState(() {
@@ -760,7 +760,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             const SizedBox(height: 4),
             _buildDetailSection(
               destination.detail ?? "No details available",
-                  (newDetail) {
+              (newDetail) {
                 if (isCurrentUser) {
                   setState(() {
                     destination.detail = newDetail;
@@ -786,8 +786,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () {
-                      _showDeleteDestinationConfirmationDialog(
-                          destination, placeTranslation!.placeName, destination.id);
+                      _showDeleteDestinationConfirmationDialog(destination,
+                          placeTranslation!.placeName, destination.id);
                     },
                   ),
                 ],
@@ -824,7 +824,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     ]);
   }
 
-  Widget _buildDetailSection(String detailText, Function(String) onSave, bool isCurrentUser) {
+  Widget _buildDetailSection(
+      String detailText, Function(String) onSave, bool isCurrentUser) {
     return GestureDetector(
       onTap: () {
         _showDetailDialog(detailText, onSave, isCurrentUser);
@@ -867,7 +868,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   const TextSpan(
                     text: " ...",
                     style: TextStyle(
-                        color: Colors.blue, decoration: TextDecoration.underline),
+                        color: Colors.blue,
+                        decoration: TextDecoration.underline),
                   ),
               ],
             ),
@@ -911,8 +913,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     final manager = Provider.of<ScheduleProvider>(context, listen: false);
     manager.removeDestination(destinationId);
     setState(() {
-      widget.destinations
-          .removeWhere((destination) => destination.scheduleId == destinationId);
+      widget.destinations.removeWhere(
+          (destination) => destination.scheduleId == destinationId);
       widget.schedules.removeWhere((schedule) => schedule.id == destinationId);
       Provider.of<CountProvider>(context, listen: false)
           .decrementScheduleCount();
@@ -945,14 +947,14 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     );
   }
 
-  Widget  _buildDateField(
-      String labelText,
-      bool isStartDate,
-      DateTime? initialDate,
-      Function(DateTime?) onDateChanged, {
-        bool clearable = false,
-        VoidCallback? onClear,
-        bool isOwner = true,
+  Widget _buildDateField(
+    String labelText,
+    bool isStartDate,
+    DateTime? initialDate,
+    Function(DateTime?) onDateChanged, {
+    bool clearable = false,
+    VoidCallback? onClear,
+    bool isOwner = true,
   }) {
     return GestureDetector(
       onTap: () async {
@@ -969,7 +971,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
 
           // If date is selected, proceed to time selection
           if (date != null) {
-            selectedDate = DateTime(date.year, date.month, date.day, selectedDate?.hour ?? 0, selectedDate?.minute ?? 0);
+            selectedDate = DateTime(date.year, date.month, date.day,
+                selectedDate?.hour ?? 0, selectedDate?.minute ?? 0);
 
             final TimeOfDay? time = await showTimePicker(
               context: context,
@@ -977,15 +980,17 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             );
 
             if (time != null) {
-              selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+              selectedDate = DateTime(
+                  date.year, date.month, date.day, time.hour, time.minute);
             } else {
-              selectedDate = DateTime(date.year, date.month, date.day, 0, 0); // Default time
+              selectedDate = DateTime(
+                  date.year, date.month, date.day, 0, 0); // Default time
             }
 
             onDateChanged(selectedDate);
           }
         }
-      } : null,
+      },
       child: Stack(
         children: [
           AbsorbPointer(
@@ -1006,7 +1011,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           ),
           if (clearable && initialDate != null)
             Positioned(
-              right:0,
+              right: 0,
               top: 5,
               child: GestureDetector(
                 onTap: onClear,
@@ -1045,7 +1050,10 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             });
           },
           icon: const Icon(Icons.add, color: Colors.white),
-          label: const Text("Add Schedule", style: TextStyle(fontSize: 13.6),),
+          label: const Text(
+            "Add Schedule",
+            style: TextStyle(fontSize: 13.6),
+          ),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.grey,
             shape: RoundedRectangleBorder(
@@ -1056,7 +1064,10 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
         ElevatedButton.icon(
           onPressed: _showSuggestScheduleBottomSheet,
           icon: const Icon(Icons.add, color: Colors.white),
-          label: const Text("Suggest Schedule", style: TextStyle(fontSize: 14),),
+          label: const Text(
+            "Suggest Schedule",
+            style: TextStyle(fontSize: 14),
+          ),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
             shape: RoundedRectangleBorder(

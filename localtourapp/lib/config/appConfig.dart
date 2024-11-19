@@ -19,4 +19,6 @@ class AppConfig {
   static const String appVersion = '1.0.0';
   static const String language = 'languageCode';
   static const String userId = 'userid';
+  static const String isLogin = 'isLogin';
+  static const String deviceId = 'deviceId';
 }

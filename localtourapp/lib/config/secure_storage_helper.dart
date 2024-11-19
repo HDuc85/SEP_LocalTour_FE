@@ -5,14 +5,43 @@ class SecureStorageHelper {
   factory SecureStorageHelper() => _instance;
   SecureStorageHelper._internal();
 
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage(
+      aOptions: AndroidOptions(
+    encryptedSharedPreferences: true,
+  ));
+  AndroidOptions _getAndroidOptions() => const AndroidOptions(
+        encryptedSharedPreferences: true,
+      );
+
+  Future<void> saveBoolValue(String key, bool value) async {
+    await _storage.write(key: key, value: value.toString());
+  }
+
+  Future<bool> readBoolValue(String key) async {
+    String? value = await _storage.read(key: key);
+    if (value == null) return false;
+    return value.toLowerCase() == 'true';
+  }
 
   Future<void> saveValue(String key, String value) async {
-    await _storage.write(key: key, value: value);
+    try {
+      await _storage.write(
+        key: key,
+        value: value,
+        aOptions: _getAndroidOptions(),
+      );
+    } catch (e) {
+      print(e);
+    }
   }
 
   Future<String?> readValue(String key) async {
-    return await _storage.read(key: key);
+    try {
+      return await _storage.read(key: key);
+    } catch (e) {
+      print("Error reading value for $key: $e");
+      return null;
+    }
   }
 
   Future<void> deleteValue(String key) async {

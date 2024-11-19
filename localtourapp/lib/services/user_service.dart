@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:localtourapp/config/secure_storage_helper.dart';
+import 'package:localtourapp/models/users/password_change_request.dart';
+import 'package:localtourapp/models/users/password_change_response.dart';
 import 'package:localtourapp/models/users/userProfile.dart';
 import 'package:localtourapp/services/api_service.dart';
 
@@ -16,6 +18,22 @@ class UserService {
       return Userprofile.fromJson(data);
     } else {
       throw Exception("Không thể tải dữ liệu. Mã lỗi: ${response.statusCode}");
+    }
+  }
+
+  Future<PasswordChangeResponse> changePassword(
+      PasswordChangeRequest request) async {
+    final response = await apiService.makeRequest(
+        'User/changePassword', 'POST', request.toJson());
+
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      final result = PasswordChangeResponse.fromJson(jsonResponse);
+
+      return result;
+    } else {
+      throw Exception(
+          "Không thể tải dữ liệu. Mã lỗi: ${response.statusCode} Message: ${response.body}");
     }
   }
 }
