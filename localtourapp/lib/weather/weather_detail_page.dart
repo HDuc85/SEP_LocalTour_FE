@@ -70,19 +70,27 @@ class WeatherDetailPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Hourly Forecast'),
       ),
-      body: ListView.builder(
-        itemCount: hourlyWeather.time.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            leading: Text(
-              getWeatherIcon(hourlyWeather.weathercode[index]),
-              style: TextStyle(fontSize: 24),
-            ),
-            title: Text('${hourlyWeather.time[index]}'),
-            subtitle: Text(
-                'Temp: ${hourlyWeather.temperature2m[index].toStringAsFixed(1)}°C, Rain: ${hourlyWeather.rain[index].toStringAsFixed(1)} mm'),
-          );
-        },
+      body: Container(
+        color: Colors.white, // Set the background color to white
+        child: ListView.separated(
+          itemCount: hourlyWeather.time.length,
+          itemBuilder: (context, index) {
+            return ListTile(
+              leading: Text(
+                getWeatherIcon(hourlyWeather.weathercode[index]),
+                style: const TextStyle(fontSize: 24),
+              ),
+              title: Text('${hourlyWeather.time[index]}'),
+              subtitle: Text(
+                  'Temp: ${hourlyWeather.temperature2m[index].toStringAsFixed(1)}°C, Rain: ${hourlyWeather.rain[index].toStringAsFixed(1)} mm'),
+            );
+          },
+          separatorBuilder: (context, index) => const Divider(
+            thickness: 1, // Thickness of the divider line
+            color: Colors.grey, // Color of the divider line
+            height: 1, // Space around the divider line
+          ),
+        ),
       ),
     );
   }

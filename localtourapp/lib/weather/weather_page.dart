@@ -123,7 +123,7 @@ class _WeatherContentState extends State<WeatherContent> {
                     ),
                   );
                 },
-                child: Text('View Hourly Forecast'),
+                child: Text('View Hourly Forecast', style: TextStyle(color: Colors.black),),
               ),
             ],
           ),

@@ -195,7 +195,7 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                       ),
                     );
                   },
-                  child: Text('View Hourly Forecast'),
+                  child: Text('View Hourly Forecast', style: TextStyle(color: Colors.black),),
                 ),
               ],
             ),
