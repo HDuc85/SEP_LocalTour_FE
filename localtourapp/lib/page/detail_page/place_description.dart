@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../../models/places/placetranslation.dart';
 
 class PlaceDescription extends StatefulWidget {
-  final int placeId;
+  final String placeDescription;
 
-  const PlaceDescription({Key? key, required this.placeId}) : super(key: key);
+  const PlaceDescription({Key? key, required this.placeDescription}) : super(key: key);
 
   @override
   State<PlaceDescription> createState() => _PlaceDescriptionState();
@@ -19,19 +19,15 @@ class _PlaceDescriptionState extends State<PlaceDescription> {
   @override
   void initState() {
     super.initState();
-    _fetchDescription(); // Fetch the description when the widget is built
+    descriptionText = widget.placeDescription;
+    //_fetchDescription(); // Fetch the description when the widget is built
   }
 
   void _fetchDescription() {
     // Find the place translation using placeId
-    final placeTranslation = dummyTranslations.firstWhere(
-          (t) => t.placeId == widget.placeId,
-      orElse: () => dummyTranslations.first, // Return a default PlaceTranslation if not found
-    );
 
-    setState(() {
-      descriptionText = placeTranslation.description ?? "No description available.";
-    });
+
+
   }
 
   @override
@@ -45,6 +41,8 @@ class _PlaceDescriptionState extends State<PlaceDescription> {
 
     return Container(
       padding: const EdgeInsets.all(16.0),
+      width: 400,
+      height: 200,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),

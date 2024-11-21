@@ -1,24 +1,24 @@
 // lib/page/detail_page/detail_page_tab_bars/detail_tabbar.dart
 
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/constants/getListApi.dart';
+import 'package:localtourapp/models/Tag/tag_model.dart';
+import 'package:localtourapp/models/event/event_model.dart';
+import 'package:localtourapp/models/places/place_detail_model.dart';
+import 'package:localtourapp/services/event_service.dart';
 import 'package:provider/provider.dart';
 import '../../../base/custom_button.dart';
-import '../../../base/filter_option.dart';
 import '../../../base/weather_icon_button.dart';
 import '../../../models/places/event.dart';
 import '../../../models/places/placereport.dart';
-import '../../../models/places/tag.dart';
 import '../../../provider/place_provider.dart';
 import '../../search_page/search_page.dart';
 import '../detail_card/activity_card.dart';
 import '../detail_card/activity_card_info.dart';
 import '../detail_card/event_card.dart';
 import '../../../models/places/place.dart';
-import '../../../models/places/placeactivity.dart';
-import '../../../models/places/placeactivitymedia.dart';
-import '../../../models/places/placeactivitytranslation.dart';
 import '../../../models/places/placetranslation.dart';
 import '../../../weather/widgets/weather_widget.dart';
 import '../all_product.dart';
@@ -29,21 +29,22 @@ import 'form/schedule_form.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DetailTabbar extends StatefulWidget {
-  final languageCode;
   final String userId;
-  final int placeId;
-  final List<Tag> tags;
+  final PlaceDetailModel placeDetail;
+  final List<TagModel> tags;
+  final String languageCode;
   final VoidCallback onAddPressed;
   final VoidCallback onReportPressed;
-
+  final List<EventModel> listEvents;
   const DetailTabbar({
     Key? key,
-    required this.languageCode,
     required this.userId,
-    required this.placeId,
+    required this.placeDetail,
     required this.tags,
     required this.onAddPressed,
     required this.onReportPressed,
+    required this.languageCode,
+    required this.listEvents
   }) : super(key: key);
 
   @override
@@ -51,18 +52,17 @@ class DetailTabbar extends StatefulWidget {
 }
 
 class _DetailTabbarState extends State<DetailTabbar> {
+
   Place? place;
   PlaceTranslation? placeTranslation;
   bool isLoading = true;
 
   List<ActivityCardInfo> activityCards = [];
-  List<Event> placeEvents = [];
+
 
   @override
   void initState() {
     super.initState();
-    _fetchPlaceDetails();
-    _filterEvents();
   }
 
   @override
@@ -74,30 +74,8 @@ class _DetailTabbarState extends State<DetailTabbar> {
     Navigator.pushNamed(context, '/weather');
   }
 
-  void _fetchPlaceDetails() {
-    place = dummyPlaces.firstWhere(
-          (p) => p.placeId == widget.placeId,
-      orElse: () => dummyPlaces.first,
-    );
+  
 
-    placeTranslation = dummyTranslations.firstWhere(
-          (t) => t.placeId == widget.placeId,
-      orElse: () => dummyTranslations.first,
-    );
-
-    _fetchActivities();
-
-    setState(() {
-      isLoading = false;
-    });
-  }
-
-  void _fetchActivities() {
-    activityCards = getActivityCards(
-        widget.placeId, randomActivities, placeActivityTranslations, mediaActivityList);
-
-    setState(() {});
-  }
 
   Future<void> _launchURL(String? url) async {
     if (url != null && url.isNotEmpty) {
@@ -110,20 +88,10 @@ class _DetailTabbarState extends State<DetailTabbar> {
     }
   }
 
-  void _filterEvents() {
-    setState(() {
-      placeEvents = dummyEvents
-          .where((event) => event.placeId == widget.placeId)
-          .toList();
-    });
-  }
+
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      // Optionally, show a loading indicator while fetching data
-      return const Center(child: CircularProgressIndicator());
-    }
 
     return Stack(
       children: [
@@ -162,7 +130,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
                             return Dialog(
                               child: ScheduleForm(
                                 userId: widget.userId, // Pass the required userId
-                                placeId: widget.placeId, // Pass the required placeId
+                                placeId: widget.placeDetail.id, // Pass the required placeId
                               ),
                             );
                           },
@@ -191,7 +159,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
                             onSubmit: (reportMessage) {
                               final placeReport = PlaceReport(
                                 id: placeProvider.placeReports.length + 1, // Assuming sequential IDs
-                                placeId: widget.placeId, // Use the relevant placeId here
+                                placeId: widget.placeDetail.id, // Use the relevant placeId here
                                 reportDate: DateTime.now(),
                                 status: 'unprocessed',
                               );
@@ -223,12 +191,12 @@ class _DetailTabbarState extends State<DetailTabbar> {
                   _buildPlaceUrl(),
                   const SizedBox(height: 10),
                   WeatherWidget(
-                    latitude: place!.latitude,
-                    longitude: place!.longitude,
+                    latitude: widget.placeDetail.latitude,
+                    longitude: widget.placeDetail.longitude,
                   ),
                   const SizedBox(height: 10),
                   PlaceDescription(
-                    placeId: place!.placeId,
+                    placeDescription: widget.placeDetail.description,
                   ),
                 ],
               ),
@@ -261,13 +229,13 @@ class _DetailTabbarState extends State<DetailTabbar> {
     String statusText;
     Color iconColor = Colors.grey;
 
-    if (place?.timeOpen != null && place?.timeClose != null) {
-      final openTime = place!.timeOpen!;
-      final closeTime = place!.timeClose!;
+    if (widget.placeDetail.timeOpen != null && widget.placeDetail.timeClose != null) {
+      final openTime = widget.placeDetail.timeOpen;
+      final closeTime = widget.placeDetail.timeClose;
 
       final nowInMinutes = timeNow.hour * 60 + timeNow.minute;
-      final openInMinutes = openTime.hour * 60 + openTime.minute;
-      final closeInMinutes = closeTime.hour * 60 + closeTime.minute;
+      final openInMinutes = openTime!.hour * 60 + openTime.minute;
+      final closeInMinutes = closeTime!.hour * 60 + closeTime.minute;
 
       final oneHourBeforeOpen = openInMinutes - 60;
       final oneHourBeforeClose = closeInMinutes - 60;
@@ -313,16 +281,16 @@ class _DetailTabbarState extends State<DetailTabbar> {
       children: [
         const Icon(Icons.location_on, color: Colors.black),
         const SizedBox(width: 8),
-        Expanded(child: Text(placeTranslation!.address)),
+        Expanded(child: Text(widget.placeDetail.address)),
       ],
     );
   }
 
   Widget _buildMapImage() {
-    final double latitude = place!.latitude;
-    final double longitude = place!.longitude;
-    final String apiKey = dotenv.get('VIETMAP_API_KEY');
-    final String mapStyleUrl = dotenv.get('VIETMAP_MAP_STYLE_URL');
+    final double latitude = widget.placeDetail.latitude;
+    final double longitude = widget.placeDetail.longitude;
+    final String apiKey =  AppConfig.vietMapApiKey;
+    final String mapStyleUrl = AppConfig.vietMapStyleUrl;
 
     return SizedBox(
       width: double.infinity,
@@ -342,7 +310,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
       children: [
         const Icon(Icons.phone, color: Colors.black54),
         const SizedBox(width: 8),
-        Text(placeTranslation!.contact ?? 'Contact not available'),
+        Text(widget.placeDetail.contact ?? 'Contact not available'),
       ],
     );
   }
@@ -354,10 +322,10 @@ class _DetailTabbarState extends State<DetailTabbar> {
         const SizedBox(width: 8),
         GestureDetector(
           onTap: () {
-            _launchURL(place!.placeUrl);
+            _launchURL(widget.placeDetail.contactLink);
           },
           child: Text(
-            place!.placeUrl ?? 'Website not available',
+            widget.placeDetail.contactLink ?? 'Website not available',
             style: const TextStyle(
               color: Colors.blue,
               decoration: TextDecoration.underline,
@@ -368,7 +336,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
     );
   }
 
-  List<Widget> _buildTagChips(List<Tag> tags) {
+  List<Widget> _buildTagChips(List<TagModel> tags) {
     List<Widget> tagChips = [];
 
     for (int i = 0; i < tags.length && i < 5; i++) {
@@ -380,7 +348,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
               MaterialPageRoute(
                 builder: (context) => SearchPage(
                   sortBy: SortBy.distance,
-                  initialTags: [tags[i].tagId], // Pass the selected tag ID
+                  initialTags: [tags[i].id], // Pass the selected tag ID
                 ),
               ),
             );
@@ -442,7 +410,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  placeTranslation?.placeName ?? "All Tags",
+                  widget.placeDetail.name?? "All Tags",
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -492,9 +460,9 @@ class _DetailTabbarState extends State<DetailTabbar> {
             scrollDirection: Axis.horizontal,
             clipBehavior: Clip.none,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: activityCards.length,
+            itemCount: widget.placeDetail.placeActivities.length,
             itemBuilder: (context, index) {
-              final activityCardInfo = activityCards[index];
+              final activityCardInfo = widget.placeDetail.placeActivities[index];
               return ActivityCard(
                 activityName: activityCardInfo.activityName,
                 photoDisplay: activityCardInfo.photoDisplay ??
@@ -512,14 +480,14 @@ class _DetailTabbarState extends State<DetailTabbar> {
                         priceType: activityCardInfo.priceType,
                         discount: activityCardInfo.discount,
                         description: activityCardInfo.description,
-                        mediaActivityList: mediaActivityList,
-                        placeActivityId: activityCardInfo.placeActivityId,
+                        mediaActivityList: activityCardInfo.placeActivityMedia,
+                        placeActivityId: activityCardInfo.id,
                       );
                     },
                   );
                 },
-                placeActivityId: activityCardInfo.placeActivityId,
-                mediaActivityList: mediaActivityList,
+                placeActivityId: activityCardInfo.id,
+                mediaActivityList: activityCardInfo.placeActivityMedia,
               );
             },
           ),
@@ -532,9 +500,8 @@ class _DetailTabbarState extends State<DetailTabbar> {
               context,
               MaterialPageRoute(
                 builder: (context) => AllProductPage(
-                  placeId: widget.placeId,
-                  activityCards: activityCards,
-                  mediaActivityList: mediaActivityList,
+                  placeId: widget.placeDetail.id,
+                  activityCards: widget.placeDetail.placeActivities,
                 ),
               ),
             );
@@ -552,7 +519,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
   }
 
   Widget _buildEventSection() {
-    if (placeEvents.isEmpty) {
+    if (widget.listEvents.isEmpty) {
       return const Center(child: Text('No events available for this place.'));
     }
     return Column(
@@ -568,10 +535,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
         ),
         const SizedBox(height: 10),
         Column(
-          children: placeEvents
-              .where((event) => event.eventStatus.toLowerCase() != 'unapproved')
-              .map((event) => EventCardWidget(event: event))
-              .toList(),
+          children: widget.listEvents.map((event) => EventCardWidget(event: event, languageCode: widget.languageCode,)).toList(),
         ),
       ],
     );

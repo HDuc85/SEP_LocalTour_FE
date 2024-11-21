@@ -37,6 +37,18 @@ class TagService {
     return result;
   }
 
+  Future<List<TagModel>> getTagInPlace(int placeId) async {
+    final response = await apiService.makeRequest('Place/getTagsInPlace?placeId=$placeId', 'GET');
+
+    List<TagModel> result = [];
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      return mapJsonToTags(jsonResponse);
+    }
+
+    return result;
+  }
+
   Future<List<TagModel>> getUserTag() async{
     final response = await apiService.makeRequest('UserPreferenceTags', 'GET');
     List<TagModel> result = [];
@@ -48,6 +60,8 @@ class TagService {
     return result;
 
   }
+
+
 
   Future<bool> addTagsPreferencs(List<int> tagIds) async{
 

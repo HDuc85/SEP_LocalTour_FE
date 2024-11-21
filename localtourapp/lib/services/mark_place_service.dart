@@ -18,7 +18,7 @@ class MarkplaceService {
       final List<dynamic> responseData = json.decode(response.body);
       return responseData.map((data) => markPlaceModel.fromJson(data)).toList();
     } else {
-      throw Exception("Không thể tải dữ liệu. Mã lỗi: ${response.statusCode}");
+      throw Exception("Không thể tải dữ liệu. Mã lỗi: ${response.body}");
     }
   }
 }

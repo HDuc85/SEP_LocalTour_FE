@@ -262,11 +262,7 @@ class _MyAppState extends State<MyApp> {
               return MaterialPageRoute(
                 builder: (context) {
                   return DetailPage(
-                    languageCode: args['languageCode'],
-                    placeName: args['placeName'] ?? 'Unknown Place',
                     placeId: args['placeId'] ?? -1,
-                    mediaList: args['mediaList'] ?? [],
-                    userId: args['userId'] ?? 'unknown-user',
                   );
                 },
               );

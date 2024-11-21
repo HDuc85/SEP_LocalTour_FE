@@ -12,6 +12,8 @@ class AppConfig {
   static final String fireBaseProjectNumber =
       dotenv.env['FIREBASE_PROJECT_NUMBER'] ?? '';
   static final String fireBaseApiKey = dotenv.env['FIREBASE_API_KEY'] ?? '';
+  static final String vietMapApiKey = dotenv.env['VIETMAP_API_KEY'] ?? '';
+  static final String vietMapStyleUrl = dotenv.env['VIETMAP_MAP_STYLE_URL'] ?? '';
 
   static const int requestTimeout = 30; // Request timeout in seconds
 

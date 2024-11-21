@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../models/places/placemedia.dart';
+import '../models/media_model.dart';
 
 class FullScreenPlaceMediaViewer extends StatelessWidget {
-  final List<PlaceMedia> mediaList;
+  final List<MediaModel> mediaList;
   final int initialIndex;
 
   const FullScreenPlaceMediaViewer({Key? key, required this.mediaList, required this.initialIndex})
@@ -21,7 +22,7 @@ class FullScreenPlaceMediaViewer extends StatelessWidget {
             itemBuilder: (context, index) {
               return Center(
                 child: Image.network(
-                  mediaList[index].placeMediaUrl,
+                  mediaList[index].url,
                   fit: BoxFit.contain, // Preserve the aspect ratio of the image
                   width: double.infinity, // Set width to maximum available
                   height: double.infinity, // Set height to maximum available

@@ -83,6 +83,7 @@ class AuthService {
         storage.saveBoolValue(AppConfig.isLogin, true);
         storage.saveBoolValue(AppConfig.isFirstLogin, result.firstTime);
         storage.saveValue(AppConfig.userId, result.userId);
+        storage.saveValue(AppConfig.refreshToken, result.refreshToken);
         return result;
 
 

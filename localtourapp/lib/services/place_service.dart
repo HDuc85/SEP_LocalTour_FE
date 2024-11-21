@@ -1,17 +1,15 @@
 import 'dart:convert';
-import 'dart:ffi';
 
-import 'package:localtourapp/config/appConfig.dart';
-import 'package:localtourapp/config/secure_storage_helper.dart';
-import 'package:localtourapp/constants/getListApi.dart';
-import 'package:localtourapp/generated/intl/messages_en.dart';
-import 'package:localtourapp/models/HomePage/placeCard.dart';
-import 'package:localtourapp/services/api_service.dart';
+import 'package:localtourapp/models/places/place_detail_model.dart';
+
+import '../config/secure_storage_helper.dart';
+import '../constants/getListApi.dart';
+import '../models/HomePage/placeCard.dart';
+import '../services/api_service.dart';
+import '../config/appConfig.dart';
 
 class PlaceService {
   final apiService = ApiService();
-
-
 
   Future<List<PlaceCardModel>> getListPlace(
       double CurrentLatitude, double CurrentLongitude,
@@ -22,9 +20,7 @@ class PlaceService {
       String? SearchTerm = '',
       int? Page = 1,
       int? Size = 10,]) async {
-    if (CurrentLatitude == null || CurrentLongitude == null) {
-      return new List.empty();
-    }
+
     String sortByStr = SortBy != null ? sortByToString(SortBy) : '';
     String sortOrderStr = SortOrder != null ? sortOrderToString(SortOrder) : '';
     String? languageCode =
@@ -46,6 +42,20 @@ class PlaceService {
       return mapJsonToPlaceCardModels(jsonResponse['items']);
     } else {
       throw Exception("Lỗi khi lấy dữ liệu. Mã lỗi: ${response.statusCode}");
+    }
+  }
+  
+  Future<PlaceDetailModel> GetPlaceDetail(int placeId) async{
+    String? languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+    final response = await apiService.makeRequest("Place/getPlaceById?languageCode=$languageCode&placeid=$placeId", "GET");
+
+    if(response.statusCode == 200){
+      final jsonResponse = json.decode(response.body);
+      return PlaceDetailModel.fromJson(jsonResponse);
+    }
+    else{
+      throw Exception("Lỗi khi lấy dữ liệu. Mã lỗi: ${response.statusCode}");
+
     }
   }
 }

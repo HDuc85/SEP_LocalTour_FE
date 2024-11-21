@@ -937,11 +937,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       context,
       MaterialPageRoute(
         builder: (_) => DetailPage(
-          userId: userId, // Replace with actual userId
-          placeName: selectedTranslation?.placeName ?? 'Unknown Place',
           placeId: selectedPlace!.placeId,
-          mediaList: filteredMediaList,
-          languageCode: 'en',
         ),
       ),
     );

@@ -1,6 +1,7 @@
 // lib/card/activity_card.dart
 
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/media_model.dart';
 import '../../../full_media/full_activity_media_viewer.dart';
 import '../../../models/places/placeactivitymedia.dart';
 
@@ -12,7 +13,7 @@ class ActivityCard extends StatelessWidget {
   final String priceType;
   final double? discount;
   final VoidCallback onTap;
-  final List<PlaceActivityMedia> mediaActivityList;
+  final List<MediaModel> mediaActivityList;
 
   const ActivityCard({
     Key? key,
@@ -28,9 +29,7 @@ class ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<PlaceActivityMedia> filteredMedia = mediaActivityList
-        .where((media) => media.placeActivityId == placeActivityId)
-        .toList();
+    List<MediaModel> filteredMedia = mediaActivityList;
 
     return GestureDetector(
       onTap: onTap, // Use the passed onTap callback
@@ -128,7 +127,8 @@ class ActivityCard extends StatelessWidget {
                           Expanded(
                             flex: 4,
                             child: Text(
-                              '${price.toStringAsFixed(0)} $priceType',
+                              discount! !=0?
+                              '${price.toStringAsFixed(0)} $priceType':'',
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
@@ -137,11 +137,12 @@ class ActivityCard extends StatelessWidget {
                             ),
                           ),
                           Expanded(
-                            flex: 1,
+                            flex: 2,
                             child: Text(
-                              '-${discount!.toStringAsFixed(0)}%',
+                              discount! != 0?
+                              '-${(discount!*100).toStringAsFixed(0)}%':'',
                               style: const TextStyle(
-                                fontSize: 12,
+                                fontSize: 14,
                                 color: Colors.red,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -149,11 +150,12 @@ class ActivityCard extends StatelessWidget {
                           ),
                         ],
                       ),
+                      SizedBox(height: 10,),
                       Center(
                         child: Text(
-                          '${(price * (1 - discount! / 100)).toStringAsFixed(0)} $priceType',
+                          '${(price * (1 - discount!)).toStringAsFixed(0)} $priceType',
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 17,
                             fontWeight: FontWeight.bold,
                             color: Colors.orange,
                           ),

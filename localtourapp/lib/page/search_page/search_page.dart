@@ -27,13 +27,15 @@ import 'tags_modal.dart'; // Ensure correct path
 class SearchPage extends StatefulWidget {
   final SortBy sortBy;
   final List<int> initialTags;
-  final Function(Place)? onPlaceSelected;
+  final String? textSearch;
 
+  final Function(Place)? onPlaceSelected;
   const SearchPage({
     Key? key,
     this.sortBy = SortBy.distance,
     this.initialTags = const [],
     this.onPlaceSelected,
+    this.textSearch
   }) : super(key: key);
 
   @override
@@ -68,6 +70,7 @@ class _SearchPageState extends State<SearchPage> {
     _selectedFilter = widget.sortBy;
     selectedTags = List.from(widget.initialTags);
     _fetchCurrentLocation();
+
     _listPlaceScrollController.addListener(_onScroll);
   }
 
@@ -104,13 +107,22 @@ class _SearchPageState extends State<SearchPage> {
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
     size >10 == 10;
-    final fetchedListPlaces = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.distance,SortOrder.asc,selectedTags);
+
+    List<PlaceCardModel> fetchedListPlaces =[];
     final fetchedTags = await _tagService.getTopTagPlace();
 
+    if(widget.textSearch != "" && widget.textSearch != null ){
+      searchText = widget.textSearch!;
+      fetchedListPlaces = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.distance,SortOrder.asc,selectedTags,searchText);
+    }
+    else{
+       fetchedListPlaces = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.distance,SortOrder.asc,selectedTags);
+    }
     setState(() {
       _currentPosition = position;
-      listPlaces = fetchedListPlaces;
       listTagPlaces = fetchedTags;
+      listPlaces = fetchedListPlaces;
+      _controllerSearchInput.text = searchText;
     });
 
   }
@@ -508,11 +520,7 @@ class _SearchPageState extends State<SearchPage> {
           context,
           MaterialPageRoute(
             builder: (_) => DetailPage(
-              userId: userId,
-              placeName: selectedTranslation?.placeName ?? 'Unknown Place',
               placeId: selectedPlace.placeId,
-              mediaList: filteredMediaList,
-              languageCode: 'en',
             ),
           ),
         );

@@ -1,6 +1,7 @@
 // lib/page/detailpagetabbars/form/activityformdialog.dart
 
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/media_model.dart';
 import '../../../../base/scrollable_text_container.dart';
 import '../../../../full_media/full_activity_media_viewer.dart';
 import '../../../../models/places/placeactivitymedia.dart';
@@ -12,7 +13,7 @@ class ActivityFormDialog extends StatelessWidget {
   final String priceType;
   final double? discount;
   final String? description;
-  final List<PlaceActivityMedia> mediaActivityList;
+  final List<MediaModel> mediaActivityList;
 
   const ActivityFormDialog({
     required this.placeActivityId,
@@ -28,9 +29,8 @@ class ActivityFormDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Filter mediaActivityList for the specific placeActivityId
-    List<PlaceActivityMedia> filteredMedia = mediaActivityList
-        .where((media) => media.placeActivityId == placeActivityId)
-        .toList();
+    List<MediaModel> filteredMedia = mediaActivityList;
+
 
     return Dialog(
       shape: RoundedRectangleBorder(
@@ -117,7 +117,7 @@ class ActivityFormDialog extends StatelessWidget {
             ),
             Center(
               child: Text(
-                '${(price * (1 - discount! / 100)).toStringAsFixed(0)} $priceType',
+                '${(price * (1 - discount!)).toStringAsFixed(0)} $priceType',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -136,7 +136,7 @@ class ActivityFormDialog extends StatelessWidget {
   }
 
   // Helper method to build the media grid layout
-  Widget _buildMediaGrid(BuildContext context, List<PlaceActivityMedia> mediaList) {
+  Widget _buildMediaGrid(BuildContext context, List<MediaModel> mediaList) {
     if (mediaList.isEmpty) {
       return Container(
         width: double.infinity,
@@ -147,7 +147,7 @@ class ActivityFormDialog extends StatelessWidget {
     }
 
     int displayCount = mediaList.length > 5 ? 5 : mediaList.length;
-    List<PlaceActivityMedia> displayMedia = mediaList.take(displayCount).toList();
+    List<MediaModel> displayMedia = mediaList.take(displayCount).toList();
 
     return Column(
       children: [

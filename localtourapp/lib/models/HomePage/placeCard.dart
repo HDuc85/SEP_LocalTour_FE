@@ -9,6 +9,7 @@ class PlaceCardModel {
   int countFeedback;
   double distance;
   TimeOfDay? timeClose;
+  String address;
 
   PlaceCardModel({
     required this.placeId,
@@ -18,6 +19,7 @@ class PlaceCardModel {
     required this.rateStar,
     required this.countFeedback,
     required this.distance,
+    required this.address,
     this.timeClose,
   });
 
@@ -27,6 +29,7 @@ class PlaceCardModel {
       wardName: json['wardName']?.toString() ?? 'Unknown Ward',
       photoDisplayUrl: json['photoDisplay'] ?? '',
       placeName: json['placeTranslation'][0]['name'] ?? 'Unknown Place',
+      address: json['placeTranslation'][0]['address'],
       rateStar: (json['rating'] ?? 0).toDouble(),
       countFeedback: json['totalPlaceFeedback'] ?? 0,
       distance: json['distance']?.toDouble() ?? 0.0,

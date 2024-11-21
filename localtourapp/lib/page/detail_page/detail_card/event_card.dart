@@ -1,37 +1,53 @@
 // event_card_widget.dart
 import 'package:flutter/material.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
+import 'package:localtourapp/models/event/event_model.dart';
 import '../../../base/scrollable_text_container.dart';
 import '../../../models/places/event.dart';
 
 class EventCardWidget extends StatelessWidget {
-  final Event event;
+  final EventModel event;
+  final String languageCode;
 
-  const EventCardWidget({Key? key, required this.event}) : super(key: key);
+  const EventCardWidget({Key? key, required this.event, required this.languageCode}) : super(key: key);
+
 
   String _formatDate(DateTime date) {
     return "${date.day}/${date.month}/${date.year}";
   }
 
-  Widget _buildEventStatus(String status) {
+
+  Widget _buildEventStatus() {
     Color statusColor;
     String statusText;
+    DateTime currentDate = DateTime.now();
+    int check = 0;
 
-    switch (status.toLowerCase()) {
-      case 'about to open':
+    if (currentDate.isBefore(event.startDate)) {
+      check = 1;
+    } else if (currentDate.isAfter(event.endDate)) {
+      check = 3;
+    } else {
+      check = 2;
+    }
+
+    switch (check) {
+      case 1:
         statusColor = const Color(0xFFFFDB58);
-        statusText = 'About to Open';
+        statusText = languageCode == 'vi'? 'Sắp diễn ra' : 'About to Open';
         break;
-      case 'is opening':
+      case 2:
         statusColor = Colors.green;
-        statusText = 'Is Opening';
+        statusText = languageCode == 'vi'?'Đang diễn ra':'Is Opening';
         break;
-      case 'has closed':
+      case 3:
         statusColor = Colors.red;
-        statusText = 'Has Closed';
+        statusText = languageCode == 'vi'?'Đã kết thúc':'Has Closed';
         break;
       default:
         statusColor = Colors.grey;
-        statusText = status;
+        statusText = languageCode == 'vi'?'Không rõ':'Unknown';
     }
 
     return Text(
@@ -69,7 +85,7 @@ class EventCardWidget extends StatelessWidget {
                         fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 4),
-                  _buildEventStatus(event.eventStatus),
+                  _buildEventStatus(),
                 ],
               ),
               const SizedBox(height: 10),

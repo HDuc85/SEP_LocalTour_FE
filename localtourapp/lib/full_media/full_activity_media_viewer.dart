@@ -1,13 +1,14 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/media_model.dart';
 import 'package:video_player/video_player.dart';
 import 'package:intl/intl.dart';
 
 import '../models/places/placeactivitymedia.dart'; // For formatting the date
 
 class FullActivityMediaViewer extends StatefulWidget {
-  final List<PlaceActivityMedia> mediaActivityList;
+  final List<MediaModel> mediaActivityList;
   final int initialIndex;
 
   const FullActivityMediaViewer({
@@ -185,25 +186,7 @@ class _FullActivityMediaViewerState extends State<FullActivityMediaViewer> {
               ),
             ),
           ),
-          // Display createDate at bottom-left corner
-          Positioned(
-            bottom: 40,
-            left: 20,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                _formatDate(widget.mediaActivityList[_currentIndex].createDate),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
+
         ],
       ),
     );

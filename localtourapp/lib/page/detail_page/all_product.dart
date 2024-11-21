@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/places/place_activity_model.dart';
 import 'detail_card/activity_card.dart';
 import 'detail_card/activity_card_info.dart';
 import 'detail_page_tab_bars/form/activityformdialog.dart';
@@ -7,14 +8,13 @@ import '../../models/places/placeactivitymedia.dart';
 
 class AllProductPage extends StatelessWidget {
   final int placeId; // Added placeId field
-  final List<ActivityCardInfo> activityCards; // The list of products related to the place
-  final List<PlaceActivityMedia> mediaActivityList; // Added mediaActivityList
+  final List<PlaceActivityModel> activityCards; // The list of products related to the place
+
 
   const AllProductPage({
     super.key,
     required this.activityCards,
     required this.placeId, // Initialize placeId
-    required this.mediaActivityList, // Initialize mediaActivityList
   });
 
   @override
@@ -39,19 +39,19 @@ class AllProductPage extends StatelessWidget {
                 context: context,
                 builder: (BuildContext context) {
                   return ActivityFormDialog(
-                    placeActivityId: product.placeActivityId,
+                    placeActivityId: product.id,
                     activityName: product.activityName,
                     price: product.price,
                     priceType: product.priceType,
                     discount: product.discount,
                     description: product.description,
-                    mediaActivityList: mediaActivityList, // Pass the full mediaActivityList
+                    mediaActivityList: product.placeActivityMedia, // Pass the full mediaActivityList
                   );
                 },
               );
             },
             child: ActivityCard(
-              placeActivityId: product.placeActivityId,
+              placeActivityId: product.id,
               activityName: product.activityName,
               photoDisplay: product.photoDisplay,
               price: product.price,
@@ -63,18 +63,18 @@ class AllProductPage extends StatelessWidget {
                   context: context,
                   builder: (BuildContext context) {
                     return ActivityFormDialog(
-                      placeActivityId: product.placeActivityId,
+                      placeActivityId: product.id,
                       activityName: product.activityName,
                       price: product.price,
                       priceType: product.priceType,
                       discount: product.discount,
                       description: product.description,
-                      mediaActivityList: mediaActivityList, // Pass the full mediaActivityList
+                      mediaActivityList: product.placeActivityMedia, // Pass the full mediaActivityList
                     );
                   },
                 );
               },
-              mediaActivityList: mediaActivityList, // Pass the full mediaActivityList
+              mediaActivityList: product.placeActivityMedia, // Pass the full mediaActivityList
             ),
           );
         },

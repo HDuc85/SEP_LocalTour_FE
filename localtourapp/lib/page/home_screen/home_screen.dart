@@ -20,6 +20,7 @@ import '../../base/const.dart';
 import '../../base/custom_button.dart';
 import '../../base/weather_icon_button.dart';
 import '../../models/places/tag.dart';
+import '../detail_page/detail_page.dart';
 import '../search_page/search_page.dart';
 import '../../base/place_card_info.dart';
 import '../../models/places/place.dart';
@@ -27,7 +28,6 @@ import '../../models/places/placemedia.dart';
 import '../../models/places/placetranslation.dart';
 import '../../base/now_location.dart';
 import '../../base/search_bar_icon.dart';
-import '../detail_page/detail_page.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -138,20 +138,6 @@ class _HomeScreenState extends State<HomeScreen> {
           desiredAccuracy: LocationAccuracy.high);
       setState(() {
         _currentPosition = position;
-
-        // Update nearestLocation and featuredPlaces
-        nearestLocation = getNearestPlaces(
-            dummyPlaces, position.latitude, position.longitude);
-        featuredPlaces = getFeaturedPlaces(
-            dummyPlaces, position.latitude, position.longitude);
-
-        // For each tag, calculate nearest and featured places
-        for (var tag in listTag) {
-          nearestPlacesByTag[tag.tagId] = getNearestPlacesForTag(
-              tag.tagId, dummyPlaces, position.latitude, position.longitude);
-          featuredPlacesByTag[tag.tagId] = getFeaturedPlacesForTag(
-              tag.tagId, dummyPlaces, position.latitude, position.longitude);
-        }
       });
       final fetchedListPlaceNearest = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.distance,SortOrder.asc);
       final fetchedListPlaceFeatured = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.rating, SortOrder.asc);
@@ -188,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const NowLocation(),
               const SizedBox(height: 10),
-              SearchBarIcon(placeTranslations: dummyTranslations),
+              SearchBarIcon(position: _currentPosition,),
               const SizedBox(height: 10),
               _buildTagGrid(listTagTop),
               const SizedBox(height: 40),
@@ -431,11 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => DetailPage(
-                            languageCode: 'en',
-                            userId: userId,
-                            placeName: selectedTranslation.placeName,
                             placeId: selectedPlace.placeId,
-                            mediaList: filteredMediaList,
                           ),
                         ),
                       );

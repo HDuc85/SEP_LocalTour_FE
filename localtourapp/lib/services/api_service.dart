@@ -16,6 +16,8 @@ class ApiService {
   Future<http.Response> makeRequest(String endpoint, String method,
       [Map<String, dynamic>? body]) async {
     String? accessToken = await storage.readValue(AppConfig.accessToken);
+    String? refreshToken = await storage.readValue(AppConfig.refreshToken);
+    
     final uri = Uri.parse('${AppConfig.apiUrl}$endpoint');
     Map<String, String>? headers = {};
 
