@@ -21,4 +21,5 @@ class AppConfig {
   static const String userId = 'userid';
   static const String isLogin = 'isLogin';
   static const String deviceId = 'deviceId';
+  static const String isFirstLogin = 'isFirstLogin';
 }

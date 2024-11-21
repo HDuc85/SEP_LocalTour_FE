@@ -1,0 +1,68 @@
+
+import 'dart:convert';
+
+import 'package:localtourapp/models/Tag/tag_model.dart';
+import 'package:localtourapp/services/api_service.dart';
+
+import '../config/appConfig.dart';
+import '../config/secure_storage_helper.dart';
+
+class TagService {
+  final apiService = ApiService();
+  static final _storage = SecureStorageHelper();
+
+  Future<List<TagModel>> getAllTag() async {
+    final response = await apiService.makeRequest('Tag/getAll', 'GET');
+
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      if (jsonResponse['items'] == null || jsonResponse['items'].isEmpty) {
+        throw Exception("Không có dữ liệu nào được tìm thấy.");
+      }
+      return mapJsonToTags(jsonResponse['items']);
+    } else {
+      throw Exception("Không thể tải dữ liệu. Mã lỗi: ${response.statusCode}");
+    }
+  }
+
+  Future<List<TagModel>> getTopTagPlace() async {
+    final response = await apiService.makeRequest('Tag/TagsTopPlace', 'GET');
+
+    List<TagModel> result = [];
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      return mapJsonToTags(jsonResponse);
+    }
+
+    return result;
+  }
+
+  Future<List<TagModel>> getUserTag() async{
+    final response = await apiService.makeRequest('UserPreferenceTags', 'GET');
+    List<TagModel> result = [];
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      return mapJsonToTags(jsonResponse);
+    }
+
+    return result;
+
+  }
+
+  Future<bool> addTagsPreferencs(List<int> tagIds) async{
+
+    final Map<String, dynamic> body = {
+      "tagIds": tagIds
+    };
+    final response = await apiService.makeRequest('UserPreferenceTags', 'POST',body);
+    if(response.statusCode == 201){
+        return true;
+    }
+    else{
+      return false;
+    }
+  }
+
+
+}
+

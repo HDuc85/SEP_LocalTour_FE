@@ -18,10 +18,8 @@ class ApiService {
     String? accessToken = await storage.readValue(AppConfig.accessToken);
     final uri = Uri.parse('${AppConfig.apiUrl}$endpoint');
     Map<String, String>? headers = {};
-    ;
-    //headers['Authorization'] = 'Bearer $accessToken';
-    headers['Authorization'] =
-        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmNmI2MzFiZi1jMzYwLTRjYzgtYmY5Zi02OGZkMjAzODkwOGMiLCJpc3MiOiJodHRwczovL2xvY2FsaG9zdDo3Mjc0IiwiaWF0IjoxNzMxOTEyNTI0LCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3Q6NzI3NCIsImh0dHBzOi8vbG9jYWxob3N0OjcyNzQiXSwiZXhwIjoxNzMxOTE0OTI0LCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL21vYmlsZXBob25lIjoiMDEyMzQ1Njc4OSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InVzZXJAZXhhbXBsZS5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJWaXNpdG9yIiwibmJmIjoxNzMxOTEyNTI0fQ.hl9GGJUBJlD18TzIQAJkwQfmeoPc6Ubur88--pd86tA';
+
+    headers['Authorization'] = 'Bearer $accessToken';
     headers['Content-Type'] = 'application/json';
 
     late http.Response response;
@@ -58,26 +56,31 @@ class ApiService {
   Future<bool> _refreshAccessToken(String? refreshToken) async {
     if (refreshToken == null) return false;
 
+    var body = {
+      "token" : refreshToken
+    };
+
     var response = await http.post(
-      Uri.parse('${AppConfig.apiUrl}/Authen/refreshToken'),
+      Uri.parse('${AppConfig.apiUrl}Authen/refreshToken'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({refreshToken}),
+      body: jsonEncode(body),
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      await _storeTokens(data);
+      await storeTokens(data);
       return true;
     }
     return false;
   }
 
-  Future<void> _storeTokens(Map<String, dynamic> tokens) async {
+  Future<void> storeTokens(Map<String, dynamic> tokens) async {
     await storage.deleteValue(AppConfig.accessToken);
     await storage.deleteValue(AppConfig.refreshToken);
 
     await storage.saveValue(AppConfig.accessToken, tokens['accessToken']);
     await storage.saveValue(AppConfig.refreshToken, tokens['refreshToken']);
+    await storage.saveValue(AppConfig.userId, tokens['userId']);
   }
 
   Future<(bool, bool)> sendFirebaseTokenToBackend(String idToken) async {

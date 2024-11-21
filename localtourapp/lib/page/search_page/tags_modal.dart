@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/Tag/tag_model.dart';
 
 import '../../models/places/tag.dart';
 
 void showTagsModal({
   required BuildContext context,
   required List<int> selectedTags,
+  required List<TagModel> listTags,
   required Function(List<int>) onSelectedTagsChanged,
 }) {
   showModalBottomSheet(
@@ -39,26 +41,26 @@ void showTagsModal({
                     Expanded(
                       child: ListView.builder(
                         controller: scrollController,
-                        itemCount: listTag.length,
+                        itemCount: listTags.length,
                         itemBuilder: (context, index) {
-                          final tag = listTag[index];
-                          final isSelected = currentSelectedTags.contains(tag.tagId);
+                          final tag = listTags[index];
+                          final isSelected = currentSelectedTags.contains(tag.id);
 
                           return CheckboxListTile(
                             value: isSelected,
                             onChanged: (bool? value) {
                               setState(() {
                                 if (value == true) {
-                                  currentSelectedTags.add(tag.tagId);
+                                  currentSelectedTags.add(tag.id);
                                 } else {
-                                  currentSelectedTags.remove(tag.tagId);
+                                  currentSelectedTags.remove(tag.id);
                                 }
                               });
                               onSelectedTagsChanged(currentSelectedTags);
                             },
                             title: Row(
                               children: [
-                                Image.asset(
+                                Image.network(
                                   tag.tagPhotoUrl,
                                   width: 24,
                                   height: 24,

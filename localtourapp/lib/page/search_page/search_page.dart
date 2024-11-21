@@ -4,29 +4,34 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:localtourapp/models/HomePage/placeCard.dart';
 import 'package:localtourapp/provider/user_provider.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
+import 'package:localtourapp/services/place_service.dart';
 import 'package:provider/provider.dart';
 import '../../base/const.dart';
 import '../../base/filter_option.dart';
 import '../../base/place_card_info.dart';
 import '../../base/place_score_manager.dart';
+import '../../constants/getListApi.dart';
+import '../../models/Tag/tag_model.dart';
 import '../../models/places/place.dart';
 import '../../models/places/placemedia.dart';
 import '../../models/places/placetag.dart';
 import '../../models/places/placetranslation.dart';
 import '../../models/places/tag.dart';
+import '../../services/tag_service.dart';
 import 'second_place_card.dart';
 import 'tags_modal.dart'; // Ensure correct path
 
 class SearchPage extends StatefulWidget {
-  final FilterOption initialFilter;
+  final SortBy sortBy;
   final List<int> initialTags;
   final Function(Place)? onPlaceSelected;
 
   const SearchPage({
     Key? key,
-    this.initialFilter = FilterOption.none,
+    this.sortBy = SortBy.distance,
     this.initialTags = const [],
     this.onPlaceSelected,
   }) : super(key: key);
@@ -38,19 +43,32 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   late String userId;
   List<Place> placeList = dummyPlaces;
+  List<PlaceCardModel> listPlaces =[];
   String searchText = "";
   List<CardInfo> cardInfoList = [];
+  List<TagModel> listTagPlaces = [];
+
   List<int> selectedTags = [];
   Position? _currentPosition;
   StreamSubscription<Position>? _positionSubscription;
-  FilterOption _selectedFilter = FilterOption.none;
+  SortBy _selectedFilter = SortBy.distance;
 
+  late PlaceService _placeService = PlaceService();
+  late TagService _tagService = TagService();
+
+  int size = 10;
+  TextEditingController _controllerSearchInput = TextEditingController();
+  FocusNode _focusSearchInput = FocusNode();
+
+  ScrollController _listPlaceScrollController = ScrollController();
+  bool _isLoading = false;
   @override
   void initState() {
     super.initState();
-    _selectedFilter = widget.initialFilter;
+    _selectedFilter = widget.sortBy;
     selectedTags = List.from(widget.initialTags);
     _fetchCurrentLocation();
+    _listPlaceScrollController.addListener(_onScroll);
   }
 
   Future<void> _fetchCurrentLocation() async {
@@ -85,82 +103,111 @@ class _SearchPageState extends State<SearchPage> {
     // When permissions are granted, get the position.
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
+    size >10 == 10;
+    final fetchedListPlaces = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.distance,SortOrder.asc,selectedTags);
+    final fetchedTags = await _tagService.getTopTagPlace();
 
     setState(() {
       _currentPosition = position;
-      _generateCardInfoList();
+      listPlaces = fetchedListPlaces;
+      listTagPlaces = fetchedTags;
     });
 
-    // Optional: Listen to position changes.
-    _positionSubscription =
-        Geolocator.getPositionStream().listen((Position position) {
-      setState(() {
-        _currentPosition = position;
-        _generateCardInfoList();
-      });
-    });
   }
 
-  void _generateCardInfoList() {
+  void _generateCardInfoList() async {
     if (_currentPosition == null) {
       return;
     }
-
-    cardInfoList = dummyPlaces
-        .where((place) => dummyTranslations.any((trans) => trans.placeId == place.placeId))
-        .map((place) {
-      PlaceTranslation translation = dummyTranslations.firstWhere(
-            (trans) => trans.placeId == place.placeId,
-      );
-
-      double score = PlaceScoreManager.instance.getScore(place.placeId);
-      double distance = calculateDistance(
-          _currentPosition!.latitude, _currentPosition!.longitude, place.latitude, place.longitude);
-
-      List<int> associatedTagIds = placeTags
-          .where((pt) => pt.placeId == place.placeId)
-          .map((pt) => pt.tagId)
-          .toList();
-
-      return CardInfo(
-        placeCardInfoId: place.placeId,
-        placeName: translation.placeName,
-        wardId: place.wardId,
-        photoDisplay: place.photoDisplay,
-        iconUrl: 'assets/icons/logo.png',
-        score: score,
-        distance: distance,
-        tagIds: associatedTagIds,
-      );
-    }).toList();
+    final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.asc,selectedTags);
+    setState(() {
+      listPlaces = fetchedListPlaces;
+    });
 
     // Apply initial filter if any
-    if (_selectedFilter == FilterOption.nearest) {
-      cardInfoList.sort((a, b) => a.distance.compareTo(b.distance));
-    } else if (_selectedFilter == FilterOption.featured) {
-      cardInfoList.sort((a, b) => b.score.compareTo(a.score));
+    if (_selectedFilter == SortBy.distance) {
+      listPlaces.sort((a, b) => a.distance.compareTo(b.distance));
+    } else if (_selectedFilter == SortBy.rating) {
+      listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
     }
+  }
+
+  void _generateCardWithSearch() async {
+    if (_currentPosition == null) {
+      return;
+    }
+    final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.asc,selectedTags,searchText);
+    setState(() {
+      listPlaces = fetchedListPlaces;
+    });
+    // Apply initial filter if any
+    if (_selectedFilter == SortBy.distance) {
+      listPlaces.sort((a, b) => a.distance.compareTo(b.distance));
+    } else if (_selectedFilter == SortBy.rating) {
+      listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
+    }
+
+
+  }
+  void _onScroll() {
+    if (_listPlaceScrollController.position.pixels ==
+        _listPlaceScrollController.position.maxScrollExtent &&
+        !_isLoading) {
+
+      _loadMore();
+    }
+  }
+
+  Future<void> _loadMore() async {
+    setState(() {
+      _isLoading = true;
+    });
+    size += 10;
+    await Future.delayed(const Duration(seconds: 5));
+    final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.asc,selectedTags,searchText);
+    setState(() {
+      listPlaces = fetchedListPlaces;
+      _isLoading = false;
+    });
+    // Apply initial filter if any
+    if (_selectedFilter == SortBy.distance) {
+      listPlaces.sort((a, b) => a.distance.compareTo(b.distance));
+    } else if (_selectedFilter == SortBy.rating) {
+      listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
+    }
+
   }
 
   @override
   void dispose() {
     _positionSubscription?.cancel();
+    _focusSearchInput.dispose();
+    _listPlaceScrollController.dispose();
     super.dispose();
   }
 
   // New method to build filter buttons
   Widget _buildFilterButton(
-      String text, Color color, FilterOption filterOption) {
-    bool isSelected = _selectedFilter == filterOption;
+      String text, Color color, SortBy sortBy) {
+    bool isSelected = _selectedFilter == sortBy;
     return ElevatedButton(
       onPressed: () {
         setState(() {
           if (isSelected) {
-            _selectedFilter = FilterOption.none;
+            _selectedFilter = SortBy.none;
+            if(sortBy == SortBy.distance){
+              listPlaces.sort((a, b) => b.distance.compareTo(a.distance));
+            }else{
+              listPlaces.sort((a, b) => a.rateStar.compareTo(b.rateStar));
+            }
           } else {
-            _selectedFilter = filterOption;
+            _selectedFilter = sortBy;
+            if(sortBy == SortBy.distance){
+              listPlaces.sort((a, b) => a.distance.compareTo(b.distance));
+            }else{
+              listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
+            }
           }
-          _generateCardInfoList(); // Regenerate list based on new filter
         });
       },
       style: ElevatedButton.styleFrom(
@@ -190,14 +237,6 @@ class _SearchPageState extends State<SearchPage> {
     if (userId.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
-    // Filter cardInfoList based on searchText and selectedTags
-    List<CardInfo> filteredList = cardInfoList.where((card) {
-      final matchesSearch =
-          card.placeName.toLowerCase().contains(searchText.toLowerCase());
-      final matchesTags = selectedTags.isEmpty ||
-          card.tagIds.any((tagId) => selectedTags.contains(tagId));
-      return matchesSearch && matchesTags;
-    }).toList();
 
     // No need to sort here since sorting is handled in _generateCardInfoList
 
@@ -232,7 +271,8 @@ class _SearchPageState extends State<SearchPage> {
             ),
           ]),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const Center(child: CircularProgressIndicator(
+        )),
       );
     }
 
@@ -247,11 +287,16 @@ class _SearchPageState extends State<SearchPage> {
             IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.black),
               onPressed: () {
-                Navigator.pop(context);
+                  Navigator.pop(context);
               },
             ),
             Expanded(
               child: TextField(
+                controller: _controllerSearchInput,
+                focusNode: _focusSearchInput,
+                onSubmitted: (value) {
+                  _generateCardWithSearch();
+                },
                 onChanged: (value) {
                   setState(() {
                     searchText = value;
@@ -259,14 +304,35 @@ class _SearchPageState extends State<SearchPage> {
                   });
                 },
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search, color: Colors.black),
+                  prefixIcon: IconButton(icon: const Icon(Icons.search, color: Colors.black)
+                    ,onPressed: () {
+                    if(searchText == ""){
+                    FocusScope.of(context).requestFocus(_focusSearchInput);
+                  }else{
+                    _focusSearchInput.unfocus();
+                    _generateCardWithSearch();
+                  }
+                  },),
+                  suffixIcon: searchText != ""
+                      ? IconButton(
+                    icon: Icon(Icons.clear, color: Colors.black),
+                    onPressed: () {
+                      setState(() {
+                        _controllerSearchInput.clear();
+                        searchText = "";
+                        _generateCardInfoList();
+                      });
+                    },
+                  )
+                      : null,
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
                     borderSide: const BorderSide(color: Colors.black),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10)
+                  ,
                 ),
               ),
             ),
@@ -282,10 +348,10 @@ class _SearchPageState extends State<SearchPage> {
             child: Row(
               children: [
                 _buildFilterButton(
-                    "Nearest", const Color(0xFF99C896), FilterOption.nearest),
+                    "Nearest", const Color(0xFF99C896), SortBy.distance),
                 const SizedBox(width: 5),
                 _buildFilterButton(
-                    "Featured", const Color(0xFFAAFF00), FilterOption.featured),
+                    "Featured", const Color(0xFFAAFF00), SortBy.rating),
                 const SizedBox(width: 5),
                 Flexible(
                   child: OutlinedButton(
@@ -293,6 +359,7 @@ class _SearchPageState extends State<SearchPage> {
                       showTagsModal(
                         context: context,
                         selectedTags: selectedTags,
+                        listTags: listTagPlaces,
                         onSelectedTagsChanged: (updatedTags) {
                           setState(() {
                             selectedTags = updatedTags;
@@ -330,10 +397,10 @@ class _SearchPageState extends State<SearchPage> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: selectedTags.map((tagId) {
-                    final tag = listTag.firstWhere(
-                      (t) => t.tagId == tagId,
-                      orElse: () => Tag(
-                        tagId: tagId,
+                    final tag = listTagPlaces.firstWhere(
+                      (t) => t.id == tagId,
+                      orElse: () => TagModel(
+                        id: tagId,
                         tagPhotoUrl: 'assets/icons/default.png',
                         tagName: 'Unknown',
                       ),
@@ -358,30 +425,48 @@ class _SearchPageState extends State<SearchPage> {
 
           // List of place cards with dividers
           Expanded(
-            child: filteredList.isNotEmpty
-                ? ListView.separated(
-                    itemCount: filteredList.length,
-                    separatorBuilder: (context, index) => const Divider(
-                      height: 5,
+            child: listPlaces.isNotEmpty
+                ? Column(
+                  children: [
+                    Expanded(
+                      child:
+                        ListView.separated(
+                            controller: _listPlaceScrollController,
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: listPlaces.length+1,
+                            separatorBuilder: (context, index) => const Divider(
+                              height: 5,
+                            ),
+                            itemBuilder: (context, index) {
+
+                              final cardInfo =  listPlaces[index % listPlaces.length];
+                              return (index == listPlaces.length)? SizedBox(height: 42,) :
+                                GestureDetector(
+                                onTap: () {
+                                  _navigateToDetail(cardInfo.placeId);
+                                },
+                                child: SecondPlaceCard(
+                                  placeCardId: cardInfo.placeId,
+                                  placeName: cardInfo.placeName,
+                                  wardName: cardInfo.wardName,
+                                  photoDisplay: cardInfo.photoDisplayUrl,
+                                  score: cardInfo.rateStar,
+                                  distance: cardInfo.distance,
+                                ),
+                              );
+                            },
+
+                          ),
+
                     ),
-                    itemBuilder: (context, index) {
-                      final cardInfo = filteredList[index];
-                      return GestureDetector(
-                        onTap: () {
-                          _navigateToDetail(cardInfo.placeCardInfoId);
-                        },
-                        child: SecondPlaceCard(
-                          placeCardId: cardInfo.placeCardInfoId,
-                          placeName: cardInfo.placeName,
-                          ward: cardInfo.wardId,
-                          photoDisplay: cardInfo.photoDisplay,
-                          iconUrl: cardInfo.iconUrl,
-                          score: cardInfo.score,
-                          distance: cardInfo.distance,
-                        ),
-                      );
-                    },
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _isLoading
+                    ? const SizedBox(child: CircularProgressIndicator())
+                    : const SizedBox(),
                   )
+                  ],
+                )
                 : Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,

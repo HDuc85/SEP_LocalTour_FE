@@ -3,13 +3,18 @@ enum SortBy {
   created_by,
   distance,
   rating,
+  none
 }
 
 enum SortOrder {
   asc,
+  desc
 }
 
 String sortByToString(SortBy sortBy) {
+  if (sortBy == SortBy.none) {
+    return '';
+  }
   return sortBy.toString().split('.').last;
 }
 

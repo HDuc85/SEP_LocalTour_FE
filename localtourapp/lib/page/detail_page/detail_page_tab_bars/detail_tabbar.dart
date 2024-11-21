@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:localtourapp/constants/getListApi.dart';
 import 'package:provider/provider.dart';
 import '../../../base/custom_button.dart';
 import '../../../base/filter_option.dart';
@@ -378,7 +379,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
               context,
               MaterialPageRoute(
                 builder: (context) => SearchPage(
-                  initialFilter: FilterOption.none,
+                  sortBy: SortBy.distance,
                   initialTags: [tags[i].tagId], // Pass the selected tag ID
                 ),
               ),

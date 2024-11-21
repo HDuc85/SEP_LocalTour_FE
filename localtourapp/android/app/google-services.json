@@ -7,14 +7,22 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:545384142045:android:fbbd590cb5cf92e7ba3734",
+        "mobilesdk_app_id": "1:545384142045:android:46e69a9980249864ba3734",
         "android_client_info": {
-          "package_name": "com.example.localtourapp"
+          "package_name": "com.localtour.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "545384142045-ubbm27vk72jhpnph745i9copnn367puq.apps.googleusercontent.com",
+          "client_id": "545384142045-4cnhbd3qiqu66k3a8cqk5ae5eprc5h80.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.localtour.app",
+            "certificate_hash": "1fa160375e63c62574a3f6546d86745020e685f4"
+          }
+        },
+        {
+          "client_id": "545384142045-2ild0rtvhniv7o1g4dqt30fbki9oavmh.apps.googleusercontent.com",
           "client_type": 3
         }
       ],

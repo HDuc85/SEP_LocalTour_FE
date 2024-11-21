@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class Placecard {
+class PlaceCardModel {
   int placeId;
   String wardName;
   String photoDisplayUrl;
@@ -10,7 +10,7 @@ class Placecard {
   double distance;
   TimeOfDay? timeClose;
 
-  Placecard({
+  PlaceCardModel({
     required this.placeId,
     required this.wardName,
     required this.photoDisplayUrl,
@@ -21,16 +21,14 @@ class Placecard {
     this.timeClose,
   });
 
-  factory Placecard.fromJson(Map<String, dynamic> json) {
-    return Placecard(
-      placeId: json['placeMedia'].isNotEmpty
-          ? json['placeMedia'][0]['placeId'] ?? 0
-          : 0,
-      wardName: json['wardId']?.toString() ?? 'Unknown Ward',
+  factory PlaceCardModel.fromJson(Map<String, dynamic> json) {
+    return PlaceCardModel(
+      placeId: json['id'],
+      wardName: json['wardName']?.toString() ?? 'Unknown Ward',
       photoDisplayUrl: json['photoDisplay'] ?? '',
-      placeName: json['contactLink'] ?? 'Unknown Place',
-      rateStar: (json['rateStar'] ?? 0).toDouble(),
-      countFeedback: json['countFeedback'] ?? 0,
+      placeName: json['placeTranslation'][0]['name'] ?? 'Unknown Place',
+      rateStar: (json['rating'] ?? 0).toDouble(),
+      countFeedback: json['totalPlaceFeedback'] ?? 0,
       distance: json['distance']?.toDouble() ?? 0.0,
       timeClose: _parseTimeOfDay(json['timeClose']),
     );
@@ -44,6 +42,6 @@ class Placecard {
   }
 }
 
-List<Placecard> mapJsonToPlacecards(List<dynamic> jsonData) {
-  return jsonData.map((data) => Placecard.fromJson(data)).toList();
+List<PlaceCardModel> mapJsonToPlaceCardModels(List<dynamic> jsonData) {
+  return jsonData.map((data) => PlaceCardModel.fromJson(data)).toList();
 }

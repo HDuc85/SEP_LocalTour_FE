@@ -2,20 +2,29 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:localtourapp/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:localtourapp/provider/user_provider.dart';
+import '../../../main.dart';
 import '../../../mock_firebase.dart';
 
 class ForgotPasswordDialog {
   static void show(BuildContext context, {FirebaseAuth? firebaseAuth}) {
-    final auth = firebaseAuth ?? MockFirebaseAuth(); // Use MockFirebaseAuth for testing
+    final AuthService _authService = AuthService();
+    final FirebaseAuth auth = FirebaseAuth.instance;
+
     final TextEditingController phoneController = TextEditingController();
     final TextEditingController smsCodeController = TextEditingController();
     final TextEditingController newPasswordController = TextEditingController();
+    final TextEditingController confirmNewPasswordController = TextEditingController();
+
     final FocusNode newPasswordFocus = FocusNode();
+    final FocusNode confirmNewPasswordFocus = FocusNode();
 
     // Validation flags and messages
     bool newPasswordError = false;
+    bool confirmNewPasswordError = false;
+    String confirmNewPasswordErrorText = '';
     bool phoneError = false;
     String phoneErrorText = '';
     bool smsError = false;
@@ -119,6 +128,47 @@ class ForgotPasswordDialog {
                             ),
                             maxLines: 3,
                           ),
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Add New Password:',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: confirmNewPasswordController,
+                          focusNode: confirmNewPasswordFocus,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            hintText: 'Enter your confirm new password',
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              confirmNewPasswordError = !validateNewPassword(value);
+                              if(confirmNewPasswordError){
+                                confirmNewPasswordErrorText = 'Password must have 1 uppercase letter, 1 special character, 1 number, and be at least 8 characters long';
+                              }else{
+                                if(value != newPasswordController.text){
+                                  confirmNewPasswordError = true;
+                                  confirmNewPasswordErrorText = 'Password is not match';
+                                }
+                              }
+
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 4),
+                        if (confirmNewPasswordError)
+                           Text(
+                            confirmNewPasswordErrorText,
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                            ),
+                            maxLines: 3,
+                          ),
                       ],
                     ],
                   ),
@@ -149,8 +199,11 @@ class ForgotPasswordDialog {
                         }
 
                         try {
+
+                           String phoneNumberSent = '+84${phoneNumber.substring(1)}';
+
                           await auth.verifyPhoneNumber(
-                            phoneNumber: phoneNumber,
+                            phoneNumber: phoneNumberSent,
                             verificationCompleted:
                                 (PhoneAuthCredential credential) async {
                               // For testing, we'll skip auto-verification to require SMS code input
@@ -220,6 +273,11 @@ class ForgotPasswordDialog {
                           // Attempt to sign in
                           await auth.signInWithCredential(credential);
 
+                          var result = await _authService.sendUserIdToBackend();
+                          if(result.firstTime){
+                            navigatorKey.currentState?.pushNamed('/register');
+                          }
+
                           // If successful, move to setting new password
                           setState(() {
                             step = 3;
@@ -243,37 +301,31 @@ class ForgotPasswordDialog {
                       onPressed: () async {
                         FocusScope.of(context).unfocus(); // Close keyboard
                         String newPassword = newPasswordController.text.trim();
+                        String confirmNewPassword = confirmNewPasswordController.text.trim();
                         if (!validateNewPassword(newPassword)) {
                           setState(() {
                             newPasswordError = true;
                           });
                           return;
                         }
+                        if(!validateNewPassword(confirmNewPassword)){
+                          setState(() {
+                           confirmNewPasswordError = true;
+                          });
+                        }
 
                         try {
-                          // Update the password in Firebase
-                          if (auth.currentUser != null) {
-                            await auth.currentUser!.updatePassword(newPassword);
+                            var result = await _authService.setPassword(newPassword, confirmNewPassword);
+                            if(result){
+                              Navigator.of(context).pop(); // Close the dialog
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Password reset successfully'),
+                                ),
+                              );
+                            }
 
-                            // Update locally if needed
-                            final userProvider =
-                            Provider.of<UserProvider>(context, listen: false);
-                            userProvider.currentUser.passwordHash = newPassword;
-                            userProvider.updateUser(userProvider.currentUser);
 
-                            Navigator.of(context).pop(); // Close the dialog
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Password reset successfully'),
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Error: User is not signed in.'),
-                              ),
-                            );
-                          }
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

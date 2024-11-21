@@ -67,7 +67,7 @@ void main() async {
   await dotenv.load(fileName: ".env");
   // Initialize Hive
   await Hive.initFlutter();
-
+  await storage.saveValue(AppConfig.language, 'vi');
   // Create an instance of bookmarkProvider and load bookmarks
   PlaceProvider bookmarkProvider = PlaceProvider(
     places: dummyPlaces,

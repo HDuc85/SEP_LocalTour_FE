@@ -61,8 +61,11 @@ class _PlaceCardState extends State<PlaceCard> {
 
   @override
   Widget build(BuildContext context) {
-    String formattedDistance = '${widget.distance.toStringAsFixed(1)} km';
-
+    String formattedDistance = '${widget.distance.toStringAsFixed(1)}';
+    if (formattedDistance.endsWith('.0')) {
+      formattedDistance = formattedDistance.substring(0, formattedDistance.length - 2);
+    }
+    formattedDistance += ' km';
     return SizedBox(
       width: 140,
       height: 240,
@@ -133,21 +136,27 @@ class _PlaceCardState extends State<PlaceCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                widget.placeName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                        Container(
+                          height: 40,
+
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  widget.placeName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Row(

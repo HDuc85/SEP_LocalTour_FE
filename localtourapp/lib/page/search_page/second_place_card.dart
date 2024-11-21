@@ -8,9 +8,8 @@ import '../../base/place_score_manager.dart';
 class SecondPlaceCard extends StatefulWidget {
   final int placeCardId;
   final String placeName;
-  final int ward;
+  final String wardName;
   final String photoDisplay;
-  final String iconUrl;
   final double score;
   final double distance;
 
@@ -18,9 +17,8 @@ class SecondPlaceCard extends StatefulWidget {
     Key? key,
     required this.placeCardId,
     required this.placeName,
-    required this.ward,
+    required this.wardName,
     required this.photoDisplay,
-    required this.iconUrl,
     required this.score,
     required this.distance,
   }) : super(key: key);
@@ -78,24 +76,28 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
   @override
   Widget build(BuildContext context) {
     // Format distance for display
-    String formattedDistance = widget.distance > 1000
-        ? '${(widget.distance / 1000).toStringAsFixed(2)} km'
-        : '${widget.distance.toStringAsFixed(0)} m';
-
+    String formattedDistance = '${widget.distance.toStringAsFixed(1)}';
+    if (formattedDistance.endsWith('.0')) {
+      formattedDistance = formattedDistance.substring(0, formattedDistance.length - 2);
+    }
+    formattedDistance += ' km';
     return Container(
+      height: 70,
       color: Colors.white, // Set background color to white
       padding: const EdgeInsets.only(right: 10), // Optional padding
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          SizedBox(width: 3,),
           // Image section on the left
           ClipRRect(
             child: Image.network(
               widget.photoDisplay,
-              width: 60,
-              height: 60,
+              width: 70,
+              height: 70,
               fit: BoxFit.cover,
             ),
+            borderRadius: BorderRadius.circular(6),
           ),
           const SizedBox(width: 12),
           // Details section on the right
@@ -114,7 +116,7 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  'ward: ${widget.ward}',
+                  '${widget.wardName}',
                   style: const TextStyle(
                     fontSize: 12,
                   ),
@@ -126,12 +128,12 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
                 Row(
                   children: [
                     Image.asset(
-                      widget.iconUrl,
+                      'assets/icons/logo.png',
                       width: 16,
                       height: 16,
                     ),
                     const SizedBox(width: 4),
-                    buildStarRating(score / 2),
+                    buildStarRating(widget.score),
                     const Spacer(),
                     Row(
                       children: [

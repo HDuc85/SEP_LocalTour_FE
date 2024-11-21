@@ -3,11 +3,18 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/models/Tag/tag_model.dart';
+import 'package:localtourapp/models/users/update_user_request.dart';
 import 'package:localtourapp/services/auth_service.dart';
+import 'package:localtourapp/services/tag_service.dart';
+import 'package:localtourapp/services/user_service.dart';
 import 'package:provider/provider.dart';
-import 'package:localtourapp/models/places/tag.dart';
 import 'package:localtourapp/provider/user_provider.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'config/secure_storage_helper.dart';
+import 'features/home/screens/homeScreen.dart'; // Import FirebaseAuth
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -19,7 +26,11 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   // Step control
   int currentStep = 1;
+  List<String> pageIndex = ['Phone', 'Password', 'Username', 'Preferences'];
   final AuthService _authService = AuthService();
+  final UserService _userService = UserService();
+  final TagService _tagService = TagService();
+  final storage = SecureStorageHelper();
   // Controllers for input fields
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController smsCodeController = TextEditingController(); // New Controller
@@ -52,22 +63,38 @@ class _RegisterPageState extends State<RegisterPage> {
   String verificationId = ''; // Stores the verification ID from FirebaseAuth
   bool isAuthenticating = false; // Indicates if authentication is in progress
 
-  // FirebaseAuth instance (use MockFirebaseAuth for testing if needed)
   final FirebaseAuth auth = FirebaseAuth.instance;
-  // final FirebaseAuth auth = MockFirebaseAuth(); // Uncomment for testing
 
   int resendCountdown = 60;
   Timer? countdownTimer;
   bool isCountdownActive = false;
-
-
+  List<TagModel> listTag = [];
+  List<int> listTagIdSelected = [];
   @override
   void initState() {
     super.initState();
     // Request focus on the first input field when the page loads
+    checkLogin();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FocusScope.of(context).requestFocus(phoneFocusNode);
     });
+  }
+
+  Future<void> checkLogin() async{
+    var isFirstLogin = await storage.readBoolValue(AppConfig.isFirstLogin);
+    var isLogin = await storage.readBoolValue(AppConfig.isLogin);
+    if(isLogin){
+      if(isFirstLogin){
+        setState(() {
+          pageIndex = ['Google', 'Password', 'Username', 'Preferences'];
+          currentStep = 2;
+        });
+      }else{
+        Navigator.pushNamed(context, '/');
+      }
+    }
+
+
   }
 
   @override
@@ -229,13 +256,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     try {
-      await _authService.verifyCode(verificationId, smsCode);
-
-      // PhoneAuthCredential credential = PhoneAuthProvider.credential(
-      //   verificationId: verificationId,
-      //   smsCode: smsCode,
-      // );
-
+       await _authService.verifyCode(verificationId, smsCode);
 
       setState(() {
         isSmsSent = false; // Reset SMS sent flag
@@ -248,6 +269,10 @@ class _RegisterPageState extends State<RegisterPage> {
           content: Text('Phone number verified successfully.'),
         ),
       );
+
+       var token = await _authService.sendUserIdToBackend();
+
+
     } catch (e) {
       setState(() {
         isAuthenticating = false;
@@ -310,6 +335,11 @@ class _RegisterPageState extends State<RegisterPage> {
     );
 
   }
+
+  Future<bool> _setPassword(String password, String confirmPassword) async{
+    var result = await _authService.setPassword(password, confirmPassword);
+    return result;
+  }
   // Function to proceed to the next step
   void _nextStep() {
     setState(() {
@@ -361,9 +391,11 @@ class _RegisterPageState extends State<RegisterPage> {
     });
   }
   // Function to handle registration completion
-  void _completeRegistration() {
+  Future<void> _completeRegistration() async {
     // Implement your registration logic here (e.g., save user to database)
     // For demonstration, we'll simply show a success message
+     await _tagService.addTagsPreferencs(listTagIdSelected);
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Registration Successful!'),
@@ -421,8 +453,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        ['Phone', 'Password', 'Username', 'Preferences']
-                        [index],
+                        pageIndex[index],
                         style: TextStyle(
                           fontSize: 12,
                           color: currentStep >= stepNumber
@@ -547,8 +578,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-
-
   // Step 2: Password and Confirm Password Input
   Widget _buildPasswordInput() {
     return Column(
@@ -598,13 +627,13 @@ class _RegisterPageState extends State<RegisterPage> {
               child: const Text('Back'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: ()  {
                 String password = passwordController.text.trim();
                 String confirmPassword =
                 confirmPasswordController.text.trim();
                 bool isValid = true;
 
-                setState(() {
+                setState(() async {
                   // Validate Password
                   if (password.isEmpty) {
                     passwordError = true;
@@ -635,12 +664,22 @@ class _RegisterPageState extends State<RegisterPage> {
                   } else {
                     confirmPasswordError = false;
                     confirmPasswordErrorText = '';
+                    try{
+                      var result = await _setPassword(password, confirmPassword);
+                      if(result){
+                        _nextStep();
+                      }
+
+                    }
+                    catch(e){
+                      isValid = false;
+                      confirmPasswordError = true;
+                      confirmPasswordErrorText = e.toString();
+                    }
+
+
                   }
                 });
-
-                if (isValid) {
-                  _nextStep();
-                }
               },
               child: const Text('Agree'),
             ),
@@ -670,6 +709,11 @@ class _RegisterPageState extends State<RegisterPage> {
             errorText: usernameError ? usernameErrorText : null,
           ),
           keyboardType: TextInputType.text,
+          onTap: () {
+            setState(() {
+              usernameError = false;
+            });
+          },
         ),
         const SizedBox(height: 24),
         Row(
@@ -692,8 +736,22 @@ class _RegisterPageState extends State<RegisterPage> {
                     usernameError = false;
                     usernameErrorText = '';
                   });
-                  // Optionally, you can save the username to the user provider here
-                  _nextStep();
+                  setState(()  async {
+                    try{
+                      await _userService.sendUserDataRequest(  new  UpdateUserRequest(username: username));
+                      listTag = await _tagService.getAllTag();
+                      var listUserTag = await _tagService.getUserTag();
+                      if(listUserTag.length > 0){
+                        listTagIdSelected = listUserTag.map((e) => e.id).toList();
+                      }
+                      _nextStep();
+                    }catch(e){
+                      usernameError = true;
+                      usernameErrorText = e.toString();
+                      usernameFocusNode.unfocus();
+                    }
+                  });
+
                 }
               },
               child: const Text('Agree'),
@@ -734,7 +792,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (userProvider.preferredTagIds.length < 5) {
+                if (listTagIdSelected.length < 5) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Please select at least 5 preferences.'),
@@ -752,18 +810,18 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  List<Widget> _buildAllTagChips(UserProvider userProvider) {
-    return listTag.map((tag) {
-      final isSelected = userProvider.isTagSelected(tag.tagId);
+  List<Widget> _buildAllTagChips(UserProvider userProvider)  {
 
+    return listTag.map((tag) {
+      final isSelected = listTagIdSelected.contains(tag.id);
       return GestureDetector(
         onTap: () {
           setState(() {
             // Toggle the tag selection with enforcement of minimum 5 selections
             if (isSelected) {
               // Allow deselection only if more than 5 tags are selected
-              if (userProvider.preferredTagIds.length > 5) {
-                userProvider.removeTag(tag.tagId);
+              if (listTagIdSelected.length > 5) {
+                listTagIdSelected.remove(tag.id);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -772,7 +830,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 );
               }
             } else {
-              userProvider.addTag(tag.tagId);
+              listTagIdSelected.add(tag.id);
             }
           });
         },
