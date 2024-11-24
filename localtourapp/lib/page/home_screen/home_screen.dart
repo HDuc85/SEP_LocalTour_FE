@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final Map<int, GlobalKey> tagSectionKeys = {};
   List<TagModel> listTagTop = [];
   List<Place> placeList = dummyPlaces;
-
+  bool isLoading = true;
   List<PlaceCardModel> listPlaceNearest = [];
   List<PlaceCardModel> listPlaceFeatured = [];
 
@@ -66,9 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     _initializeData();
     // Generate mediaList
-    mediaList = generatePlaceMediaForAllPlaces(dummyPlaces);
 
-    // Initialize tagSectionKeys for all tags in listTag
     for (var tag in listTag) {
       tagSectionKeys[tag.tagId] = GlobalKey();
     }
@@ -85,10 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _initializeData() async {
-    final topTags = await _tagService.getTopTagPlace();
-    setState(() {
-      listTagTop = topTags;
-    });
+
   }
 
   // Listener to handle scroll events
@@ -142,13 +137,18 @@ class _HomeScreenState extends State<HomeScreen> {
       final fetchedListPlaceNearest = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.distance,SortOrder.asc);
       final fetchedListPlaceFeatured = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.rating, SortOrder.asc);
 
-      for(var tag in listTagTop){
+      final topTags = await _tagService.getTopTagPlace();
+
+      for(var tag in topTags){
         listPlaceTags[tag.id] = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.distance,SortOrder.asc,[tag.id]);
       }
 
+
       setState(() {
+        listTagTop = topTags;
         listPlaceNearest = fetchedListPlaceNearest;
         listPlaceFeatured = fetchedListPlaceFeatured;
+        isLoading = false;
       });
     } catch (e) {}
   }
@@ -165,7 +165,10 @@ class _HomeScreenState extends State<HomeScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return Stack(
+    return
+      isLoading?
+      const Center(child: CircularProgressIndicator()):
+      Stack(
       children: [
         // Main Scrollable Content
         SingleChildScrollView(

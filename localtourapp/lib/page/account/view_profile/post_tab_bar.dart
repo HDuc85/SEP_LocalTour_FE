@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
+import 'package:localtourapp/models/users/userProfile.dart';
 import 'package:localtourapp/provider/place_provider.dart';
 import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
@@ -25,7 +26,7 @@ class PostTabBar extends StatefulWidget {
   final List<FollowUser>followUsers;
   final String userId;
   final Map<int, String>? scheduleNames;
-  final User user;
+  final Userprofile user;
   final bool isCurrentUser;
   final Function(int postId, bool isFavorited) onFavoriteToggle;
   final Function() onCommentPressed;
@@ -84,7 +85,7 @@ class _PostTabBarState extends State<PostTabBar> {
     final postProvider = Provider.of<PostProvider>(context, listen: false);
 
     bool isCurrentlyFavorited = postProvider.postLikes.any(
-          (like) => like.postId == postId && like.userId == widget.user.userId,
+          (like) => like.postId == postId && like.userId == widget.userId,
     );
 
     // Invoke the callback to update the provider
@@ -450,7 +451,7 @@ class _PostTabBarState extends State<PostTabBar> {
 
     final likes = postProvider.getLikesForPost(post.id).length;
     bool isLiked = postProvider.postLikes.any(
-            (like) => like.postId == post.id && like.userId == widget.user.userId);
+            (like) => like.postId == post.id && like.userId == widget.userId);
     int likeCount = likes;
 
     final int commentCount = postProvider.getCommentsForPost(post.id).length;
@@ -484,7 +485,7 @@ class _PostTabBarState extends State<PostTabBar> {
                 children: [
                   CircleAvatar(
                     backgroundImage: NetworkImage(
-                        widget.user.profilePictureUrl ??
+                        widget.user.userProfileImage ??
                             'https://example.com/default.jpg'),
                   ),
                   const SizedBox(width: 8),

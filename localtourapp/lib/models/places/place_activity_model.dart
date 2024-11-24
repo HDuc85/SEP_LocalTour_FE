@@ -24,6 +24,8 @@ class PlaceActivityModel {
     required this.priceType
   });
   factory PlaceActivityModel.fromJson(Map<String, dynamic> json) {
+    bool hasValue = json['placeActivityTranslations'].isNotEmpty ? true: false;
+
     return PlaceActivityModel(
       id: json['id'],
       displayNumber: json['displayNumber'],
@@ -31,11 +33,11 @@ class PlaceActivityModel {
       placeActivityMedia: (json['placeActivityMedia'] as List)
           .map((e) => MediaModel.fromJson(e))
           .toList(),
-      activityName: json['placeActivityTranslations'][0]['activityName'],
-      description: json['placeActivityTranslations'][0]['description'],
-      discount: (json['placeActivityTranslations'][0]['discount']).toDouble(),
-      price: (json['placeActivityTranslations'][0]['price']).toDouble(),
-      priceType: json['placeActivityTranslations'][0]['priceType']
+      activityName: hasValue ? json['placeActivityTranslations'][0]['activityName'] : '',
+      description: hasValue ? json['placeActivityTranslations'][0]['description'] : '',
+      discount: hasValue ? (json['placeActivityTranslations'][0]['discount']).toDouble():'',
+      price: hasValue ? (json['placeActivityTranslations'][0]['price']).toDouble() : -1,
+      priceType: hasValue ? json['placeActivityTranslations'][0]['priceType'] : ''
     );
   }
 

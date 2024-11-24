@@ -1,17 +1,25 @@
 // lib/page/account/personal_information_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/users/password_change_request.dart';
+import 'package:localtourapp/models/users/userProfile.dart';
+import 'package:localtourapp/services/auth_service.dart';
+import 'package:localtourapp/services/user_service.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 import '../../mock_firebase.dart';
+import '../../models/users/update_user_request.dart';
 import '../../models/users/users.dart';
 import '../../provider/user_provider.dart';
 import 'view_profile/for_got_password.dart'; // Ensure you have intl package in pubspec.yaml
 
 class PersonalInformationPage extends StatefulWidget {
-  const PersonalInformationPage({Key? key}) : super(key: key);
+  final Userprofile userprofile;
+  final String userId;
+  final VoidCallback? fetchData;
 
+  const PersonalInformationPage({Key? key, required this.userprofile, required this.userId, this.fetchData,}) : super(key: key);
   @override
   State<PersonalInformationPage> createState() =>
       _PersonalInformationPageState();
@@ -21,6 +29,8 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
   // Form key to manage form state
   final _formKey = GlobalKey<FormState>();
 
+  AuthService _authService = AuthService();
+  UserService _userService = UserService();
   // Controllers for form fields
   late TextEditingController _fullNameController;
   late TextEditingController _passwordController;
@@ -29,7 +39,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
   late TextEditingController _phoneNumberController;
   late TextEditingController _addressController;
   late TextEditingController _nicknameController;
-
+  late Userprofile _userprofile;
   // Variables for interactive fields
   String? _selectedGender;
 
@@ -39,24 +49,51 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
     // Initialize controllers with current user data
     final userProvider =
     Provider.of<UserProvider>(context, listen: false);
-    final User currentUser = userProvider.currentUser;
+    _userprofile = widget.userprofile;
 
+    final User currentUser = userProvider.currentUser;
     _fullNameController =
-        TextEditingController(text: currentUser.fullName ?? '');
+        TextEditingController(text: _userprofile.fullName ?? '');
     _passwordController = TextEditingController();
     _emailController =
-        TextEditingController(text: currentUser.email ?? '');
+        TextEditingController(text: _userprofile.email! ?? '');
     _dobController = TextEditingController(
-        text: currentUser.dateOfBirth != null
-            ? DateFormat('yyyy-MM-dd').format(currentUser.dateOfBirth!)
+        text: _userprofile.dateOfBirth != null
+            ? DateFormat('yyyy-MM-dd').format(_userprofile.dateOfBirth!)
             : '');
     _phoneNumberController =
-        TextEditingController(text: currentUser.phoneNumber ?? '');
+        TextEditingController(text: _userprofile.phoneNumber! ?? '');
     _addressController =
-        TextEditingController(text: currentUser.address ?? '');
+        TextEditingController(text: _userprofile.address ?? '');
     _nicknameController =
-        TextEditingController(text: currentUser.userName ?? '');
-    _selectedGender = currentUser.gender;
+        TextEditingController(text: _userprofile.userName ?? '');
+    _selectedGender = _userprofile.gender;
+
+  }
+
+  Future<void> fetchData() async{
+    var userfetched = await  _userService.getUserProfile(widget.userId);
+
+    _fullNameController =
+        TextEditingController(text: userfetched.fullName ?? '');
+    _passwordController = TextEditingController();
+    _emailController =
+        TextEditingController(text: userfetched.email! ?? '');
+    _dobController = TextEditingController(
+        text: userfetched.dateOfBirth != null
+            ? DateFormat('yyyy-MM-dd').format(userfetched.dateOfBirth!)
+            : '');
+    _phoneNumberController =
+        TextEditingController(text: userfetched.phoneNumber! ?? '');
+    _addressController =
+        TextEditingController(text: userfetched.address ?? '');
+    _nicknameController =
+        TextEditingController(text: userfetched.userName ?? '');
+    _selectedGender = userfetched.gender;
+
+    setState(() {
+      _userprofile = userfetched;
+    });
   }
 
   @override
@@ -94,14 +131,28 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
   }
 
   // Function to handle form submission
-  void _savePersonalInformation() {
+  void _savePersonalInformation() async {
+    UpdateUserRequest userdata = new UpdateUserRequest(
+      username: _nicknameController.text,
+      address: _addressController.text,
+      dateOfBirth: DateFormat('yyyy-MM-dd').parse(_dobController.text),
+      fullName: _fullNameController.text,
+      gender: _selectedGender,
+    );
+
+    var result = await _userService.sendUserDataRequest(userdata);
+    if(result != null){
+      setState(() {
+        _userprofile = result;
+      });
+    }
+
     if (_formKey.currentState!.validate()) {
       // Fetch the user provider
       final userProvider =
       Provider.of<UserProvider>(context, listen: false);
       final User currentUser = userProvider.currentUser;
 
-      // Update user information
       User updatedUser = User(
         userId: currentUser.userId,
         userName: _nicknameController.text.trim(),
@@ -143,6 +194,19 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
     // Implement your hashing logic here
     // For demonstration, we'll return the password itself
     return password;
+  }
+
+  Future<void> addPhoneNumber() async{
+    String result = await _authService.AddPhoneNumber();
+    if(result != null){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+            Text('$result.')),
+      );
+      fetchData();
+      widget.fetchData!();
+    }
   }
 
   @override
@@ -233,15 +297,22 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                 builder: (BuildContext context) {
                                   final TextEditingController currentPasswordController = TextEditingController();
                                   final TextEditingController newPasswordController = TextEditingController();
+                                  final TextEditingController confirmPasswordController = TextEditingController();
                                   final FocusNode currentPasswordFocus = FocusNode();
                                   final FocusNode newPasswordFocus = FocusNode();
+                                  final FocusNode confirmPasswordFocus = FocusNode();
                                   bool currentPasswordError = false;
                                   bool newPasswordError = false;
-
+                                  bool confirmPasswordError = false;
+                                  String newPasswordErrorText = 'Password must have 1 uppercase letter, 1 special character, 1 number, and be at least 8 characters long';
+                                  String oldPasswordErrorText = '';
                                   // Helper function to validate the new password
                                   bool validateNewPassword(String password) {
                                     final passwordRegExp = RegExp(r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$');
                                     return passwordRegExp.hasMatch(password);
+                                  }
+                                  bool validateConfirmPassword(String password) {
+                                    return newPasswordController.text == password;
                                   }
 
                                   return StatefulBuilder(
@@ -267,7 +338,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                   decoration: InputDecoration(
                                                     border: const OutlineInputBorder(),
                                                     hintText: 'Enter your current password',
-                                                    errorText: currentPasswordError ? 'Wrong password' : null,
+                                                    errorText: currentPasswordError ? oldPasswordErrorText : null,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 16),
@@ -287,12 +358,36 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                     border: const OutlineInputBorder(),
                                                     hintText: 'Enter your new password',
                                                     errorText: newPasswordError
-                                                        ? 'Password must have 1 uppercase letter, 1 special character, 1 number, and be at least 8 characters long'
+                                                        ? newPasswordErrorText
                                                         : null,
                                                   ),
                                                   onChanged: (value) {
                                                     setState(() {
                                                       newPasswordError = !validateNewPassword(value);
+                                                    });
+                                                  },
+                                                ),
+                                                const SizedBox(height: 16),
+                                                const Align(
+                                                  alignment: Alignment.centerLeft,
+                                                  child: Text('Confirm New Password:'),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                TextField(
+                                                  controller: confirmPasswordController,
+                                                  focusNode: confirmPasswordFocus,
+                                                  obscureText: true,
+                                                  decoration: InputDecoration(
+                                                    errorMaxLines: 3,
+                                                    border: const OutlineInputBorder(),
+                                                    hintText: 'Enter your confirm new password',
+                                                    errorText: confirmPasswordError
+                                                        ? 'New password and confirm password is not match'
+                                                        : null,
+                                                  ),
+                                                  onChanged: (value) {
+                                                    setState(() {
+                                                      confirmPasswordError = !validateConfirmPassword(value);
                                                     });
                                                   },
                                                 ),
@@ -302,36 +397,39 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                           actions: [
                                             ElevatedButton(
                                               onPressed: () async {
-                                                // Retrieve the current password from UserProvider
-                                                final userProvider = Provider.of<UserProvider>(context, listen: false);
-                                                final currentUser = userProvider.currentUser;
-                                                if (userProvider.currentUser.passwordHash == null) {
-                                                  print('No password is set for the current user.');
-                                                } else {
-                                                  print('Current Password: ${userProvider.currentUser.passwordHash}');
-                                                }
 
-                                                // Check if the current password is correct
-                                                if (currentPasswordController.text != currentUser.passwordHash) {
-                                                  setState(() {
-                                                    currentPasswordError = true;
-                                                  });
-                                                } else if (newPasswordError) {
-                                                  // If new password doesn't meet the criteria, show error
-                                                  setState(() {
-                                                    newPasswordFocus.requestFocus();
-                                                  });
-                                                } else {
-                                                  // Password update logic
-                                                  currentUser.passwordHash = newPasswordController.text;
-                                                  userProvider.updateUser(currentUser);
+                                                  var result = await _userService.changePassword(
+                                                      new PasswordChangeRequest(oldPassword: currentPasswordController.text,
+                                                          newPassword: newPasswordController.text,
+                                                          confirmPassword: confirmPasswordController.text));
+                                                  currentPasswordError = false;
+                                                  newPasswordError = false;
+                                                  confirmPasswordError = false;
+                                                  if(result.success){
+                                                    Navigator.of(context).pop();
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      const SnackBar(content: Text('Password changed successfully')),
+                                                    );
+                                                  }else{
 
-                                                  // Close dialog and show success notification
-                                                  Navigator.of(context).pop();
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    const SnackBar(content: Text('Password changed successfully')),
-                                                  );
-                                                }
+                                                    if(result.newPasswordError != null){
+                                                      newPasswordFocus.requestFocus();
+                                                      setState((){
+                                                        newPasswordError = true;
+                                                        newPasswordErrorText = result.newPasswordError!;
+                                                      });
+                                                    }
+                                                    if(result.oldPasswordError != null){
+                                                      setState(() {
+                                                        oldPasswordErrorText = result.oldPasswordError!;
+                                                        currentPasswordError = true;
+                                                      });
+                                                      currentPasswordFocus.requestFocus();
+                                                    }
+
+                                                  }
+
+
                                               },
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: Colors.blue,
@@ -360,7 +458,8 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                           ),
                           TextButton(
                             onPressed: () {
-                              ForgotPasswordDialog.show(context);
+                              ForgotPasswordDialog.show(context,'',() {
+                              },);
                             },
                             child: const Text(
                               'Forgot Password?',
@@ -382,6 +481,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
+                      _userprofile.email != "" ?
                       TextFormField(
                         controller: _emailController,
                         decoration: const InputDecoration(
@@ -401,7 +501,58 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                           }
                           return null;
                         },
-                      ),
+                      ) :
+                      GestureDetector(
+                        onTap: () async {
+                         String result = await _authService.AddEmailGoogle();
+                         if(result != null){
+                           ScaffoldMessenger.of(context).showSnackBar(
+                             SnackBar(
+                                 content:
+                                 Text('$result.')),
+                           );
+                           fetchData();
+                           widget.fetchData!();
+                         }
+
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 13,horizontal: 90), // Adjust spacing
+
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.blueAccent.withOpacity(0.8),
+                            // Background color
+                          ),
+                          child:  Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Icon Google
+                              Container(
+                                height: 24,
+                                width: 24,
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: AssetImage('assets/images/google_logo.png'),
+                                    fit: BoxFit.contain,
+
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Text(
+                                'Add Google Email',
+                                style: TextStyle(
+                                  color: Colors.white, // Màu chữ đỏ
+                                  fontWeight: FontWeight.w600, // Chữ đậm
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                      ,
                       const SizedBox(height: 16),
 
                       // Date of Birth
@@ -446,6 +597,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
+                      _userprofile.phoneNumber != "" ?
                       TextFormField(
                         controller: _phoneNumberController,
                         decoration: const InputDecoration(
@@ -465,7 +617,51 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                           }
                           return null;
                         },
-                      ),
+                      ):
+                      GestureDetector(
+                        onTap: () async {
+                          ForgotPasswordDialog.show(context,'add', ()  {
+                            addPhoneNumber();
+                          },);
+
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 13,horizontal: 90), // Adjust spacing
+
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.green.withOpacity(0.8),
+                            // Background color
+                          ),
+                          child:  Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Icon Google
+                              Container(
+                                height: 24,
+                                width: 24,
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: AssetImage('assets/images/phone_logo.png'),
+                                    fit: BoxFit.contain,
+
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Text(
+                                'Add Phone Number',
+                                style: TextStyle(
+                                  color: Colors.white, // Màu chữ đỏ
+                                  fontWeight: FontWeight.w600, // Chữ đậm
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                      ,
                     ],
                   ),
                 ),
@@ -516,7 +712,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                           border: OutlineInputBorder(),
                           hintText: 'Select your gender',
                         ),
-                        items: ['Male', 'Female', 'Other', 'Prefer not to say']
+                        items: ['Male', 'Female', 'Other', 'Prefer not to say','']
                             .map((gender) => DropdownMenuItem<String>(
                           value: gender,
                           child: Text(gender),

@@ -90,7 +90,7 @@ class _RegisterPageState extends State<RegisterPage> {
           currentStep = 2;
         });
       }else{
-        Navigator.pushNamed(context, '/');
+        Navigator.pushNamed(context, '/homepage');
       }
     }
 

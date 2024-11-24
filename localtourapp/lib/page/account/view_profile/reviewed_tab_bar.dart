@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
+import 'package:localtourapp/models/feedback/feedback_model.dart';
 import 'package:localtourapp/models/places/placefeedback.dart';
 import 'package:localtourapp/models/places/placefeedbackhelpful.dart';
 import 'package:localtourapp/models/places/placefeedbackmedia.dart';
@@ -41,7 +42,7 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
   List<PlaceFeedbackHelpful> feedbackHelpfuls = [];
   late int totalReviews;
   late bool isCurrentUserViewing;
-
+FeedBackModel feedBackModel = FeedBackModel(id: 1, userId: 'userId', profileUrl: 'profileUrl', userName: 'userName', rating: 1, content: 'content', totalLike: 1, createDate: DateTime(2000), isLiked: true, placeFeedbackMedia: []);
   @override
   void initState() {
     super.initState();
@@ -156,10 +157,8 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
                     );
                   },
                   child: ReviewCard(
-                    user: user,
-                    feedback: feedback,
-                    feedbackMediaList: mediaList,
-                    feedbackHelpfuls: relevantHelpfuls,
+                    placeId: 1,
+                    feedBackCard: feedBackModel,
                     userId: widget.userId,
                     onUpdate: isCurrentUserViewing ? () {
                       // Open ReviewDialog to update
@@ -171,13 +170,10 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
                       ReportForm.show(
                         context,
                         'Have a problem with this person? Report them to us!',
+                        user.userId,
+                        -1
                       );
                     },
-                    onFavoriteToggle: (feedbackId, isFavorited) {
-                      // Implement favorite toggle logic via a provider or state management
-                    },
-                    isInAllProductPage: false,
-                    followUsers: [],
                   ),
                 );
               }).toList(),

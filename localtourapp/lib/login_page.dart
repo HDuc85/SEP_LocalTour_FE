@@ -1,10 +1,11 @@
 // login_page.dart
 
 import 'package:flutter/material.dart';
-import 'package:localtourapp/features/home/screens/homeScreen.dart';
+import 'package:localtourapp/page/home_screen/home_screen.dart';
 import 'package:localtourapp/page/account/view_profile/for_got_password.dart';
 import 'package:localtourapp/services/auth_service.dart';
 
+import 'base/base_page.dart';
 import 'main.dart';
 
 class LoginPage extends StatefulWidget {
@@ -81,8 +82,8 @@ class _LoginPageState extends State<LoginPage> {
     if (isValid) {
       try {
         await _authService.signInWithPassword(phoneNumber, password);
-        navigatorKey.currentState?.pushNamed('/');
-
+        widget.onLogin();
+        Navigator.pushNamed(context, '/');
       }catch(e){
         String error = e.toString();
         if(error.toLowerCase().contains('password')){
@@ -184,7 +185,9 @@ class _LoginPageState extends State<LoginPage> {
 
                             onPressed: () {
                               ForgotPasswordDialog.show(
-                                context,
+                                context,'',() {
+
+                                },
                               );
                             },
                             child: const Text(
@@ -207,8 +210,8 @@ class _LoginPageState extends State<LoginPage> {
                       if(result.firstTime){
                         navigatorKey.currentState?.pushNamed('/register');
                       }
-                      navigatorKey.currentState?.pushNamed('/');
-
+                     widget.onLogin();
+                      Navigator.pushNamed(context, '/');
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 13,horizontal: 105), // Adjust spacing
@@ -289,8 +292,10 @@ class _LoginPageState extends State<LoginPage> {
                   // TextButton
                   TextButton(
                     onPressed: () {
-                      navigatorKey.currentState?.pushNamed('/');
-                    },
+                  widget.onLogin();
+                  Navigator.pushNamed(context, '/');
+
+                  },
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.black,
                     ),

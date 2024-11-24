@@ -3,6 +3,7 @@ enum SortBy {
   created_by,
   distance,
   rating,
+  liked,
   none
 }
 

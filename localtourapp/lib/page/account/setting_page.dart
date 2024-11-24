@@ -1,6 +1,8 @@
 // lib/page/setting_page.dart
 
 import 'package:flutter/material.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:provider/provider.dart';
 
 import '../../provider/language_provider.dart';
@@ -16,14 +18,34 @@ class _SettingPageState extends State<SettingPage> {
   // Define the list of supported languages
   final List<Map<String, String>> _languages = [
     {'name': 'English', 'code': 'en'},
-    {'name': 'Vietnamese', 'code': 'vn'},
-    {'name': 'Chinese', 'code': 'cn'},
+    {'name': 'Vietnamese', 'code': 'vi'},
   ];
+  String currentLanguageCode = 'en';
+  Future<void> getSystemLanguage() async{
+    String? languagecode = await SecureStorageHelper().readValue(AppConfig.language);
+    if(languagecode != null){
+      setState(() {
+        currentLanguageCode = languagecode;
+      });
+    }
+  }
+  Future<void> changeSystemLanguage(String languageCode) async {
+    if(languageCode != null){
+      await SecureStorageHelper().saveValue(AppConfig.language, languageCode);
+      getSystemLanguage();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getSystemLanguage();
+  }
 
   @override
   Widget build(BuildContext context) {
     final languageProvider = Provider.of<LanguageProvider>(context);
-    String currentLanguageCode = languageProvider.currentLocale.languageCode;
+
 
     return Scaffold(
       appBar: AppBar(
@@ -88,7 +110,7 @@ class _SettingPageState extends State<SettingPage> {
                           }).toList(),
                           onChanged: (String? newValue) {
                             if (newValue != null) {
-                              languageProvider.changeLanguage(newValue);
+                              changeSystemLanguage(newValue);
                             }
                           },
                           validator: (value) {

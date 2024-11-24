@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:localtourapp/services/report_service.dart';
 
 class ReportForm extends StatefulWidget {
   final String message;
+  final String? userId;
+  final int?  placeId;
   final ValueChanged<String>? onSubmit; // Changing the callback to pass the report message
 
   const ReportForm({
     Key? key,
     required this.message,
+    this.userId,
+    this.placeId,
     this.onSubmit,
   }) : super(key: key);
 
   // Static method to display the ReportForm dialog
-  static void show(BuildContext context, String message, {ValueChanged<String>? onSubmit}) {
+  static void show(BuildContext context, String message,String? userId, int? placeId , {ValueChanged<String>? onSubmit}) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -30,7 +35,7 @@ class ReportForm extends StatefulWidget {
               ),
             ),
             padding: const EdgeInsets.all(20),
-            child: ReportForm(message: message, onSubmit: onSubmit),
+            child: ReportForm(message: message,userId: userId,placeId: placeId, onSubmit: onSubmit),
           ),
         );
       },
@@ -43,7 +48,7 @@ class ReportForm extends StatefulWidget {
 
 class _ReportFormState extends State<ReportForm> {
   final TextEditingController _controller = TextEditingController();
-
+  final ReportService _reportService = ReportService();
   // Key for the form to manage validation
   final _formKey = GlobalKey<FormState>();
 
@@ -63,12 +68,21 @@ class _ReportFormState extends State<ReportForm> {
     );
   }
 
-  void _handleReportSubmission() {
+  Future<void> _handleReportSubmission() async {
     if (_formKey.currentState?.validate() ?? false) {
       // If the form is valid (text is not empty)
       final reportMessage = _controller.text.trim();
-      widget.onSubmit?.call(reportMessage);
-      _showSnackbar('Your report has been sent, we will consider it.');
+      String message = '';
+      if(widget.userId != null){
+         message = await _reportService.reportUser(widget.userId!, reportMessage);
+      }
+      if(widget.placeId != null && widget.placeId! > 0){
+         message = await _reportService.reportPlace(widget.placeId!, reportMessage);
+      }
+
+
+      widget.onSubmit?.call(message);
+      _showSnackbar('$message');
       Navigator.pop(context); // Close the form after reporting
     }
   }

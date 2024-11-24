@@ -67,7 +67,6 @@ class AuthService {
       if (user == null) {
         throw Exception("User chưa đăng nhập.");
       }
-
       final requestBody = {
         "token": user.uid,
       };
@@ -80,7 +79,7 @@ class AuthService {
         final result = VerifyFirebaseResponse.fromJson(jsonData);
 
         storage.saveValue(AppConfig.accessToken, result.firebaseAuthToken);
-        storage.saveBoolValue(AppConfig.isLogin, true);
+        storage.saveValue(AppConfig.isLogin, 'true');
         storage.saveBoolValue(AppConfig.isFirstLogin, result.firstTime);
         storage.saveValue(AppConfig.userId, result.userId);
         storage.saveValue(AppConfig.refreshToken, result.refreshToken);
@@ -103,6 +102,11 @@ class AuthService {
   }
 
   Future<void> signOut() async {
+      storage.deleteValue(AppConfig.isLogin);
+      storage.deleteValue(AppConfig.userId);
+      storage.deleteValue(AppConfig.accessToken);
+      storage.deleteValue(AppConfig.refreshToken);
+
     await _auth.signOut();
   }
 
@@ -132,7 +136,7 @@ class AuthService {
         await storage.saveValue(AppConfig.accessToken, responseData['accessToken']);
         await storage.saveValue(AppConfig.refreshToken, responseData['refreshToken']);
         await storage.saveValue(AppConfig.userId, responseData['userId']);
-
+        await storage.saveValue(AppConfig.isLogin, 'true');
        return true;
       } else {
         throw Exception(responseData);
@@ -142,5 +146,60 @@ class AuthService {
     }
   }
 
+  Future<String> AddEmailGoogle() async {
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser != null) {
+        final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        await _auth.signInWithCredential(credential);
+
+        User? user = FirebaseAuth.instance.currentUser;
+        if(user != null){
+          var body = { "token" : user.uid};
+          var response = await apiService.makeRequest("User/UpdatePhoneOrEmail", 'PUT',body);
+
+          if(response.statusCode == 200){
+            return response.body;
+          }
+          return response.body;
+
+        }
+
+      }
+    } catch (e) {
+      print('Google Sign-In Error: $e');
+    }
+    return '';
+  }
+
+  Future<String> AddPhoneNumber() async {
+    try {
+
+        User? user = FirebaseAuth.instance.currentUser;
+        if(user != null){
+          var body = { "token" : user.uid};
+          var response = await apiService.makeRequest("User/UpdatePhoneOrEmail", 'PUT',body);
+
+          if(response.statusCode == 200){
+            return response.body;
+          }
+          return response.body;
+
+        }
+
+
+    } catch (e) {
+      print('Google Sign-In Error: $e');
+    }
+    return '';
+  }
 
 }

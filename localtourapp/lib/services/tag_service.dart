@@ -11,8 +11,8 @@ class TagService {
   final apiService = ApiService();
   static final _storage = SecureStorageHelper();
 
-  Future<List<TagModel>> getAllTag() async {
-    final response = await apiService.makeRequest('Tag/getAll', 'GET');
+  Future<List<TagModel>> getAllTag([int? page, int? size]) async {
+    final response = await apiService.makeRequest('Tag/getAll?Page=$page&Size=$size', 'GET');
 
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(response.body);

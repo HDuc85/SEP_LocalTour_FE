@@ -74,8 +74,6 @@ void main() async {
     translations: dummyTranslations,
   );
   await bookmarkProvider.loadBookmarks();
-  await storage.saveValue(
-      AppConfig.userId, "00000000-0000-0000-0000-000000000000");
 
   // Generate fake users
   User myUser = fakeUsers.firstWhere(
@@ -120,15 +118,15 @@ void main() async {
                   media: dummyPostMedia,
                 )),
       ],
-      child: MyApp(myUser: myUser),
+      child: MyApp(),
     ),
   );
 }
 
 class MyApp extends StatefulWidget {
-  final User myUser;
-
-  const MyApp({Key? key, required this.myUser}) : super(key: key);
+  const MyApp({
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -139,7 +137,7 @@ class _MyAppState extends State<MyApp> {
   late final List<Widget> screens;
   late final List<String?> titles;
   final ScrollController scrollController = ScrollController();
-
+  String CurrentUserId = '';
   bool _showWelcomePage = true;
   // Removed: bool _showLoginPage = false; // No longer needed
 
@@ -153,7 +151,7 @@ class _MyAppState extends State<MyApp> {
       PlannedPage(
         scheduleLikes: dummyScheduleLikes,
         destinations: dummyDestinations,
-        userId: widget.myUser.userId,
+        userId: CurrentUserId,
         users: Provider.of<UsersProvider>(context, listen: false).users,
       ),
       AccountPage(
@@ -166,7 +164,7 @@ class _MyAppState extends State<MyApp> {
       null,
       'Bookmark Page',
       null,
-      "${widget.myUser.fullName}'s Account Page",
+      "Account Page",
     ];
   }
 
@@ -188,6 +186,16 @@ class _MyAppState extends State<MyApp> {
       _showWelcomePage = false; // Hide the WelcomePage
       // No longer setting _showLoginPage
     });
+  }
+
+  Future<void> CurrentUserfetch() async {
+    var userId = await SecureStorageHelper().readValue(AppConfig.userId);
+    if (userId != null && userId != '') {
+      setState(() {
+        CurrentUserId = userId;
+        currentIndex = 0;
+      });
+    }
   }
 
   @override
@@ -239,10 +247,7 @@ class _MyAppState extends State<MyApp> {
                 builder: (context) => LoginPage(
                   onLogin: () {
                     // Handle successful login
-                    authProvider.login(widget.myUser.userId);
-                    setState(() {
-                      // Optionally, perform additional state updates
-                    });
+                    CurrentUserfetch();
                   },
                   onRegister: () {
                     // Handle registration navigation
@@ -257,6 +262,7 @@ class _MyAppState extends State<MyApp> {
                     const RegisterPage(), // Ensure you have RegisterPage
               );
             }
+
             if (settings.name == '/detail') {
               final args = settings.arguments as Map<String, dynamic>;
               return MaterialPageRoute(
@@ -271,15 +277,12 @@ class _MyAppState extends State<MyApp> {
 
               final userId = args != null && args.containsKey('userId')
                   ? args['userId'] as String
-                  : widget.myUser.userId;
-              final User selectedUser =
-                  Provider.of<UsersProvider>(context, listen: false)
-                          .getUserById(userId) ??
-                      widget.myUser;
-              final isCurrentUser = userId == widget.myUser.userId;
+                  : CurrentUserId;
+
+              final isCurrentUser = userId == CurrentUserId;
               return MaterialPageRoute(
                 builder: (context) => AccountPage(
-                  userId: '',
+                  userId: CurrentUserId,
                 ),
               );
             }
@@ -305,7 +308,7 @@ class _MyAppState extends State<MyApp> {
                   builder: (context) => PlannedPage(
                     scheduleLikes: dummyScheduleLikes,
                     destinations: dummyDestinations,
-                    userId: widget.myUser.userId,
+                    userId: CurrentUserId,
                     users: Provider.of<UsersProvider>(context, listen: false)
                         .users,
                   ),

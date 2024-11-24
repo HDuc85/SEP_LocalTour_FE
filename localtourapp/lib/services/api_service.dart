@@ -16,8 +16,7 @@ class ApiService {
   Future<http.Response> makeRequest(String endpoint, String method,
       [Map<String, dynamic>? body]) async {
     String? accessToken = await storage.readValue(AppConfig.accessToken);
-    String? refreshToken = await storage.readValue(AppConfig.refreshToken);
-    
+
     final uri = Uri.parse('${AppConfig.apiUrl}$endpoint');
     Map<String, String>? headers = {};
 
@@ -73,6 +72,7 @@ class ApiService {
       await storeTokens(data);
       return true;
     }
+    await storage.saveBoolValue(AppConfig.isLogin, false);
     return false;
   }
 
@@ -83,6 +83,8 @@ class ApiService {
     await storage.saveValue(AppConfig.accessToken, tokens['accessToken']);
     await storage.saveValue(AppConfig.refreshToken, tokens['refreshToken']);
     await storage.saveValue(AppConfig.userId, tokens['userId']);
+    await storage.saveValue(AppConfig.isLogin, 'true');
+
   }
 
   Future<(bool, bool)> sendFirebaseTokenToBackend(String idToken) async {

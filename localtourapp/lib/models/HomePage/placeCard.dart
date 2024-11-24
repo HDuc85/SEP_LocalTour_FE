@@ -24,12 +24,15 @@ class PlaceCardModel {
   });
 
   factory PlaceCardModel.fromJson(Map<String, dynamic> json) {
+
+    bool hasValue = json['placeTranslation'].isNotEmpty ? true: false;
+
     return PlaceCardModel(
       placeId: json['id'],
       wardName: json['wardName']?.toString() ?? 'Unknown Ward',
       photoDisplayUrl: json['photoDisplay'] ?? '',
-      placeName: json['placeTranslation'][0]['name'] ?? 'Unknown Place',
-      address: json['placeTranslation'][0]['address'],
+      placeName: hasValue ? json['placeTranslation'][0]['name'] : 'Unknown Place',
+      address: hasValue ? json['placeTranslation'][0]['address'] : 'Unknown Address',
       rateStar: (json['rating'] ?? 0).toDouble(),
       countFeedback: json['totalPlaceFeedback'] ?? 0,
       distance: json['distance']?.toDouble() ?? 0.0,

@@ -58,7 +58,11 @@ class UserService {
     }
     String? accessToken = await _storage.readValue(AppConfig.accessToken);
 
-    request.headers['Authorization'] = 'Bearer $accessToken';
+    Map<String, String> headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'multipart/form-data',
+    };
+    request.headers.addAll(headers);
     final response = await request.send();
     final responseBody = await http.Response.fromStream(response);
 
@@ -69,4 +73,16 @@ class UserService {
       throw Exception(responseBody.body);
     }
   }
+
+  Future<bool> FollowOrUnFollowUser(String userId, bool isFollowed) async {
+    final response = await apiService.makeRequest(
+        'FollowUser?userFollowedId=$userId', isFollowed ? 'DELETE' : 'POST',{});
+
+    if (response.statusCode == 200) {
+      return true;
+    }
+    return false;
+  }
+
+
 }

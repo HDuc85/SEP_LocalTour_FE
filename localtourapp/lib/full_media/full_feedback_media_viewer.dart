@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/media_model.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -8,7 +9,7 @@ import 'package:intl/intl.dart';
 import '../../models/places/placefeedbackmedia.dart'; // For formatting the date
 
 class FullFeedbackMediaViewer extends StatefulWidget {
-  final List<PlaceFeedbackMedia> feedbackMediaList;
+  final List<MediaModel> feedbackMediaList;
   final int initialIndex;
 
   const FullFeedbackMediaViewer({
@@ -51,7 +52,7 @@ class _FullFeedbackMediaViewerState extends State<FullFeedbackMediaViewer> {
     _videoController?.dispose();
 
     // Check if the video is from assets or local/network storage
-    if (currentMedia.type.toLowerCase() == 'video') {
+    if (currentMedia.type.toLowerCase() == 'Video') {
       if (currentMedia.url.startsWith('assets')) {
         // Copy asset to a temporary location and use that path
         final localFile = await _copyAssetToLocal(currentMedia.url);
@@ -97,7 +98,7 @@ class _FullFeedbackMediaViewerState extends State<FullFeedbackMediaViewer> {
             },
             itemBuilder: (context, index) {
               final media = widget.feedbackMediaList[index];
-              if (media.type.toLowerCase() == 'photo') {
+              if (media.type.toLowerCase() == 'image') {
                 return Center(
                   child: media.url.startsWith('http')
                       ? Image.network(
@@ -171,25 +172,6 @@ class _FullFeedbackMediaViewerState extends State<FullFeedbackMediaViewer> {
             ),
           ),
           // Display createDate at bottom-left corner
-          Positioned(
-            bottom: 40, // Adjust as needed
-            left: 20,
-            child: Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                _formatDate(widget.feedbackMediaList[_currentIndex].createDate),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );

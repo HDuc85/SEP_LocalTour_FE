@@ -18,7 +18,28 @@ class MarkplaceService {
       final List<dynamic> responseData = json.decode(response.body);
       return responseData.map((data) => markPlaceModel.fromJson(data)).toList();
     } else {
-      throw Exception("Không thể tải dữ liệu. Mã lỗi: ${response.body}");
+     return [];
     }
   }
+
+  Future<bool> markPlace(int placeId) async {
+    final response = await apiService.makeRequest(
+        'MarkPlace?placeId=$placeId', 'POST');
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  Future<bool> deleteMarkPlace(int placeId) async {
+    final response = await apiService.makeRequest(
+        'MarkPlace?placeId=$placeId', 'DELETE');
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
 }

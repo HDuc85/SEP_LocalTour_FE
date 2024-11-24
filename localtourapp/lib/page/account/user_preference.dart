@@ -1,17 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/Tag/tag_model.dart';
+import 'package:localtourapp/models/users/userProfile.dart';
+import 'package:localtourapp/services/tag_service.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/places/tag.dart';
 import '../../provider/user_provider.dart';
 
 class UserPreferencePage extends StatefulWidget {
-  const UserPreferencePage({Key? key}) : super(key: key);
+  final Userprofile userprofile;
+  const UserPreferencePage({Key? key, required this.userprofile}) : super(key: key);
 
   @override
   State<UserPreferencePage> createState() => _UserPreferencePageState();
 }
 
 class _UserPreferencePageState extends State<UserPreferencePage> {
+  final TagService _tagService = TagService();
+  late List<TagModel> listUserTag;
+  late List<TagModel> listTag;
+
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    Getdata();
+
+  }
+
+  Future<void> Getdata()async{
+    var fetchListTag = await _tagService.getAllTag(1,30);
+    var fetchUserTag = await _tagService.getUserTag();
+    
+    setState(() {
+      listUserTag = fetchUserTag;
+      listTag = fetchListTag;
+      isLoading = false;
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
@@ -19,9 +48,20 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Preferences's $userName"),
+        title: Text("Preferences's ${widget.userprofile.userName}"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () async {
+            List<int> listTagSelected = listUserTag.map((e) => e.id,).toList();
+            var result = await _tagService.addTagsPreferencs(listTagSelected);
+            if(result){
+              Navigator.pop(context);
+            }
+          },
+        ),
       ),
-      body: Column(
+      body:
+      isLoading?  Center(child: CircularProgressIndicator()) :Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           const Text("Choose your preferences", style: TextStyle(fontSize: 18)),
@@ -30,7 +70,7 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
             child: Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _buildAllTagChips(userProvider),
+              children:  _buildAllTagChips(userProvider),
             ),
           ),
         ],
@@ -40,17 +80,19 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
 
   // Builds a chip for each tag in the listTag
   List<Widget> _buildAllTagChips(UserProvider userProvider) {
-    return listTag.map((tag) {
-      final isSelected = userProvider.isTagSelected(tag.tagId);
 
-      return GestureDetector(
+
+    return listTag.map((tag) {
+      final isSelected = listUserTag.any((element) => element.id == tag.id,);
+
+      return
+        GestureDetector(
         onTap: () {
           setState(() {
             // Toggle the tag selection with enforcement of minimum 5 selections
             if (isSelected) {
-              // Allow deselection only if more than 5 tags are selected
-              if (userProvider.preferredTagIds.length > 5) {
-                userProvider.removeTag(tag.tagId);
+              if (listUserTag.length > 4) {
+                listUserTag.removeWhere((element) => element.id == tag.id,);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -59,7 +101,8 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
                 );
               }
             } else {
-              userProvider.addTag(tag.tagId);
+              listUserTag.add(tag);
+
             }
           });
         },

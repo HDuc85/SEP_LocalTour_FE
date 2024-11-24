@@ -152,18 +152,13 @@ class _DetailTabbarState extends State<DetailTabbar> {
                       child: IconButton(
                         color: Colors.red,
                         onPressed: () {
-                          final placeProvider = Provider.of<PlaceProvider>(context, listen: false);
                           ReportForm.show(
                             context,
                             'Have a problem with this place? Report it to us!',
+                            null,
+                            widget.placeDetail.id,
                             onSubmit: (reportMessage) {
-                              final placeReport = PlaceReport(
-                                id: placeProvider.placeReports.length + 1, // Assuming sequential IDs
-                                placeId: widget.placeDetail.id, // Use the relevant placeId here
-                                reportDate: DateTime.now(),
-                                status: 'unprocessed',
-                              );
-                              placeProvider.addPlaceReport(placeReport);
+
                             },
                           );
                         },

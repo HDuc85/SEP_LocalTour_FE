@@ -1,12 +1,17 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/users/userProfile.dart';
+import 'package:localtourapp/services/auth_service.dart';
 import 'package:localtourapp/services/user_service.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../base/weather_icon_button.dart';
 import '../../models/users/followuser.dart';
+import '../../models/users/update_user_request.dart';
 import '../../models/users/users.dart';
 import '../../provider/users_provider.dart';
 import 'faq.dart';
@@ -32,6 +37,7 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
+  final AuthService _authService = AuthService();
   late UserService _userService = UserService();
   final storage = SecureStorageHelper();
   late List<FollowUser> followers;
@@ -55,29 +61,37 @@ class _AccountPageState extends State<AccountPage> {
   late User displayedUser;
   String myUserId = '';
   late bool isLogin = false;
-
+  bool isCurrentUser = false;
   // Existing ScrollController declaration
   final ScrollController _scrollController = ScrollController();
-
+  final ImagePicker _picker = ImagePicker();
   @override
   void initState() {
     readUserId();
-    readUserProfile(widget.userId);
     super.initState();
   }
 
   Future<void> readUserId() async {
     try {
       String? userIdStorage = await storage.readValue(AppConfig.userId);
-      bool isLoginStorage = await storage.readBoolValue(AppConfig.isLogin);
+      String? isLoginStorage = await storage.readValue(AppConfig.isLogin);
 
-      if(isLoginStorage){
+
+
+      if(isLoginStorage != null){
         setState(() {
-          isLogin = isLoginStorage;
+          isLogin = true;
         });
       }
 
       if (userIdStorage != null && userIdStorage.isNotEmpty) {
+
+        if(widget.userId == ''){
+          readUserProfile(userIdStorage);
+        }else{
+          readUserProfile(widget.userId);
+        }
+
         setState(() {
           myUserId = userIdStorage;
         });
@@ -88,13 +102,33 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   Future<void> readUserProfile(String userId) async {
-    if (userId == '') {
-      userId = (await storage.readValue(AppConfig.userId))!;
-    }
+
     final reponse = await _userService.getUserProfile(userId);
     setState(() {
       userprofile = reponse;
     });
+
+    if ( userId == myUserId && myUserId.isNotEmpty) {
+
+      setState(() {
+        isCurrentUser = true;
+
+      });
+    }
+  }
+
+  Future<void> _selectAvatar() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      File file = File(pickedFile.path);
+     var result = await _userService.sendUserDataRequest(new UpdateUserRequest(profilePicture: file));
+     if(result != null){
+       setState(() {
+         userprofile = result;
+       });
+     }
+    }
   }
 
   @override
@@ -115,22 +149,17 @@ class _AccountPageState extends State<AccountPage> {
   @override
   Widget build(BuildContext context) {
 
-    bool isCurrentUser = false;
     // Listen to scroll events
     _scrollController.addListener(() {
       // Implement your logic here, e.g., show "Back to Top" button
     });
     // Determine if the current user is following the displayed user
-    if (widget.userId == myUserId) {
-      isCurrentUser = true;
-    }
+
     return Stack(
       children: [
-
             ListView(
               controller: _scrollController,
               padding: const EdgeInsets.all(8.0),
-
               children: [
                 const SizedBox(height: 16),
                 _buildProfileSection(userprofile),
@@ -149,7 +178,7 @@ class _AccountPageState extends State<AccountPage> {
                   const SizedBox(height: 12), // Adjust spacing if needed
                 ],
 
-                  _buildLogoutButton(), // Add the Logout button here
+                if (isCurrentUser)_buildLogoutButton(), // Add the Logout button here
                   const SizedBox(height: 36),
 
               ],
@@ -168,6 +197,15 @@ class _AccountPageState extends State<AccountPage> {
 
   }
 
+  Future<void> folowBtn(bool isFollowing) async {
+    bool result = await _userService.FollowOrUnFollowUser(widget.userId,isFollowing);
+    if(result){
+      setState(() {
+        userprofile.isFollowed = !isFollowing;
+      });
+    }
+  }
+
   // Add this method inside _AccountPageState
   Widget _buildFollowButton(
     bool isFollowing,
@@ -175,7 +213,7 @@ class _AccountPageState extends State<AccountPage> {
     return Center(
       child: ElevatedButton(
         onPressed: () {
-          // Update follower and following counts after following/unfollowing
+          folowBtn(isFollowing);
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: isFollowing ? Colors.red : Colors.blue,
@@ -212,15 +250,17 @@ class _AccountPageState extends State<AccountPage> {
               Column(
                 children: [
                   SizedBox(height: 10,),
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundImage: userProfile.userProfileImage != ''
-                        ? NetworkImage(userProfile.userProfileImage)
-                        : null,
-                    child: userProfile.userProfileImage == ''
-                        ? const Icon(Icons.account_circle,
-                            size: 60, color: Colors.grey)
-                        : null,
+                  GestureDetector(
+                    onTap: isCurrentUser? _selectAvatar : (){}, // Gọi khi nhấn vào avatar
+                    child: CircleAvatar(
+                      radius: 60,
+                      backgroundImage: userProfile.userProfileImage != ''
+                          ? NetworkImage(userProfile.userProfileImage)
+                          : null,
+                      child: userProfile.userProfileImage == ''
+                          ? const Icon(Icons.account_circle, size: 60, color: Colors.grey)
+                          : null,
+                    ),
                   ),
                 ],
               ),
@@ -321,8 +361,8 @@ class _AccountPageState extends State<AccountPage> {
                       followUsers: [],
                       posts: [],
                       schedules: [],
-                      user: displayedUser,
-                      userId: myUserId,
+                      user: userprofile,
+                      userId: widget.userId == ''? myUserId : widget.userId,
                     ),
                   ),
                 );
@@ -356,7 +396,9 @@ class _AccountPageState extends State<AccountPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const PersonalInformationPage(),
+              builder: (context) =>  PersonalInformationPage(userprofile: userprofile, userId: myUserId,fetchData: () {
+                readUserProfile(myUserId);
+              },),
             ),
           );
         },
@@ -527,7 +569,7 @@ class _AccountPageState extends State<AccountPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const UserPreferencePage(),
+              builder: (context) =>  UserPreferencePage(userprofile: userprofile,),
             ),
           );
         },
@@ -591,14 +633,11 @@ class _AccountPageState extends State<AccountPage> {
   void _logout() {
     // Access the AuthProvider
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.logout();
-    if(isLogin){
-      storage.deleteValue(AppConfig.isLogin);
-      storage.deleteValue(AppConfig.userId);
-      storage.deleteValue(AppConfig.accessToken);
-      storage.deleteValue(AppConfig.refreshToken);
 
-    }
+    authProvider.logout();
+
+    _authService.signOut();
+
     // Navigate to the login screen or any desired screen after logout
     Navigator.pushReplacementNamed(
         context, '/login'); // Adjust the route as needed

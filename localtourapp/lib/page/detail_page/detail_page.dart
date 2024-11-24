@@ -5,6 +5,7 @@ import 'package:localtourapp/models/Tag/tag_model.dart';
 import 'package:localtourapp/models/event/event_model.dart';
 import 'package:localtourapp/models/media_model.dart';
 import 'package:localtourapp/models/places/place_detail_model.dart';
+import 'package:localtourapp/services/mark_place_service.dart';
 import 'package:localtourapp/services/place_service.dart';
 import 'package:localtourapp/services/tag_service.dart';
 import 'package:provider/provider.dart';
@@ -34,17 +35,17 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
   final PlaceService _placeService = PlaceService();
   final TagService _tagService = TagService();
   final EventService _eventService = EventService();
-
+  final MarkplaceService _markplaceService = MarkplaceService();
   String _userId = '';
   String _languageCode = '';
 
-  late PlaceDetailModel _placeDetailModel =
-  PlaceDetailModel
-    (id: 1, photoDisplay: '', timeOpen: TimeOfDay(hour: 1,minute: 1), timeClose: TimeOfDay(hour: 1, minute: 1), longitude: 1, latitude: 1, contactLink: '', placeActivities: [], placeMedias: [], name: '', description: '', address: '', contact: '');
+  late PlaceDetailModel _placeDetailModel ;
   late TabController _tabController;
   List<TagModel> _listTagInPlace = [];
   List<EventModel> _listEvents =[];
+  bool isMarked = false;
   bool _showBackToTopButton = false;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -72,13 +73,22 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
     var userId = await SecureStorageHelper().readValue(AppConfig.userId);
     var fetchedListEvents = await _eventService.GetEventInPlace(widget.placeId);
     var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
-
+    bool isMark = false;
+    if(userId == null){
+      _userId = '';
+    }
+    if(userId != null && userId!.isNotEmpty)
+    {
+      var Listmark = await _markplaceService.getAllMarkPlace();
+      isMark = Listmark.any((element) => element.placeId == widget.placeId);
+    }
     setState(() {
       _placeDetailModel = fetchPlaceDetail;
       _listTagInPlace = fetchTagInPlace;
-      _userId = userId!;
       _listEvents = fetchedListEvents;
-      _languageCode = _languageCode;
+      _languageCode = languageCode!;
+      isMarked = isMark;
+      isLoading = false;
     });
 
   }
@@ -108,26 +118,26 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
     );
   }
 
-  void _toggleBookmark(PlaceProvider bookmarkManager) async {
-    if (bookmarkManager.isBookmarked(widget.placeId)) {
-      await bookmarkManager.removeBookmark(widget.placeId);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bookmark removed')),
-      );
-    } else {
-      await bookmarkManager.addBookmark(
-        MarkPlace(
-          markPlaceId: widget.placeId,
-          userId: _userId, // Use widget.userId instead of hardcoded ID
-          placeId: widget.placeId,
-          createdDate: DateTime.now(),
-          isVisited: false,
-        ),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bookmark added')),
-      );
-    }
+  Future<void> _toggleBookmark(int placeId) async {
+   if(_userId != '' && _userId.isNotEmpty){
+     if(isMarked){
+       bool success = await _markplaceService.deleteMarkPlace(placeId);
+       if(success){
+         setState(() {
+           isMarked = false;
+         });
+       }
+
+     }else{
+       bool success = await _markplaceService.markPlace(placeId);
+       if (success){
+         setState(() {
+           isMarked = true;
+         });
+       }
+     }
+   }
+
   }
 
   @override
@@ -138,7 +148,10 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
     // Access widget properties directly
     final int placeId = widget.placeId;
 
-    return Scaffold(
+    return  isLoading
+        ? Center(child: CircularProgressIndicator())
+        :
+      Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         title: Text(
@@ -148,18 +161,18 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
         actions: [
           IconButton(
             icon: Icon(
-              isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              isMarked ? Icons.bookmark
+                  : Icons.bookmark_border,
               color: Colors.red,
             ),
             onPressed: () {
-              _toggleBookmark(bookmarkManager);
+              _toggleBookmark(widget.placeId);
             },
           ),
         ],
       ),
-      body: FutureBuilder(future: _getPlaceDetail(), builder: (context, snapshot) =>
-
-          Stack(
+      body:
+      Stack(
             children: [
               NestedScrollView(
                 key: _nestedScrollViewKey, // Assign the GlobalKey here
@@ -331,7 +344,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
               ),
             ],
           ),
-      )
+
     );
   }
 

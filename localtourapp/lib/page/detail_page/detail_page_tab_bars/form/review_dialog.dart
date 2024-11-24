@@ -2,22 +2,22 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../models/media_model.dart';
+import '../../../../services/media_service.dart';
+
 class ReviewDialog extends StatefulWidget {
   final Function(
       int rating, String content, List<File> images, List<File> videos)
   onSubmit;
   final int initialRating;
   final String initialContent;
-  final List<File> initialImages;
-  final List<File> initialVideos;
-
+  final List<MediaModel>? initialMedia;
   const ReviewDialog({
     Key? key,
     required this.onSubmit,
     this.initialRating = 0,
     this.initialContent = '',
-    this.initialImages = const [],
-    this.initialVideos = const [],
+    this.initialMedia,
   }) : super(key: key);
 
   @override
@@ -25,13 +25,15 @@ class ReviewDialog extends StatefulWidget {
 }
 
 class _ReviewDialogState extends State<ReviewDialog> {
+  MediaService _mediaService = MediaService();
+
   int selectedRating = 0;
   final TextEditingController contentController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   List<XFile> _selectedImages = [];
   List<XFile> _selectedVideos = [];
   int _totalSize = 0; // Track total size in MB
-
+  int initSize = 0;
   final int maxItems = 10;
   final int maxTotalSize = 200; // 200MB limit
 
@@ -40,17 +42,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
     super.initState();
     selectedRating = widget.initialRating;
     contentController.text = widget.initialContent;
-
-    // Convert initial Files to XFiles
-    _selectedImages = widget.initialImages
-        .where((file) => file.existsSync())
-        .map((file) => XFile(file.path))
-        .toList();
-
-    _selectedVideos = widget.initialVideos
-        .where((file) => file.existsSync())
-        .map((file) => XFile(file.path))
-        .toList();
+    _convertListMedia();
 
     _totalSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
   }
@@ -61,6 +53,30 @@ class _ReviewDialogState extends State<ReviewDialog> {
     super.dispose();
   }
 
+  Future<void> _convertListMedia() async {
+    if(widget.initialMedia != null){
+      for(var item in widget.initialMedia!){
+        if(item.type == 'Video'){
+          XFile? xFile = await _mediaService.downloadAndConvertToXFile(item.url);
+          if (xFile != null) {
+            _selectedVideos.add(xFile);
+          }
+        }
+        if(item.type == 'Image'){
+          XFile? xFile = await _mediaService.downloadAndConvertToXFile(item.url);
+          if (xFile != null) {
+            _selectedImages.add(xFile);
+          }
+        }
+      }
+    }
+
+    setState(() {
+      initSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
+    });
+  }
+  
+  
   Future<void> _pickImages() async {
     final List<XFile> images = await _picker.pickMultiImage();
     int newSize = _calculateTotalSize([..._selectedImages, ...images, ..._selectedVideos]);
@@ -113,10 +129,9 @@ class _ReviewDialogState extends State<ReviewDialog> {
   bool _hasChanges() {
     bool contentChanged = widget.initialContent != contentController.text;
     bool ratingChanged = widget.initialRating != selectedRating;
-    bool imagesChanged = !_areFilesEqual(widget.initialImages, _selectedImages);
-    bool videosChanged = !_areFilesEqual(widget.initialVideos, _selectedVideos);
+    bool mediaChanged = initSize != _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
 
-    return contentChanged || ratingChanged || imagesChanged || videosChanged;
+    return contentChanged || ratingChanged  || mediaChanged;
   }
 
   bool _areFilesEqual(List<File> initialFiles, List<XFile> selectedFiles) {

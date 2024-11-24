@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
+import 'package:localtourapp/models/feedback/feedback_model.dart';
+import 'package:localtourapp/services/review_service.dart';
 import 'package:provider/provider.dart';
 import '../../../../models/places/placefeedback.dart';
 import '../../../models/places/placefeedbackmedia.dart';
@@ -12,25 +16,11 @@ import '../../models/places/placefeedbackhelpful.dart';
 import 'detail_page_tab_bars/form/reportform.dart';
 
 class AllReviewsPage extends StatefulWidget {
-  final List<PlaceFeedback> feedbacks;
-  final List<User> users;
-  final List<FollowUser> followUsers;
-  final List<PlaceFeedbackMedia> feedbackMediaList;
-  final List<PlaceFeedbackHelpful> feedbackHelpfuls;
-  final String userId;
   final int placeId;
-  final int totalReviews;
 
   const AllReviewsPage({
     Key? key,
-    required this.feedbacks,
-    required this.users,
-    required this.feedbackMediaList,
     required this.placeId,
-    required this.feedbackHelpfuls,
-    required this.userId,
-    required this.followUsers,
-    required this.totalReviews,
   }) : super(key: key);
 
   @override
@@ -78,6 +68,7 @@ class _FilterCellState extends State<FilterCell> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            SizedBox(),
             Text(
               widget.label,
               textAlign: TextAlign.center,
@@ -94,6 +85,7 @@ class _FilterCellState extends State<FilterCell> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+            SizedBox()
           ],
         ),
       ),
@@ -102,24 +94,52 @@ class _FilterCellState extends State<FilterCell> {
 }
 
 class _AllReviewsPageState extends State<AllReviewsPage> {
+  final ReviewService _reviewService = ReviewService();
+
+  List<FeedBackModel> _feedbackList = [];
+  List<FeedBackModel> _feedbackListInit =[];
+  int totalReview = -1;
+  String currentUserId = '';
   String sortByStars = "All";
   String sortOrder = "Latest";
   Color sortOrderColor = Colors.green;
   bool filterWithMedia = false;
+
+  int MediaCount = 0;
   final ScrollController _scrollController = ScrollController();
   bool _showBackToTopButton = false;
-
-  late List<PlaceFeedbackMedia> relevantMediaList;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+    _fetchFeedbackDate();
+  }
 
-    relevantMediaList = widget.feedbackMediaList.where((media) {
-      return widget.feedbacks.any((feedback) =>
-      feedback.placeFeedbackId == media.feedbackId && feedback.placeId == widget.placeId);
-    }).toList();
+  Future<void> _fetchFeedbackDate() async{
+    var (fetchFeedback,total) = await _reviewService.getFeedbackInPlace(widget.placeId);
+    var myUserId = await SecureStorageHelper().readValue(AppConfig.userId);
+
+    if(myUserId == null){
+      myUserId ='';
+    }
+
+    var count = 0;
+    for(var item in fetchFeedback){
+      count += item.placeFeedbackMedia.length;
+    }
+
+
+    setState(() {
+      _feedbackList = fetchFeedback;
+      _feedbackListInit = fetchFeedback;
+      totalReview = total;
+      currentUserId = myUserId!;
+      isLoading = false;
+      MediaCount = count;
+    });
+
   }
 
   @override
@@ -157,11 +177,9 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
   }
 
   // Get the list of PlaceFeedback objects filtered by the selected criteria
-  List<PlaceFeedback> getFilteredFeedbacks() {
+  List<FeedBackModel> getFilteredFeedbacks() {
     // Start with feedbacks filtered by placeId
-    List<PlaceFeedback> filteredFeedbacks = widget.feedbacks.where((feedback) {
-      return feedback.placeId == widget.placeId;
-    }).toList();
+    List<FeedBackModel> filteredFeedbacks = _feedbackListInit;
 
     // Filter by star rating if needed
     if (sortByStars != "All") {
@@ -173,34 +191,32 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
 
     // Filter by media presence
     if (filterWithMedia) {
-      filteredFeedbacks = filteredFeedbacks.where((feedback) {
-        return relevantMediaList.any((media) => media.feedbackId == feedback.placeFeedbackId);
-      }).toList();
+      filteredFeedbacks = filteredFeedbacks.where((element) => element.placeFeedbackMedia.isNotEmpty).toList();
     }
 
     // Sort by the selected sort order
     filteredFeedbacks.sort((a, b) {
       switch (sortOrder) {
         case "Latest":
-          return b.createdAt.compareTo(a.createdAt);
+          return b.createDate.compareTo(a.createDate);
         case "Oldest":
-          return a.createdAt.compareTo(b.createdAt);
+          return a.createDate.compareTo(b.createDate);
         case "Favorite (High to Low)":
-          return _getHelpfulCount(b).compareTo(_getHelpfulCount(a));
+          return b.totalLike.compareTo(a.totalLike);
         case "Favorite (Low to High)":
-          return _getHelpfulCount(a).compareTo(_getHelpfulCount(b));
+          return a.totalLike.compareTo(b.totalLike);
         default:
           return 0;
       }
     });
 
+    setState(() {
+      _feedbackList = filteredFeedbacks;
+    });
+
     return filteredFeedbacks;
   }
 
-  // Helper to get the helpful count for sorting by "Favorite"
-  int _getHelpfulCount(PlaceFeedback feedback) {
-    return widget.feedbackHelpfuls.where((helpful) => helpful.placeFeedbackId == feedback.placeFeedbackId).length;
-  }
 
   void _showSortByStarsDialog() {
     showDialog(
@@ -273,28 +289,19 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
     );
   }
 
-  User getUserDetails(String userId) {
-    return widget.users.firstWhere(
-          (user) => user.userId == userId,
-      orElse: () => User(
-        userId: 'default',
-        userName: 'Unknown User',
-        emailConfirmed: false,
-        phoneNumberConfirmed: false,
-        dateCreated: DateTime.now(),
-        dateUpdated: DateTime.now(),
-        reportTimes: 0,
-      ),
-    );
+
+  Future<void> onFavoriteToggle(int feedbackId) async{
+
   }
 
   @override
   Widget build(BuildContext context) {
     final filteredFeedbacks = getFilteredFeedbacks();
-    final mediaFeedbackCount = getMediaFeedbackCount();
     final reviewProvider = Provider.of<ReviewProvider>(context);
 
-    return Scaffold(
+    return isLoading
+        ? Center(child: CircularProgressIndicator())
+        :Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -320,7 +327,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
               Flexible(
                 child: FilterCell(
                   label: "All",
-                  count: "(${widget.totalReviews})",
+                  count: "(${totalReview})",
                   isSelected: !filterWithMedia && sortByStars == "All" && sortOrder == "Latest",
                   onTap: () {
                     setState(() {
@@ -334,7 +341,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
               Flexible(
                 child: FilterCell(
                   label: "With photo/video",
-                  count: "($mediaFeedbackCount)",
+                  count: "($MediaCount)",
                   isSelected: filterWithMedia,
                   onTap: () {
                     setState(() {
@@ -369,33 +376,20 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
                 SingleChildScrollView(
                   controller: _scrollController,
                   child: Column(
-                    children: filteredFeedbacks.map((feedback) {
-                      final relevantHelpfuls = widget.feedbackHelpfuls
-                          .where((helpful) => helpful.placeFeedbackId == feedback.placeFeedbackId)
-                          .toList();
-                      final mediaForFeedback = relevantMediaList
-                          .where((media) => media.feedbackId == feedback.placeFeedbackId)
-                          .toList();
+                    children: _feedbackList.map((feedback) {
 
                       return ReviewCard(
-                        isInAllProductPage: true,
-                        feedback: feedback,
-                        user: getUserDetails(feedback.userId),
-                        feedbackMediaList: mediaForFeedback,
-                        feedbackHelpfuls: relevantHelpfuls,
-                        userId: widget.userId,
-                        onFavoriteToggle: (feedbackId, isFavorited) {
-                          reviewProvider.toggleFavorite(feedbackId, widget.userId);
-                          // Refresh the page to reflect changes.
-                          setState(() {});
-                        },
+                        feedBackCard: feedback,
+                        placeId: widget.placeId,
                         onReport: () {
                           ReportForm.show(
                             context,
                             'Have a problem with this person? Report them to us!',
+                            feedback.userId,
+                            -1
                           );
                         },
-                        followUsers: widget.followUsers,
+                        userId: currentUserId,
                       );
                     }).toList(),
                   ),
@@ -431,9 +425,6 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
     );
   }
 
-  // Count feedbacks with media
-  int getMediaFeedbackCount() {
-    return relevantMediaList.length;
-  }
+
 
 }

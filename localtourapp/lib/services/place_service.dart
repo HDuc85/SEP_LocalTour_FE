@@ -37,7 +37,7 @@ class PlaceService {
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(response.body);
       if (jsonResponse['items'] == null || jsonResponse['items'].isEmpty) {
-        throw Exception("Không có dữ liệu nào được tìm thấy.");
+       return [];
       }
       return mapJsonToPlaceCardModels(jsonResponse['items']);
     } else {

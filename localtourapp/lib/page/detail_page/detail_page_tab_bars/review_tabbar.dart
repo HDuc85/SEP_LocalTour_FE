@@ -1,5 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
+import 'package:localtourapp/models/feedback/feedback_model.dart';
+import 'package:localtourapp/models/places/place_detail_model.dart';
+import 'package:localtourapp/models/users/userProfile.dart';
+import 'package:localtourapp/services/place_service.dart';
+import 'package:localtourapp/services/review_service.dart';
+import 'package:localtourapp/services/user_service.dart';
 import 'package:provider/provider.dart';
 import '../../../base/weather_icon_button.dart';
 import '../../../models/users/userreport.dart';
@@ -35,21 +43,76 @@ class ReviewTabbar extends StatefulWidget {
 }
 
 class _ReviewTabbarState extends State<ReviewTabbar> {
-  bool showAllReviews = false;
-  late int totalReviewers;
 
+  final ReviewService _reviewService = ReviewService();
+  final PlaceService _placeService = PlaceService();
+  final UserService _userService = UserService();
+  List<FeedBackModel> _listFeedbacks = [];
+  late FeedBackModel _userFeedback ;
+  late Userprofile _userprofile;
+  String currentUser = '';
+  bool _isLogin = false;
+  bool isLoading = true;
+  bool showAllReviews = false;
+  late int totalReviewers = 0;
+  late PlaceDetailModel _placeDetailModel;
   void _navigateToWeatherPage() {
     Navigator.pushNamed(context, '/weather');
   }
-
+  bool userHasReviewed = false;
   @override
   void initState() {
     super.initState();
+    fetchListReview();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Calculate the initial score after the widget builds
-      _updatePlaceScore();
+      //_updatePlaceScore();
+    });
+
+  }
+
+  Future<void> fetchListReview() async{
+    var (listDate,totalReview) = await _reviewService.getFeedbackInPlace(widget.placeId);
+    var fetchPlaceDetail = await _placeService.GetPlaceDetail(widget.placeId);
+    var userId = await SecureStorageHelper().readValue(AppConfig.userId);
+    bool isLogin = (await SecureStorageHelper().readValue(AppConfig.isLogin))!.isNotEmpty;
+
+    if(userId != "" && userId != null){
+      var userprofile = await _userService.getUserProfile(userId!);
+      setState(() {
+        _userprofile = userprofile;
+      });
+    }else{
+      userId = '';
+    }
+    if(listDate.length > 0){
+      setState(() {
+        _listFeedbacks = listDate;
+        userHasReviewed = userId!.contains(listDate.first.userId);
+      });
+    }
+    if(listDate.length == 0){
+      setState(() {
+        _listFeedbacks = listDate;
+        userHasReviewed =false;
+      });
+    }
+    if(userHasReviewed){
+      setState(() {
+        _userFeedback = listDate.first;
+      });
+    }
+
+    setState(() {
+      _isLogin = isLogin;
+      totalReviewers = totalReview;
+      currentUser = userId!;
+      isLoading = false;
+      _placeDetailModel = fetchPlaceDetail;
     });
   }
+
+
 
   /// Update the place score and total reviewers count in PlaceScoreManager.
   void _updatePlaceScore() {
@@ -63,102 +126,66 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
     PlaceScoreManager.instance.setReviewCount(widget.placeId, totalReviewers);
   }
 
-  /// Method to add or update a user's review using the ReviewProvider.
-  void addOrUpdateUserReview(
-      int rating, String content, List<File> images, List<File> videos) {
-    final reviewProvider = Provider.of<ReviewProvider>(context, listen: false);
+  Future<void> fetchDate() async {
+    var (listDate,totalReview) = await _reviewService.getFeedbackInPlace(widget.placeId);
+    var fetchPlaceDetail = await _placeService.GetPlaceDetail(widget.placeId);
 
-    // If there's an existing review by this user for this place, update it; otherwise, add a new one.
-    final existingReview = reviewProvider.getReviewsByUserIdAndPlaceId(
-        widget.userId, widget.placeId);
-    final reviewId = existingReview.isNotEmpty
-        ? existingReview.first.placeFeedbackId
-        : reviewProvider.placeFeedbacks.length + 1;
-
-    final newReview = PlaceFeedback(
-      placeFeedbackId: reviewId,
-      placeId: widget.placeId,
-      userId: widget.userId,
-      rating: rating.toDouble(),
-      content: content,
-      createdAt: DateTime.now(),
-    );
-
-    reviewProvider.addOrUpdateReview(
-      newReview,
-      Provider.of<CountProvider>(context, listen: false),
-    );
-
-    // Remove any existing media entries for this review before adding new user-added media
-    reviewProvider.getMediaByReviewId(reviewId).forEach((existingMedia) {
-      reviewProvider.removeReviewMedia(existingMedia.id);
+    setState(() {
+      _listFeedbacks = listDate;
+      totalReviewers = totalReview;
+      _placeDetailModel = fetchPlaceDetail;
     });
-
-    // Add images
-    for (var image in images) {
-      reviewProvider.addReviewMedia(
-        PlaceFeedbackMedia(
-          id: reviewProvider.placeFeedbackMedia.length + 1,
-          feedbackId: reviewId,
-          type: 'photo',
-          url: image.path,
-          createDate: DateTime.now(),
-        ),
-      );
-    }
-
-    // Add videos
-    for (var video in videos) {
-      reviewProvider.addReviewMedia(
-        PlaceFeedbackMedia(
-          id: reviewProvider.placeFeedbackMedia.length + 1,
-          feedbackId: reviewId,
-          type: 'video',
-          url: video.path,
-          createDate: DateTime.now(),
-        ),
-      );
-    }
-
-    // After adding/updating the review:
-    _updatePlaceScore();
-
-    // Show a SnackBar or any relevant UI feedback
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Your review has been added/updated.')),
-    );
   }
 
   /// Method to delete a user's review from ReviewProvider.
-  void deleteUserReview() {
-    final reviewProvider = Provider.of<ReviewProvider>(context, listen: false);
-    final userReview = reviewProvider
-        .getReviewsByUserIdAndPlaceId(widget.userId, widget.placeId)
-        .firstOrNull;
-    if (userReview != null) {
-      reviewProvider.removeReviewByFeedbackId(userReview.placeFeedbackId, Provider.of<CountProvider>(context, listen: false),);
+
+  /// Method to add or update a user's review using the ReviewProvider.
+  void addOrUpdateUserReview(int rating, String content, List<File> images, List<File> videos,[int? feedbackId]) async {
+    List<File> combinedList = [];
+    combinedList.addAll(images);
+    combinedList.addAll(videos);
+
+    String result = '';
+    if(!userHasReviewed){
+       result = await _reviewService.CreateFeedback(widget.placeId, rating, content, combinedList);
+    }else{
+      result = await _reviewService.UpdateFeedback(widget.placeId, rating,feedbackId!, content, combinedList);
     }
 
-    Provider.of<CountProvider>(context, listen: false).decrementReviewCount();
-    _updatePlaceScore();
+    if(result != 'Success'){
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result),
+            duration: const Duration(seconds: 3),
+            backgroundColor: Colors.red,
+          ));
+    }
+    else{
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Your review has been added/updated.')));
+      fetchListReview();
+    }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Your review has been deleted.')),
-    );
+
+
+  }
+  void deleteUserReview(int feedbackId, int placeId) async {
+    var result = await _reviewService.DeleteFeedback(placeId, feedbackId);
+    if(result){
+      setState(() {
+        fetchListReview();
+      });
+    }
   }
 
 
-  /// Check if the user has already reviewed this place.
   bool hasUserReviewed() {
-    final reviewProvider = Provider.of<ReviewProvider>(context, listen: false);
-    final userReviews = reviewProvider.getReviewsByUserIdAndPlaceId(
-        widget.userId, widget.placeId);
-    return userReviews.isNotEmpty;
+    return _listFeedbacks.first.userId.contains(currentUser);
   }
 
   User? getUserDetails(String userId) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    if (userProvider.currentUser!.userId == userId) {
+    if (userProvider.currentUser.userId == userId) {
       return userProvider.currentUser;
     }
     // If not current user, either retrieve from user list or return a default
@@ -196,37 +223,10 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
 
   @override
   Widget build(BuildContext context) {
-    final reviewProvider = Provider.of<ReviewProvider>(context);
-    final followUsersProvider = Provider.of<FollowUsersProvider>(context);
-    final userProvider = Provider.of<UserProvider>(context);
-    final usersProvider = Provider.of<UsersProvider>(context, listen: false);
-    final placeFeedbacks = reviewProvider.getReviewsByPlaceId(widget.placeId);
-    final feedbackMediaList = reviewProvider.getMediaByPlaceId(widget.placeId);
-    final double score = calculateScore(placeFeedbacks);
-    totalReviewers = placeFeedbacks.length;
-    final bool userHasReviewed = hasUserReviewed();
-
-    // Get current user's review
-    final userReview = reviewProvider
-        .getReviewsByUserIdAndPlaceId(widget.userId, widget.placeId)
-        .firstOrNull;
-
-    // Get other users' reviews
-    final otherUserReviews = placeFeedbacks
-        .where((feedback) => feedback.userId != widget.userId)
-        .toList();
-
-    String formatNumber(int number) {
-      if (number >= 1000000) {
-        return '${(number / 1000000).toStringAsFixed(1)}M';
-      } else if (number >= 1000) {
-        return '${(number / 1000).toStringAsFixed(1)}K';
-      } else {
-        return number.toString();
-      }
-    }
-
-    return Stack(
+    bool check = (userHasReviewed && _listFeedbacks.length >0);
+    return isLoading
+        ? Center(child: CircularProgressIndicator())
+        :Stack(
       children: [
         SingleChildScrollView(
           child: Column(
@@ -240,28 +240,20 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                   borderRadius: BorderRadius.circular(50),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Text(
-                      "reviewers: ${formatNumber(totalReviewers)}",
-                      style: const TextStyle(fontSize: 10),
+                      "reviewers: $totalReviewers",
+                      style: const TextStyle(fontSize: 13),
                     ),
-                    buildStarRating(score),
+                    buildStarRating(_placeDetailModel.rating),
                     TextButton(
                       onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => AllReviewsPage(
-                              feedbacks: reviewProvider.placeFeedbacks,
-                              users: usersProvider.users, // You can pass the list of users if needed
-                              feedbackMediaList:
-                              reviewProvider.placeFeedbackMedia,
                               placeId: widget.placeId,
-                              userId: widget.userId,
-                              totalReviews: placeFeedbacks.length,
-                              feedbackHelpfuls: reviewProvider.placeFeedbackHelpful,
-                              followUsers: followUsersProvider.followUsers,
                             ),
                           ),
                         );
@@ -271,7 +263,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                   ],
                 ),
               ),
-              if (!userHasReviewed)
+              if (!userHasReviewed && _isLogin)
                 Container(
                   margin:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
@@ -286,12 +278,12 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                       CircleAvatar(
                         radius: 30,
                         backgroundImage: NetworkImage(
-                          getUserDetails(widget.userId)!.profilePictureUrl ?? '',
+                          _userprofile.userProfileImage,
                         ),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        "${getUserDetails(widget.userId)!.userName}, you have no reviews yet, let's explore and review it!",
+                        "${_userprofile.userName}, you have no reviews yet, let's explore and review it!",
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 16),
                       ),
@@ -307,7 +299,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                                   addOrUpdateUserReview(
                                       rating, content, images, videos);
                                 },
-                              );
+                             );
                             },
                           );
                         },
@@ -330,151 +322,43 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                     ],
                   ),
                 ),
-              if (userHasReviewed && userReview != null)
-                ReviewCard(
-                  userId: widget.userId,
-                  user: getUserDetails(userReview.userId),
-                  feedback: userReview,
-                  feedbackMediaList: reviewProvider
-                      .getMediaByReviewId(userReview.placeFeedbackId),
-                  onFavoriteToggle: (feedbackId, isFavorited) {
-                    Provider.of<ReviewProvider>(context, listen: false)
-                        .toggleFavorite(feedbackId, widget.userId);
-                    setState(() {});
+              check?
+              ReviewCard(
+                  userId: currentUser,
+                  placeId: widget.placeId,
+                  feedBackCard: _userFeedback,
+                  onUpdate: fetchListReview,
+                  onDelete: () {
+                    deleteUserReview(_userFeedback.id,widget.placeId);
                   },
-                  feedbackHelpfuls: reviewProvider
-                      .getHelpfulsByFeedbackId(userReview.placeFeedbackId),
-                  onUpdate: () {
-                    final parentContext = context;
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        final existingImages = reviewProvider
-                            .getMediaByReviewId(userReview.placeFeedbackId)
-                            .where((media) => media.type == 'photo')
-                            .map((media) => File(media.url))
-                            .toList();
-                        final existingVideos = reviewProvider
-                            .getMediaByReviewId(userReview.placeFeedbackId)
-                            .where((media) => media.type == 'video')
-                            .map((media) => File(media.url))
-                            .toList();
-                        return ReviewDialog(
-                          initialRating: userReview.rating.toInt(),
-                          initialContent: userReview.content ?? '',
-                          initialImages: existingImages,
-                          initialVideos: existingVideos,
-                          onSubmit: (int rating, String content,
-                              List<File> images, List<File> videos) {
-                            if (rating != userReview.rating.toInt() ||
-                                content != userReview.content ||
-                                !_areListsEqual(images, existingImages) ||
-                                !_areListsEqual(videos, existingVideos)) {
-                              addOrUpdateUserReview(
-                                  rating, content, images, videos);
-                              ScaffoldMessenger.of(parentContext).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                    Text('Your review has been updated.')),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(parentContext).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                    Text('You have not changed anything.')),
-                              );
-                            }
-                          },
-                        );
-                      },
-                    );
-                  },
-                  onDelete: deleteUserReview,
-                  // Updated onReport callback to open the report form and use UserProvider to record a new user report.
-                  onReport: () {
-                    ReportForm.show(
-                      context,
-                      'Have a problem with this person? Please report them to us.',
-                      onSubmit: (reportMessage) {
-                        userProvider.addUserReport(
-                          UserReport(
-                            id: userProvider.userReport.length +
-                                1, // Example ID generation
-                            userId: userReview
-                                .userId, // Storing the reported user's ID
-                            reportDate: DateTime.now(), // Current date
-                            status:
-                            reportMessage, // Storing the report message in 'status'
-                          ),
-                        );
-                        Navigator.of(context).pop(); // Close the dialog
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Your report has been submitted.')),
-                        );
-                      },
-                    );
-                  },
-                  followUsers:
-                  followUsersProvider.getFollowers(userReview.userId),
-                  isInAllProductPage: false,
-                ),
+                  onReport:() {} ): SizedBox(),
               ReviewCardList(
-                feedbacks: otherUserReviews,
-                users: usersProvider.users, // Provide a list of users if needed
-                feedbackMediaList: feedbackMediaList,
-                userId: widget.userId,
-                onFavoriteToggle: (feedbackId, isFavorited) {
-                  Provider.of<ReviewProvider>(context, listen: false)
-                      .toggleFavorite(feedbackId, widget.userId);
-                  setState(() {});
-                },
-                feedbackHelpfuls: reviewProvider
-                    .placeFeedbackHelpful, // You can filter as needed
-                limit: 2,
+                placeId: widget.placeId,
+                feedbacks: userHasReviewed?_listFeedbacks.sublist(1):_listFeedbacks,
+                userId: currentUser,
+                limit: 3,
                 onSeeAll: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => AllReviewsPage(
-                        feedbacks: reviewProvider.placeFeedbacks,
-                        users: usersProvider.users, // Provide a list of users if needed
-                        feedbackMediaList: reviewProvider.placeFeedbackMedia,
                         placeId: widget.placeId,
-                        userId: widget.userId,
-                        feedbackHelpfuls: reviewProvider.placeFeedbackHelpful,
-                        totalReviews: otherUserReviews.length,
-                        followUsers: followUsersProvider.followUsers,
                       ),
                     ),
                   );
                 },
                 // Updated onReport callback for other user reviews
-                onReport: (feedback) {
+                onReport: (userId) {
                   ReportForm.show(
                     context,
                     'Have a problem with this person’s feedback? Please report it to us.',
+                    userId,
+                    -1,
                     onSubmit: (reportMessage) {
-                      userProvider.addUserReport(
-                        UserReport(
-                          id: userProvider.userReport.length +
-                              1, // Example ID generation
-                          userId:
-                          feedback.userId, // Storing the reported user's ID
-                          reportDate: DateTime.now(),
-                          status:
-                          reportMessage, // Storing the report message in 'status'
-                        ),
-                      );
-                      Navigator.of(context).pop(); // Close the dialog
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Your report has been submitted.')),
-                      );
+
                     },
                   );
                 },
-                followUsers: followUsersProvider.followUsers, // Provide actual data if needed
               ),
             ],
           ),
@@ -489,6 +373,8 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
         ),
       ],
     );
+
+
   }
 
   Widget buildStarRating(double score) {

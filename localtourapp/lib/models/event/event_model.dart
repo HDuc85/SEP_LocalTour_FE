@@ -13,8 +13,8 @@ class EventModel {
 
   factory EventModel.fromJson(Map<String, dynamic> json) {
     return EventModel(
-      eventName: json['eventName'],
-      description: json['description'],
+      eventName: json['eventName']??'',
+      description: json['description']??'',
       startDate: DateTime.parse(json['startDate']),
       endDate: DateTime.parse(json['endDate']),
     );

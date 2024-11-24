@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/users/userProfile.dart';
 import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/models/places/place.dart';
 import 'package:localtourapp/models/places/placefeedbackmedia.dart';
@@ -26,7 +27,7 @@ class ViewProfilePage extends StatefulWidget {
   final String userId;
   final List<Schedule> schedules;
   final List<Post> posts;
-  final User user;
+  final Userprofile user;
 
   const ViewProfilePage({
     Key? key,

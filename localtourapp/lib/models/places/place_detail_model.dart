@@ -16,6 +16,7 @@ class PlaceDetailModel {
   final double longitude;
   final double latitude;
   final String contactLink;
+  final double rating;
   final List<PlaceActivityModel> placeActivities;
   final List<MediaModel> placeMedias;
 
@@ -33,10 +34,12 @@ class PlaceDetailModel {
     required this.description,
     required this.address,
     required this.contact,
+    required this.rating,
   });
 
 
   factory PlaceDetailModel.fromJson(Map<String, dynamic> json) {
+    bool hasValue = (json['placeTranslations'] as List).isNotEmpty;
 
     return PlaceDetailModel(
       id: json['id'],
@@ -46,16 +49,17 @@ class PlaceDetailModel {
       longitude: json['longitude'].toDouble(),
       latitude: json['latitude'].toDouble(),
       contactLink: json['contactLink'],
-      address: json['placeTranslations'][0]['address'],
-      contact: json['placeTranslations'][0]['contact'],
-      description: json['placeTranslations'][0]['description'],
-      name: json['placeTranslations'][0]['name'],
+      address: hasValue ? json['placeTranslations'][0]['address'] : '',
+      contact: hasValue ? json['placeTranslations'][0]['contact']:'',
+      description: hasValue ? json['placeTranslations'][0]['description'] : '',
+      name: hasValue ? json['placeTranslations'][0]['name']:'',
       placeMedias: (json['placeMedia'] as List)
                     .map((e) => MediaModel.fromJson(e))
                     .toList(),
       placeActivities: (json['placeActivities'] as List)
           .map((e) => PlaceActivityModel.fromJson(e))
           .toList(),
+      rating: json['rating'].toDouble()
     );
   }
 

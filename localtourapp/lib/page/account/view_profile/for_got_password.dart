@@ -9,7 +9,7 @@ import '../../../main.dart';
 import '../../../mock_firebase.dart';
 
 class ForgotPasswordDialog {
-  static void show(BuildContext context, {FirebaseAuth? firebaseAuth}) {
+  static void show(BuildContext context,String type,VoidCallback? onCompleted, {FirebaseAuth? firebaseAuth}) {
     final AuthService _authService = AuthService();
     final FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -66,9 +66,9 @@ class ForgotPasswordDialog {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (step == 1) ...[
-                        const Text(
+                        Text( type == 'add' ? 'Input your phone number to add' :
                           'Input your phone number to reset password:',
-                          style: TextStyle(fontSize: 16),
+                          style: const TextStyle(fontSize: 16),
                         ),
                         const SizedBox(height: 8),
                         TextField(
@@ -272,6 +272,11 @@ class ForgotPasswordDialog {
 
                           // Attempt to sign in
                           await auth.signInWithCredential(credential);
+
+                          if(type == 'add'){
+                            onCompleted!();
+                            Navigator.of(context).pop();
+                          }
 
                           var result = await _authService.sendUserIdToBackend();
                           if(result.firstTime){
