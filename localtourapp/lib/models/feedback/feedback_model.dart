@@ -13,6 +13,9 @@ class FeedBackModel {
   final DateTime createDate;
   final DateTime? updateDate;
   final bool isLiked;
+  final String placeName;
+  final String placePhotoDisplay;
+  final int placeId;
   final List<MediaModel> placeFeedbackMedia;
 
   FeedBackModel({
@@ -27,6 +30,9 @@ class FeedBackModel {
     this.updateDate,
     required this.isLiked,
     required this.placeFeedbackMedia,
+    required this.placeId,
+    required this.placeName,
+    required this.placePhotoDisplay,
   });
 
   factory FeedBackModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +47,9 @@ class FeedBackModel {
       createDate: DateTime.parse(json['createDate']),
       updateDate: json['updateDate'] != null ? DateTime.parse(json['updateDate']) : null,
       isLiked: json['isLiked'],
+      placePhotoDisplay: json['placePhotoDisplay'],
+      placeName: json['placeName'],
+      placeId: json['placeId'],
       placeFeedbackMedia: (json['placeFeeedbackMedia'] as List)
           .map((media) => MediaModel.fromJson(media))
           .toList(),

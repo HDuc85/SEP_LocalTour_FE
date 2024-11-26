@@ -118,7 +118,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
   }
 
   Future<void> _fetchFeedbackDate() async{
-    var (fetchFeedback,total) = await _reviewService.getFeedbackInPlace(widget.placeId);
+    var (fetchFeedback,total) = await _reviewService.getFeedback(widget.placeId);
     var myUserId = await SecureStorageHelper().readValue(AppConfig.userId);
 
     if(myUserId == null){

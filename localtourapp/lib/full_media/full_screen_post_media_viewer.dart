@@ -1,6 +1,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:localtourapp/models/media_model.dart';
 import 'package:video_player/video_player.dart';
 import 'package:intl/intl.dart';
 
@@ -8,7 +9,7 @@ import '../models/posts/postmedia.dart';
 
 
 class FullScreenPostMediaViewer extends StatefulWidget {
-  final List<PostMedia> postMediaList;
+  final List<MediaModel> postMediaList;
   final int initialIndex;
 
   const FullScreenPostMediaViewer({
@@ -195,13 +196,6 @@ class _FullScreenPostMediaViewerState extends State<FullScreenPostMediaViewer> {
               decoration: BoxDecoration(
                 color: Colors.black54,
                 borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                _formatDate(widget.postMediaList[_currentIndex].createdAt),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                ),
               ),
             ),
           ),

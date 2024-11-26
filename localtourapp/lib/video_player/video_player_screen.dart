@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:http/http.dart' as http;
+
 
 class VideoPlayerScreen extends StatefulWidget {
   final String videoPath;
@@ -32,7 +34,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       _controller = VideoPlayerController.file(file);
     } else {
       // If it's a file path, use it directly
-      _controller = VideoPlayerController.file(File(widget.videoPath));
+      final filepath = await _downloadVideo(widget.videoPath);
+      _controller = VideoPlayerController.file(filepath);
     }
     await _controller?.initialize();
     setState(() {
@@ -46,6 +49,18 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     final localFile = File('${directory.path}/video.mp4');
     final videoData = await rootBundle.load(assetPath);
     await localFile.writeAsBytes(videoData.buffer.asUint8List());
+    return localFile;
+  }
+
+  Future<File> _downloadVideo(String url) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final localFile = File('${directory.path}/downloaded_video.mp4');
+
+
+    Uri uri = Uri.parse(url);
+
+    final response = await http.get(uri);
+    await localFile.writeAsBytes(response.bodyBytes);
     return localFile;
   }
 

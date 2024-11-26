@@ -11,16 +11,19 @@ import 'api_service.dart';
 class ReviewService {
   final apiService = ApiService();
 
-  Future<(List<FeedBackModel>,int)> getFeedbackInPlace(
-      int placeId,
-        [SortBy? SortBy,
+  Future<(List<FeedBackModel>,int)> getFeedback(
+        [int? placeId,
+        String? userId,
+        SortBy? SortBy,
         SortOrder? SortOrder,
         int? Page = 1,
         int? Size = 10,]) async {
     String sortByStr = SortBy != null ? sortByToString(SortBy) : '';
     String sortOrderStr = SortOrder != null ? sortOrderToString(SortOrder) : '';
+    String? language = await SecureStorageHelper().readValue(AppConfig.language);
+
     final response = await apiService
-        .makeRequest("PlaceFeedback/getAllFeedback?placeid=$placeId&Page=$Page&Size=$Size&SortBy=$sortByStr&SortOrder=$sortOrderStr","GET");
+        .makeRequest("PlaceFeedback/getAllFeedback?PlaceId=${placeId ?? ''}&UserId=${userId ?? ''}&LanguageCode=$language&Page=$Page&Size=$Size&SortBy=$sortByStr&SortOrder=$sortOrderStr","GET");
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(response.body);
       if (jsonResponse['items'] == null || jsonResponse['items'].isEmpty) {

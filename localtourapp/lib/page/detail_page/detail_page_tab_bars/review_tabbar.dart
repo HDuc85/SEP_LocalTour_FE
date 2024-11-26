@@ -72,7 +72,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
   }
 
   Future<void> fetchListReview() async{
-    var (listDate,totalReview) = await _reviewService.getFeedbackInPlace(widget.placeId);
+    var (listDate,totalReview) = await _reviewService.getFeedback(widget.placeId);
     var fetchPlaceDetail = await _placeService.GetPlaceDetail(widget.placeId);
     var userId = await SecureStorageHelper().readValue(AppConfig.userId);
     bool isLogin = (await SecureStorageHelper().readValue(AppConfig.isLogin))!.isNotEmpty;
@@ -127,7 +127,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
   }
 
   Future<void> fetchDate() async {
-    var (listDate,totalReview) = await _reviewService.getFeedbackInPlace(widget.placeId);
+    var (listDate,totalReview) = await _reviewService.getFeedback(widget.placeId);
     var fetchPlaceDetail = await _placeService.GetPlaceDetail(widget.placeId);
 
     setState(() {

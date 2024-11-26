@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
+import 'package:localtourapp/models/posts/post_model.dart';
 import 'package:localtourapp/models/users/userProfile.dart';
 import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/models/places/place.dart';
@@ -43,6 +46,28 @@ class ViewProfilePage extends StatefulWidget {
 }
 
 class _ViewProfilePageState extends State<ViewProfilePage> {
+
+  bool isCurrentUserId = false;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    fetch();
+  }
+
+  Future<void> fetch() async{
+    String? myUserId = await SecureStorageHelper().readValue(AppConfig.userId);
+    if(myUserId != null){
+      if(myUserId == widget.userId){
+        setState(() {
+          isCurrentUserId = true;
+        });
+      }
+
+    }
+
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheduleNames = {
@@ -51,8 +76,6 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
     final reviewProvider = Provider.of<ReviewProvider>(context);
     final userReviews = reviewProvider.getReviewsByUserId(widget.userId);
 
-    final currentUserId = Provider.of<UserProvider>(context).userId;
-    final bool isCurrentUser = currentUserId == widget.userId;
 
     final scheduleProvider = Provider.of<ScheduleProvider>(context);
     final List<Schedule> userSchedules = scheduleProvider.getSchedulesByUserId(widget.userId);
@@ -76,14 +99,14 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
         title: Text('${widget.user.fullName} Profile', maxLines: 2),
       ),
       body: DefaultTabController(
-        length: isCurrentUser ? 2 : 3,
+        length: isCurrentUserId ? 2 : 3,
         child: Column(
           children: [
             TabBar(
               tabs: [
                 const Tab(text: "Posts"),
                 const Tab(text: "Reviews"),
-                if (!isCurrentUser) const Tab(text: "Schedules"),
+                if (!isCurrentUserId) const Tab(text: "Schedules"),
               ],
             ),
             Expanded(
@@ -93,7 +116,7 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
                     userId: widget.userId,
                     scheduleNames: scheduleNames,
                     user: widget.user,
-                    isCurrentUser: isCurrentUser,
+                    isCurrentUser: isCurrentUserId,
                     onFavoriteToggle: (postId, isFavorited) {
                       final postProvider = Provider.of<PostProvider>(context, listen: false);
                       if (isFavorited) {
@@ -111,24 +134,18 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
                       // Define the function to handle comment press action
                       // For example, navigate to a comments page or open a comments section
                     },
-                    onUpdatePressed: (Post post) {
+                    onUpdatePressed: (PostModel post) {
                       // Handle update press action, i.e., open CreatePostOverlay with the post
                       showModalBottomSheet(
                         context: context,
                         isScrollControlled: true,
                         builder: (context) => CreatePostOverlay(
-                          placeId: post.placeId,
                           existingPost: post,
                         ),
                       );
                     },
-                    onDeletePressed: (Post post) {
-                      // Handle delete press action, i.e., delete the post via provider
-                      Provider.of<PostProvider>(context, listen: false).deletePost(post.id);
-                      Provider.of<CountProvider>(context, listen: false).decrementPostCount();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Post deleted successfully!')),
-                      );
+                    onDeletePressed: (PostModel post) {
+
                     }, followUsers: widget.followUsers,
                   ),
                   ReviewedTabbar(
@@ -137,7 +154,7 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
                       feedbackMediaList: userFeedbackMedia,
                       favoritedFeedbackIds: favoritedFeedbackIds
                   ),
-                  if (!isCurrentUser)
+                  if (!isCurrentUserId)
                     ScheduleTabbar(
                       userId: widget.userId,
                       schedules: userSchedules,

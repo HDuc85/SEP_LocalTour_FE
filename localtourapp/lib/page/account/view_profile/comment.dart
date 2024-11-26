@@ -1,10 +1,15 @@
 // comments_bottom_sheet.dart
 
 import 'package:flutter/material.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
+import 'package:localtourapp/models/posts/comment_model.dart';
+import 'package:localtourapp/models/posts/post_model.dart';
 import 'package:localtourapp/models/posts/postcommentlike.dart';
 import 'package:localtourapp/models/users/users.dart';
 import 'package:localtourapp/page/account/account_page.dart';
 import 'package:localtourapp/provider/users_provider.dart';
+import 'package:localtourapp/services/post_service.dart';
 import 'package:provider/provider.dart';
 import 'package:localtourapp/models/posts/post.dart';
 import 'package:localtourapp/models/posts/postcomment.dart';
@@ -13,12 +18,12 @@ import '../../../provider/follow_users_provider.dart';
 import '../../../provider/user_provider.dart';
 
 class CommentsBottomSheet extends StatefulWidget {
-  final Post post;
-  final String userId;
+  final PostModel post;
+  //final String userId;
 
   const CommentsBottomSheet({
     Key? key,
-    required this.userId,
+   // required this.userId,
     required this.post,
   }) : super(key: key);
 
@@ -27,19 +32,49 @@ class CommentsBottomSheet extends StatefulWidget {
 }
 
 class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
+  final PostService _postService = PostService();
   final TextEditingController _commentController = TextEditingController();
   final ScrollController _commentsScrollController = ScrollController();
   final FocusNode _commentFocusNode = FocusNode();
-
+  late List<CommentModel> _listComment;
+  late PostModel _post;
+  late String _userId;
+  late String languageCode;
   // For tracking which comment is being replied to
   int? _replyingToCommentId;
-
+  bool isLoading = true;
   Map<int?, List<PostComment>> commentsMap = {};
 
   @override
   void initState() {
     super.initState();
     _commentsScrollController.addListener(_scrollListener);
+    fetchDataInit();
+  }
+
+  Future<void> fetchDataInit() async{
+    var (post, listcomment) = await _postService.GetPostDetail(widget.post.id);
+    var userid = await SecureStorageHelper().readValue(AppConfig.userId);
+    var language = await SecureStorageHelper().readValue(AppConfig.language);
+    if(language != null){
+      languageCode = language;
+    }
+
+    if(userid != null){
+      _userId = userid!;
+    }
+
+    setState(() {
+        _listComment = listcomment;
+        isLoading = false;
+      });
+  }
+
+  Future<void> fetchData() async{
+    var (post, listcomment) = await _postService.GetPostDetail(widget.post.id);
+    setState(() {
+      _listComment = listcomment;
+    });
   }
 
   @override
@@ -62,7 +97,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     }
   }
 
-  void _addComment({int? parentId}) {
+  void _addComment({int? parentId}) async {
     final commentText = _commentController.text.trim();
     if (commentText.isEmpty) return;
 
@@ -72,15 +107,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     // Obtain the current user's ID
     final currentUserId = userProvider.currentUser.userId;
 
-    // Validate if the user exists
-    final user = Provider.of<UsersProvider>(context, listen: false)
-        .getUserById(currentUserId);
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not found.')),
-      );
-      return;
-    }
+
 
     // Create a new comment
     final newComment = PostComment(
@@ -93,7 +120,10 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     );
 
     // Add the comment to the provider
-    postProvider.addComment(newComment);
+    var result = await _postService.CreateComment(widget.post.id, parentId, commentText);
+    if(result){
+      fetchData();
+    }
 
     // Clear the text field and reset replying state
     _commentController.clear();
@@ -124,37 +154,46 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     });
   }
 
-  void _likeComment(int commentId) {
-    final postProvider = Provider.of<PostProvider>(context, listen: false);
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
+  String formatTimeAgo(DateTime pastTime) {
+    final now = DateTime.now();
+    final difference = now.difference(pastTime);
 
-    // Obtain the current user's ID
-    final currentUserId = userProvider.currentUser.userId;
-
-    // Check if the user has already liked the comment
-    bool hasLiked = postProvider.getLikesForComment(commentId).any(
-          (like) => like.userId == currentUserId,
-        );
-
-    if (hasLiked) {
-      // Unlike the comment
-      postProvider.removeCommentLike(commentId, currentUserId);
+    if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} ${languageCode == 'vi'? 'phút trước':(difference.inMinutes > 1?'minutes':'minute')}';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} ${languageCode == 'vi'? 'tiếng trước': (difference.inHours > 1?'hours':'hour')}';
+    } else if (difference.inDays < 30) {
+      return '${difference.inDays} ${languageCode == 'vi'? 'ngày trước': (difference.inDays > 1?'days':'day')}';
+    } else if (difference.inDays < 365) {
+      return '${(difference.inDays / 30).round()} ${languageCode == 'vi'? 'tháng trước': ((difference.inDays / 30).round() > 1?'months':'month')}';
     } else {
-      // Like the comment
-      final newLike = PostCommentLike(
-        id: DateTime.now().millisecondsSinceEpoch,
-        postCommentId: commentId,
-        userId: currentUserId,
-        createdDate: DateTime.now(),
-      );
-      postProvider.addCommentLike(newLike);
+      return '${(difference.inDays / 365).round()} ${languageCode == 'vi'? 'năm trước': ((difference.inDays / 30).round() > 1?'years':'year')}';
     }
   }
 
-  List<Widget> _buildComments(int? parentId, int depth) {
-    List<PostComment>? commentsList = commentsMap[parentId];
+  Future<void> _likeComment(int commentId) async {
+  var result = await _postService.LikeComment(commentId);
+  if(result){
+    fetchData();
+  }
+    // Obtain the current user's ID
 
-    if (commentsList == null) return [];
+  }
+
+  List<Widget> _buildComments(int? parentId, int depth, [List<CommentModel>? list]) {
+
+    List<CommentModel> commentsList = [];
+
+    if(parentId != null){
+      if(list!.length > 0){
+        commentsList = list;
+      }
+    }else if(parentId == null){
+      commentsList = _listComment;
+    }
+
+    if (commentsList.length == 0) return [];
+
 
     List<Widget> commentWidgets = [];
 
@@ -162,13 +201,13 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
       commentWidgets.add(_buildCommentItem(comment, depth));
 
       // Recursively add replies to this comment
-      commentWidgets.addAll(_buildComments(comment.id, depth + 1));
+      commentWidgets.addAll(_buildComments(comment.id, depth + 1,comment.childComments));
     }
 
     return commentWidgets;
   }
 
-  void _showDeleteConfirmationDialog(int commentId) {
+  void _showDeleteConfirmationDialog(int commentId)  {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -180,15 +219,18 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(context).pop(); // Close the dialog
               final postProvider =
                   Provider.of<PostProvider>(context, listen: false);
 
               // Update the comment count for the post
 
-              // Delete the comments
-              postProvider.deleteComment(commentId);
+              var result = await _postService.DeleteComment(commentId);
+              if(result ){
+                fetchData();
+              }
+
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
@@ -197,7 +239,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     );
   }
 
-  Widget _buildCommentItem(PostComment comment, int depth) {
+  Widget _buildCommentItem(CommentModel comment, int depth) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final postProvider = Provider.of<PostProvider>(context, listen: false);
     final usersProvider = Provider.of<UsersProvider>(context, listen: false);
@@ -205,28 +247,24 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
         Provider.of<FollowUsersProvider>(context, listen: false);
 
     // Adjust left padding based on depth
-    double leftPadding = depth * 10.0;
+    double leftPadding = depth * 30.0;
 
-    final commenter = usersProvider.getUserById(comment.userId);
-    if (commenter == null) {
-      return const SizedBox.shrink();
-    }
+
 
     final commentLikes = postProvider.getLikesForComment(comment.id);
     final currentUserId = userProvider.currentUser.userId;
-    final bool hasLiked =
-        commentLikes.any((like) => like.userId == currentUserId);
-    final likeCount = commentLikes.length;
+    final bool hasLiked = comment.likedByUser;
+
+    final likeCount = comment.totalLikes;
 
     // Get parent user's name if this is a reply
     String? parentUserName;
     if (comment.parentId != null) {
-      final parentComment = postProvider.comments.firstWhere(
+      final parentComment = _listComment.firstWhere(
         (c) => c.id == comment.parentId,
         orElse: () => comment,
       );
-      final parentUser = usersProvider.getUserById(parentComment.userId);
-      parentUserName = parentUser?.userName;
+      parentUserName = parentComment.userFullName;
     }
 
     return Padding(
@@ -237,22 +275,21 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
           // Profile Picture
           GestureDetector(
             onTap: () {
-              final isCurrentUser =
-                  userProvider.isCurrentUser(commenter.userId);
+
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => AccountPage(
-                    userId: '',
+                    userId: comment.userId,
                   ),
                 ),
               );
             },
             child: CircleAvatar(
-              backgroundImage: commenter.profilePictureUrl != null
-                  ? NetworkImage(commenter.profilePictureUrl!)
+              backgroundImage: comment.userProfilePictureUrl != null
+                  ? NetworkImage(comment.userProfilePictureUrl!)
                   : null,
-              child: commenter.profilePictureUrl == null
+              child: comment.userProfilePictureUrl == null
                   ? const Icon(Icons.account_circle,
                       size: 40, color: Colors.grey)
                   : null,
@@ -270,19 +307,18 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        final isCurrentUser =
-                            userProvider.isCurrentUser(commenter.userId);
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => AccountPage(
-                              userId: '',
+                              userId: comment.userId,
                             ),
                           ),
                         );
                       },
                       child: Text(
-                        commenter.userName ?? "Unknown User",
+                        comment.userFullName ?? "Unknown User",
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
@@ -290,7 +326,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                     ),
                     // Time difference
                     Text(
-                      "Time Ago",
+                      formatTimeAgo(comment.createdDate),
                       style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 12,
@@ -311,11 +347,15 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                 // Comment Content
                 GestureDetector(
                   onLongPress: () {
-                    if (currentUserId == comment.userId) {
+                    if (_userId == comment.userId) {
                       _showDeleteConfirmationDialog(comment.id);
                     }
                   },
                   child: Container(
+                    constraints: BoxConstraints(
+                      minWidth: 130.0,
+                      maxWidth: MediaQuery.of(context).size.width * 0.7,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.grey[300], // Light grey background
                       borderRadius:
@@ -366,7 +406,9 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     comments.sort((a, b) => a.createdDate.compareTo(b.createdDate));
     _buildCommentsMap(comments);
 
-    return Container(
+    return
+      isLoading ? const Center(child: CircularProgressIndicator()) :
+      Container(
       height: MediaQuery.of(context).size.height * 1,
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -427,8 +469,9 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
           const SizedBox(height: 10),
           // Comments List
           Expanded(
-            child: comments.isEmpty
-                ? const Center(
+            child: _listComment.isEmpty
+                ?
+            const Center(
                     child: Text(
                       'No comments yet. Be the first to comment!',
                       style: TextStyle(color: Colors.grey),

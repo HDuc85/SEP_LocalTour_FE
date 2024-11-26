@@ -4,6 +4,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
+import 'package:localtourapp/constants/colors.dart';
+import 'package:localtourapp/models/media_model.dart';
+import 'package:localtourapp/models/posts/post_model.dart';
 import 'package:localtourapp/models/users/userProfile.dart';
 import 'package:localtourapp/provider/place_provider.dart';
 import 'package:localtourapp/provider/schedule_provider.dart';
@@ -13,6 +18,7 @@ import 'package:localtourapp/models/users/followuser.dart';
 import 'package:localtourapp/page/account/view_profile/comment.dart';
 import 'package:localtourapp/page/account/view_profile/create_post.dart';
 import 'package:localtourapp/provider/count_provider.dart';
+import 'package:localtourapp/services/post_service.dart';
 import 'package:localtourapp/video_player/video_thumbnail.dart';
 import 'package:provider/provider.dart';
 import 'package:localtourapp/models/posts/post.dart';
@@ -30,8 +36,8 @@ class PostTabBar extends StatefulWidget {
   final bool isCurrentUser;
   final Function(int postId, bool isFavorited) onFavoriteToggle;
   final Function() onCommentPressed;
-  final Function(Post post) onUpdatePressed; // Accepts Post
-  final Function(Post post) onDeletePressed; // Accepts Post
+  final Function(PostModel post) onUpdatePressed; // Accepts Post
+  final Function(PostModel post) onDeletePressed; // Accepts Post
 
   const PostTabBar({
     Key? key,
@@ -52,6 +58,7 @@ class PostTabBar extends StatefulWidget {
 
 class _PostTabBarState extends State<PostTabBar> {
   final ScrollController _scrollController = ScrollController();
+  final PostService _postService = PostService();
   bool _showBackToTopButton = false;
   DateTime? _fromDate;
   DateTime? _toDate;
@@ -59,11 +66,60 @@ class _PostTabBarState extends State<PostTabBar> {
   final FocusNode searchFocusNode = FocusNode();
   Map<int, bool> postVisibility = {};
   Map<int, bool> expandedPosts = {}; // Tracks expansion state per post
+  late List<PostModel> listPost;
+  late List<PostModel> initListPost;
+  bool isLoading = true;
+  bool isLogin = false;
+
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+    fetchDate();
+  }
+
+  Future<void> fetchDate() async {
+    var result = await _postService.getListPost(widget.userId);
+    var userId = await SecureStorageHelper().readValue(AppConfig.userId);
+
+    if(userId != null){
+      isLogin = true;
+    }
+
+    setState(() {
+      listPost = result;
+      initListPost = result;
+      isLoading = false;
+    });
+
+  }
+
+  Future<void> SearchEvent()async{
+   /* if ((_fromDate != null && _toDate == null) ||
+
+        (_fromDate == null && _toDate != null)) */
+
+
+    var searchList = initListPost;
+    if(searchController.text != ''){
+      String searchtxt = searchController.text;
+      searchList = searchList.where((element) =>
+                  element.title.toLowerCase()!.contains(searchtxt.toLowerCase())
+                      || element.scheduleName!.toLowerCase().contains(searchtxt.toLowerCase())
+                      || element.placeName!.toLowerCase().contains(searchtxt.toLowerCase()),).toList();
+    }
+    if(_fromDate != null){
+      searchList = searchList.where((element) => element.createdDate!.isAfter(_fromDate!),).toList();
+    }
+    if(_toDate != null){
+      searchList = searchList.where((element) => element.createdDate!.isBefore(_toDate!),).toList();
+    }
+
+    setState(() {
+      listPost = searchList;
+    });
+
   }
 
   @override
@@ -75,21 +131,26 @@ class _PostTabBarState extends State<PostTabBar> {
     super.dispose();
   }
 
-  void _toggleVisibility(int postId) {
-    setState(() {
-      postVisibility[postId] = !(postVisibility[postId] ?? true);
-    });
+  Future<void> _toggleVisibility(int postId, bool ispublic,String tilte,String content) async {
+    var result = await _postService.UpdatePostStatus(postId, !ispublic,tilte,content);
+    if(result != null){
+      fetchDate();
+    }
   }
 
-  void toggleLike(int postId) {
-    final postProvider = Provider.of<PostProvider>(context, listen: false);
+  Future<void> _deletePost(int postId) async{
+    var result = await _postService.DeletePost(postId);
+    if(result){
+      fetchDate();
+    }
+  }
 
-    bool isCurrentlyFavorited = postProvider.postLikes.any(
-          (like) => like.postId == postId && like.userId == widget.userId,
-    );
-
-    // Invoke the callback to update the provider
-    widget.onFavoriteToggle(postId, !isCurrentlyFavorited);
+  void toggleLike(int postId) async {
+    var result = await _postService.LikePost(postId);
+    if(result){
+      fetchDate();
+    }
+  
   }
 
   void _scrollListener() {
@@ -144,7 +205,7 @@ class _PostTabBarState extends State<PostTabBar> {
     }).toList();
   }
 
-  void _confirmDeletePost(Post post) {
+  void _confirmDeletePost(PostModel post) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -157,7 +218,7 @@ class _PostTabBarState extends State<PostTabBar> {
           ),
           TextButton(
             onPressed: () {
-              widget.onDeletePressed(post); // Pass the post to the callback
+              _deletePost(post.id); // Pass the post to the callback
               Navigator.of(context).pop(); // Close the dialog
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Post deleted successfully!')),
@@ -170,51 +231,53 @@ class _PostTabBarState extends State<PostTabBar> {
     );
   }
 
-  void _openCommentsBottomSheet(Post post) {
+  void _openCommentsBottomSheet(PostModel post) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (context) => CommentsBottomSheet(
-        post: post, userId: widget.userId,),
+        post: post,),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<PostProvider>(
+    return
+      isLoading? const Center(child: CircularProgressIndicator()) :
+      Consumer<PostProvider>(
       builder: (context, postProvider, _) {
-        final List<Post> userPosts = postProvider.getPostsByUserId(widget.userId);
-        final List<Post> filteredPosts = getFilteredPosts(userPosts);
+
 
         // Initialize or update postVisibility and expandedPosts if necessary
-        for (var post in userPosts) {
+        for (var post in listPost) {
           postVisibility.putIfAbsent(post.id, () => true);
           expandedPosts.putIfAbsent(post.id, () => false); // Initialize as not expanded
         }
-        Provider.of<CountProvider>(context, listen: false)
-            .setPostCount(userPosts.length);
 
-        return Stack(
+        return
+
+          Stack(
           children: [
             GestureDetector(
               onTap: () => FocusScope.of(context).unfocus(),
-              child: ListView.builder(
+              child:
+              ListView.builder(
                 controller: _scrollController,
                 itemCount:
-                4 + (filteredPosts.isNotEmpty ? filteredPosts.length : 1) + 2,
+                4 + (listPost.isNotEmpty ? listPost.length : 1) + 2,
                 itemBuilder: (context, index) {
                   if (index == 0) {
                     return _buildFilterSection();
                   } else if (index == 1) {
                     return const SizedBox(height: 10);
-                  } else if (index == 2) {
+                  } else if (index == 2 && isLogin) {
                     return _buildButtonsSection();
                   } else if (index == 3) {
                     return const SizedBox(height: 10);
                   } else if (index <=
-                      3 + (filteredPosts.isNotEmpty ? filteredPosts.length : 1)) {
-                    if (filteredPosts.isNotEmpty) {
-                      final post = filteredPosts[index - 4];
+                      3 + (listPost.isNotEmpty ? listPost.length : 1)) {
+                    if (listPost.isNotEmpty) {
+                      final post = listPost[index - 4];
                       return Container(
                         margin: const EdgeInsets.symmetric(vertical: 8.0),
                         child: _buildSinglePostItem(post),
@@ -269,17 +332,29 @@ class _PostTabBarState extends State<PostTabBar> {
         const SizedBox(height: 10),
         SizedBox(
           height: 40,
-          width: 250,
+          width: 330,
           child: TextField(
             controller: searchController,
             focusNode: searchFocusNode,
-            decoration: const InputDecoration(
-              labelText: "Search by title, schedule, placeName",
+            decoration:  InputDecoration(
+              labelText: "Search by title, schedule, place name, ...",
               border: OutlineInputBorder(),
+              suffixIcon: searchController.text.isNotEmpty
+              ? IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: () {
+
+              searchController.clear();
+              setState(() {});
+              SearchEvent();
+              },
+              )
+                  : null,
             ),
             onChanged: (value) {
               setState(() {});
             },
+
           ),
         ),
         const SizedBox(height: 10),
@@ -296,6 +371,7 @@ class _PostTabBarState extends State<PostTabBar> {
               clearable: true,
               onClear: () {
                 _onDateSelected(null, true);
+                SearchEvent();
               },
             ),
             const SizedBox(width: 5),
@@ -309,6 +385,7 @@ class _PostTabBarState extends State<PostTabBar> {
               clearable: true,
               onClear: () {
                 _onDateSelected(null, false);
+                SearchEvent();
               },
             ),
           ],
@@ -316,25 +393,20 @@ class _PostTabBarState extends State<PostTabBar> {
         const SizedBox(height: 10),
         ElevatedButton(
           onPressed: () {
-            if ((_fromDate != null && _toDate == null) ||
-                (_fromDate == null && _toDate != null)) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                      'Please choose both "From Date" and "To Date" for filtering.'),
-                ),
-              );
+
+              SearchEvent();
+
               return;
-            }
-            setState(() {});
+
+
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFDCA1A1),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: const BorderSide(color: Colors.black, width: 2),
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Colors.black, width: 1),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 142, vertical: 10),
           ),
           child: const Text(
             "Search",
@@ -364,6 +436,7 @@ class _PostTabBarState extends State<PostTabBar> {
         );
         if (picked != null) {
           onDateChanged(picked);
+          SearchEvent();
         }
       },
       child: Stack(
@@ -379,7 +452,7 @@ class _PostTabBarState extends State<PostTabBar> {
                       : labelText,
                   hintStyle: const TextStyle(fontSize: 12),
                   border: const OutlineInputBorder(),
-                  suffixIcon: const Icon(Icons.calendar_today),
+                  suffixIcon:  (initialDate == null)? Icon(Icons.calendar_today) : null,
                 ),
               ),
             ),
@@ -399,65 +472,41 @@ class _PostTabBarState extends State<PostTabBar> {
   }
 
   Widget _buildButtonsSection() {
-    return Center(
-      child: SizedBox(
-        height: 40,
-        width: 150,
-        child: ElevatedButton.icon(
-          onPressed: () => showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            builder: (context) => CreatePostOverlay(
-            ),
-          ),
-          icon: const Icon(Icons.add, color: Colors.white),
-          label: const Text("Add Post"),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.grey,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        SizedBox(
+          height: 40,
+          width: 150,
+          child: ElevatedButton.icon(
+            onPressed: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              builder: (context) => CreatePostOverlay(callback: () {
+
+              },
+              ),
+            ).then((value) {
+              fetchDate();
+            },),
+            icon: const Icon(Icons.add, color: Colors.white),
+            label: Text("Add Post", style: TextStyle(color: Colors.white), ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
         ),
-      ),
+        SizedBox(width: 15,)
+      ]
     );
   }
 
-  Widget _buildSinglePostItem(Post post) {
-    final postProvider = Provider.of<PostProvider>(context, listen: false);
-    bool isVisible = postVisibility[post.id] ?? true;
-    // Fetch media specific to this post from PostProvider
-    List<PostMedia> mediaForPost = postProvider.getMediaForPost(post.id);
-
-    final scheduleProvider =
-    Provider.of<ScheduleProvider>(context, listen: false);
-    final photoDisplay = post.placeId != null
-        ? scheduleProvider.getPhotoDisplay(post.placeId!)
-        : 'assets/images/default_image.png';
-
-    // Get the scheduleName by finding the corresponding schedule
-    final scheduleName = post.scheduleId != null
-        ? scheduleProvider.getScheduleById(post.scheduleId!)
-        ?.scheduleName ??
-        'Unknown Schedule'
-        : 'Unknown Schedule';
-
-    final String currentLanguageCode =
-        Localizations.localeOf(context).languageCode;
-
-    final placeName = post.placeId != null
-        ? scheduleProvider.getPlaceName(post.placeId!, currentLanguageCode)
-        : 'Unknown Place';
-
-    final likes = postProvider.getLikesForPost(post.id).length;
-    bool isLiked = postProvider.postLikes.any(
-            (like) => like.postId == post.id && like.userId == widget.userId);
-    int likeCount = likes;
-
-    final int commentCount = postProvider.getCommentsForPost(post.id).length;
+  Widget _buildSinglePostItem(PostModel post) {
 
     bool isExpandedLocal = expandedPosts[post.id] ?? false;
-
     return Container(
       margin: const EdgeInsets.all(8.0),
       padding: const EdgeInsets.all(8.0),
@@ -494,7 +543,7 @@ class _PostTabBarState extends State<PostTabBar> {
                     children: [
                       Text(widget.user.userName ?? 'Unknown',
                           style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text(DateFormat('MM/dd/yyyy').format(post.createdAt)),
+                      Text(DateFormat('MM/dd/yyyy').format(post.createdDate!)),
                     ],
                   ),
                 ],
@@ -504,14 +553,26 @@ class _PostTabBarState extends State<PostTabBar> {
                   children: [
                     IconButton(
                       icon: Icon(
-                        isVisible ? Icons.public : Icons.lock,
-                        color: Colors.white,
+                        post.isPublic ? Icons.public : Icons.lock,
+                        color: Colors.green,
                       ),
-                      onPressed: () => _toggleVisibility(post.id),
+                      onPressed: () => _toggleVisibility(post.id, post.isPublic,post.title,post.content),
                     ),
                     IconButton(
                       icon: const Icon(Icons.edit, color: Colors.blue,),
-                      onPressed: () => widget.onUpdatePressed(post),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (context) => CreatePostOverlay(
+                            existingPost: post,
+                            callback: () {
+                            },
+                          ),
+                        ).then((value) {
+                          fetchDate();
+                        },);
+                      },
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete,color: Colors.red,),
@@ -522,20 +583,21 @@ class _PostTabBarState extends State<PostTabBar> {
               ],
             ],
           ),
-          // Schedule name
+          post.scheduleId != null?// Schedule name
           Text(
-            scheduleName,
+            post.scheduleName!,
             maxLines: 2,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
-          ),
+          ):SizedBox(),
+          post.placeId != null?
           Row(
             children: [
               Expanded(
                 child: Text(
-                  placeName,
+                  post.placeName!,
                   maxLines: 2,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
@@ -544,13 +606,13 @@ class _PostTabBarState extends State<PostTabBar> {
                 ),
               ),
               Image.network(
-                photoDisplay,
+                post.placePhotoDisplay!,
                 width: 60,
                 height: 60,
                 fit: BoxFit.cover,
               )
             ],
-          ),
+          ): SizedBox(),
           const SizedBox(height: 10),
           // Post Content with See More/See Less
           if (post.content != null)
@@ -577,7 +639,7 @@ class _PostTabBarState extends State<PostTabBar> {
           const SizedBox(height: 10),
 
           // Media List
-          if (mediaForPost.isNotEmpty) _buildMediaList(mediaForPost),
+          if (post.media.isNotEmpty) _buildMediaList(post.media),
 
           const SizedBox(height: 10),
 
@@ -588,10 +650,10 @@ class _PostTabBarState extends State<PostTabBar> {
               Row(
                 children: [
                   const Icon(Icons.favorite, color: Colors.red),
-                  Text('$likeCount'),
+                  Text('${post.totalLikes}'),
                 ],
               ),
-              Text('$commentCount comment${commentCount != 1 ? 's' : ''}'),
+              Text('${post.totalComments} comment${post.totalComments != 1 ? 's' : ''}'),
             ],
           ),
           const Divider(),
@@ -607,7 +669,7 @@ class _PostTabBarState extends State<PostTabBar> {
                 child: TextButton.icon(
                   onPressed: () => toggleLike(post.id),
                   icon: Icon(
-                    isLiked ? Icons.favorite : Icons.favorite_border,
+                    post.isLiked ? Icons.favorite : Icons.favorite_border,
                     color: Colors.red,
                   ),
                   label: const Text(
@@ -627,7 +689,7 @@ class _PostTabBarState extends State<PostTabBar> {
                     color: Color(0xFF008080),
                   ),
                   label: Text(
-                    '$commentCount Comment${commentCount != 1 ? 's' : ''}',
+                    '${post.totalComments} Comment${post.totalComments != 1 ? 's' : ''}',
                     style: const TextStyle(color: Colors.black),
                   ),
                 ),
@@ -639,7 +701,7 @@ class _PostTabBarState extends State<PostTabBar> {
     );
   }
 
-  Widget _buildMediaList(List<PostMedia> mediaForPost) {
+  Widget _buildMediaList(List<MediaModel> mediaForPost) {
     return Column(
       children: [
         GridView.builder(
@@ -667,7 +729,7 @@ class _PostTabBarState extends State<PostTabBar> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  mediaForPost[index].type == 'photo'
+                  mediaForPost[index].type == 'Image'
                       ? Image(
                     image: mediaForPost[index].url.startsWith('http')
                         ? NetworkImage(mediaForPost[index].url)

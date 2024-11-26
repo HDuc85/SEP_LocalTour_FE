@@ -4,6 +4,8 @@
 import 'package:flutter/material.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/feedback/feedback_model.dart';
 import 'package:localtourapp/models/places/placefeedback.dart';
 import 'package:localtourapp/models/places/placefeedbackhelpful.dart';
@@ -15,6 +17,7 @@ import 'package:localtourapp/page/detail_page/detail_card/review_card.dart';
 import 'package:localtourapp/provider/count_provider.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/form/reportform.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/review_tabbar.dart';
+import 'package:localtourapp/services/review_service.dart';
 import 'package:provider/provider.dart';
 
 class ReviewedTabbar extends StatefulWidget {
@@ -36,28 +39,36 @@ class ReviewedTabbar extends StatefulWidget {
 }
 
 class _ReviewedTabbarState extends State<ReviewedTabbar> {
+  final ReviewService _reviewService = ReviewService();
   bool _showBackToTopButton = false;
   final ScrollController _scrollController = ScrollController();
-  List<PlaceFeedback> userFeedbacks = [];
+  //List<PlaceFeedback> userFeedbacks = [];
   List<PlaceFeedbackHelpful> feedbackHelpfuls = [];
   late int totalReviews;
   late bool isCurrentUserViewing;
-FeedBackModel feedBackModel = FeedBackModel(id: 1, userId: 'userId', profileUrl: 'profileUrl', userName: 'userName', rating: 1, content: 'content', totalLike: 1, createDate: DateTime(2000), isLiked: true, placeFeedbackMedia: []);
+  late List<FeedBackModel> _listFeedback;
+  late String _myUserId;
+
+
+  bool isLoading = true;
+  FeedBackModel feedBackModel = FeedBackModel(id: 1, userId: 'userId',placeId: 1,placeName: '',placePhotoDisplay: '' ,profileUrl: 'profileUrl', userName: 'userName', rating: 1, content: 'content', totalLike: 1, createDate: DateTime(2000), isLiked: true, placeFeedbackMedia: []);
   @override
   void initState() {
     super.initState();
     // Check if the current user is viewing their own reviews
     isCurrentUserViewing = widget.userId == Provider.of<UserProvider>(context, listen: false).currentUser!.userId;
-
-    // Fetch reviews specific to the userId
-    userFeedbacks = Provider.of<ReviewProvider>(context, listen: false).getReviewsByUserId(widget.userId);
-    totalReviews = userFeedbacks.length;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<CountProvider>(context, listen: false).setReviewCount(totalReviews);
-    });
-
+    fetchInt();
     _scrollController.addListener(_scrollListener);
+  }
+
+  Future<void> fetchInt() async{
+    var (listfeedback, totalreview) = await _reviewService.getFeedback(null,widget.userId);
+    print('object');
+    setState(() {
+      _listFeedback = listfeedback;
+      totalReviews = totalreview;
+      isLoading = false;
+    });
   }
 
   void _scrollListener() {
@@ -96,15 +107,18 @@ FeedBackModel feedBackModel = FeedBackModel(id: 1, userId: 'userId', profileUrl:
   @override
   Widget build(BuildContext context) {
     final reviewProvider = Provider.of<ReviewProvider>(context);
-    userFeedbacks = reviewProvider.getReviewsByUserId(widget.userId);
+    //userFeedbacks = reviewProvider.getReviewsByUserId(widget.userId);
 
-    return Stack(
+    return
+      isLoading? const Center(child: CircularProgressIndicator()) :
+      Stack(
       children: [
         SingleChildScrollView(
           controller: _scrollController,
           child: Column(
             children: [
               Container(
+                height: 40,
                 margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -114,35 +128,12 @@ FeedBackModel feedBackModel = FeedBackModel(id: 1, userId: 'userId', profileUrl:
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Text("Total Reviews: $totalReviews", style: const TextStyle(fontSize: 15)),
+                    Text("Total Reviews: $totalReviews", style:  TextStyle(fontSize: 18,fontWeight: FontWeight.bold,)),
                   ],
                 ),
               ),
               // Display user reviews
-              ...userFeedbacks.map((feedback) {
-                final user = widget.users.firstWhere(
-                      (user) => user.userId == feedback.userId,
-                  orElse: () => User(
-                    userId: 'default',
-                    userName: 'Unknown User',
-                    fullName: 'Unknown User',
-                    emailConfirmed: false,
-                    phoneNumberConfirmed: false,
-                    dateCreated: DateTime.now(),
-                    dateUpdated: DateTime.now(),
-                    reportTimes: 0,
-                    profilePictureUrl: '',
-                  ),
-                );
-
-                final mediaList = widget.feedbackMediaList
-                    .where((media) => media.feedbackId == feedback.placeFeedbackId)
-                    .toList();
-
-                final relevantHelpfuls = feedbackHelpfuls
-                    .where((helpful) => helpful.placeFeedbackId == feedback.placeFeedbackId)
-                    .toList();
-
+              ..._listFeedback.map((feedback) {
                 return GestureDetector(
                   onTap: () {
                     // Navigate to ReviewTabbar with the selected placeId
@@ -157,8 +148,8 @@ FeedBackModel feedBackModel = FeedBackModel(id: 1, userId: 'userId', profileUrl:
                     );
                   },
                   child: ReviewCard(
-                    placeId: 1,
-                    feedBackCard: feedBackModel,
+                    placeId: feedback.placeId,
+                    feedBackCard: feedback,
                     userId: widget.userId,
                     onUpdate: isCurrentUserViewing ? () {
                       // Open ReviewDialog to update
@@ -170,7 +161,7 @@ FeedBackModel feedBackModel = FeedBackModel(id: 1, userId: 'userId', profileUrl:
                       ReportForm.show(
                         context,
                         'Have a problem with this person? Report them to us!',
-                        user.userId,
+                        widget.userId,
                         -1
                       );
                     },

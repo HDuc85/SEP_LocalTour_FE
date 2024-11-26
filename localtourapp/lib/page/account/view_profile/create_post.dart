@@ -3,6 +3,10 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:localtourapp/models/HomePage/placeCard.dart';
+import 'package:localtourapp/models/places/place_detail_model.dart';
+import 'package:localtourapp/models/posts/post_model.dart';
+import 'package:localtourapp/models/schedule/schedule_model.dart';
 import 'package:localtourapp/provider/place_provider.dart';
 import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/models/places/place.dart';
@@ -11,18 +15,24 @@ import 'package:localtourapp/models/posts/postmedia.dart';
 import 'package:localtourapp/models/schedule/schedule.dart';
 import 'package:localtourapp/page/account/view_profile/post_provider.dart';
 import 'package:localtourapp/page/search_page/search_page.dart';
+import 'package:localtourapp/services/media_service.dart';
+import 'package:localtourapp/services/place_service.dart';
+import 'package:localtourapp/services/post_service.dart';
+import 'package:localtourapp/services/schedule_service.dart';
 import 'package:provider/provider.dart';
 
 import '../../../provider/user_provider.dart';
 
 class CreatePostOverlay extends StatefulWidget {
   final int? placeId;
-  final Post? existingPost;
+  final PostModel? existingPost;
+  final VoidCallback? callback;
 
   const CreatePostOverlay({
     Key? key,
     this.placeId,
     this.existingPost,
+    this.callback
   }) : super(key: key);
 
   @override
@@ -30,8 +40,12 @@ class CreatePostOverlay extends StatefulWidget {
 }
 
 class _CreatePostOverlayState extends State<CreatePostOverlay> {
+  final ScheduleService _scheduleService = ScheduleService();
+  final PostService _postService = PostService();
+  final PlaceService _placeService = PlaceService();
+  final MediaService _mediaService = MediaService();
   final ImagePicker _picker = ImagePicker();
-  Place? selectedPlace;
+  PlaceCardModel? selectedPlace;
   String? selectedSchedule;
   final TextEditingController titleController = TextEditingController();
   final TextEditingController contentController = TextEditingController();
@@ -39,6 +53,9 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
   String placeName = "Unknown Place";
   String photoDisplay = "";
   bool isUpdateMode = false;
+  late List<ScheduleModel> myListSchedule;
+  List<File> listFilePick =[];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -49,29 +66,64 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
     _fetchPlaceDetails();
   }
 
-  void _initializeForUpdate(Post post) {
+  void _initializeForUpdate(PostModel post) {
     // Set update mode and initialize fields
     isUpdateMode = true;
-    titleController.text = post.title;
-    contentController.text = post.content ?? '';
-    final scheduleProvider =
-    Provider.of<ScheduleProvider>(context, listen: false);
-    selectedSchedule = scheduleProvider.getScheduleNameById(post.scheduleId!);
-    mediaList = List<PostMedia>.from(
-        Provider.of<PostProvider>(context, listen: false)
-            .getMediaForPost(post.id));
+
   }
 
-  void _fetchPlaceDetails() {
-    final scheduleProvider =
-    Provider.of<ScheduleProvider>(context, listen: false);
-    if (widget.placeId != null) {
-      placeName = scheduleProvider.getPlaceName(widget.placeId!, 'en'); // Replace 'en' with desired language code
-      photoDisplay = scheduleProvider.getPhotoDisplay(widget.placeId!);
-    }
+  Future<void> _fetchPlaceDetails() async {
+      try{
+        var result = await _scheduleService.GetScheduleCurrentUser();
+
+        if(isUpdateMode){
+          PostModel postmodel = widget.existingPost!;
+
+          if(postmodel.placeId != null){
+
+            var p = await _placeService.GetPlaceDetail(widget.existingPost!.placeId!);
+
+            selectedPlace = new PlaceCardModel(placeId: p.id,
+                wardName: '',
+                photoDisplayUrl: p.photoDisplay,
+                placeName: p.name,
+                rateStar: p.rating,
+                countFeedback: 0,
+                distance: 0,
+                address: '');
+
+          }
+          if(widget.existingPost!.scheduleId != null){
+            selectedSchedule = result.firstWhere((element) => element.id == postmodel.scheduleId!,).scheduleName;
+          }
+          titleController.text = widget.existingPost!.title;
+          contentController.text = widget.existingPost!.content;
+          if(postmodel.media != null){
+            for(var item in postmodel.media){
+               var result = await _mediaService.downloadAndConvertToXFile(item.url);
+               if(result != null){
+                 mediaList.add(new PostMedia(
+                   createdAt: DateTime.now(),
+                   id: DateTime.now().millisecondsSinceEpoch,
+                   type: '${item.type}',
+                   url: result.path,)
+                 );
+               }
+            }
+          }
+
+        }
+
+        setState(() {
+          myListSchedule = result;
+          isLoading = false;
+        });
+      }catch (e){
+
+      }
   }
 
-  void _selectPlace(Place place) {
+  void _selectPlace(PlaceCardModel place) {
     final scheduleProvider =
     Provider.of<ScheduleProvider>(context, listen: false);
     setState(() {
@@ -187,23 +239,30 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
     });
   }
 
-  void _createOrUpdatePost() {
+  Future<void> _createOrUpdatePost() async {
     final title = titleController.text.trim();
     final content = contentController.text.trim();
     final scheduleId = _getSelectedScheduleId();
     final hasContent = content.isNotEmpty;
-    final hasPlace = selectedPlace != null;
+    //final hasPlace = selectedPlace != null;
     final hasMedia = mediaList.isNotEmpty;
-    final hasSchedule = scheduleId != null;
-
+    //final hasSchedule = scheduleId != null;
+    final hasTitle = title.isNotEmpty;
     // Check if at least one of the required fields is provided
-    if (!hasContent && !hasPlace && !hasMedia && !hasSchedule) {
+    if (!hasContent && !hasContent) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please provide at least one of: Schedule, Place, Content, or Media.'),
+          content: Text('Please provide at least one of: Title, Content.'),
         ),
       );
       return;
+    }
+
+    if(hasMedia){
+      listFilePick.clear();
+      for(var item in mediaList){
+        listFilePick.add(new File(item.url));
+      }
     }
 
     final postProvider = Provider.of<PostProvider>(context, listen: false);
@@ -217,7 +276,7 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
       placeId: selectedPlace?.placeId,
       title: title,
       content: content,
-      createdAt: widget.existingPost?.createdAt ?? DateTime.now(),
+      createdAt: widget.existingPost?.createdDate ?? DateTime.now(),
       authorId: currentUserId,
       updatedAt: DateTime.now(),
       isPublic: true,
@@ -225,14 +284,17 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
     );
 
     if (isUpdateMode) {
-      postProvider.updatePost(newPost);
+      var result = await _postService.UpdatePost(widget.existingPost!.id, title, content, selectedPlace !=null ? selectedPlace!.placeId : null, scheduleId??null, listFilePick);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Post updated successfully!')),
+         SnackBar(content: Text(result)),
       );
     } else {
-      postProvider.addPost(newPost);
+
+      var result = await _postService.CreatePost(title, content, selectedPlace !=null ? selectedPlace!.placeId : null, scheduleId??null, listFilePick);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Post created successfully!')),
+         SnackBar(content: Text('$result')),
       );
     }
 
@@ -242,7 +304,7 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
         postProvider.addMedia(media);
       }
     }
-
+    widget.callback;
     Navigator.pop(context);
   }
 
@@ -278,8 +340,10 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
         .where((s) => s.userId == currentUserId)
         .toList();
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.7,
+    return
+      isLoading ? const Center(child: CircularProgressIndicator()) :
+      DraggableScrollableSheet(
+      initialChildSize: 0.87,
       maxChildSize: 0.9,
       minChildSize: 0.4,
       builder: (context, scrollController) {
@@ -287,7 +351,7 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
           controller: scrollController,
           child: Container(
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: Color.fromRGBO(255, 236, 179, 1),
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Padding(
@@ -317,7 +381,7 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
                           ElevatedButton(
                             onPressed: _createOrUpdatePost,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.pinkAccent,
+                              backgroundColor: Colors.green,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
@@ -342,7 +406,7 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
                       border: OutlineInputBorder(),
                     ),
                     value: selectedSchedule,
-                    items: userSchedules
+                    items: myListSchedule
                         .map((schedule) => DropdownMenuItem(
                       value: schedule.scheduleName,
                       child: Text(schedule.scheduleName),
@@ -360,15 +424,15 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
                   if (selectedPlace != null) ...[
                     Row(
                       children: [
-                        if (photoDisplay.isNotEmpty)
+                        if (selectedPlace!.photoDisplayUrl.isNotEmpty)
                           Image.network(
-                            photoDisplay,
+                            selectedPlace!.photoDisplayUrl,
                             width: 50,
                             height: 50,
                           ),
                         const SizedBox(width: 10),
                         Text(
-                          placeName,
+                          selectedPlace!.placeName,
                           style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold),
@@ -482,7 +546,7 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
                                 ClipRRect(
                                   borderRadius:
                                   BorderRadius.circular(8),
-                                  child: media.type == 'photo'
+                                  child: media.type == 'Image'
                                       ? Image.file(
                                     File(media.url),
                                     width: 100,

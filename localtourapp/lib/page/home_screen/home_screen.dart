@@ -406,21 +406,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   GestureDetector(
                     onTap: () {
                       // Navigate to DetailPage and pass the filtered data
-                      Place selectedPlace = placeList.firstWhere(
-                          (placeItem) => placeItem.placeId == place.placeId);
-                      PlaceTranslation? selectedTranslation =
-                          dummyTranslations.firstWhere((trans) =>
-                              trans.placeId == selectedPlace.placeId);
-                      List<PlaceMedia> filteredMediaList = mediaList
-                          .where(
-                              (media) => media.placeId == selectedPlace.placeId)
-                          .toList();
+
 
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => DetailPage(
-                            placeId: selectedPlace.placeId,
+                            placeId: place.placeId,
                           ),
                         ),
                       );

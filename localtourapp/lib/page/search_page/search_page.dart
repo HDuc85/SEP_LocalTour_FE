@@ -29,7 +29,7 @@ class SearchPage extends StatefulWidget {
   final List<int> initialTags;
   final String? textSearch;
 
-  final Function(Place)? onPlaceSelected;
+  final Function(PlaceCardModel)? onPlaceSelected;
   const SearchPage({
     Key? key,
     this.sortBy = SortBy.distance,
@@ -501,7 +501,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _navigateToDetail(int placeId) {
-    Place? selectedPlace = placeList.firstWhereOrNull((place) => place.placeId == placeId);
+    PlaceCardModel? selectedPlace = listPlaces.firstWhereOrNull((place) => place.placeId == placeId);
 
     if (selectedPlace != null) {
       if (widget.onPlaceSelected != null) {

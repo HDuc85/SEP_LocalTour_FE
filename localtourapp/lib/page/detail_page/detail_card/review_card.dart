@@ -58,7 +58,7 @@ class _ReviewCardState extends State<ReviewCard> {
   Future<void> onFavoriteToggle(int feedbackId) async{
     var success = await _reviewService.LikeFeedback(widget.placeId, feedbackId);
     if(success){
-      var (listDate,totalReview) = await _reviewService.getFeedbackInPlace(widget.placeId);
+      var (listDate,totalReview) = await _reviewService.getFeedback(widget.placeId);
       var feedback = listDate.firstWhere((element) => element.id == widget.feedBackCard.id,);
       setState(() {
         feedBackCard  = feedback;
@@ -69,7 +69,7 @@ class _ReviewCardState extends State<ReviewCard> {
 
   Future<void> onUpdateTogget(int feedbackId) async{
 
-      var (listDate,totalReview) = await _reviewService.getFeedbackInPlace(widget.placeId);
+      var (listDate,totalReview) = await _reviewService.getFeedback(widget.placeId);
       var feedback = listDate.firstWhere((element) => element.id == widget.feedBackCard.id,);
       setState(() {
         feedBackCard  = feedback;
