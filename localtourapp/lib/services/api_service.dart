@@ -16,11 +16,12 @@ class ApiService {
   Future<http.Response> makeRequest(String endpoint, String method,
       [Map<String, dynamic>? body]) async {
     String? accessToken = await storage.readValue(AppConfig.accessToken);
-
     final uri = Uri.parse('${AppConfig.apiUrl}$endpoint');
     Map<String, String>? headers = {};
-
-    headers['Authorization'] = 'Bearer $accessToken';
+    if(accessToken != null)
+      {
+        headers['Authorization'] = 'Bearer $accessToken';
+      }
     headers['Content-Type'] = 'application/json';
 
     late http.Response response;

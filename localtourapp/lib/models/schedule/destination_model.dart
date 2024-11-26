@@ -32,7 +32,7 @@ class DestinationModel {
       endDate: json['endDate'] != null
           ? DateTime.parse(json['endDate'])
           : null,
-      detail: json['detail'],
+      detail: json['detail'] != null ?json['detail'] : '',
       isArrived: json['isArrived'],
       placePhotoDisplay: json['placePhotoDisplay']??'',
       placeName: json['placeName']??'Unknown place name',

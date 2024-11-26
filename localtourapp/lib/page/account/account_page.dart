@@ -178,7 +178,7 @@ class _AccountPageState extends State<AccountPage> {
                   const SizedBox(height: 12), // Adjust spacing if needed
                 ],
 
-                if (isCurrentUser)_buildLogoutButton(), // Add the Logout button here
+                if (isCurrentUser || !isLogin)_buildLogoutButton(), // Add the Logout button here
                   const SizedBox(height: 36),
 
               ],

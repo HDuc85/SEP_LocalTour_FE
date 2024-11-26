@@ -23,7 +23,7 @@ class Userprofile {
     required this.gender,
     required this.address,
     required this.phoneNumber,
-    required this.dateOfBirth,
+    this.dateOfBirth,
     required this.totalSchedules,
     required this.totalPosteds,
     required this.totalReviews,

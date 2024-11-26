@@ -3,6 +3,8 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:localtourapp/models/schedule/schedule_model.dart';
+import 'package:localtourapp/services/schedule_service.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
 
@@ -22,9 +24,35 @@ class ScheduleForm extends StatefulWidget {
 }
 
 class _ScheduleFormState extends State<ScheduleForm> {
+  final ScheduleService _scheduleService = ScheduleService();
+  List<ScheduleModel> _listSchedule = [];
   String? _selectedSchedule;
   DateTime? _fromDate;
   DateTime? _toDate;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    fetchInit();
+  }
+  Future<void> fetchInit() async {
+    var listschedule = await _scheduleService.GetScheduleCurrentUser();
+
+    if(listschedule.length >0){
+      setState(() {
+        _listSchedule = listschedule;
+      });
+    }
+  }
+
+  Future<void> _addSchedule(String scheduleName, DateTime? startDate, DateTime? endDate) async{
+    var result = await _scheduleService.CreateSchedule(scheduleName, startDate, endDate);
+    if(result){
+      fetchInit();
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +89,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
                   int newId = scheduleProvider.schedules.isNotEmpty
                       ? scheduleProvider.schedules.map((s) => s.id).reduce(max) + 1
                       : 1;
-
+                  _addSchedule(scheduleName,startDate,endDate);
                   Schedule newSchedule = Schedule(
                     id: newId,
                     userId: widget.userId,
@@ -110,7 +138,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
                   border: OutlineInputBorder(),
                 ),
                 value: _selectedSchedule,
-                items: userSchedules
+                items: _listSchedule
                     .map((schedule) => DropdownMenuItem(
                   value: schedule.scheduleName,
                   child: Text(schedule.scheduleName),
@@ -163,7 +191,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
 
             // Done Button
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (_selectedSchedule == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -183,50 +211,28 @@ class _ScheduleFormState extends State<ScheduleForm> {
                       ),
                     );
                     return;
+                  }else{
+                    if(_fromDate != null && _fromDate!.isBefore(DateTime.now())){
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content:
+                          Text('The "From" date cannot be after Now.'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
                   }
+                  var schedule = _listSchedule.firstWhere((element) => element.scheduleName == _selectedSchedule,);
 
-                  final scheduleProvider =
-                  Provider.of<ScheduleProvider>(context, listen: false);
-                  final destinationProvider =
-                  Provider.of<ScheduleProvider>(context, listen: false);
-
-                  final selectedSchedule =
-                  scheduleProvider.schedules.firstWhereOrNull(
-                        (s) => s.scheduleName == _selectedSchedule,
-                  );
-
-                  if (selectedSchedule == null) {
+                  var result = await _scheduleService.CreateDestination(schedule.id, widget.placeId, _fromDate, _toDate, null);
+                  if(result){
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Selected schedule not found.'),
-                        duration: Duration(seconds: 2),
+                      SnackBar(
+                        content: Text(
+                            'Place has been added to Schedule: $_selectedSchedule'),
                       ),
                     );
-                    return;
                   }
-
-                  Destination newDestination = Destination(
-                    id: destinationProvider.destinations.isNotEmpty
-                        ? destinationProvider.destinations
-                        .map((d) => d.id)
-                        .reduce(max) +
-                        1
-                        : 1,
-                    scheduleId: selectedSchedule.id,
-                    placeId: widget.placeId,
-                    detail: 'Destination Detail',
-                    startDate: _fromDate,
-                    endDate: _toDate,
-                  );
-
-                  destinationProvider.addDestination(newDestination);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                          'Place has been added to Schedule: $_selectedSchedule'),
-                    ),
-                  );
 
                   Navigator.pop(context);
                 }

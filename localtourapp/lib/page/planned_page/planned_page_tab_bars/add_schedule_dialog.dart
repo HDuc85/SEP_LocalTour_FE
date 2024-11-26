@@ -57,26 +57,31 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate) {
                               });
                             }
                           },
-                          child: AbsorbPointer(
-                            child: TextField(
-                              decoration: InputDecoration(
-                                prefixIcon: const Icon(Icons.calendar_today),
-                                hintText: _startDate != null
-                                    ? DateFormat('yyyy-MM-dd').format(_startDate!)
-                                    : 'Start Date',
-                                border: const OutlineInputBorder(),
-                                suffixIcon: _startDate != null
-                                    ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    setState(() {
-                                      _startDate = null;
-                                    });
-                                  },
-                                )
-                                    : null,
+                          child: Stack(
+                            children: [AbsorbPointer(
+                              child: TextField(
+                                decoration: InputDecoration(
+                                  prefixIcon: const Icon(Icons.calendar_today),
+                                  hintText: _startDate != null
+                                      ? DateFormat('yyyy-MM-dd').format(_startDate!)
+                                      : 'Start Date',
+                                  border: const OutlineInputBorder(),
+                                ),
                               ),
                             ),
+                              _startDate != null
+                              ?
+                              Positioned(
+                                top: 5,
+                                right: 0,
+                                child: IconButton(
+                                icon:  Icon(Icons.clear),
+                                onPressed: () {
+                                setState(() {
+                                _startDate = null;
+                                });}),
+                              ): SizedBox(),
+                            ]
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -94,26 +99,42 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate) {
                               });
                             }
                           },
-                          child: AbsorbPointer(
-                            child: TextFormField(
-                                decoration: InputDecoration(
-                                  prefixIcon: const Icon(Icons.calendar_today),
-                                  hintText: _endDate != null
-                                      ? DateFormat('yyyy-MM-dd').format(_endDate!)
-                                      : 'End Date',
-                                  border: const OutlineInputBorder(),
-                                  suffixIcon: _endDate != null
-                                      ? IconButton(
-                                    icon: const Icon(Icons.clear),
+                          child: Stack(
+                            children: [
+                              AbsorbPointer(
+                                child: TextFormField(
+                                    decoration: InputDecoration(
+                                      prefixIcon: const Icon(Icons.calendar_today),
+                                      hintText: _endDate != null
+                                          ? DateFormat('yyyy-MM-dd').format(_endDate!)
+                                          : 'End Date',
+                                      border: const OutlineInputBorder(),
+                                      suffixIcon: _endDate != null
+                                          ? IconButton(
+                                        icon: const Icon(Icons.clear),
+                                        onPressed: () {
+                                          setState(() {
+                                            _endDate = null;
+                                          });
+                                        },
+                                      )
+                                          : null,
+                                    ),
+                                  ),
+                              ),
+                              _endDate != null
+                                  ?
+                              Positioned(
+                                top: 5,
+                                right: 0,
+                                child: IconButton(
+                                    icon:  Icon(Icons.clear),
                                     onPressed: () {
                                       setState(() {
                                         _endDate = null;
-                                      });
-                                    },
-                                  )
-                                      : null,
-                                ),
-                              ),
+                                      });}),
+                              ): SizedBox()
+                            ],
                           ),
                         ),
                       ],

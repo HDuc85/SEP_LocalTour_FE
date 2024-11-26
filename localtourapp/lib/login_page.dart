@@ -166,7 +166,6 @@ class _LoginPageState extends State<LoginPage> {
                           padding: EdgeInsets.symmetric(
                               horizontal: 165,vertical: 13), // Button padding
                           shape: RoundedRectangleBorder(
-
                             borderRadius: BorderRadius.circular(8), // Rounded corners
                           ),
                         ),
