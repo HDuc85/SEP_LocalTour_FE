@@ -51,7 +51,7 @@ dependencies:
   intl_utils: ^2.8.7
   hive_flutter: ^1.1.0
   #vietmap_gl_platform_interface: ^0.2.0
-  vietmap_flutter_navigation: ^3.1.0
+  vietmap_flutter_navigation: ^3.1.1
   talker: ^3.1.4
   flutter_dotenv: ^5.2.1
   persistent_bottom_nav_bar: ^6.2.1
