@@ -67,9 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _initializeData();
     // Generate mediaList
 
-    for (var tag in listTag) {
-      tagSectionKeys[tag.tagId] = GlobalKey();
-    }
+
 
     // Get the current position
   }
@@ -143,7 +141,9 @@ class _HomeScreenState extends State<HomeScreen> {
         listPlaceTags[tag.id] = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.distance,SortOrder.asc,[tag.id]);
       }
 
-
+      for (var tag in topTags) {
+        tagSectionKeys[tag.id] = GlobalKey();
+      }
       setState(() {
         listTagTop = topTags;
         listPlaceNearest = fetchedListPlaceNearest;

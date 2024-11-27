@@ -68,6 +68,7 @@ void main() async {
   // Initialize Hive
   await Hive.initFlutter();
   await storage.saveValue(AppConfig.language, 'vi');
+
   // Create an instance of bookmarkProvider and load bookmarks
   PlaceProvider bookmarkProvider = PlaceProvider(
     places: dummyPlaces,
@@ -146,7 +147,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     screens = [
       const HomeScreen(),
-      const HomeScreen(),
+      const MapPage(),
       const BookmarkPage(),
       PlannedPage(
         scheduleLikes: dummyScheduleLikes,
@@ -314,8 +315,7 @@ class _MyAppState extends State<MyApp> {
                   ),
                 );
               case '/map':
-                return MaterialPageRoute(
-                    builder: (context) => const HomeScreen());
+                return MaterialPageRoute(builder: (context) => const MapPage());
               case '/history':
                 return MaterialPageRoute(
                     builder: (context) => const HistoryTabbar());

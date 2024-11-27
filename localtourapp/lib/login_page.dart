@@ -158,18 +158,21 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 10),
                   // Login and Register buttons
-                      ElevatedButton(
-                        onPressed: _handleLogin,
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          backgroundColor: Colors.blue, // Button color
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 165,vertical: 13), // Button padding
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8), // Rounded corners
+                      Container(
+                        width: 380,
+                        child: ElevatedButton(
+                          onPressed: _handleLogin,
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.blue, // Button color
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 50,vertical: 13), // Button padding
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8), // Rounded corners
+                            ),
                           ),
+                          child: Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17), textAlign: TextAlign.center,),
                         ),
-                        child: Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17), textAlign: TextAlign.center,),
                       ),
                   Row(
                     children: [

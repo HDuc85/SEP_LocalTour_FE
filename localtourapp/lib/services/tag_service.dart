@@ -31,7 +31,10 @@ class TagService {
     List<TagModel> result = [];
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(response.body);
-      return mapJsonToTags(jsonResponse);
+
+        var x = mapJsonToTags(jsonResponse);
+
+      return x.sublist(0,5);
     }
 
     return result;
