@@ -3,9 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
-import 'package:provider/provider.dart';
 
-import '../../provider/language_provider.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -44,8 +42,6 @@ class _SettingPageState extends State<SettingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = Provider.of<LanguageProvider>(context);
-
 
     return Scaffold(
       appBar: AppBar(

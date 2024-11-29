@@ -6,7 +6,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 
-import '../../models/places/placefeedbackmedia.dart'; // For formatting the date
 
 class FullFeedbackMediaViewer extends StatefulWidget {
   final List<MediaModel> feedbackMediaList;

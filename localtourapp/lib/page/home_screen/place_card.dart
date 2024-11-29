@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../base/place_score_manager.dart';
+import '../../models/event/event_model.dart';
 
 class PlaceCard extends StatefulWidget {
   final int placeCardId;
@@ -11,7 +12,8 @@ class PlaceCard extends StatefulWidget {
   final double distance;
   final int countFeedback;
   final TimeOfDay? timeClose;
-
+  final bool? isEvent;
+  final EventModel? eventModel;
   const PlaceCard({
     super.key,
     required this.placeCardId,
@@ -22,6 +24,8 @@ class PlaceCard extends StatefulWidget {
     required this.distance,
     required this.countFeedback,
     required this.timeClose,
+    this.eventModel,
+    this.isEvent
   });
 
   @override
@@ -58,7 +62,43 @@ class _PlaceCardState extends State<PlaceCard> {
       }),
     );
   }
+  Widget InHour() {
+    DateTime now = DateTime.now();
 
+      Duration differenceStart = now.difference(widget.eventModel!.startDate);
+      Duration differenceEnd = now.difference(widget.eventModel!.endDate);
+
+      if(differenceStart.inHours > 0 && differenceEnd.inHours < 0 ){
+        int days = 0;
+        String type = '';
+        if(differenceEnd.inHours.abs() > 24){
+          days = (differenceEnd.inHours.abs() / 24).floor();
+          type = days == 1 ? 'Day' : 'Days';
+        }
+        else{
+          days = differenceEnd.inHours;
+          type = days == 1 ? 'Hour' : 'Hours';
+        }
+
+        return Text('Available in ${days} ${type}', style: TextStyle(color: Colors.green, fontSize: 11),);
+      }
+      if(differenceStart.inHours < 0){
+
+        int days = 0;
+        String type = '';
+        if(differenceStart.inHours.abs() > 24){
+          days = (differenceStart.inHours.abs() / 24).floor();
+          type = days == 1 ? 'Day' : 'Days';
+        }
+        else{
+          days = differenceStart.inHours;
+          type = days == 1 ? 'Hour' : 'Hours';
+        }
+
+        return Text('Coming in ${days} ${type} ', style: TextStyle(color: Colors.red ,fontSize: 11),);
+      }
+    return SizedBox();
+  }
   @override
   Widget build(BuildContext context) {
     String formattedDistance = '${widget.distance.toStringAsFixed(1)}';
@@ -100,6 +140,7 @@ class _PlaceCardState extends State<PlaceCard> {
                           height: double.infinity,
                           fit: BoxFit.cover,
                         ),
+                        if(widget.isEvent == null)
                         Positioned(
                           top: 0,
                           left: 0,
@@ -163,20 +204,35 @@ class _PlaceCardState extends State<PlaceCard> {
                           children: [
                             Image.asset(
                               iconUrl,
-                              width: 16,
-                              height: 16,
+                              width: 14,
+                              height: 14,
                             ),
                             const SizedBox(width: 4),
-                            buildStarRating(
-                                widget.score / 2), // Display the score as stars
+                            widget.isEvent == null ?
+                             buildStarRating(
+                                widget.score / 2) :
+                            Container(
+                              width: 90,
+                              child: Text(
+                                widget.eventModel!.placeName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            // Display the score as stars
                           ],
                         ),
                         const SizedBox(width: 4),
+                        widget.isEvent == null?
                         Text(
                           '(${widget.countFeedback.toString()})', // Display totalReviewers as text
                           style:
                               const TextStyle(fontSize: 12), // Optional styling
-                        ),
+                        ) : InHour(),
                         const SizedBox(height: 4),
                         Row(
                           children: [

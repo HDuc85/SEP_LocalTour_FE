@@ -4,6 +4,8 @@ class PlaceCardModel {
   int placeId;
   String wardName;
   String photoDisplayUrl;
+  double longitude;
+  double latitude;
   String placeName;
   double rateStar;
   int countFeedback;
@@ -15,6 +17,8 @@ class PlaceCardModel {
     required this.placeId,
     required this.wardName,
     required this.photoDisplayUrl,
+    required this.latitude,
+    required this.longitude,
     required this.placeName,
     required this.rateStar,
     required this.countFeedback,
@@ -31,6 +35,8 @@ class PlaceCardModel {
       placeId: json['id'],
       wardName: json['wardName']?.toString() ?? 'Unknown Ward',
       photoDisplayUrl: json['photoDisplay'] ?? '',
+      latitude: (json['latitude'] ?? 0).toDouble(),
+      longitude: (json['longitude'] ?? 0).toDouble(),
       placeName: hasValue ? json['placeTranslation'][0]['name'] : 'Unknown Place',
       address: hasValue ? json['placeTranslation'][0]['address'] : 'Unknown Address',
       rateStar: (json['rating'] ?? 0).toDouble(),

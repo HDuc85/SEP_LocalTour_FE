@@ -7,22 +7,18 @@ import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/users/userProfile.dart';
 import 'package:localtourapp/services/auth_service.dart';
 import 'package:localtourapp/services/user_service.dart';
-import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../base/weather_icon_button.dart';
 import '../../models/users/followuser.dart';
 import '../../models/users/update_user_request.dart';
 import '../../models/users/users.dart';
-import '../../provider/users_provider.dart';
 import 'faq.dart';
 import 'followlistpage.dart';
 import 'personal_infomation.dart';
 import 'setting_page.dart';
 import 'user_preference.dart';
-import 'view_profile/auth_provider.dart';
 import 'view_profile/view_profile.dart';
 
-// Import other necessary pages like ViewProfilePage, PersonalInformationPage, SettingPage, FAQPage
 
 class AccountPage extends StatefulWidget {
   final String userId;
@@ -75,9 +71,6 @@ class _AccountPageState extends State<AccountPage> {
     try {
       String? userIdStorage = await storage.readValue(AppConfig.userId);
       String? isLoginStorage = await storage.readValue(AppConfig.isLogin);
-
-
-
       if(isLoginStorage != null){
         setState(() {
           isLogin = true;
@@ -103,9 +96,9 @@ class _AccountPageState extends State<AccountPage> {
 
   Future<void> readUserProfile(String userId) async {
 
-    final reponse = await _userService.getUserProfile(userId);
+    final response = await _userService.getUserProfile(userId);
     setState(() {
-      userprofile = reponse;
+      userprofile = response;
     });
 
     if ( userId == myUserId && myUserId.isNotEmpty) {
@@ -162,7 +155,7 @@ class _AccountPageState extends State<AccountPage> {
               padding: const EdgeInsets.all(8.0),
               children: [
                 const SizedBox(height: 16),
-                _buildProfileSection(userprofile),
+                if(isLogin) _buildProfileSection(userprofile),
                 const SizedBox(height: 16),
                 if (!isCurrentUser && isLogin) _buildFollowButton(userprofile.isFollowed),
                 if (isCurrentUser) ...[
@@ -177,10 +170,8 @@ class _AccountPageState extends State<AccountPage> {
                   _buildUserPreference(),
                   const SizedBox(height: 12), // Adjust spacing if needed
                 ],
-
-                if (isCurrentUser || !isLogin)_buildLogoutButton(), // Add the Logout button here
+                if (isCurrentUser || !isLogin) _buildLogoutButton(), // Add the Logout button here
                   const SizedBox(height: 36),
-
               ],
             ),
             Positioned(
@@ -309,9 +300,7 @@ class _AccountPageState extends State<AccountPage> {
                                 builder: (context) => FollowListPage(
                                   followers: followers,
                                   following: followings,
-                                  allUsers: Provider.of<UsersProvider>(context,
-                                          listen: false)
-                                      .users, // List of all users
+                                  allUsers:[]// List of all users
                                 ),
                               ),
                             );
@@ -330,9 +319,7 @@ class _AccountPageState extends State<AccountPage> {
                                 builder: (context) => FollowListPage(
                                   followers: followers,
                                   following: followings,
-                                  allUsers: Provider.of<UsersProvider>(context,
-                                          listen: false)
-                                      .users, // List of all users
+                                  allUsers: [], // List of all users
                                 ),
                               ),
                             );
@@ -358,9 +345,6 @@ class _AccountPageState extends State<AccountPage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => ViewProfilePage(
-                      followUsers: [],
-                      posts: [],
-                      schedules: [],
                       user: userprofile,
                       userId: widget.userId == ''? myUserId : widget.userId,
                     ),
@@ -597,8 +581,9 @@ class _AccountPageState extends State<AccountPage> {
 
   // Build Logout Button
   Widget _buildLogoutButton() {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+    return
+      Container(
+      margin:  EdgeInsets.only(top: !isLogin?300:8,bottom: 8,left: 8,right: 8),
       child: ElevatedButton(
         onPressed: () {
           // Trigger the logout process
@@ -606,7 +591,7 @@ class _AccountPageState extends State<AccountPage> {
         },
         style: !isLogin? ElevatedButton.styleFrom(
           backgroundColor: Colors.blueAccent, // Choose a color that signifies logout
-          padding: const EdgeInsets.symmetric(vertical: 12.0),
+          padding: const EdgeInsets.symmetric(vertical: 16.0),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
           )) : ElevatedButton.styleFrom(
@@ -631,10 +616,6 @@ class _AccountPageState extends State<AccountPage> {
 
   // Function to handle logout
   void _logout() {
-    // Access the AuthProvider
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-    authProvider.logout();
 
     _authService.signOut();
 

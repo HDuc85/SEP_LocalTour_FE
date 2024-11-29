@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../models/places/placemedia.dart';
 import '../models/media_model.dart';
 
 class FullScreenPlaceMediaViewer extends StatelessWidget {

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.localtourapp"
+    namespace = "com.localtour.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

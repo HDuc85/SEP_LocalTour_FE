@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/models/markPlace/markPlaceModel.dart';
+import 'package:localtourapp/services/location_Service.dart';
 import 'package:localtourapp/services/mark_place_service.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart'; // Import for firstWhereOrNull
@@ -15,6 +16,7 @@ class BookmarkPage extends StatefulWidget {
 }
 
 class _BookmarkPageState extends State<BookmarkPage> {
+  final LocationService _locationService = LocationService();
   final MarkplaceService _markplaceService = MarkplaceService();
   List<markPlaceModel> markPlaces = [];
   late String userId;
@@ -26,7 +28,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
   @override
   void initState() {
     _scrollController.addListener(_scrollListener);
-    _fetchCurrentPosition();
+  // _fetchCurrentPosition();
     _fetchMarkPlaceData();
     super.initState();
   }
@@ -70,75 +72,11 @@ class _BookmarkPageState extends State<BookmarkPage> {
     final fetchedmarkData = await _markplaceService.getAllMarkPlace();
     setState(() {
       markPlaces = fetchedmarkData;
+
     });
   }
 
-  // Method to fetch the current location once
-  Future<void> _fetchCurrentPosition() async {
-    try {
-      Position? position = await _getCurrentPosition();
-      if (position != null) {
-        setState(() {
-          _currentPosition = position;
-        });
-      }
-    } catch (e) {
-      // Handle exceptions, possibly set an error state
-      print('Error fetching location: $e');
-      setState(() {
-        _currentPosition = null; // Or set an error flag
-      });
-    }
-  }
 
-  // Method to get the current location with permission handling
-  Future<Position?> _getCurrentPosition() async {
-    try {
-      bool serviceEnabled;
-      LocationPermission permission;
-
-      // Check if location services are enabled.
-      serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        // Location services are not enabled, handle accordingly.
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location services are disabled.')),
-        );
-        return null;
-      }
-
-      // Check for location permissions.
-      permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          // Permissions are denied, handle accordingly.
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location permissions are denied')),
-          );
-          return null;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        // Permissions are denied forever, handle accordingly.
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(
-                  'Location permissions are permanently denied, we cannot request permissions.')),
-        );
-        return null;
-      }
-
-      // When permissions are granted, get the position.
-      return await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-    } catch (e) {
-      // Handle exceptions
-      print('Error in _getCurrentPosition: $e');
-      return null;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,9 +91,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
 
     return Stack(
       children: [
-        _currentPosition == null
-            ? const Center(child: CircularProgressIndicator())
-            : ListView.separated(
+        ListView.separated(
                 controller: _scrollController,
                 padding: const EdgeInsets.only(bottom: 16.0),
                 itemCount: markPlaces.length,

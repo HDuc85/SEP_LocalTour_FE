@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:localtourapp/models/Tag/tag_model.dart';
 
-import '../../models/places/tag.dart';
-
 void showTagsModal({
   required BuildContext context,
   required List<int> selectedTags,

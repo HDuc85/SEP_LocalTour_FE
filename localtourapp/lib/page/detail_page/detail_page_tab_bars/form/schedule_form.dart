@@ -1,16 +1,8 @@
-// lib/widgets/schedule_form.dart
 
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:localtourapp/models/schedule/schedule_model.dart';
 import 'package:localtourapp/services/schedule_service.dart';
-import 'package:provider/provider.dart';
-import 'dart:math';
-
-import '../../../../models/schedule/destination.dart';
-import '../../../../models/schedule/schedule.dart';
-import '../../../../provider/schedule_provider.dart';
 import '../../../planned_page/planned_page_tab_bars/add_schedule_dialog.dart';
 
 class ScheduleForm extends StatefulWidget {
@@ -56,10 +48,6 @@ class _ScheduleFormState extends State<ScheduleForm> {
 
   @override
   Widget build(BuildContext context) {
-    final scheduleProvider = Provider.of<ScheduleProvider>(context);
-    final List<Schedule> userSchedules = scheduleProvider.schedules
-        .where((s) => s.userId == widget.userId)
-        .toList();
 
     return SingleChildScrollView(
       child: Container(
@@ -86,24 +74,11 @@ class _ScheduleFormState extends State<ScheduleForm> {
             ElevatedButton.icon(
               onPressed: () {
                 showAddScheduleDialog(context, (scheduleName, startDate, endDate) {
-                  int newId = scheduleProvider.schedules.isNotEmpty
-                      ? scheduleProvider.schedules.map((s) => s.id).reduce(max) + 1
-                      : 1;
-                  _addSchedule(scheduleName,startDate,endDate);
-                  Schedule newSchedule = Schedule(
-                    id: newId,
-                    userId: widget.userId,
-                    scheduleName: scheduleName,
-                    startDate: startDate,
-                    endDate: endDate,
-                    createdAt: DateTime.now(),
-                    isPublic: false,
-                  );
 
-                  scheduleProvider.addSchedule(newSchedule);
+                  _addSchedule(scheduleName,startDate,endDate);
 
                   setState(() {
-                    _selectedSchedule = newSchedule.scheduleName;
+                    _selectedSchedule = scheduleName;
                   });
                 });
               },

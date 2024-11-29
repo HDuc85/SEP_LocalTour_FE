@@ -3,10 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:localtourapp/services/auth_service.dart';
-import 'package:provider/provider.dart';
-import 'package:localtourapp/provider/user_provider.dart';
 import '../../../main.dart';
-import '../../../mock_firebase.dart';
 
 class ForgotPasswordDialog {
   static void show(BuildContext context,String type,VoidCallback? onCompleted, {FirebaseAuth? firebaseAuth}) {

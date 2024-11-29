@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:localtourapp/models/event/event_model.dart';
+import 'package:localtourapp/services/event_service.dart';
 
 import '../constants/getListApi.dart';
 import '../models/HomePage/placeCard.dart';
@@ -22,10 +24,12 @@ class _SearchBarIconState extends State<SearchBarIcon> {
   bool isSearchIsClicked = false;
   final TextEditingController _searchController = TextEditingController();
   String searchText = '';
-  late PlaceService _placeService = PlaceService();
+  final PlaceService _placeService = PlaceService();
+  final EventService _eventService = EventService();
   Position? _currentPosition;
 
   List<PlaceCardModel> placeTranslations = [];
+  List<EventModel> events =[];
   Timer? _debounce;
   @override
   void initState() {
@@ -44,7 +48,10 @@ class _SearchBarIconState extends State<SearchBarIcon> {
       setState(() {
         placeTranslations = fetchedSearchList;
       });
-
+      final fetchedEventList = await _eventService.GetEventInPlace(null, _currentPosition!.latitude, _currentPosition!.longitude, SortOrder.asc,SortBy.distance,searchText);
+      setState(() {
+        events = fetchedEventList;
+      });
     });
   }
 
@@ -126,23 +133,29 @@ class _SearchBarIconState extends State<SearchBarIcon> {
               ),
               child: ListView.builder(
                 padding: EdgeInsets.zero,
-                itemCount: placeTranslations.length + 1,
+                itemCount: placeTranslations.length + events.length + 1,
                 itemBuilder: (context, index) {
 
-                  final item = placeTranslations.isEmpty || index == placeTranslations.length? null : placeTranslations[index];
+                  bool isPlace = true;
+                  if(index >= placeTranslations.length){
+                    isPlace = false;
+                  }
+                  bool lastItem = index == placeTranslations.length + events.length;
 
+                  final placeItem =  !lastItem ?  (isPlace ? placeTranslations[index] : null) : null;
+                  final eventItem = !lastItem ?  (!isPlace ? events[index - placeTranslations.length] : null) : null;
                   return ListTile(
-                    leading: item == null
+                    leading: lastItem
                         ? const Icon(Icons.search)
-                        : const Icon(Icons.location_on),
-                    title: item == null
+                        : (isPlace ? Icon(Icons.location_on) : Icon(Icons.event_available_rounded)),
+                    title: lastItem
                         ? Text("Search for $searchText") // Display the "Search for..." action
-                        : Text(item.placeName), // Display place name for PlaceTranslation
-                    subtitle: item == null
+                        : (isPlace ? Text(placeItem!.placeName) : Text(eventItem!.eventName) ), // Display place name for PlaceTranslation
+                    subtitle: lastItem
                         ? null
-                        : Text(item.address), // Display address if item is PlaceTranslation
+                        : (isPlace ? Text(placeItem!.address) : Text(eventItem!.placeName)), // Display address if item is PlaceTranslation
                     onTap: () {
-                      if (item == null) {
+                      if (lastItem) {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -154,15 +167,28 @@ class _SearchBarIconState extends State<SearchBarIcon> {
                             ));
 
                       } else {
+                        if(isPlace){
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DetailPage(
+                                placeId: placeItem!.placeId,
 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => DetailPage(
-                              placeId: item.placeId,
+                              ),
                             ),
-                          ),
-                        );
+                          );
+                        }else {
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (_) => DetailPage(
+                          //       placeId: placeItem!.placeId,
+                          //     ),
+                          //   ),
+                          // );
+                          print("object");
+                        }
+
                       }
                     },
                   );

@@ -1,31 +1,25 @@
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/constants/getListApi.dart';
 import 'package:localtourapp/models/HomePage/placeCard.dart';
 import 'package:localtourapp/models/Tag/tag_model.dart';
+import 'package:localtourapp/models/event/event_model.dart';
+import 'package:localtourapp/page/detail_page/event_detail_page.dart';
 import 'package:localtourapp/page/home_screen/place_card.dart';
-import 'package:localtourapp/provider/schedule_provider.dart';
-import 'package:localtourapp/models/schedule/destination.dart';
-import 'package:localtourapp/models/schedule/schedule.dart';
-import 'package:localtourapp/models/schedule/schedulelike.dart';
-import 'package:localtourapp/models/users/users.dart';
-import 'package:localtourapp/provider/user_provider.dart';
-import 'package:localtourapp/provider/count_provider.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/fearuted_schedule_page.dart';
+import 'package:localtourapp/page/wheel/wheel_page.dart';
+import 'package:localtourapp/services/event_service.dart';
+import 'package:localtourapp/services/location_Service.dart';
 import 'package:localtourapp/services/place_service.dart';
 import 'package:localtourapp/services/tag_service.dart';
-import 'package:provider/provider.dart';
 import '../../base/back_to_top_button.dart';
 import '../../base/const.dart';
 import '../../base/custom_button.dart';
 import '../../base/weather_icon_button.dart';
-import '../../models/places/tag.dart';
 import '../detail_page/detail_page.dart';
 import '../search_page/search_page.dart';
 import '../../base/place_card_info.dart';
-import '../../models/places/place.dart';
-import '../../models/places/placemedia.dart';
-import '../../models/places/placetranslation.dart';
 import '../../base/now_location.dart';
 import '../../base/search_bar_icon.dart';
 
@@ -36,17 +30,18 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late String userId;
+  final LocationService _locationService = LocationService();
+  final EventService _eventService = EventService();
+  late String userId = '';
   late PlaceService _placeService = PlaceService();
   late TagService _tagService = TagService();
   final ScrollController _scrollController = ScrollController();
   bool _showBackToTopButton = false;
   final Map<int, GlobalKey> tagSectionKeys = {};
   List<TagModel> listTagTop = [];
-  List<Place> placeList = dummyPlaces;
   bool isLoading = true;
   List<PlaceCardModel> listPlaceNearest = [];
-  List<PlaceCardModel> listPlaceFeatured = [];
+  List<EventModel> listEvent = [];
 
   List<CardInfo> nearestLocation = [];
   List<CardInfo> featuredPlaces = [];
@@ -63,13 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _scrollController.addListener(_scrollListener);
     super.initState();
     _getCurrentPosition();
-
-    _initializeData();
-    // Generate mediaList
-
-
-
-    // Get the current position
   }
 
   @override
@@ -78,10 +66,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     super.dispose();
-  }
-
-  Future<void> _initializeData() async {
-
   }
 
   // Listener to handle scroll events
@@ -102,6 +86,12 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.pushNamed(context, '/weather');
   }
 
+  void _navigateToWheelPage() {
+    Navigator.pushNamed(context, '/wheel');
+  }
+
+
+
   // Function to scroll back to the top
   void _scrollToTop() {
     _scrollController.animateTo(
@@ -113,41 +103,45 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _getCurrentPosition() async {
     try {
-      // Check for permissions
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        permission = await Geolocator.requestPermission();
-        if (permission != LocationPermission.whileInUse &&
-            permission != LocationPermission.always) {
-          // Permissions are denied, show a message
-          setState(() {});
-          return;
-        }
+      Position? position = await _locationService.getCurrentPosition();
+      double long = position != null ? position.longitude : 106.8096761;
+      double lat =  position != null ? position.latitude : 10.8411123;
+      if(position != null){
+        _currentPosition = position;
+      }else{
+        _currentPosition = new Position(longitude: long, latitude: lat, timestamp: DateTime.timestamp(), accuracy: 1, altitude: 1, altitudeAccuracy: 1, heading: 1, headingAccuracy: 1, speed: 1, speedAccuracy: 1);
       }
 
-      // When we reach here, permissions are granted, and we can get the position
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-      setState(() {
-        _currentPosition = position;
-      });
-      final fetchedListPlaceNearest = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.distance,SortOrder.asc);
-      final fetchedListPlaceFeatured = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.rating, SortOrder.asc);
-
+      final fetchedListPlaceNearest = await _placeService.getListPlace(lat, long, SortBy.distance,SortOrder.asc);
+      var fetchedListEvent = await _eventService.GetEventInPlace(null, lat, long,SortOrder.asc, SortBy.distance);
       final topTags = await _tagService.getTopTagPlace();
 
       for(var tag in topTags){
-        listPlaceTags[tag.id] = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.distance,SortOrder.asc,[tag.id]);
+        listPlaceTags[tag.id] = await _placeService.getListPlace(lat, long, SortBy.distance,SortOrder.asc,[tag.id]);
       }
 
       for (var tag in topTags) {
         tagSectionKeys[tag.id] = GlobalKey();
       }
+      DateTime now = DateTime.now();
+      fetchedListEvent = fetchedListEvent.where((element) {
+        Duration difference = now.difference(element.startDate);
+        Duration differenceEnd = now.difference(element.endDate);
+        if(difference.inHours > 0 && differenceEnd.inHours < 0 ){
+          return true;
+        }
+        if(difference.inHours < 0){
+          return true;
+        }
+
+        return false;
+      },).toList();
+
+
+      listTagTop = topTags;
+      listPlaceNearest = fetchedListPlaceNearest;
+      listEvent = fetchedListEvent;
       setState(() {
-        listTagTop = topTags;
-        listPlaceNearest = fetchedListPlaceNearest;
-        listPlaceFeatured = fetchedListPlaceFeatured;
         isLoading = false;
       });
     } catch (e) {}
@@ -156,12 +150,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     if (_currentPosition == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    userId = Provider.of<UserProvider>(context).userId;
-
-    if (userId.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -184,8 +172,8 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildNearFeaturedSection('assets/icons/Nearest Places.png',
                   'Nearest Location', listPlaceNearest, SortBy.distance),
               const SizedBox(height: 40),
-              _buildNearFeaturedSection('assets/icons/Featured Places.png',
-                  'Featured Places', listPlaceFeatured, SortBy.rating),
+              _buildNearEventNearest('assets/icons/event.png',
+                  'Nearest Events', listEvent, SortBy.distance),
               const SizedBox(height: 40),
               ...listTagTop.map((tag) {
                 return Padding(
@@ -200,12 +188,58 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // Positioned Weather Icon Button (Bottom Left)
         Positioned(
-          bottom: 0,
-          left: 20,
-          child: WeatherIconButton(
-            onPressed: _navigateToWeatherPage,
-            assetPath: 'assets/icons/weather.png',
-          ),
+          bottom: 10,
+          left: 10,
+          child:
+          PopupMenuButton<int>(
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            offset: Offset(0, -100),
+            itemBuilder:
+                (context) => [
+              PopupMenuItem(
+                value: 1,
+                child: Row(
+                  children: [WeatherIconButton(
+                    onPressed: _navigateToWeatherPage,
+                    assetPath: 'assets/icons/weather.png',
+                  ),
+                  Text('Thời tiết')
+                  ]
+                ),
+              ),
+              PopupMenuItem(
+                value: 2,
+                child: Row(
+                    children: [WeatherIconButton(
+                      onPressed: _navigateToWeatherPage,
+                      assetPath: 'assets/icons/wheel.png',
+                    ),
+                      Text('Hôm nay ăn gì')
+                    ]
+                )),
+            ],
+            onSelected: (value) {
+              if (value == 1) {
+                _navigateToWeatherPage();
+              } else if (value == 2) {
+                _navigateToWheelPage();
+              }
+            },
+            child: Container(
+              padding: EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                color: Colors.green[300], // Màu nền khi chưa click
+                shape: BoxShape.circle, // Hình dạng tròn
+              ),
+              child: Icon(
+                Icons.more_vert,
+                color: Colors.black,
+              ),
+            ), // Icon hiển thị trên nút
+          )
         ),
 
         // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
@@ -244,29 +278,25 @@ class _HomeScreenState extends State<HomeScreen> {
             MaterialPageRoute(
               builder: (_) => FeaturedSchedulePage(
                 userId: userId, // Pass in the actual userId
-                allSchedules: dummySchedules,
-                scheduleLikes: dummyScheduleLikes,
-                destinations: dummyDestinations,
-                users: fakeUsers,
-                onClone: (Schedule clonedSchedule,
-                    List<Destination> clonedDestinations) {
-                  Provider.of<ScheduleProvider>(context, listen: false)
-                      .addSchedule(clonedSchedule);
-                  Provider.of<ScheduleProvider>(context, listen: false)
-                      .destinations
-                      .addAll(clonedDestinations);
-
-                  // Increment schedule count in CountProvider if necessary
-                  Provider.of<CountProvider>(context, listen: false)
-                      .incrementScheduleCount();
-                },
               ),
             ),
           );
         },
         child: _buildTagItem('https://api.localtour.space/Media/image_4fc69903-324c-4765-96f4-f338815e4aad.png',
             'Schedule Page'), // Example image for "Schedule Page"
-      ),
+      ),GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => WheelPage(
+              ),
+            ),
+          );
+        },
+        child: _buildTagItem('https://api.localtour.space/Media/wheel.png',
+            'Today choose'), // Example image for "Schedule Page"
+      )
     ];
 
     // Add the rest of the tags to the list
@@ -454,6 +484,88 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildNearEventNearest(String iconPath, String title,
+      List<EventModel> events, SortBy sortBy) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: Row(
+            children: [
+              Image.asset(iconPath, width: 30, height: 30),
+              const SizedBox(width: 16),
+              Text(
+                title.toUpperCase(),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 300,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: events.length,
+            itemBuilder: (context, index) {
+              EventModel event = events[index];
+              return Row(
+                children: [
+                  if (index == 0) const SizedBox(width: 20),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EventDetailPage(
+                            eventModel: event,
+                          ),
+                        ),
+                      );
+                    },
+                    child: PlaceCard(
+                      placeCardId: event.placeId,
+                      placeName: event.eventName,
+                      ward: event.placeName,
+                      photoDisplay: event.eventPhoto!,
+                      score: 5,
+                      distance: event.distance,
+                      countFeedback: 5,
+                      timeClose: TimeOfDay.fromDateTime(event.endDate),
+                      isEvent: true,
+                      eventModel: event,
+                    ),
+                  ),
+                  if (index == events.length - 1) const SizedBox(width: 20),
+                ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+        CustomSeeAllButton(
+          text: "SEE ALL",
+          onPressed: () {
+            // Navigate to SearchPage with the corresponding filter
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => SearchPage(
+                  sortBy: sortBy,
+                  initialTags: [],
+                  isEvent: true,
+                ),
+              ),
+            );
+          },
+        )
+      ],
+    );
+  }
+
   // Build Tag Sections with Nearest and Featured toggle
   Widget _buildTagSection(TagModel tag) {
     bool isFeatured = tagToggleStates[tag.id] ?? false;
@@ -555,26 +667,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (index == 0) const SizedBox(width: 20),
                     GestureDetector(
                       onTap: () {
-                        Place selectedPlace = placeList.firstWhere(
-                            (placeItem) =>
-                                placeItem.placeId == place.placeId);
-                        PlaceTranslation? selectedTranslation =
-                            dummyTranslations.firstWhere((trans) =>
-                                trans.placeId == selectedPlace.placeId);
-                        List<PlaceMedia> filteredMediaList = mediaList
-                            .where((media) =>
-                                media.placeId == selectedPlace.placeId)
-                            .toList();
 
                         Navigator.pushNamed(
                           context,
-                          '/detail',
-                          arguments: {
-                            'place': selectedPlace,
-                            'placeName': selectedTranslation.placeName,
-                            'mediaList': filteredMediaList,
-                            'placeId': selectedPlace.placeId,
-                          },
+                          '/detail'
                         );
                       },
                       child: PlaceCard(

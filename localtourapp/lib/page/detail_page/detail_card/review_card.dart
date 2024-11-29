@@ -1,17 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:localtourapp/models/media_model.dart';
-import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
-import '../../../../../models/places/placefeedback.dart';
 import '../../../base/const.dart';
 import '../../../full_media/full_feedback_media_viewer.dart';
 import '../../../models/feedback/feedback_model.dart';
-import '../../../models/places/placefeedbackhelpful.dart';
-import '../../../models/places/placefeedbackmedia.dart';
-import '../../../models/users/followuser.dart';
-import '../../../models/users/users.dart';
-import '../../../provider/review_provider.dart';
 import '../../../services/review_service.dart';
 import '../../../video_player/video_thumbnail.dart';
 import '../../account/account_page.dart';
@@ -136,7 +128,7 @@ class _ReviewCardState extends State<ReviewCard> {
             style: const TextStyle(color: Colors.grey, fontSize: 12),
           ),
           const SizedBox(height: 5),
-          Text(feedBackCard.content ?? "No content"),
+          Text(feedBackCard.content ),
           const SizedBox(height: 10),
           if (feedBackCard.placeFeedbackMedia.isNotEmpty) _buildMediaRow(feedBackCard.placeFeedbackMedia),
         ],
@@ -232,30 +224,20 @@ class _ReviewCardState extends State<ReviewCard> {
                 IconButton(
                   icon: const Icon(Icons.update, color: Colors.blue),
                   onPressed:  () {
-                    final parentContext = context;
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {
                         return ReviewDialog(
                           initialRating: feedBackCard.rating,
-                          initialContent: feedBackCard.content?? '',
+                          initialContent: feedBackCard.content,
                           initialMedia: feedBackCard.placeFeedbackMedia,
                           onSubmit: (int rating, String content,
                               List<File> images, List<File> videos) {
                             if (true) {
                               addOrUpdateUserReview(rating, content, images, videos,feedBackCard.id);
-                              ScaffoldMessenger.of(parentContext).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                    Text('Your review has been updated.')),
-                              );
 
-                            } else {
-                              ScaffoldMessenger.of(parentContext).showSnackBar(
-                                const SnackBar(
-                                    content:
-                                    Text('You have not changed anything.')),
-                              );
+
+
                             }
                           },
                         );
@@ -313,14 +295,13 @@ class _ReviewCardState extends State<ReviewCard> {
         );
       },
       child: Text(
-        feedBackCard.userName ?? "Anonymous",
+        feedBackCard.userName,
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
     );
   }
 
   ImageProvider _getUserProfileImage() {
-    // Provide a default image if profilePictureUrl is empty or null
     if (feedBackCard.profileUrl == null ||
         feedBackCard.profileUrl.isEmpty) {
       return const AssetImage('assets/images/default_profile_picture.png');

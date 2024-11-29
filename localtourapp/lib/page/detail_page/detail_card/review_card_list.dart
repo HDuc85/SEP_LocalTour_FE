@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:localtourapp/models/feedback/feedback_model.dart';
-import '../../../models/places/placefeedback.dart';
-import '../../../models/places/placefeedbackhelpful.dart';
-import '../../../models/places/placefeedbackmedia.dart';
-import '../../../models/users/followuser.dart';
-import '../../../models/users/users.dart';
 import 'review_card.dart';
 
 class ReviewCardList extends StatelessWidget {

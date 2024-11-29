@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../models/places/placetranslation.dart';
-
 class PlaceDescription extends StatefulWidget {
   final String placeDescription;
 

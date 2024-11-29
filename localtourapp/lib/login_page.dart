@@ -181,7 +181,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: Container(),
                       ),
                       Expanded(
-                        flex: 3,
+                        flex: 4,
                         child:
                           TextButton(
 
@@ -216,7 +216,7 @@ class _LoginPageState extends State<LoginPage> {
                       Navigator.pushNamed(context, '/');
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 13,horizontal: 105), // Adjust spacing
+                      padding: const EdgeInsets.symmetric(vertical: 13,horizontal: 95), // Adjust spacing
 
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
@@ -224,7 +224,6 @@ class _LoginPageState extends State<LoginPage> {
                         // Background color
                       ),
                       child:  Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           // Icon Google
                           Container(

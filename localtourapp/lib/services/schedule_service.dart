@@ -31,8 +31,8 @@ class ScheduleService {
   }
 
   Future<List<ScheduleModel>> getListSchedule(
-      String userId,
-      [SortBy? SortBy,
+      [String? userId,
+      SortBy? SortBy,
         SortOrder? SortOrder,
         int? Page = 1,
         int? Size = 10,]) async {
@@ -150,5 +150,12 @@ class ScheduleService {
     return false;
   }
 
+  Future<bool> CloneSchedule(int scheduleId) async {
+    var response = await _apiService.makeRequest('Schedule/cloneSchedule?scheduleId=$scheduleId', "POST");
+    if(response.statusCode == 201){
+      return true;
+    }
+    return false;
+  }
 
 }

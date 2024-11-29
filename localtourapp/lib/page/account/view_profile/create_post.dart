@@ -1,27 +1,17 @@
 import 'dart:io';
 
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:localtourapp/models/HomePage/placeCard.dart';
-import 'package:localtourapp/models/places/place_detail_model.dart';
 import 'package:localtourapp/models/posts/post_model.dart';
 import 'package:localtourapp/models/schedule/schedule_model.dart';
-import 'package:localtourapp/provider/place_provider.dart';
-import 'package:localtourapp/provider/schedule_provider.dart';
-import 'package:localtourapp/models/places/place.dart';
-import 'package:localtourapp/models/posts/post.dart';
 import 'package:localtourapp/models/posts/postmedia.dart';
-import 'package:localtourapp/models/schedule/schedule.dart';
-import 'package:localtourapp/page/account/view_profile/post_provider.dart';
 import 'package:localtourapp/page/search_page/search_page.dart';
 import 'package:localtourapp/services/media_service.dart';
 import 'package:localtourapp/services/place_service.dart';
 import 'package:localtourapp/services/post_service.dart';
 import 'package:localtourapp/services/schedule_service.dart';
-import 'package:provider/provider.dart';
 
-import '../../../provider/user_provider.dart';
 
 class CreatePostOverlay extends StatefulWidget {
   final int? placeId;
@@ -86,6 +76,8 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
             selectedPlace = new PlaceCardModel(placeId: p.id,
                 wardName: '',
                 photoDisplayUrl: p.photoDisplay,
+                latitude: 0,
+                longitude: 0,
                 placeName: p.name,
                 rateStar: p.rating,
                 countFeedback: 0,
@@ -124,12 +116,9 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
   }
 
   void _selectPlace(PlaceCardModel place) {
-    final scheduleProvider =
-    Provider.of<ScheduleProvider>(context, listen: false);
+
     setState(() {
       selectedPlace = place;
-      placeName = scheduleProvider.getPlaceName(place.placeId, 'en');
-      photoDisplay = scheduleProvider.getPhotoDisplay(place.placeId);
     });
   }
 
@@ -242,13 +231,11 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
   Future<void> _createOrUpdatePost() async {
     final title = titleController.text.trim();
     final content = contentController.text.trim();
-    final scheduleId = _getSelectedScheduleId();
+    //final scheduleId = _getSelectedScheduleId();
     final hasContent = content.isNotEmpty;
     //final hasPlace = selectedPlace != null;
     final hasMedia = mediaList.isNotEmpty;
     //final hasSchedule = scheduleId != null;
-    final hasTitle = title.isNotEmpty;
-    // Check if at least one of the required fields is provided
     if (!hasContent && !hasContent) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -264,81 +251,35 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
         listFilePick.add(new File(item.url));
       }
     }
+    int scheduleId = myListSchedule.firstWhere((element) => element.scheduleName == selectedSchedule!,).id;
 
-    final postProvider = Provider.of<PostProvider>(context, listen: false);
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-
-    // Obtain current user from UserProvider
-    final currentUserId = userProvider.currentUser!.userId;
-
-    final newPost = Post(
-      id: widget.existingPost?.id ?? DateTime.now().millisecondsSinceEpoch,
-      placeId: selectedPlace?.placeId,
-      title: title,
-      content: content,
-      createdAt: widget.existingPost?.createdDate ?? DateTime.now(),
-      authorId: currentUserId,
-      updatedAt: DateTime.now(),
-      isPublic: true,
-      scheduleId: scheduleId,
-    );
 
     if (isUpdateMode) {
-      var result = await _postService.UpdatePost(widget.existingPost!.id, title, content, selectedPlace !=null ? selectedPlace!.placeId : null, scheduleId??null, listFilePick);
+      var result = await _postService.UpdatePost(widget.existingPost!.id, title, content, selectedPlace !=null ? selectedPlace!.placeId : null, scheduleId, listFilePick);
 
       ScaffoldMessenger.of(context).showSnackBar(
          SnackBar(content: Text(result)),
       );
     } else {
 
-      var result = await _postService.CreatePost(title, content, selectedPlace !=null ? selectedPlace!.placeId : null, scheduleId??null, listFilePick);
+      var result = await _postService.CreatePost(title, content, selectedPlace !=null ? selectedPlace!.placeId : null, scheduleId, listFilePick);
 
       ScaffoldMessenger.of(context).showSnackBar(
          SnackBar(content: Text('$result')),
       );
     }
 
-    for (var media in mediaList) {
-      media.postId = newPost.id;
-      if (!isUpdateMode || !postProvider.isMediaAttached(media)) {
-        postProvider.addMedia(media);
-      }
-    }
+
     widget.callback;
     Navigator.pop(context);
   }
 
 
-  int? _getSelectedScheduleId() {
-    final scheduleProvider = Provider.of<ScheduleProvider>(context, listen: false);
-    final userProvider = Provider.of<UserProvider>(context, listen: false); // Fetch UserProvider
-    final String? currentUserId = userProvider.currentUser.userId; // Get current user's ID
 
-    if (currentUserId == null) {
-      return null; // Handle cases where the user ID is not available
-    }
-
-    final schedule = scheduleProvider.schedules.firstWhereOrNull(
-          (s) => s.scheduleName == selectedSchedule && s.userId == currentUserId,
-    );
-
-    return schedule?.id;
-  }
 
   @override
   Widget build(BuildContext context) {
-    final scheduleProvider = Provider.of<ScheduleProvider>(context);
-    final userProvider = Provider.of<UserProvider>(context, listen: false); // Fetch UserProvider
-    final String? currentUserId = userProvider.currentUser.userId; // Get current user's ID
-    if (currentUserId == null) {
-      return const Center(
-        child: Text('Unable to fetch user information.'),
-      );
-    }
 
-    final List<Schedule> userSchedules = scheduleProvider.schedules
-        .where((s) => s.userId == currentUserId)
-        .toList();
 
     return
       isLoading ? const Center(child: CircularProgressIndicator()) :

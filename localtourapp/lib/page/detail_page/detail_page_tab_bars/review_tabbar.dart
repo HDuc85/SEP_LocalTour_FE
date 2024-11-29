@@ -8,30 +8,16 @@ import 'package:localtourapp/models/users/userProfile.dart';
 import 'package:localtourapp/services/place_service.dart';
 import 'package:localtourapp/services/review_service.dart';
 import 'package:localtourapp/services/user_service.dart';
-import 'package:provider/provider.dart';
 import '../../../base/weather_icon_button.dart';
-import '../../../models/users/userreport.dart';
-import '../../../models/users/users.dart';
-import '../../../provider/follow_users_provider.dart';
-import '../../../provider/review_provider.dart';
-import '../../../provider/user_provider.dart';
-import '../../../provider/users_provider.dart';
 import '../detail_card/review_card_list.dart';
 import '../detail_card/review_card.dart';
-import '../../../models/places/placefeedback.dart';
-import '../../../models/places/placefeedbackhelpful.dart';
-import '../../../models/places/placefeedbackmedia.dart';
 import '../all_reviews_page.dart';
-import '../../../provider/count_provider.dart';
 import 'form/reportform.dart';
 import 'form/review_dialog.dart';
-import '../../../base/place_score_manager.dart';
-import 'package:collection/collection.dart';
 
 class ReviewTabbar extends StatefulWidget {
   final int placeId;
   final String userId;
-
   const ReviewTabbar({
     super.key,
     required this.placeId,
@@ -43,7 +29,6 @@ class ReviewTabbar extends StatefulWidget {
 }
 
 class _ReviewTabbarState extends State<ReviewTabbar> {
-
   final ReviewService _reviewService = ReviewService();
   final PlaceService _placeService = PlaceService();
   final UserService _userService = UserService();
@@ -75,10 +60,13 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
     var (listDate,totalReview) = await _reviewService.getFeedback(widget.placeId);
     var fetchPlaceDetail = await _placeService.GetPlaceDetail(widget.placeId);
     var userId = await SecureStorageHelper().readValue(AppConfig.userId);
-    bool isLogin = (await SecureStorageHelper().readValue(AppConfig.isLogin))!.isNotEmpty;
-
+    var islogin = await SecureStorageHelper().readValue(AppConfig.isLogin);
+    bool isLogin = false;
+    if(islogin != null){
+      isLogin = true;
+    }
     if(userId != "" && userId != null){
-      var userprofile = await _userService.getUserProfile(userId!);
+      var userprofile = await _userService.getUserProfile(userId);
       setState(() {
         _userprofile = userprofile;
       });
@@ -112,19 +100,6 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
     });
   }
 
-
-
-  /// Update the place score and total reviewers count in PlaceScoreManager.
-  void _updatePlaceScore() {
-    final reviewProvider = Provider.of<ReviewProvider>(context, listen: false);
-    final placeFeedbacks = reviewProvider.getReviewsByPlaceId(widget.placeId);
-
-    final double score = calculateScore(placeFeedbacks);
-    totalReviewers = placeFeedbacks.length;
-
-    PlaceScoreManager.instance.setScore(widget.placeId, score);
-    PlaceScoreManager.instance.setReviewCount(widget.placeId, totalReviewers);
-  }
 
   Future<void> fetchDate() async {
     var (listDate,totalReview) = await _reviewService.getFeedback(widget.placeId);
@@ -178,48 +153,6 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
     }
   }
 
-
-  bool hasUserReviewed() {
-    return _listFeedbacks.first.userId.contains(currentUser);
-  }
-
-  User? getUserDetails(String userId) {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    if (userProvider.currentUser.userId == userId) {
-      return userProvider.currentUser;
-    }
-    // If not current user, either retrieve from user list or return a default
-    // For demonstration, returning a default user
-    return User(
-      userId: 'default',
-      userName: 'Unknown User',
-      emailConfirmed: false,
-      phoneNumberConfirmed: false,
-      dateCreated: DateTime.now(),
-      dateUpdated: DateTime.now(),
-      reportTimes: 0,
-    );
-  }
-
-  /// Calculate the average score for the place based on its feedbacks.
-  double calculateScore(List<PlaceFeedback> placeFeedbacks) {
-    if (placeFeedbacks.isEmpty) return 0.0; // Avoid division by zero
-
-    int totalStars = placeFeedbacks.fold(
-      0,
-          (sum, feedback) => sum + feedback.rating.toInt(),
-    );
-    return totalStars / placeFeedbacks.length; // Calculate average as a double
-  }
-
-  /// Utility method to compare two lists of Files (by path).
-  bool _areListsEqual(List<File> list1, List<File> list2) {
-    if (list1.length != list2.length) return false;
-    for (int i = 0; i < list1.length; i++) {
-      if (list1[i].path != list2[i].path) return false;
-    }
-    return true;
-  }
 
   @override
   Widget build(BuildContext context) {

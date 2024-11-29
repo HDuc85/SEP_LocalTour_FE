@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:localtourapp/config/secure_storage_helper.dart';
 import '../config/appConfig.dart';
@@ -49,7 +50,7 @@ class ApiService {
       if (refreshed) {
         return makeRequest(endpoint, method, body);
       } else {
-        _returnToLoginPage();
+         await storage.deleteValue(AppConfig.isLogin);
       }
     }
     return response;

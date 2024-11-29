@@ -3,16 +3,9 @@ import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/feedback/feedback_model.dart';
 import 'package:localtourapp/services/review_service.dart';
-import 'package:provider/provider.dart';
-import '../../../../models/places/placefeedback.dart';
-import '../../../models/places/placefeedbackmedia.dart';
 import '../../base/back_to_top_button.dart';
 import '../../base/weather_icon_button.dart';
-import '../../models/users/followuser.dart';
-import '../../models/users/users.dart';
-import '../../provider/review_provider.dart';
 import 'detail_card/review_card.dart';
-import '../../models/places/placefeedbackhelpful.dart';
 import 'detail_page_tab_bars/form/reportform.dart';
 
 class AllReviewsPage extends StatefulWidget {
@@ -296,8 +289,6 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredFeedbacks = getFilteredFeedbacks();
-    final reviewProvider = Provider.of<ReviewProvider>(context);
 
     return isLoading
         ? Center(child: CircularProgressIndicator())

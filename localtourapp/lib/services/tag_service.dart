@@ -25,7 +25,7 @@ class TagService {
     }
   }
 
-  Future<List<TagModel>> getTopTagPlace() async {
+  Future<List<TagModel>> getTopTagPlace([int? size]) async {
     final response = await apiService.makeRequest('Tag/TagsTopPlace', 'GET');
 
     List<TagModel> result = [];
@@ -33,12 +33,15 @@ class TagService {
       final jsonResponse = json.decode(response.body);
 
         var x = mapJsonToTags(jsonResponse);
-
+      if(size != null){
+        return x.sublist(0,size);
+      }
       return x.sublist(0,5);
     }
 
     return result;
   }
+
 
   Future<List<TagModel>> getTagInPlace(int placeId) async {
     final response = await apiService.makeRequest('Place/getTagsInPlace?placeId=$placeId', 'GET');

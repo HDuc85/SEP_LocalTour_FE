@@ -2,6 +2,8 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:localtourapp/models/event/event_model.dart';
 
 import '../../base/place_score_manager.dart';
 
@@ -12,7 +14,8 @@ class SecondPlaceCard extends StatefulWidget {
   final String photoDisplay;
   final double score;
   final double distance;
-
+  final bool? isEvent;
+  final EventModel? event;
   const SecondPlaceCard({
     Key? key,
     required this.placeCardId,
@@ -21,6 +24,8 @@ class SecondPlaceCard extends StatefulWidget {
     required this.photoDisplay,
     required this.score,
     required this.distance,
+    this.isEvent,
+    this.event
   }) : super(key: key);
 
   @override
@@ -73,6 +78,12 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
     );
   }
 
+  int differentDay(DateTime date) {
+    DateTime currentDate = DateTime.now();
+    Duration difference = date.difference(currentDate);
+    return difference.inDays;
+  }
+
   @override
   Widget build(BuildContext context) {
     // Format distance for display
@@ -106,14 +117,23 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Place name and ward
-                Text(
-                  widget.placeName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      widget.placeName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if(widget.event != null)
+                    if(differentDay(widget.event!.endDate)  > 1)
+                      Text("${differentDay(widget.event!.endDate)} ${differentDay(widget.event!.endDate) > 1 ? 'DAYS' : 'DAY'} LEFT" ,
+                        style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold, color: Colors.green),)
+                  ],
                 ),
                 Text(
                   '${widget.wardName}',
@@ -125,6 +145,7 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
                 ),
                 // Score and distance with icon
                 const SizedBox(height: 3.5),
+                widget.isEvent == null?
                 Row(
                   children: [
                     Image.asset(
@@ -143,7 +164,25 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
                       ],
                     ),
                   ],
-                ),
+                ) : 
+                Row(children: [
+                  Image.asset(
+                    'assets/icons/logo.png',
+                    width: 16,
+                    height: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text('Start ${DateFormat("h:mma dd-MM-yyyy").format(widget.event!.startDate)}', style: TextStyle(color:differentDay(widget.event!.startDate!) < 0? Colors.grey: Colors.red),),
+                  const Spacer(),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on, color: Colors.red, size: 16),
+                      const SizedBox(width: 4),
+                      Text(formattedDistance),
+                    ],
+                  ),
+                ],)
+                ,
               ],
             ),
           ),

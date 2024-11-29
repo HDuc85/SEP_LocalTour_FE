@@ -3,9 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../models/users/followuser.dart';
 import '../../models/users/users.dart';
-import '../../provider/follow_users_provider.dart';
-import '../../provider/user_provider.dart';
-import '../../provider/users_provider.dart';
 import 'account_page.dart';
 
 class FollowListPage extends StatefulWidget {
@@ -85,15 +82,6 @@ class _FollowListPageState extends State<FollowListPage> {
           title: GestureDetector(
             onTap: () {
               // Use UserProvider to get the user's details
-              final userProvider =
-                  Provider.of<UserProvider>(context, listen: false);
-              final usersProvider =
-                  Provider.of<UsersProvider>(context, listen: false);
-              final followUsersProvider =
-                  Provider.of<FollowUsersProvider>(context, listen: false);
-
-              final clickedUser = usersProvider.getUserById(user.userId);
-              final isCurrentUser = userProvider.isCurrentUser(user.userId);
 
               Navigator.push(
                 context,

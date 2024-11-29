@@ -1,32 +1,19 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:localtourapp/constants/getListApi.dart';
+import 'package:localtourapp/models/schedule/schedule_model.dart';
+import 'package:localtourapp/services/schedule_service.dart';
 import '../../../base/back_to_top_button.dart';
 import '../../../base/weather_icon_button.dart';
-import '../../../models/places/place.dart';
-import '../../../models/places/placetranslation.dart';
-import '../../../models/schedule/destination.dart';
-import '../../../models/schedule/schedule.dart';
-import '../../../models/schedule/schedulelike.dart';
-import '../../../models/users/users.dart';
 import 'dart:ui' as ui;
 
 class FeaturedSchedulePage extends StatefulWidget {
   final String userId;
-  final List<Schedule> allSchedules;
-  final List<ScheduleLike> scheduleLikes;
-  final List<Destination> destinations;
-  final List<User> users;
-  final Function(Schedule, List<Destination>) onClone;
 
   const FeaturedSchedulePage({
     super.key,
-    required this.allSchedules,
-    required this.scheduleLikes,
-    required this.destinations,
-    required this.users,
     required this.userId,
-    required this.onClone,
   });
 
   @override
@@ -34,7 +21,10 @@ class FeaturedSchedulePage extends StatefulWidget {
 }
 
 class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
+  final ScheduleService _scheduleService = ScheduleService();
   final ScrollController _scrollController = ScrollController();
+  late List<ScheduleModel> _listSchedule = [];
+  bool isLoading = true;
   bool _showBackToTopButton = false;
   int? _expandedIndex;
   final Set<int> favoritedScheduleIds = {};
@@ -43,7 +33,23 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
   void initState() {
     _scrollController.addListener(_scrollListener);
     super.initState();
-    _initializeFavoriteSchedules();
+    _initializeSchedules();
+  }
+
+
+  Future<void> _initializeSchedules() async{
+    var listSchedule = await _scheduleService.getListSchedule('',SortBy.liked,SortOrder.desc,1,20);
+    _listSchedule = listSchedule;
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Future<void> _fetchData() async{
+    var listSchedule = await _scheduleService.getListSchedule('',SortBy.liked,SortOrder.desc,1,20);
+    setState(() {
+      _listSchedule = listSchedule;
+    });
   }
 
   @override
@@ -80,35 +86,36 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
     );
   }
 
-  void _initializeFavoriteSchedules() {
-    for (var like in widget.scheduleLikes) {
-      favoritedScheduleIds.add(like.scheduleId);
+
+
+  void _toggleFavorite(int scheduleId) async {
+    var result = await _scheduleService.LikeSchedule(scheduleId);
+    if(result){
+      _fetchData();
     }
   }
 
-  void _toggleFavorite(int scheduleId) {
-    setState(() {
-      if (favoritedScheduleIds.contains(scheduleId)) {
-        favoritedScheduleIds.remove(scheduleId);
-      } else {
-        favoritedScheduleIds.add(scheduleId);
-      }
-    });
+
+  Future<void> _cloneSchedule(ScheduleModel schedule) async{
+    var result = await _scheduleService.CloneSchedule(schedule.id);
+    if(!result){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Some thing wrong went clone !'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }else{
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Schedule is cloned!'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
-  List<Schedule> _getTopSchedules() {
-    final sortedSchedules = widget.allSchedules.toList()
-      ..sort((a, b) {
-        final aLikes = widget.scheduleLikes
-            .where((like) => like.scheduleId == a.id)
-            .length;
-        final bLikes = widget.scheduleLikes
-            .where((like) => like.scheduleId == b.id)
-            .length;
-        return bLikes.compareTo(aLikes);
-      });
-    return sortedSchedules.take(10).toList();
-  }
+
 
   void _showDetailDialog(String detailText) {
     showDialog(
@@ -188,11 +195,11 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
 
   @override
   Widget build(BuildContext context) {
-    final topSchedules = _getTopSchedules();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Top 10 Most Favorite Schedules",
+          "Top Most Favorite Schedules",
           maxLines: 2,
         ),
       ),
@@ -200,29 +207,17 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
         children: [
           ListView.builder(
             controller: _scrollController,
-            itemCount: topSchedules.length + 1, // Increased by 1
+            itemCount: _listSchedule.length + 1, // Increased by 1
             itemBuilder: (context, index) {
-              if (index == topSchedules.length) {
+              if (index == _listSchedule.length) {
                 // Extra SizedBox at the bottom
                 return const SizedBox(height: 100); // Adjust height as needed
               }
 
-              final schedule = topSchedules[index];
-              final scheduleLikes = widget.scheduleLikes
-                  .where((like) => like.scheduleId == schedule.id)
-                  .toList();
-              final int likeCount = scheduleLikes.length;
-              final scheduleDestinations = widget.destinations
-                  .where((destination) => destination.scheduleId == schedule.id)
-                  .toList();
-              final isExpanded = _expandedIndex == index;
+              final schedule = _listSchedule[index];
 
-              // Find the user who created the schedule
-              final user = widget.users.firstWhere(
-                    (u) => u.userId == schedule.userId,
-                orElse: () =>
-                    User.minimal(userId: 'Unknown', userName: 'Unknown User'),
-              );
+
+              final isExpanded = _expandedIndex == index;
 
               return GestureDetector(
                 onTap: () {
@@ -254,7 +249,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                 ),
                               ),
                               Text(
-                                  "Created date: ${DateFormat('yyyy-MM-dd').format(schedule.createdAt)}"),
+                                  "Created date: ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}"),
                               Row(
                                 children: [
                                   Flexible(
@@ -278,14 +273,14 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                               ),
                               Row(
                                 children: [
-                                  Text("Created by: ${user.userName ?? 'Unknown'}"),
+                                  Text("Created by: ${schedule.userName ?? 'Unknown'}"),
                                   const SizedBox(width: 8),
                                   IconButton(
                                     icon: Icon(
-                                      favoritedScheduleIds.contains(schedule.id)
+                                      schedule.isLiked
                                           ? Icons.favorite
                                           : Icons.favorite_border,
-                                      color: favoritedScheduleIds.contains(schedule.id)
+                                      color: schedule.isLiked
                                           ? Colors.red
                                           : Colors.grey,
                                     ),
@@ -294,7 +289,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                     },
                                   ),
                                   Text(
-                                    likeCount.toString(),
+                                    schedule.totalLikes.toString(),
                                     style: const TextStyle(
                                         color: Colors.black, fontSize: 12),
                                   ),
@@ -322,33 +317,8 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                             ),
                                             TextButton(
                                               onPressed: () {
-                                                // Perform the cloning action by calling onClone
-                                                final clonedSchedule = Schedule(
-                                                  id: widget.allSchedules.length + 1, // Use a unique ID
-                                                  userId: 'anh-tuan-unique-id-1234', // Pass the current user ID
-                                                  scheduleName: schedule.scheduleName,
-                                                  startDate: schedule.startDate,
-                                                  endDate: schedule.endDate,
-                                                  createdAt: DateTime.now(),
-                                                  isPublic: false,
-                                                );
 
-                                                // Clone the destinations for the schedule
-                                                final clonedDestinations = widget.destinations
-                                                    .where((destination) => destination.scheduleId == schedule.id)
-                                                    .map((destination) => Destination(
-                                                  id: widget.destinations.length + 1, // Keep the same ID or create a new unique ID
-                                                  scheduleId: clonedSchedule.id, // Link to cloned schedule
-                                                  placeId: destination.placeId,
-                                                  startDate: destination.startDate,
-                                                  endDate: destination.endDate,
-                                                  detail: destination.detail,
-                                                ))
-                                                    .toList();
-
-                                                widget.onClone(
-                                                    clonedSchedule, clonedDestinations); // Call onClone with cloned schedule
-
+                                                _cloneSchedule(schedule);
                                                 Navigator.of(context).pop(); // Close the dialog after cloning
                                               },
                                               child: const Text("Clone"),
@@ -373,7 +343,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                             borderRadius: BorderRadius.circular(15),
                             border: Border.all(color: Colors.black, width: 1),
                           ),
-                          child: _buildDestinationList(scheduleDestinations, schedule),
+                          child: _buildDestinationList(schedule),
                         ),
                     ],
                   ),
@@ -433,15 +403,10 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
     );
   }
 
-  Widget _buildDestinationList(
-      List<Destination> scheduleDestinations, Schedule schedule) {
+  Widget _buildDestinationList(ScheduleModel schedule) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: scheduleDestinations.map((destination) {
-        final place =
-            dummyPlaces.firstWhere((p) => p.placeId == destination.placeId);
-        final placeTranslation =
-            dummyTranslations.firstWhere((t) => t.placeId == destination.placeId);
+      children: schedule.destinations.map((destination) {
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -452,7 +417,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
-                    placeTranslation.placeName,
+                    destination.placeName,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -463,7 +428,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                 ),
                 const SizedBox(width: 8),
                 Image.network(
-                  place.photoDisplay,
+                  destination.placePhotoDisplay!,
                   width: 50,
                   height: 50,
                   fit: BoxFit.cover,
@@ -489,7 +454,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
             ),
             const SizedBox(height: 4),
             _buildDestinationDetail(
-                destination.detail ?? "No details available"),
+                destination.detail ),
             const Divider(),
           ],
         );

@@ -5,13 +5,8 @@ import 'package:localtourapp/models/users/password_change_request.dart';
 import 'package:localtourapp/models/users/userProfile.dart';
 import 'package:localtourapp/services/auth_service.dart';
 import 'package:localtourapp/services/user_service.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-
-import '../../mock_firebase.dart';
 import '../../models/users/update_user_request.dart';
-import '../../models/users/users.dart';
-import '../../provider/user_provider.dart';
 import 'view_profile/for_got_password.dart'; // Ensure you have intl package in pubspec.yaml
 
 class PersonalInformationPage extends StatefulWidget {
@@ -46,27 +41,23 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize controllers with current user data
-    final userProvider =
-    Provider.of<UserProvider>(context, listen: false);
     _userprofile = widget.userprofile;
-
-    final User currentUser = userProvider.currentUser;
+    // Initialize controllers with current user data
     _fullNameController =
-        TextEditingController(text: _userprofile.fullName ?? '');
+        TextEditingController(text: _userprofile.fullName );
     _passwordController = TextEditingController();
     _emailController =
-        TextEditingController(text: _userprofile.email! ?? '');
+        TextEditingController(text: _userprofile.email );
     _dobController = TextEditingController(
         text: _userprofile.dateOfBirth != null
             ? DateFormat('yyyy-MM-dd').format(_userprofile.dateOfBirth!)
             : '');
     _phoneNumberController =
-        TextEditingController(text: _userprofile.phoneNumber! ?? '');
+        TextEditingController(text: _userprofile.phoneNumber);
     _addressController =
-        TextEditingController(text: _userprofile.address ?? '');
+        TextEditingController(text: _userprofile.address);
     _nicknameController =
-        TextEditingController(text: _userprofile.userName ?? '');
+        TextEditingController(text: _userprofile.userName);
     _selectedGender = _userprofile.gender;
 
   }
@@ -75,20 +66,20 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
     var userfetched = await  _userService.getUserProfile(widget.userId);
 
     _fullNameController =
-        TextEditingController(text: userfetched.fullName ?? '');
+        TextEditingController(text: userfetched.fullName);
     _passwordController = TextEditingController();
     _emailController =
-        TextEditingController(text: userfetched.email! ?? '');
+        TextEditingController(text: userfetched.email);
     _dobController = TextEditingController(
         text: userfetched.dateOfBirth != null
             ? DateFormat('yyyy-MM-dd').format(userfetched.dateOfBirth!)
             : '');
     _phoneNumberController =
-        TextEditingController(text: userfetched.phoneNumber! ?? '');
+        TextEditingController(text: userfetched.phoneNumber);
     _addressController =
-        TextEditingController(text: userfetched.address ?? '');
+        TextEditingController(text: userfetched.address);
     _nicknameController =
-        TextEditingController(text: userfetched.userName ?? '');
+        TextEditingController(text: userfetched.userName);
     _selectedGender = userfetched.gender;
 
     setState(() {
@@ -133,7 +124,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
   // Function to handle form submission
   void _savePersonalInformation() async {
     UpdateUserRequest userdata = new UpdateUserRequest(
-      username: _nicknameController.text,
+      username: _nicknameController.text == widget.userprofile.userName ? null : _nicknameController.text,
       address: _addressController.text,
       dateOfBirth: DateFormat('yyyy-MM-dd').parse(_dobController.text),
       fullName: _fullNameController.text,
@@ -149,39 +140,6 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
 
     if (_formKey.currentState!.validate()) {
       // Fetch the user provider
-      final userProvider =
-      Provider.of<UserProvider>(context, listen: false);
-      final User currentUser = userProvider.currentUser;
-
-      User updatedUser = User(
-        userId: currentUser.userId,
-        userName: _nicknameController.text.trim(),
-        normalizedUserName:
-        _nicknameController.text.trim().toUpperCase(),
-        email: _emailController.text.trim(),
-        normalizedEmail:
-        _emailController.text.trim().toUpperCase(),
-        emailConfirmed: currentUser.emailConfirmed,
-        passwordHash: _passwordController.text.isNotEmpty
-            ? _hashPassword(_passwordController.text.trim())
-            : currentUser.passwordHash,
-        phoneNumber: _phoneNumberController.text.trim(),
-        phoneNumberConfirmed: currentUser.phoneNumberConfirmed,
-        fullName: _fullNameController.text.trim(),
-        dateOfBirth: _dobController.text.isNotEmpty
-            ? DateTime.parse(_dobController.text)
-            : null,
-        address: _addressController.text.trim(),
-        gender: _selectedGender,
-        profilePictureUrl: currentUser.profilePictureUrl,
-        dateCreated: currentUser.dateCreated,
-        dateUpdated: DateTime.now(),
-        reportTimes: currentUser.reportTimes,
-      );
-
-      // Update the user in the provider
-      userProvider.updateUser(updatedUser);
-
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Personal information saved')),
@@ -189,12 +147,6 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
     }
   }
 
-  // Placeholder for password hashing function
-  String _hashPassword(String password) {
-    // Implement your hashing logic here
-    // For demonstration, we'll return the password itself
-    return password;
-  }
 
   Future<void> addPhoneNumber() async{
     String result = await _authService.AddPhoneNumber();

@@ -1,13 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/models/schedule/destination.dart';
+import 'package:localtourapp/models/schedule/destination_model.dart';
 import 'package:localtourapp/models/schedule/schedule.dart';
-import 'package:provider/provider.dart';
 
-// Import local classes and providers
-import 'package:localtourapp/provider/user_provider.dart';
 import 'package:localtourapp/models/places/place.dart';
 
 class SuggestSchedulePage extends StatefulWidget {
@@ -20,10 +17,8 @@ class SuggestSchedulePage extends StatefulWidget {
 }
 
 class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
-  late ScheduleProvider scheduleProvider;
-  late UserProvider userProvider;
   late Schedule suggestedSchedule;
-  late List<Destination> suggestedDestinations;
+  late List<DestinationModel> suggestedDestinations;
   late DateTime currentTime;
   Random random = Random();
 
@@ -37,8 +32,6 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
   @override
   void initState() {
     super.initState();
-    scheduleProvider = Provider.of<ScheduleProvider>(context, listen: false);
-    userProvider = Provider.of<UserProvider>(context, listen: false);
     currentTime = DateTime.now();
 
     // Generate the suggested schedule and destinations upon initialization
@@ -46,40 +39,12 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
   }
 
   void _generateSuggestedSchedule() {
-    final userPreferredTags = userProvider.getUserPreferredTags();
-    final userPreferredPlaces = scheduleProvider.getPlacesForUserPreferences(userPreferredTags);
 
-    // If user has no preferred tags or no places match preferences, handle gracefully
-    if (userPreferredPlaces.isEmpty) {
-      suggestedSchedule = _createEmptySchedule();
-      suggestedDestinations = [];
-      return;
-    }
 
-    // Calculate a unique schedule ID based on existing schedules
-    final int newScheduleId = (scheduleProvider.schedules.isEmpty)
-        ? 1
-        : scheduleProvider.schedules.map((s) => s.id).reduce(max) + 1;
-
-    // Start date is based on current date/time
     final DateTime startDate = _calculateStartDate(currentTime, timeslots);
     final DateTime endDate = startDate.add(const Duration(days: 3)); // A 3-day schedule
 
-    suggestedSchedule = Schedule(
-      id: newScheduleId,
-      userId: widget.userId,
-      scheduleName: "Schedule at ${DateFormat('yyyy-MM-dd HH:mm').format(currentTime)}",
-      startDate: startDate,
-      endDate: endDate,
-      createdAt: DateTime.now(),
-      isPublic: false,
-    );
 
-    // Generate destinations for 3 days, each day having 3 timeslots
-    suggestedDestinations = _generateDestinations(userPreferredPlaces, startDate);
-
-    // Sort destinations by their startDate for clarity
-    suggestedDestinations.sort((a, b) => a.startDate!.compareTo(b.startDate!));
   }
 
   Schedule _createEmptySchedule() {
@@ -129,24 +94,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
           }
         }
 
-        // Pick a random place from user preferred places
-        if (userPreferredPlaces.isNotEmpty) {
-          final place = userPreferredPlaces[random.nextInt(userPreferredPlaces.length)];
-          final destinationId = (scheduleProvider.destinations.isEmpty)
-              ? 1
-              : scheduleProvider.destinations.map((d) => d.id).reduce(max) + 1;
 
-          // Create a destination
-          Destination destination = Destination(
-            id: destinationId,
-            scheduleId: suggestedSchedule.id,
-            placeId: place.placeId,
-            startDate: slotStart,
-            endDate: slotEnd,
-            detail: "Suggested by preferences",
-          );
-          destinations.add(destination);
-        }
 
         currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day).add(Duration(days: day));
       }
@@ -171,12 +119,6 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
       // No suggested schedule available
       Navigator.pop(context);
       return;
-    }
-
-    final scheduleProvider = Provider.of<ScheduleProvider>(context, listen: false);
-    scheduleProvider.addSchedule(suggestedSchedule);
-    for (var dest in suggestedDestinations) {
-      scheduleProvider.addDestination(dest);
     }
 
     Navigator.pop(context);
@@ -270,11 +212,10 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
     );
   }
 
-  Widget _buildDestinationList(BuildContext context, List<Destination> destinations) {
-    final scheduleProvider = Provider.of<ScheduleProvider>(context, listen: false);
+  Widget _buildDestinationList(BuildContext context, List<DestinationModel> destinations) {
 
     // Group destinations by day
-    Map<String, List<Destination>> destinationsByDay = {};
+    Map<String, List<DestinationModel>> destinationsByDay = {};
     for (var destination in destinations) {
       final dayKey = DateFormat('yyyy-MM-dd').format(destination.startDate ?? DateTime.now());
       destinationsByDay.putIfAbsent(dayKey, () => []);
@@ -298,12 +239,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
             const SizedBox(height: 8),
             Column(
               children: dayDestinations.map((dest) {
-                final place = scheduleProvider.getPlaceById(dest.placeId);
-                // Fetch the place translation for placeName
-                final placeTranslation = scheduleProvider.getTranslationByPlaceIdAndLanguage(
-                    place?.placeId ?? 0,
-                    'en' // assuming the language code is 'en'
-                );
+
                 return Card(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
@@ -313,9 +249,9 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
                   color: const Color(0xFFD6B588),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(8.0),
-                    leading: place?.photoDisplay != null
+                    leading: dest.placePhotoDisplay != null
                         ? Image.network(
-                      place!.photoDisplay,
+                      dest.placePhotoDisplay!,
                       width: 60,
                       height: 60,
                       fit: BoxFit.cover,
@@ -325,7 +261,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
                     )
                         : const Icon(Icons.photo),
                     title: Text(
-                      placeTranslation?.placeName ?? "Unknown Place",
+                      dest.placeName ,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(

@@ -5,25 +5,15 @@ import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/posts/comment_model.dart';
 import 'package:localtourapp/models/posts/post_model.dart';
-import 'package:localtourapp/models/posts/postcommentlike.dart';
-import 'package:localtourapp/models/users/users.dart';
 import 'package:localtourapp/page/account/account_page.dart';
-import 'package:localtourapp/provider/users_provider.dart';
 import 'package:localtourapp/services/post_service.dart';
-import 'package:provider/provider.dart';
-import 'package:localtourapp/models/posts/post.dart';
 import 'package:localtourapp/models/posts/postcomment.dart';
-import 'package:localtourapp/page/account/view_profile/post_provider.dart';
-import '../../../provider/follow_users_provider.dart';
-import '../../../provider/user_provider.dart';
 
 class CommentsBottomSheet extends StatefulWidget {
   final PostModel post;
-  //final String userId;
 
   const CommentsBottomSheet({
     Key? key,
-   // required this.userId,
     required this.post,
   }) : super(key: key);
 
@@ -37,7 +27,6 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   final ScrollController _commentsScrollController = ScrollController();
   final FocusNode _commentFocusNode = FocusNode();
   late List<CommentModel> _listComment;
-  late PostModel _post;
   late String _userId;
   late String languageCode;
   // For tracking which comment is being replied to
@@ -61,7 +50,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     }
 
     if(userid != null){
-      _userId = userid!;
+      _userId = userid;
     }
 
     setState(() {
@@ -90,42 +79,16 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     // Handle scroll events if needed
   }
 
-  void _buildCommentsMap(List<PostComment> comments) {
-    commentsMap.clear();
-    for (var comment in comments) {
-      commentsMap.putIfAbsent(comment.parentId, () => []).add(comment);
-    }
-  }
 
   void _addComment({int? parentId}) async {
     final commentText = _commentController.text.trim();
     if (commentText.isEmpty) return;
 
-    final postProvider = Provider.of<PostProvider>(context, listen: false);
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-
-    // Obtain the current user's ID
-    final currentUserId = userProvider.currentUser.userId;
-
-
-
-    // Create a new comment
-    final newComment = PostComment(
-      id: DateTime.now().millisecondsSinceEpoch,
-      postId: widget.post.id,
-      parentId: parentId,
-      userId: currentUserId,
-      content: commentText,
-      createdDate: DateTime.now(),
-    );
-
-    // Add the comment to the provider
     var result = await _postService.CreateComment(widget.post.id, parentId, commentText);
     if(result){
       fetchData();
     }
 
-    // Clear the text field and reset replying state
     _commentController.clear();
     setState(() {
       _replyingToCommentId = null;
@@ -221,10 +184,6 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop(); // Close the dialog
-              final postProvider =
-                  Provider.of<PostProvider>(context, listen: false);
-
-              // Update the comment count for the post
 
               var result = await _postService.DeleteComment(commentId);
               if(result ){
@@ -240,19 +199,9 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   }
 
   Widget _buildCommentItem(CommentModel comment, int depth) {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final postProvider = Provider.of<PostProvider>(context, listen: false);
-    final usersProvider = Provider.of<UsersProvider>(context, listen: false);
-    final followUsersProvider =
-        Provider.of<FollowUsersProvider>(context, listen: false);
-
     // Adjust left padding based on depth
     double leftPadding = depth * 30.0;
 
-
-
-    final commentLikes = postProvider.getLikesForComment(comment.id);
-    final currentUserId = userProvider.currentUser.userId;
     final bool hasLiked = comment.likedByUser;
 
     final likeCount = comment.totalLikes;
@@ -397,14 +346,6 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final postProvider = Provider.of<PostProvider>(context);
-    final usersProvider = Provider.of<UsersProvider>(context);
-
-    final comments = postProvider.getCommentsForPost(widget.post.id);
-
-    // Sort comments and build the comments map
-    comments.sort((a, b) => a.createdDate.compareTo(b.createdDate));
-    _buildCommentsMap(comments);
 
     return
       isLoading ? const Center(child: CircularProgressIndicator()) :
@@ -436,29 +377,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Consumer<PostProvider>(
-                    builder: (context, postProvider, _) {
-                      final parentComment = postProvider.comments.firstWhere(
-                        (comment) => comment.id == _replyingToCommentId!,
-                        orElse: () => PostComment(
-                          id: -1, // Use a unique placeholder ID
-                          postId: widget.post.id, // Provide the post ID
-                          parentId: null, // Indicate no parent
-                          userId: '', // Use an empty string for the user ID
-                          content:
-                              'This comment does not exist.', // Placeholder content
-                          createdDate: DateTime(0), // Placeholder date
-                        ),
-                      );
-                      final User? parentUser;
-                      parentUser =
-                          usersProvider.getUserById(parentComment.userId);
-                      return parentUser != null
-                          ? Text(
-                              'Replying to ${parentUser.userName ?? "Unknown User"}')
-                          : const Text('Replying to Unknown User');
-                    },
-                  ),
+
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: _cancelReply,

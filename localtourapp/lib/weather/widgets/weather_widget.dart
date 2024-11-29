@@ -1,9 +1,10 @@
 // lib/weather/widgets/weather_widget.dart
 
 import 'package:flutter/material.dart';
-import 'package:localtourapp/weather/providers/weather_provider.dart';
 import 'package:localtourapp/weather/weather_detail_page.dart';
-import 'package:provider/provider.dart';
+
+import '../models/weather_model.dart';
+import '../services/weather_service.dart';
 
 class WeatherWidget extends StatefulWidget {
   final double latitude;
@@ -20,15 +21,21 @@ class WeatherWidget extends StatefulWidget {
 }
 
 class _WeatherWidgetState extends State<WeatherWidget> {
+  WeatherService _service = WeatherService();
+  late WeatherResponse weatherResponse;
+  bool isloading = true;
   @override
   void initState() {
     super.initState();
     // Fetch weather data after the first frame is rendered
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<WeatherProvider>(context, listen: false).fetchWeather(
-        latitude: widget.latitude,
-        longitude: widget.longitude,
-      );
+    fetchInit();
+  }
+
+  Future<void> fetchInit() async {
+    var response = await _service.fetchWeather(latitude: widget.latitude, longitude: widget.longitude);
+    setState(() {
+      weatherResponse = response!;
+      isloading = false;
     });
   }
 
@@ -92,23 +99,11 @@ class _WeatherWidgetState extends State<WeatherWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<WeatherProvider>(
-      builder: (context, weatherProvider, child) {
-        if (weatherProvider.isLoading) {
-          return Center(child: CircularProgressIndicator());
-        }
 
-        if (weatherProvider.errorMessage != null) {
-          return Center(child: Text(weatherProvider.errorMessage!));
-        }
 
-        if (weatherProvider.weatherResponse == null) {
-          return Center(child: Text('No weather data available.'));
-        }
-
-        final currentWeather = weatherProvider.weatherResponse!.current;
-
-        return Card(
+        return
+          isloading ? SizedBox() :
+          Card(
           elevation: 4,
           margin: const EdgeInsets.all(16.0),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -125,7 +120,7 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                     ),
                     Spacer(),
                     Text(
-                      getWeatherIcon(currentWeather.weathercode),
+                      getWeatherIcon(weatherResponse.current.weathercode),
                       style: TextStyle(fontSize: 24),
                     ),
                   ],
@@ -133,12 +128,12 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                 SizedBox(height: 10),
                 // Temperature
                 Text(
-                  '${currentWeather.temperature.toStringAsFixed(1)}°C',
+                  '${weatherResponse.current.temperature.toStringAsFixed(1)}°C',
                   style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                 ),
                 // Weather Description
                 Text(
-                  getWeatherDescription(currentWeather.weathercode),
+                  getWeatherDescription(weatherResponse.current.weathercode),
                   style: TextStyle(fontSize: 16),
                 ),
                 SizedBox(height: 10),
@@ -151,7 +146,7 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                       children: [
                         Icon(Icons.wind_power),
                         SizedBox(height: 5),
-                        Text('${currentWeather.windspeed} m/s'),
+                        Text('${weatherResponse.current.windspeed} m/s'),
                         Text('Wind Speed'),
                       ],
                     ),
@@ -159,10 +154,10 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                     Column(
                       children: [
                         Icon(
-                          currentWeather.isDay ? Icons.wb_sunny : Icons.nights_stay,
+                          weatherResponse.current.isDay ? Icons.wb_sunny : Icons.nights_stay,
                         ),
                         SizedBox(height: 5),
-                        Text(currentWeather.isDay ? 'Day' : 'Night'),
+                        Text(weatherResponse.current.isDay ? 'Day' : 'Night'),
                       ],
                     ),
                     // Weather Code
@@ -170,7 +165,7 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                       children: [
                         Icon(Icons.cloud),
                         SizedBox(height: 5),
-                        Text('${currentWeather.weathercode}'),
+                        Text('${weatherResponse.current.weathercode}'),
                         Text('Code'),
                       ],
                     ),
@@ -179,7 +174,7 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                 SizedBox(height: 10),
                 // Weather Advice
                 Text(
-                  'Advice: ${currentWeather.weathercode >= 61 && currentWeather.weathercode <= 65 ? "Take an umbrella!" : "Enjoy your day!"}',
+                  'Advice: ${weatherResponse.current.weathercode >= 61 && weatherResponse.current.weathercode <= 65 ? "Take an umbrella!" : "Enjoy your day!"}',
                   style: TextStyle(fontSize: 16, color: Colors.blueGrey),
                 ),
                 SizedBox(height: 10),
@@ -190,7 +185,7 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => WeatherDetailPage(
-                          hourlyWeather: weatherProvider.weatherResponse!.hourly,
+                          hourlyWeather: weatherResponse.hourly,
                         ),
                       ),
                     );
@@ -201,7 +196,5 @@ class _WeatherWidgetState extends State<WeatherWidget> {
             ),
           ),
         );
-      },
-    );
   }
 }

@@ -6,50 +6,25 @@ import 'package:intl/intl.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
-import 'package:localtourapp/constants/colors.dart';
 import 'package:localtourapp/models/media_model.dart';
 import 'package:localtourapp/models/posts/post_model.dart';
 import 'package:localtourapp/models/users/userProfile.dart';
-import 'package:localtourapp/provider/place_provider.dart';
-import 'package:localtourapp/provider/schedule_provider.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
 import 'package:localtourapp/full_media/full_screen_post_media_viewer.dart';
-import 'package:localtourapp/models/users/followuser.dart';
 import 'package:localtourapp/page/account/view_profile/comment.dart';
 import 'package:localtourapp/page/account/view_profile/create_post.dart';
-import 'package:localtourapp/provider/count_provider.dart';
 import 'package:localtourapp/services/post_service.dart';
 import 'package:localtourapp/video_player/video_thumbnail.dart';
-import 'package:provider/provider.dart';
-import 'package:localtourapp/models/posts/post.dart';
-import 'package:localtourapp/models/posts/postmedia.dart';
-import 'package:localtourapp/models/posts/postlike.dart';
-import 'package:localtourapp/models/users/users.dart';
-import 'package:localtourapp/models/schedule/schedule.dart';
-import 'package:localtourapp/page/account/view_profile/post_provider.dart';
 
 class PostTabBar extends StatefulWidget {
-  final List<FollowUser>followUsers;
   final String userId;
-  final Map<int, String>? scheduleNames;
   final Userprofile user;
   final bool isCurrentUser;
-  final Function(int postId, bool isFavorited) onFavoriteToggle;
-  final Function() onCommentPressed;
-  final Function(PostModel post) onUpdatePressed; // Accepts Post
-  final Function(PostModel post) onDeletePressed; // Accepts Post
-
   const PostTabBar({
     Key? key,
-    required this.followUsers,
     required this.userId,
     required this.user,
-    this.scheduleNames,
     required this.isCurrentUser,
-    required this.onFavoriteToggle,
-    required this.onCommentPressed,
-    required this.onUpdatePressed,
-    required this.onDeletePressed,
   }) : super(key: key);
 
   @override
@@ -70,7 +45,7 @@ class _PostTabBarState extends State<PostTabBar> {
   late List<PostModel> initListPost;
   bool isLoading = true;
   bool isLogin = false;
-
+  bool isCurrentUser = false;
 
   @override
   void initState() {
@@ -86,7 +61,9 @@ class _PostTabBarState extends State<PostTabBar> {
     if(userId != null){
       isLogin = true;
     }
-
+    if(isLogin = true){
+      isCurrentUser = userId == widget.userId;
+    }
     setState(() {
       listPost = result;
       initListPost = result;
@@ -96,18 +73,14 @@ class _PostTabBarState extends State<PostTabBar> {
   }
 
   Future<void> SearchEvent()async{
-   /* if ((_fromDate != null && _toDate == null) ||
-
-        (_fromDate == null && _toDate != null)) */
-
 
     var searchList = initListPost;
     if(searchController.text != ''){
-      String searchtxt = searchController.text;
+      String searchTxt = searchController.text;
       searchList = searchList.where((element) =>
-                  element.title.toLowerCase()!.contains(searchtxt.toLowerCase())
-                      || element.scheduleName!.toLowerCase().contains(searchtxt.toLowerCase())
-                      || element.placeName!.toLowerCase().contains(searchtxt.toLowerCase()),).toList();
+                  element.title.toLowerCase().contains(searchTxt.toLowerCase())
+                      || element.scheduleName!.toLowerCase().contains(searchTxt.toLowerCase())
+                      || element.placeName!.toLowerCase().contains(searchTxt.toLowerCase()),).toList();
     }
     if(_fromDate != null){
       searchList = searchList.where((element) => element.createdDate!.isAfter(_fromDate!),).toList();
@@ -175,35 +148,6 @@ class _PostTabBarState extends State<PostTabBar> {
     });
   }
 
-  List<Post> getFilteredPosts(List<Post> userPosts) {
-    String searchText = searchController.text.toLowerCase();
-
-    return userPosts.where((post) {
-      // Match title
-      final matchesTitle = post.title.toLowerCase().contains(searchText);
-
-      // Match schedule name
-      final scheduleName = widget.scheduleNames?[post.scheduleId] ?? '';
-      final matchesScheduleName =
-      scheduleName.toLowerCase().contains(searchText);
-
-      // Match place name
-      final placeName = post.placeId != null
-          ? Provider.of<ScheduleProvider>(context, listen: false)
-          .getPlaceName(post.placeId!, Localizations.localeOf(context).languageCode)
-          : '';
-      final matchesPlaceName = placeName.toLowerCase().contains(searchText);
-
-      // Match date filter by createdAt
-      final matchesDate =
-          (_fromDate == null || post.createdAt.isAfter(_fromDate!)) &&
-              (_toDate == null || post.createdAt.isBefore(_toDate!));
-
-      // Combine all filters
-      return (matchesTitle || matchesScheduleName || matchesPlaceName) &&
-          matchesDate;
-    }).toList();
-  }
 
   void _confirmDeletePost(PostModel post) {
     showDialog(
@@ -244,18 +188,6 @@ class _PostTabBarState extends State<PostTabBar> {
   Widget build(BuildContext context) {
     return
       isLoading? const Center(child: CircularProgressIndicator()) :
-      Consumer<PostProvider>(
-      builder: (context, postProvider, _) {
-
-
-        // Initialize or update postVisibility and expandedPosts if necessary
-        for (var post in listPost) {
-          postVisibility.putIfAbsent(post.id, () => true);
-          expandedPosts.putIfAbsent(post.id, () => false); // Initialize as not expanded
-        }
-
-        return
-
           Stack(
           children: [
             GestureDetector(
@@ -270,7 +202,7 @@ class _PostTabBarState extends State<PostTabBar> {
                     return _buildFilterSection();
                   } else if (index == 1) {
                     return const SizedBox(height: 10);
-                  } else if (index == 2 && isLogin) {
+                  } else if (index == 2 && isCurrentUser) {
                     return _buildButtonsSection();
                   } else if (index == 3) {
                     return const SizedBox(height: 10);
@@ -322,8 +254,6 @@ class _PostTabBarState extends State<PostTabBar> {
             ),
           ],
         );
-      },
-    );
   }
 
   Widget _buildFilterSection() {
@@ -534,14 +464,13 @@ class _PostTabBarState extends State<PostTabBar> {
                 children: [
                   CircleAvatar(
                     backgroundImage: NetworkImage(
-                        widget.user.userProfileImage ??
-                            'https://example.com/default.jpg'),
+                        widget.user.userProfileImage),
                   ),
                   const SizedBox(width: 8),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.user.userName ?? 'Unknown',
+                      Text(widget.user.userName ,
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                       Text(DateFormat('MM/dd/yyyy').format(post.createdDate!)),
                     ],
@@ -620,11 +549,11 @@ class _PostTabBarState extends State<PostTabBar> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  post.content!.length > 1000 && !isExpandedLocal
-                      ? '${post.content!.substring(0, 1000)}...'
-                      : post.content!,
+                  post.content.length > 1000 && !isExpandedLocal
+                      ? '${post.content.substring(0, 1000)}...'
+                      : post.content,
                 ),
-                if (post.content!.length > 1000)
+                if (post.content.length > 1000)
                   TextButton(
                     onPressed: () {
                       setState(() {

@@ -2,24 +2,16 @@
 
 import 'package:flutter/material.dart';
 import 'package:localtourapp/config/appConfig.dart';
-import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/constants/getListApi.dart';
 import 'package:localtourapp/models/Tag/tag_model.dart';
 import 'package:localtourapp/models/event/event_model.dart';
 import 'package:localtourapp/models/places/place_detail_model.dart';
-import 'package:localtourapp/services/event_service.dart';
-import 'package:provider/provider.dart';
 import '../../../base/custom_button.dart';
 import '../../../base/weather_icon_button.dart';
-import '../../../models/places/event.dart';
-import '../../../models/places/placereport.dart';
-import '../../../provider/place_provider.dart';
 import '../../search_page/search_page.dart';
 import '../detail_card/activity_card.dart';
 import '../detail_card/activity_card_info.dart';
 import '../detail_card/event_card.dart';
-import '../../../models/places/place.dart';
-import '../../../models/places/placetranslation.dart';
 import '../../../weather/widgets/weather_widget.dart';
 import '../all_product.dart';
 import '../place_description.dart';
@@ -53,8 +45,6 @@ class DetailTabbar extends StatefulWidget {
 
 class _DetailTabbarState extends State<DetailTabbar> {
 
-  Place? place;
-  PlaceTranslation? placeTranslation;
   bool isLoading = true;
 
   List<ActivityCardInfo> activityCards = [];
@@ -305,7 +295,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
       children: [
         const Icon(Icons.phone, color: Colors.black54),
         const SizedBox(width: 8),
-        Text(widget.placeDetail.contact ?? 'Contact not available'),
+        Text(widget.placeDetail.contact),
       ],
     );
   }
@@ -320,7 +310,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
             _launchURL(widget.placeDetail.contactLink);
           },
           child: Text(
-            widget.placeDetail.contactLink ?? 'Website not available',
+            widget.placeDetail.contactLink,
             style: const TextStyle(
               color: Colors.blue,
               decoration: TextDecoration.underline,
@@ -405,7 +395,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.placeDetail.name?? "All Tags",
+                  widget.placeDetail.name,
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -460,8 +450,8 @@ class _DetailTabbarState extends State<DetailTabbar> {
               final activityCardInfo = widget.placeDetail.placeActivities[index];
               return ActivityCard(
                 activityName: activityCardInfo.activityName,
-                photoDisplay: activityCardInfo.photoDisplay ??
-                    'https://picsum.photos/250?image=9',
+                photoDisplay: activityCardInfo.photoDisplay
+                   ,
                 price: activityCardInfo.price,
                 priceType: activityCardInfo.priceType,
                 discount: activityCardInfo.discount,

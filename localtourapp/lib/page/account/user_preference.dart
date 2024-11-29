@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:localtourapp/models/Tag/tag_model.dart';
 import 'package:localtourapp/models/users/userProfile.dart';
 import 'package:localtourapp/services/tag_service.dart';
-import 'package:provider/provider.dart';
-
-import '../../models/places/tag.dart';
-import '../../provider/user_provider.dart';
 
 class UserPreferencePage extends StatefulWidget {
   final Userprofile userprofile;
@@ -43,8 +39,6 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
-    final userName = userProvider.currentUser.userName;
 
     return Scaffold(
       appBar: AppBar(
@@ -70,7 +64,7 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
             child: Wrap(
               spacing: 8,
               runSpacing: 8,
-              children:  _buildAllTagChips(userProvider),
+              children:  _buildAllTagChips(),
             ),
           ),
         ],
@@ -79,7 +73,7 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
   }
 
   // Builds a chip for each tag in the listTag
-  List<Widget> _buildAllTagChips(UserProvider userProvider) {
+  List<Widget> _buildAllTagChips() {
 
 
     return listTag.map((tag) {

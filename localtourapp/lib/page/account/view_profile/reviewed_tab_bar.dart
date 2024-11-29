@@ -1,37 +1,19 @@
-// lib/widgets/reviewed_tabbar.dart
-
 
 import 'package:flutter/material.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
-import 'package:localtourapp/config/appConfig.dart';
-import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/feedback/feedback_model.dart';
-import 'package:localtourapp/models/places/placefeedback.dart';
-import 'package:localtourapp/models/places/placefeedbackhelpful.dart';
-import 'package:localtourapp/models/places/placefeedbackmedia.dart';
-import 'package:localtourapp/models/users/users.dart';
-import 'package:localtourapp/provider/review_provider.dart';
-import 'package:localtourapp/provider/user_provider.dart';
 import 'package:localtourapp/page/detail_page/detail_card/review_card.dart';
-import 'package:localtourapp/provider/count_provider.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/form/reportform.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/review_tabbar.dart';
 import 'package:localtourapp/services/review_service.dart';
-import 'package:provider/provider.dart';
 
 class ReviewedTabbar extends StatefulWidget {
-  final List<int> favoritedFeedbackIds;
   final String userId;
-  final List<User> users;
-  final List<PlaceFeedbackMedia> feedbackMediaList;
 
   const ReviewedTabbar({
     Key? key,
-    required this.favoritedFeedbackIds,
     required this.userId,
-    required this.users,
-    required this.feedbackMediaList,
   }) : super(key: key);
 
   @override
@@ -42,12 +24,8 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
   final ReviewService _reviewService = ReviewService();
   bool _showBackToTopButton = false;
   final ScrollController _scrollController = ScrollController();
-  //List<PlaceFeedback> userFeedbacks = [];
-  List<PlaceFeedbackHelpful> feedbackHelpfuls = [];
   late int totalReviews;
-  late bool isCurrentUserViewing;
   late List<FeedBackModel> _listFeedback;
-  late String _myUserId;
 
 
   bool isLoading = true;
@@ -56,14 +34,12 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
   void initState() {
     super.initState();
     // Check if the current user is viewing their own reviews
-    isCurrentUserViewing = widget.userId == Provider.of<UserProvider>(context, listen: false).currentUser!.userId;
     fetchInt();
     _scrollController.addListener(_scrollListener);
   }
 
   Future<void> fetchInt() async{
     var (listfeedback, totalreview) = await _reviewService.getFeedback(null,widget.userId);
-    print('object');
     setState(() {
       _listFeedback = listfeedback;
       totalReviews = totalreview;
@@ -106,8 +82,6 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
 
   @override
   Widget build(BuildContext context) {
-    final reviewProvider = Provider.of<ReviewProvider>(context);
-    //userFeedbacks = reviewProvider.getReviewsByUserId(widget.userId);
 
     return
       isLoading? const Center(child: CircularProgressIndicator()) :
@@ -151,12 +125,6 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
                     placeId: feedback.placeId,
                     feedBackCard: feedback,
                     userId: widget.userId,
-                    onUpdate: isCurrentUserViewing ? () {
-                      // Open ReviewDialog to update
-                    } : null,
-                    onDelete: isCurrentUserViewing ? () {
-                      // Handle deletion within ReviewCard
-                    } : null,
                     onReport: () {
                       ReportForm.show(
                         context,

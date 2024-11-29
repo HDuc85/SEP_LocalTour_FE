@@ -8,12 +8,9 @@ import 'package:localtourapp/models/places/place_detail_model.dart';
 import 'package:localtourapp/services/mark_place_service.dart';
 import 'package:localtourapp/services/place_service.dart';
 import 'package:localtourapp/services/tag_service.dart';
-import 'package:provider/provider.dart';
 
 import '../../base/back_to_top_button.dart';
 import '../../full_media/full_place_media_viewer.dart';
-import '../../models/places/markplace.dart';
-import '../../provider/place_provider.dart';
 import '../../services/event_service.dart';
 import 'detail_page_tab_bars/detail_tabbar.dart';
 import 'detail_page_tab_bars/review_tabbar.dart';
@@ -71,13 +68,13 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
     var fetchPlaceDetail = await _placeService.GetPlaceDetail(widget.placeId);
     var fetchTagInPlace = await _tagService.getTagInPlace(widget.placeId);
     var userId = await SecureStorageHelper().readValue(AppConfig.userId);
-    var fetchedListEvents = await _eventService.GetEventInPlace(widget.placeId);
+    var fetchedListEvents = await _eventService.GetEventInPlace(widget.placeId,1,1);
     var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     bool isMark = false;
     if(userId == null){
       _userId = '';
     }
-    if(userId != null && userId!.isNotEmpty)
+    if(userId != null && userId.isNotEmpty)
     {
       var Listmark = await _markplaceService.getAllMarkPlace();
       isMark = Listmark.any((element) => element.placeId == widget.placeId);
@@ -143,9 +140,6 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final bookmarkManager = Provider.of<PlaceProvider>(context);
-    bool isBookmarked = bookmarkManager.isBookmarked(widget.placeId);
-
     // Access widget properties directly
     final int placeId = widget.placeId;
 

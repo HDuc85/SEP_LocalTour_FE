@@ -1,52 +1,26 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart'; // Needed for TapGestureRecognizer
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/schedule/destination_model.dart';
 import 'package:localtourapp/models/schedule/schedule_model.dart';
-import 'package:localtourapp/provider/schedule_provider.dart';
-import 'package:localtourapp/models/places/placemedia.dart';
-import 'package:localtourapp/models/places/placetranslation.dart';
-import 'package:localtourapp/models/places/place.dart'; // Import Place
-import 'package:localtourapp/models/schedule/schedulelike.dart';
-import 'package:localtourapp/models/users/users.dart';
-import 'package:localtourapp/provider/user_provider.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
-import 'package:localtourapp/provider/count_provider.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/add_schedule_dialog.dart';
-import 'package:localtourapp/page/planned_page/planned_page_tab_bars/fearuted_schedule_page.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/suggest_schedule_page.dart';
 import 'package:localtourapp/page/search_page/search_page.dart';
 import 'package:localtourapp/services/schedule_service.dart';
-import 'package:provider/provider.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
-import '../../../models/schedule/schedule.dart';
-import '../../../models/schedule/destination.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 
 class ScheduleTabbar extends StatefulWidget {
   final String userId;
-  final List<Schedule> schedules;
-  final List<ScheduleLike> scheduleLikes;
-  final List<Destination> destinations;
-  final Function(int scheduleId, bool isFavorited) onFavoriteToggle;
-  final List<User> users;
-  final List<Place> places; // Added
-  final List<PlaceTranslation> translations; // Added
+
 
   const ScheduleTabbar({
     Key? key,
     required this.userId,
-    required this.schedules,
-    required this.scheduleLikes,
-    required this.destinations,
-    required this.onFavoriteToggle,
-    required this.users,
-    required this.places, // Initialize
-    required this.translations, // Initialize
   }) : super(key: key);
 
   @override
@@ -61,10 +35,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   final ScheduleService _scheduleService = ScheduleService();
   late List<ScheduleModel> _listSchedule;
   late List<ScheduleModel> _listScheduleInit;
-
   String _myUserId = '';
   bool isLoading = true;
-  List<Place> placeList = dummyPlaces;
   late String _userId;
   final ScrollController _scrollController = ScrollController();
   bool _showBackToTopButton = false;
@@ -171,42 +143,16 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   void _saveScheduleName() {
     if (_editingScheduleIds.isNotEmpty) {
       final scheduleId = _editingScheduleIds.first;
-      final scheduleProvider =
-          Provider.of<ScheduleProvider>(context, listen: false);
-      final schedule = scheduleProvider.getScheduleById(scheduleId);
-      if (schedule != null) {
-        final updatedSchedule = Schedule(
-          id: schedule.id,
-          userId: schedule.userId,
-          scheduleName: _nameController.text,
-          startDate: schedule.startDate,
-          endDate: schedule.endDate,
-          createdAt: schedule.createdAt,
-          isPublic: schedule.isPublic,
-        );
-        scheduleProvider.updateSchedule(updatedSchedule);
+
         setState(() {
           _editingScheduleIds.remove(scheduleId);
         });
       }
-    }
+
   }
 
   void _toggleEditing(int scheduleId) {
-    setState(() {
-      if (_editingScheduleIds.contains(scheduleId)) {
-        _editingScheduleIds.remove(scheduleId);
-      } else {
-        _editingScheduleIds.add(scheduleId);
-        final scheduleProvider =
-            Provider.of<ScheduleProvider>(context, listen: false);
-        final schedule = scheduleProvider.getScheduleById(scheduleId);
-        if (schedule != null) {
-          _nameController.text = schedule.scheduleName;
-          _nameFocusNode.requestFocus();
-        }
-      }
-    });
+    _editingScheduleIds.add(scheduleId);
   }
 
   void _toggleFavorite(int scheduleId) async {
@@ -284,20 +230,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     setState(() {
 
     });
-  }
-
-  List<Schedule> getFilteredSchedules() {
-    String searchText = searchController.text.toLowerCase();
-
-    return widget.schedules.where((schedule) {
-      final matchesName =
-          schedule.scheduleName.toLowerCase().contains(searchText);
-      final matchesDate =
-          (_fromDate == null || schedule.createdAt.isAfter(_fromDate!)) &&
-              (_toDate == null || schedule.createdAt.isBefore(_toDate!));
-
-      return matchesName && matchesDate;
-    }).toList();
   }
 
   @override
@@ -536,9 +468,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                         null; // Correctly clears startDate
                                   });
                                 },
-                                isOwner: Provider.of<UserProvider>(context,
-                                        listen: false)
-                                    .isCurrentUser(widget.userId),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -560,9 +489,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                         null; // Correctly clears endDate
                                   });
                                 },
-                                isOwner: Provider.of<UserProvider>(context,
-                                        listen: false)
-                                    .isCurrentUser(widget.userId),
                               ),
                             ),
                           ],
@@ -582,19 +508,14 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                     ? () => _toggleVisibility(schedule, _nameController.text)
                                     : null, // Ensure only the owner can toggle visibility
                               ),
-                            Consumer<ScheduleProvider>(
-                              builder: (context, scheduleProvider, child) {
-                                bool isFavorited = schedule.isLiked;
-                                int likeCount = schedule.totalLikes;
-
-                                return Row(
+                                 Row(
                                   children: [
                                     IconButton(
                                       icon: Icon(
-                                        isFavorited
+                                        schedule.isLiked
                                             ? Icons.favorite
                                             : Icons.favorite_border,
-                                        color: isFavorited
+                                        color: schedule.isLiked
                                             ? Colors.red
                                             : Colors.grey,
                                       ),
@@ -602,14 +523,13 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                           _toggleFavorite(schedule.id),
                                     ),
                                     Text(
-                                      likeCount.toString(),
+                                      schedule.totalLikes.toString(),
                                       style: const TextStyle(
                                           color: Colors.black, fontSize: 12),
                                     ),
                                   ],
-                                );
-                              },
-                            ),
+                                ),
+
                             Row(
                               children: [
                                 IconButton(
@@ -933,17 +853,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     );
   }
 
-  void _deleteDestination(int destinationId) {
-    final manager = Provider.of<ScheduleProvider>(context, listen: false);
-    manager.removeDestination(destinationId);
-    setState(() {
-      widget.destinations.removeWhere(
-          (destination) => destination.scheduleId == destinationId);
-      widget.schedules.removeWhere((schedule) => schedule.id == destinationId);
-      Provider.of<CountProvider>(context, listen: false)
-          .decrementScheduleCount();
-    });
-  }
 
   void _navigateToDetail(int placeId) {
 
@@ -1084,23 +993,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
         ElevatedButton.icon(
           onPressed: () {
             showAddScheduleDialog(context, (scheduleName, startDate, endDate) {
-              final newSchedule = Schedule(
-                id: widget.schedules.length + 1,
-                userId: widget.userId,
-                scheduleName: scheduleName,
-                startDate: startDate,
-                endDate: endDate,
-                createdAt: DateTime.now(),
-                isPublic: false,
-              );
-              _addSchedule(scheduleName,startDate,endDate);
-              // Add schedule using ScheduleProvider
-              Provider.of<ScheduleProvider>(context, listen: false)
-                  .addSchedule(newSchedule);
 
-              // Increment schedule count in CountProvider
-              Provider.of<CountProvider>(context, listen: false)
-                  .incrementScheduleCount();
+              _addSchedule(scheduleName,startDate,endDate);
             });
           },
           icon: const Icon(Icons.add, color: Colors.white),

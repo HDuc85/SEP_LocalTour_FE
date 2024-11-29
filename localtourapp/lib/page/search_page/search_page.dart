@@ -5,21 +5,14 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/models/HomePage/placeCard.dart';
-import 'package:localtourapp/provider/user_provider.dart';
+import 'package:localtourapp/models/event/event_model.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
+import 'package:localtourapp/services/event_service.dart';
+import 'package:localtourapp/services/location_Service.dart';
 import 'package:localtourapp/services/place_service.dart';
-import 'package:provider/provider.dart';
 import '../../base/const.dart';
-import '../../base/filter_option.dart';
-import '../../base/place_card_info.dart';
-import '../../base/place_score_manager.dart';
 import '../../constants/getListApi.dart';
 import '../../models/Tag/tag_model.dart';
-import '../../models/places/place.dart';
-import '../../models/places/placemedia.dart';
-import '../../models/places/placetag.dart';
-import '../../models/places/placetranslation.dart';
-import '../../models/places/tag.dart';
 import '../../services/tag_service.dart';
 import 'second_place_card.dart';
 import 'tags_modal.dart'; // Ensure correct path
@@ -28,14 +21,15 @@ class SearchPage extends StatefulWidget {
   final SortBy sortBy;
   final List<int> initialTags;
   final String? textSearch;
-
   final Function(PlaceCardModel)? onPlaceSelected;
+  final bool? isEvent;
   const SearchPage({
     Key? key,
     this.sortBy = SortBy.distance,
     this.initialTags = const [],
     this.onPlaceSelected,
-    this.textSearch
+    this.textSearch,
+    this.isEvent
   }) : super(key: key);
 
   @override
@@ -43,20 +37,23 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  late String userId;
-  List<Place> placeList = dummyPlaces;
-  List<PlaceCardModel> listPlaces =[];
+
+  final PlaceService _placeService = PlaceService();
+  final TagService _tagService = TagService();
+  final EventService _eventService = EventService();
+  final LocationService _locationService = LocationService();
+  late List<PlaceCardModel> listPlaceInit = [];
+  late List<PlaceCardModel> listPlaces =[];
+  late List<EventModel> listEventInit = [];
+  late List<EventModel> listEvent = [];
+  bool isPlace = true;
   String searchText = "";
-  List<CardInfo> cardInfoList = [];
   List<TagModel> listTagPlaces = [];
 
   List<int> selectedTags = [];
   Position? _currentPosition;
-  StreamSubscription<Position>? _positionSubscription;
   SortBy _selectedFilter = SortBy.distance;
-
-  late PlaceService _placeService = PlaceService();
-  late TagService _tagService = TagService();
+  String  _isComing = '';
 
   int size = 10;
   TextEditingController _controllerSearchInput = TextEditingController();
@@ -67,6 +64,9 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void initState() {
     super.initState();
+    if(widget.isEvent != null){
+      isPlace  = !widget.isEvent!;
+    }
     _selectedFilter = widget.sortBy;
     selectedTags = List.from(widget.initialTags);
     _fetchCurrentLocation();
@@ -75,91 +75,107 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Future<void> _fetchCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
 
-    // Check if location services are enabled.
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      // Location services are not enabled, handle accordingly.
-      setState(() {});
-      return;
+    Position? position = await _locationService.getCurrentPosition();
+    double long = position != null ? position.longitude : 106.8096761;
+    double lat =  position != null ? position.latitude : 10.8411123;
+    if(position != null){
+      _currentPosition = position;
+    }else{
+      _currentPosition = new Position(longitude: long, latitude: lat, timestamp: DateTime.timestamp(), accuracy: 1, altitude: 1, altitudeAccuracy: 1, heading: 1, headingAccuracy: 1, speed: 1, speedAccuracy: 1);
     }
 
-    // Check for location permissions.
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        // Permissions are denied, handle accordingly.
-        setState(() {});
-        return;
-      }
+    if(widget.isEvent != null){
+      isPlace = false;
     }
-
-    if (permission == LocationPermission.deniedForever) {
-      // Permissions are denied forever, handle accordingly.
-      setState(() {});
-      return;
-    }
-
-    // When permissions are granted, get the position.
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    size >10 == 10;
-
-    List<PlaceCardModel> fetchedListPlaces =[];
     final fetchedTags = await _tagService.getTopTagPlace();
 
-    if(widget.textSearch != "" && widget.textSearch != null ){
-      searchText = widget.textSearch!;
-      fetchedListPlaces = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.distance,SortOrder.asc,selectedTags,searchText);
-    }
-    else{
-       fetchedListPlaces = await _placeService.getListPlace(position.latitude, position.longitude, SortBy.distance,SortOrder.asc,selectedTags);
-    }
-    setState(() {
-      _currentPosition = position;
-      listTagPlaces = fetchedTags;
-      listPlaces = fetchedListPlaces;
-      _controllerSearchInput.text = searchText;
-    });
+   if(isPlace){
+     List<PlaceCardModel> fetchedListPlaces =[];
+
+     if(widget.textSearch != "" && widget.textSearch != null ){
+       searchText = widget.textSearch!;
+       fetchedListPlaces = await _placeService.getListPlace(lat, long, SortBy.distance,SortOrder.asc,selectedTags,searchText);
+     }
+     else{
+       fetchedListPlaces = await _placeService.getListPlace(lat, long, SortBy.distance,SortOrder.asc,selectedTags);
+     }
+     setState(() {
+       listTagPlaces = fetchedTags;
+       listPlaces = fetchedListPlaces;
+       _controllerSearchInput.text = searchText;
+       _isLoading = false;
+     });
+   }else{
+     List<EventModel> fetchedListEvents = [];
+     if(widget.textSearch != "" && widget.textSearch != null ){
+       searchText = widget.textSearch!;
+       fetchedListEvents = await _eventService.GetEventInPlace(null,lat, long,SortOrder.asc,SortBy.distance,searchText);
+     }
+     else{
+       fetchedListEvents = await _eventService.GetEventInPlace(null,lat, long,SortOrder.asc,SortBy.distance);
+     }
+     setState(() {
+       listEvent = fetchedListEvents;
+       listEventInit = fetchedListEvents;
+       listTagPlaces = fetchedTags;
+       _controllerSearchInput.text = searchText;
+       _isLoading = false;
+     });
+   }
 
   }
 
   void _generateCardInfoList() async {
-    if (_currentPosition == null) {
-      return;
-    }
-    final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.asc,selectedTags);
-    setState(() {
-      listPlaces = fetchedListPlaces;
-    });
 
-    // Apply initial filter if any
-    if (_selectedFilter == SortBy.distance) {
-      listPlaces.sort((a, b) => a.distance.compareTo(b.distance));
-    } else if (_selectedFilter == SortBy.rating) {
-      listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
+    if(isPlace){
+      final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.asc,selectedTags);
+      setState(() {
+        listPlaces = fetchedListPlaces;
+      });
+
+      // Apply initial filter if any
+      if (_selectedFilter == SortBy.distance) {
+        listPlaces.sort((a, b) => a.distance.compareTo(b.distance));
+      } else if (_selectedFilter == SortBy.rating) {
+        listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
+      }
+    }else{
+      final fetchedListEvent = await _eventService.GetEventInPlace(null, _currentPosition!.latitude, _currentPosition!.longitude, SortOrder.asc,SortBy.distance,);
+      setState(() {
+        listEvent = fetchedListEvent;
+        listEventInit = fetchedListEvent;
+      });
+
     }
+
   }
 
   void _generateCardWithSearch() async {
-    if (_currentPosition == null) {
-      return;
+    if(isPlace){
+      final fetchedListPlaces = await _placeService.getListPlace(
+          _currentPosition!.latitude,
+          _currentPosition!.longitude,
+          SortBy.distance,
+          SortOrder.asc,
+          selectedTags,
+          searchText);
+      setState(() {
+        listPlaces = fetchedListPlaces;
+      });
+      // Apply initial filter if any
+      if (_selectedFilter == SortBy.distance) {
+        listPlaces.sort((a, b) => a.distance.compareTo(b.distance));
+      } else if (_selectedFilter == SortBy.rating) {
+        listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
+      }
+    }else{
+      final fetchedListEvent = await _eventService.GetEventInPlace(null, _currentPosition!.latitude, _currentPosition!.longitude, SortOrder.asc,SortBy.distance,searchText);
+      setState(() {
+        listEvent = fetchedListEvent;
+        listEventInit = fetchedListEvent;
+      });
     }
-    final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.asc,selectedTags,searchText);
-    setState(() {
-      listPlaces = fetchedListPlaces;
-    });
-    // Apply initial filter if any
-    if (_selectedFilter == SortBy.distance) {
-      listPlaces.sort((a, b) => a.distance.compareTo(b.distance));
-    } else if (_selectedFilter == SortBy.rating) {
-      listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
-    }
-
-
   }
   void _onScroll() {
     if (_listPlaceScrollController.position.pixels ==
@@ -192,7 +208,6 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   void dispose() {
-    _positionSubscription?.cancel();
     _focusSearchInput.dispose();
     _listPlaceScrollController.dispose();
     super.dispose();
@@ -200,26 +215,92 @@ class _SearchPageState extends State<SearchPage> {
 
   // New method to build filter buttons
   Widget _buildFilterButton(
-      String text, Color color, SortBy sortBy) {
-    bool isSelected = _selectedFilter == sortBy;
+      String text, Color color, SortBy sortBy ,[String? isComing]) {
+    bool isSelected = false;
+    if(sortBy == SortBy.created_by){
+      if(isComing == _isComing){
+        isSelected = true;
+      }
+      else{
+        isSelected = false;
+      }
+    }else{
+      isSelected = _selectedFilter == sortBy;
+    }
     return ElevatedButton(
       onPressed: () {
         setState(() {
-          if (isSelected) {
-            _selectedFilter = SortBy.none;
-            if(sortBy == SortBy.distance){
-              listPlaces.sort((a, b) => b.distance.compareTo(a.distance));
-            }else{
-              listPlaces.sort((a, b) => a.rateStar.compareTo(b.rateStar));
-            }
-          } else {
-            _selectedFilter = sortBy;
-            if(sortBy == SortBy.distance){
-              listPlaces.sort((a, b) => a.distance.compareTo(b.distance));
-            }else{
-              listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
-            }
-          }
+         if(isPlace){
+           if (isSelected) {
+             _selectedFilter = SortBy.none;
+             if(sortBy == SortBy.distance){
+               listPlaces.sort((a, b) => b.distance.compareTo(a.distance));
+             }else{
+               listPlaces.sort((a, b) => a.rateStar.compareTo(b.rateStar));
+             }
+           } else {
+             _selectedFilter = sortBy;
+             if(sortBy == SortBy.distance){
+               listPlaces.sort((a, b) => a.distance.compareTo(b.distance));
+             }else{
+               listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
+             }
+           }
+         }else{
+           if(isSelected){
+             _selectedFilter = SortBy.none;
+             if(sortBy == SortBy.distance){
+               listEvent.sort((a,b) => b.distance.compareTo(a.distance));
+             }else{
+               _isComing = '';
+               DateTime now = DateTime.now();
+               if(isComing == 'isComing'){
+                var list = listEventInit;
+
+                list.sort((a, b) => b.startDate.compareTo(a.startDate),);
+                listEvent = list;
+               }else if(isComing == 'onGoing') {
+                 var list = listEventInit;
+                 listEvent = list;
+
+               }
+             }
+           }else {
+             _selectedFilter = sortBy;
+             if(sortBy == SortBy.distance){
+               listEvent.sort((a,b) => a.distance.compareTo(b.distance));
+             }else{
+               _isComing = isComing!;
+               DateTime now = DateTime.now();
+               if(isComing == 'isComing'){
+                 var list = listEventInit.where((element) {
+                   Duration difference = now.difference(element.startDate);
+                   if(difference.inDays < 0){
+                     return true;
+                   }
+                   return false;
+                 },).toList();
+
+                 list.sort((a, b) => a.startDate.compareTo(b.startDate),);
+                 listEvent = list;
+               }else if(isComing == 'onGoing') {
+                 var list = listEventInit.where((element) {
+                   Duration differenceStart = now.difference(element.startDate);
+                   Duration differenceEnd = now.difference(element.endDate);
+
+                   if(differenceStart.inHours > 0 && differenceEnd.inHours < 0 ){
+                     return true;
+                   }
+                   return false;
+                 },).toList();
+
+                 list.sort((a, b) => a.startDate.compareTo(b.startDate),);
+                 listEvent = list;
+
+               }
+             }
+           }
+         }
         });
       },
       style: ElevatedButton.styleFrom(
@@ -244,13 +325,7 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    userId = Provider.of<UserProvider>(context).userId;
 
-    if (userId.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    // No need to sort here since sorting is handled in _generateCardInfoList
 
     // Optionally, show a loading indicator while fetching the location
     if (_currentPosition == null) {
@@ -336,7 +411,24 @@ class _SearchPageState extends State<SearchPage> {
                       });
                     },
                   )
-                      : null,
+                      :
+                  (isPlace ?
+                  IconButton(
+                    icon: Icon(Icons.place_rounded, color: Colors.blue, ),
+                    onPressed: () {
+                    setState(() {
+                      isPlace = false;
+                      _generateCardInfoList();
+                    });
+                  },)
+                  :IconButton(
+                      icon: Icon(Icons.event_available_rounded, color: Colors.greenAccent),
+                  onPressed: () {
+                    setState(() {
+                      isPlace = true;
+                      _generateCardInfoList();
+                    });
+                  },) ),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -362,9 +454,16 @@ class _SearchPageState extends State<SearchPage> {
                 _buildFilterButton(
                     "Nearest", const Color(0xFF99C896), SortBy.distance),
                 const SizedBox(width: 5),
+                isPlace ?
                 _buildFilterButton(
-                    "Featured", const Color(0xFFAAFF00), SortBy.rating),
+                    "Featured", const Color(0xFFAAFF00), SortBy.rating)
+                :_buildFilterButton(
+                    "Coming soon", const Color(0xFFFFB200), SortBy.created_by, 'isComing'),
                 const SizedBox(width: 5),
+                if(!isPlace) _buildFilterButton(
+                    "On Going", const Color(0xFF99C896), SortBy.created_by, 'onGoing'),
+                if(isPlace) const SizedBox(width: 5) ,
+                if(isPlace)
                 Flexible(
                   child: OutlinedButton(
                     onPressed: () {
@@ -437,11 +536,13 @@ class _SearchPageState extends State<SearchPage> {
 
           // List of place cards with dividers
           Expanded(
-            child: listPlaces.isNotEmpty
+            child:
+
+                (listPlaces.isNotEmpty && isPlace) || (listEvent.isNotEmpty && !isPlace)
                 ? Column(
                   children: [
                     Expanded(
-                      child:
+                      child: isPlace?
                         ListView.separated(
                             controller: _listPlaceScrollController,
                             physics: const BouncingScrollPhysics(),
@@ -450,7 +551,6 @@ class _SearchPageState extends State<SearchPage> {
                               height: 5,
                             ),
                             itemBuilder: (context, index) {
-
                               final cardInfo =  listPlaces[index % listPlaces.length];
                               return (index == listPlaces.length)? SizedBox(height: 42,) :
                                 GestureDetector(
@@ -468,7 +568,36 @@ class _SearchPageState extends State<SearchPage> {
                               );
                             },
 
-                          ),
+                          ) :
+                      ListView.separated(
+                        controller: _listPlaceScrollController,
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: listEvent.length + 1,
+                        separatorBuilder: (context, index) => const Divider(
+                          height: 5,
+                        ),
+                        itemBuilder: (context, index) {
+                          final eventInfo =  listEvent[index % listEvent.length];
+                          return (index == listEvent.length)? SizedBox(height: 42,) :
+                          GestureDetector(
+                            onTap: () {
+                              //_navigateToDetail(cardInfo.placeId);
+                            },
+                            child: SecondPlaceCard(
+                              placeCardId: eventInfo.placeId,
+                              placeName: eventInfo.eventName,
+                              wardName: eventInfo.placeName,
+                              photoDisplay: eventInfo.eventPhoto!,
+                              score: 5,
+                              distance: eventInfo.distance,
+                              isEvent: true,
+                              event: eventInfo,
+                            ),
+                          );
+                        },
+
+                      )
+                      ,
 
                     ),
                   Padding(
@@ -508,13 +637,6 @@ class _SearchPageState extends State<SearchPage> {
         widget.onPlaceSelected!(selectedPlace);
         Navigator.pop(context);
       } else {
-        PlaceTranslation? selectedTranslation = dummyTranslations.firstWhereOrNull(
-              (trans) => trans.placeId == selectedPlace.placeId,
-        );
-
-        List<PlaceMedia> filteredMediaList = mediaList
-            .where((media) => media.placeId == selectedPlace.placeId)
-            .toList();
 
         Navigator.push(
           context,

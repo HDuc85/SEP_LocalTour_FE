@@ -9,12 +9,8 @@ import 'package:localtourapp/models/users/update_user_request.dart';
 import 'package:localtourapp/services/auth_service.dart';
 import 'package:localtourapp/services/tag_service.dart';
 import 'package:localtourapp/services/user_service.dart';
-import 'package:provider/provider.dart';
-import 'package:localtourapp/provider/user_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'config/secure_storage_helper.dart';
-import 'features/home/screens/homeScreen.dart'; // Import FirebaseAuth
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -270,7 +266,7 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
       );
 
-       var token = await _authService.sendUserIdToBackend();
+      await _authService.sendUserIdToBackend();
 
 
     } catch (e) {
@@ -408,7 +404,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
 
     return GestureDetector(
       onTap: () {
@@ -471,7 +466,7 @@ class _RegisterPageState extends State<RegisterPage> {
               if (currentStep == 1) _buildPhoneAuthenticationStep(),
               if (currentStep == 2) _buildPasswordInput(),
               if (currentStep == 3) _buildUsernameInput(),
-              if (currentStep == 4) _buildUserPreferences(userProvider),
+              if (currentStep == 4) _buildUserPreferences(),
             ],
           ),
         ),
@@ -763,7 +758,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   // Step 4: User Preferences Selection
-  Widget _buildUserPreferences(UserProvider userProvider) {
+  Widget _buildUserPreferences() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -780,7 +775,7 @@ class _RegisterPageState extends State<RegisterPage> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: _buildAllTagChips(userProvider),
+          children: _buildAllTagChips(),
         ),
         const SizedBox(height: 24),
         Row(
@@ -810,7 +805,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  List<Widget> _buildAllTagChips(UserProvider userProvider)  {
+  List<Widget> _buildAllTagChips()  {
 
     return listTag.map((tag) {
       final isSelected = listTagIdSelected.contains(tag.id);

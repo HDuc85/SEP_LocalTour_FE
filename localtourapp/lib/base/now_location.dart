@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:localtourapp/services/location_Service.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class NowLocation extends StatefulWidget {
@@ -10,6 +11,7 @@ class NowLocation extends StatefulWidget {
 }
 
 class _NowLocationState extends State<NowLocation> {
+  final LocationService _locationService = LocationService();
   String _location = 'Fetching location...';
   Position? _currentPosition;
 
