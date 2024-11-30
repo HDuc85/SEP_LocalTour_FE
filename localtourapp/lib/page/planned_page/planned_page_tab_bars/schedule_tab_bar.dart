@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart'; // Needed for TapGestureRecognizer
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
+import 'package:localtourapp/models/schedule/destination.dart';
 import 'package:localtourapp/models/schedule/destination_model.dart';
 import 'package:localtourapp/models/schedule/schedule_model.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
@@ -59,6 +60,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   Map<int, bool> scheduleVisibility = {};
   final Set<int> _editingScheduleIds = {};
   bool isCurrentUser = false;
+  late List<DestinationModel> _listDestination;
 
   @override
   void initState() {
@@ -568,7 +570,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                     ),
                     child: Column(
                       children: [
-                        _buildDestinationGrid(schedule.destinations),
+                        _buildDestinationGrid(schedule.destinations, schedule),
                         if (isCurrentUser)
                           IconButton(
                             onPressed: () {
@@ -624,8 +626,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     }
   }
 
-  Widget _buildDestinationGrid(List<DestinationModel> destinations) {
-if (destinations.isEmpty) {
+  Widget _buildDestinationGrid(List<DestinationModel> destinations, ScheduleModel schedule) {
+    if (destinations.isEmpty) {
       return const Center(
         child: Text('No destinations available.'),
       );
@@ -633,10 +635,10 @@ if (destinations.isEmpty) {
 
     List<Widget> rows = [];
     int index = 0;
-    int columns = 4;
-    double connectorWidth = 41; // Horizontal connector width
-    double connectorHeight = 30; // Vertical connector height
-    double circleSize = 40; // Diameter of CircleAvatar
+    int columns = 3;
+    double connectorWidth = 78; // Horizontal connector width
+    double connectorHeight = 40; // Vertical connector height
+    double circleSize = 50; // Diameter of CircleAvatar
 
     while (index < destinations.length) {
       // Get the destinations for the current row
@@ -653,30 +655,89 @@ if (destinations.isEmpty) {
       for (int i = 0; i < rowItems.length; i++) {
         DestinationModel destination = rowItems[i];
 
-        Widget imageWidget = GestureDetector(
-          onTap: () => _showDestinationDetails(destination),
-          onLongPress: () => _showDeleteDestinationConfirmationDialog(destination),
-          child: Column(
-            children: [
-              if (isCurrentUser)
-                Checkbox(
-                  value: destination.isArrived,
-                  onChanged: (bool? value)  async {
-                    var result = await _scheduleService.UpdateDestination(destination.id, destination.scheduleId,destination.placeId ,null, null, destination.detail, value);
-                    if(result){
-                      fetchData();
-                    }
-                  },
-                ),
-              CircleAvatar(
-                radius: circleSize / 2,
-                backgroundImage: NetworkImage(
-                  destination.placePhotoDisplay ?? 'assets/images/default.png',
-                ),
-                backgroundColor: Colors.grey,
-              ),
-            ],
+        // Create the CircleAvatar without GestureDetector
+        Widget circleAvatar = CircleAvatar(
+          radius: circleSize / 2,
+          backgroundImage: NetworkImage(
+            destination.placePhotoDisplay ?? 'assets/images/default.png',
           ),
+          backgroundColor: Colors.grey,
+        );
+
+        // Wrap the CircleAvatar with LongPressDraggable
+        Widget draggableCircleAvatar = LongPressDraggable<DestinationModel>(
+          data: destination,
+          feedback: Material(
+            color: Colors.transparent,
+            child: circleAvatar,
+          ),
+          childWhenDragging: Opacity(
+            opacity: 0.5,
+            child: circleAvatar,
+          ),
+          child: DragTarget<DestinationModel>(
+            builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
+              return GestureDetector(
+                onTap: () => _showDestinationDetails(destination),
+                child: circleAvatar,
+              );
+            },
+            onWillAccept: (data) {
+              // Optional: Add visual feedback here
+              return true;
+            },
+            onAccept: (draggedDestination) {
+              setState(() {
+                // Swap positions of draggedDestination and destination
+                int oldIndex = destinations.indexOf(draggedDestination);
+                int newIndex = destinations.indexOf(destination);
+
+                if (oldIndex != -1 && newIndex != -1) {
+                  // Remove dragged item
+                  final removedItem = destinations.removeAt(oldIndex);
+                  // Insert dragged item at new position
+                  destinations.insert(newIndex, removedItem);
+
+                  // Optionally, update the schedule's destinations in your backend or state
+                  // For example:
+                  // schedule.destinations = destinations;
+                  // _updateScheduleDestinations(schedule);
+                }
+              });
+            },
+          ),
+        );
+
+        // Wrap the Checkbox with GestureDetector for onLongPress to show delete dialog
+        Widget checkboxWidget = GestureDetector(
+          onLongPress: () => _showDeleteDestinationConfirmationDialog(destination),
+          child: Checkbox(
+            value: destination.isArrived,
+            onChanged: (bool? value) async {
+              var result = await _scheduleService.UpdateDestination(
+                destination.id,
+                destination.scheduleId,
+                destination.placeId,
+                null,
+                null,
+                destination.detail,
+                value,
+              );
+              if (result) {
+                fetchData();
+              }
+            },
+          ),
+        );
+
+        // Build the imageWidget with the updated Checkbox and CircleAvatar
+        Widget imageWidget = Column(
+          mainAxisSize: MainAxisSize.min, // Take minimum space
+          children: [
+            if (isCurrentUser)
+              checkboxWidget,
+            draggableCircleAvatar,
+          ],
         );
 
         rowWidgets.add(imageWidget);
@@ -684,9 +745,13 @@ if (destinations.isEmpty) {
         // Add horizontal dashed connector except after the last item
         if (i < rowItems.length - 1) {
           rowWidgets.add(
-            DashedLine(
-              isHorizontal: true,
-              length: connectorWidth,
+            Container(
+              height: circleSize, // Same height as CircleAvatar
+              alignment: Alignment.center, // Center vertically
+              child: DashedLine(
+                isHorizontal: true,
+                length: connectorWidth,
+              ),
             ),
           );
         }
@@ -699,17 +764,10 @@ if (destinations.isEmpty) {
 
       // Build the row widget
       Widget rowWidget = Row(
-        mainAxisAlignment: MainAxisAlignment.start, // Left-align all rows initially
+        mainAxisAlignment: isEvenRow ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center, // Align children at center vertically
         children: rowWidgets,
       );
-
-      // Adjust alignment for even rows
-      if (isEvenRow) {
-        rowWidget = Row(
-          mainAxisAlignment: MainAxisAlignment.end, // Right-align even rows
-          children: rowWidgets,
-        );
-      }
 
       rows.add(rowWidget);
 
@@ -717,11 +775,19 @@ if (destinations.isEmpty) {
       if (index + columns < destinations.length) {
         rows.add(
           Row(
-            mainAxisAlignment: isEvenRow ? MainAxisAlignment.start : MainAxisAlignment.end,
             children: [
-              DashedLine(
-                isHorizontal: false,
-                length: connectorHeight,
+              Expanded(
+                child: Align(
+                  alignment: isEvenRow ? Alignment.centerLeft : Alignment.centerRight,
+                  child: Container(
+                    width: circleSize,
+                    alignment: Alignment.center,
+                    child: DashedLine(
+                      isHorizontal: false,
+                      length: connectorHeight,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
