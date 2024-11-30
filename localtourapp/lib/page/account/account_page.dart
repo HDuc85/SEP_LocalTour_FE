@@ -116,12 +116,10 @@ class _AccountPageState extends State<AccountPage> {
     if (pickedFile != null) {
       File file = File(pickedFile.path);
      var result = await _userService.sendUserDataRequest(new UpdateUserRequest(profilePicture: file));
-     if(result != null){
-       setState(() {
-         userprofile = result;
-       });
-     }
-    }
+     setState(() {
+       userprofile = result;
+     });
+       }
   }
 
   @override
@@ -217,7 +215,7 @@ class _AccountPageState extends State<AccountPage> {
   // Build Profile Section
   Widget _buildProfileSection(Userprofile userProfile) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(8.0),
       decoration: BoxDecoration(
         border: Border.all(width: 2),
         color: Colors.white,
@@ -234,27 +232,21 @@ class _AccountPageState extends State<AccountPage> {
       child: Column(
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start, // Changed to start
+            crossAxisAlignment: CrossAxisAlignment.center, // Changed to start
             children: [
-              SizedBox(width: 10,),
               // Profile picture on the left
-              Column(
-                children: [
-                  SizedBox(height: 10,),
                   GestureDetector(
                     onTap: isCurrentUser? _selectAvatar : (){}, // Gọi khi nhấn vào avatar
                     child: CircleAvatar(
-                      radius: 60,
+                      radius: 40,
                       backgroundImage: userProfile.userProfileImage != ''
                           ? NetworkImage(userProfile.userProfileImage)
                           : null,
                       child: userProfile.userProfileImage == ''
-                          ? const Icon(Icons.account_circle, size: 60, color: Colors.grey)
+                          ? const Icon(Icons.account_circle, size: 80, color: Colors.grey)
                           : null,
                     ),
                   ),
-                ],
-              ),
               const SizedBox(width: 25),
 
               // User details on the right

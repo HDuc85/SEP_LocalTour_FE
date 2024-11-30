@@ -14,9 +14,16 @@ import 'package:localtourapp/base/weather_icon_button.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import 'dashed_line.dart';
+
 class ScheduleTabbar extends StatefulWidget {
   final String userId;
-
 
   const ScheduleTabbar({
     Key? key,
@@ -52,20 +59,21 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   Map<int, bool> scheduleVisibility = {};
   final Set<int> _editingScheduleIds = {};
   bool isCurrentUser = false;
+
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
     _nameFocusNode.addListener(_onNameFieldFocusChange);
-    
+
     fetchInit();
   }
 
-  Future<void> fetchInit() async{
+  Future<void> fetchInit() async {
     String? userid = '';
-    if(widget.userId == ''){
-        userid = await SecureStorageHelper().readValue(AppConfig.userId);
-      if(userid == null){
+    if (widget.userId == '') {
+      userid = await SecureStorageHelper().readValue(AppConfig.userId);
+      if (userid == null) {
         setState(() {
           _listSchedule = [];
           isLoading = false;
@@ -73,22 +81,21 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
         return;
       }
       _myUserId = userid;
-    }else{
+    } else {
       userid = widget.userId;
     }
 
     var listschedule = await _scheduleService.getListSchedule(userid);
-    if(_myUserId == userid){
+    if (_myUserId == userid) {
       isCurrentUser = true;
     }
-    _userId= userid;
+    _userId = userid;
     setState(() {
       _listScheduleInit = listschedule;
       _listSchedule = listschedule;
       isLoading = false;
     });
   }
-
 
   Future<void> fetchData() async {
     var listschedule = await _scheduleService.getListSchedule(_userId);
@@ -98,7 +105,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     });
   }
 
-  
   @override
   void dispose() {
     _scrollController.removeListener(_scrollListener);
@@ -144,11 +150,10 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     if (_editingScheduleIds.isNotEmpty) {
       final scheduleId = _editingScheduleIds.first;
 
-        setState(() {
-          _editingScheduleIds.remove(scheduleId);
-        });
-      }
-
+      setState(() {
+        _editingScheduleIds.remove(scheduleId);
+      });
+    }
   }
 
   void _toggleEditing(int scheduleId) {
@@ -157,21 +162,31 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
 
   void _toggleFavorite(int scheduleId) async {
     var success = await _scheduleService.LikeSchedule(scheduleId);
-    if(success){
+    if (success) {
       fetchData();
     }
   }
 
   void _toggleVisibility(ScheduleModel schedule, String scheduleName) async {
-    var result = await _scheduleService.UpdateSchedule(schedule.id, scheduleName != ''? scheduleName:schedule.scheduleName, null, null, !schedule.isPublic);
-    if(result){
+    var result = await _scheduleService.UpdateSchedule(
+        schedule.id,
+        scheduleName != '' ? scheduleName : schedule.scheduleName,
+        null,
+        null,
+        !schedule.isPublic);
+    if (result) {
       fetchData();
     }
   }
 
   void _EditPlaceName(ScheduleModel schedule, String scheduleName) async {
-    var result = await _scheduleService.UpdateSchedule(schedule.id, scheduleName != ''? scheduleName:schedule.scheduleName, schedule.startDate, schedule.endDate, schedule.isPublic);
-    if(result){
+    var result = await _scheduleService.UpdateSchedule(
+        schedule.id,
+        scheduleName != '' ? scheduleName : schedule.scheduleName,
+        schedule.startDate,
+        schedule.endDate,
+        schedule.isPublic);
+    if (result) {
       fetchData();
     }
   }
@@ -186,22 +201,22 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           title: Text(isCurrentUser ? 'Edit Detail' : 'Detail'),
           content: isCurrentUser
               ? TextFormField(
-                  controller: _detailController,
-                  maxLines: 10,
-                  maxLength: 500,
-                  decoration: const InputDecoration(
-                    hintText: "Enter detail (max 500 words)",
-                    border: OutlineInputBorder(),
-                  ),
-                )
+            controller: _detailController,
+            maxLines: 10,
+            maxLength: 500,
+            decoration: const InputDecoration(
+              hintText: "Enter detail (max 500 words)",
+              border: OutlineInputBorder(),
+            ),
+          )
               : TextFormField(
-                  controller: _detailController,
-                  readOnly: true,
-                  maxLines: 10,
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
+            controller: _detailController,
+            readOnly: true,
+            maxLines: 10,
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -222,24 +237,21 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   void _onDateSelected(DateTime? newDate, bool isFromDate) {
-      if (isFromDate) {
-        _fromDate = newDate;
-      } else {
-        _toDate = newDate;
-      }
-    setState(() {
-
-    });
+    if (isFromDate) {
+      _fromDate = newDate;
+    } else {
+      _toDate = newDate;
+    }
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
-    // Fetch all schedules from ScheduleProvider
-    return
-      isLoading?const Center(child: CircularProgressIndicator()):
-      Stack(
+    return isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : Stack(
       children: [
         GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
@@ -255,10 +267,12 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildFilterSection(),
-                    const SizedBox(height: 20),
+                    const Divider(
+                      color: Colors.grey, // Color of the divider
+                      thickness: 1, // Thickness of the divider
+                    ),
                     if (isCurrentUser) ...[
-                      _buildButtonsSection(), // Only show buttons for current user
-                      const SizedBox(height: 25),
+                      _buildButtonsSection(),
                     ],
                     _buildScheduleSection(_listSchedule),
                     const SizedBox(height: 100),
@@ -284,8 +298,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             duration: const Duration(milliseconds: 300),
             child: _showBackToTopButton
                 ? BackToTopButton(
-                    onPressed: _scrollToTop,
-                  )
+              onPressed: _scrollToTop,
+            )
                 : const SizedBox.shrink(),
           ),
         ),
@@ -320,7 +334,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               "From Date",
               true,
               _fromDate,
-              (newDate) {
+                  (newDate) {
                 _onDateSelected(newDate, true);
               },
               clearable: true,
@@ -333,7 +347,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               "To Date",
               false,
               _toDate,
-              (newDate) {
+                  (newDate) {
                 _onDateSelected(newDate, false);
               },
               clearable: true,
@@ -369,8 +383,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   Widget _buildScheduleSection(List<ScheduleModel> filteredSchedules) {
-
-
     if (filteredSchedules.isEmpty) {
       return const Center(
         child: Text(
@@ -388,11 +400,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           final schedule = filteredSchedules[index];
           final isEditingName = _editingScheduleIds.contains(schedule.id);
           bool isExpanded = _expandedIndex == index;
-          // Define isOwner for each schedule
           final bool isOwner = schedule.userId == _myUserId;
-          // Initial states for visibility and favorites
           bool isVisible = schedule.isPublic || isOwner;
-          // If the schedule is not visible, skip rendering it
           if (!isVisible) {
             return const SizedBox.shrink();
           }
@@ -417,30 +426,29 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Schedule name, editing, visibility, favorite toggling, and like count
                         GestureDetector(
                           onTap: () => _toggleEditing(schedule.id),
                           child: isEditingName
                               ? TextFormField(
-                                  controller: _nameController,
-                                  focusNode: _nameFocusNode,
-                                  onFieldSubmitted: (newValue) {
-                                    _saveScheduleName();
-                                    _EditPlaceName(schedule,newValue);
-                                  },
-                                  decoration: const InputDecoration(
-                                    border: OutlineInputBorder(),
-                                    contentPadding:
-                                        EdgeInsets.symmetric(horizontal: 8),
-                                  ),
-                                )
+                            controller: _nameController,
+                            focusNode: _nameFocusNode,
+                            onFieldSubmitted: (newValue) {
+                              _saveScheduleName();
+                              _EditPlaceName(schedule, newValue);
+                            },
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              contentPadding:
+                              EdgeInsets.symmetric(horizontal: 8),
+                            ),
+                          )
                               : Text(
-                                  schedule.scheduleName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
+                            schedule.scheduleName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
                         Row(
                           children: [
@@ -455,17 +463,16 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                 "From Date",
                                 true,
                                 schedule.startDate,
-                                (newDate) {
+                                    (newDate) {
                                   setState(() {
                                     schedule.startDate = newDate;
                                   });
-                                  _EditPlaceName(schedule,_nameController.text);
+                                  _EditPlaceName(schedule, _nameController.text);
                                 },
                                 clearable: true,
                                 onClear: () {
                                   setState(() {
-                                    schedule.startDate =
-                                        null; // Correctly clears startDate
+                                    schedule.startDate = null;
                                   });
                                 },
                               ),
@@ -476,17 +483,16 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                 "To Date",
                                 false,
                                 schedule.endDate,
-                                (newDate) {
+                                    (newDate) {
                                   setState(() {
                                     schedule.endDate = newDate;
                                   });
-                                  _EditPlaceName(schedule,_nameController.text);
+                                  _EditPlaceName(schedule, _nameController.text);
                                 },
                                 clearable: true,
                                 onClear: () {
                                   setState(() {
-                                    schedule.endDate =
-                                        null; // Correctly clears endDate
+                                    schedule.endDate = null;
                                   });
                                 },
                               ),
@@ -499,37 +505,37 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                             if (isOwner)
                               IconButton(
                                 icon: Icon(
-                                          schedule.isPublic
+                                  schedule.isPublic
                                       ? Icons.visibility
                                       : Icons.visibility_off,
-                                  color: schedule.isPublic? Colors.blue : Colors.red,
+                                  color:
+                                  schedule.isPublic ? Colors.blue : Colors.red,
                                 ),
                                 onPressed: isOwner
-                                    ? () => _toggleVisibility(schedule, _nameController.text)
-                                    : null, // Ensure only the owner can toggle visibility
+                                    ? () =>
+                                    _toggleVisibility(schedule, _nameController.text)
+                                    : null,
                               ),
-                                 Row(
-                                  children: [
-                                    IconButton(
-                                      icon: Icon(
-                                        schedule.isLiked
-                                            ? Icons.favorite
-                                            : Icons.favorite_border,
-                                        color: schedule.isLiked
-                                            ? Colors.red
-                                            : Colors.grey,
-                                      ),
-                                      onPressed: () =>
-                                          _toggleFavorite(schedule.id),
-                                    ),
-                                    Text(
-                                      schedule.totalLikes.toString(),
-                                      style: const TextStyle(
-                                          color: Colors.black, fontSize: 12),
-                                    ),
-                                  ],
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    schedule.isLiked
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: schedule.isLiked
+                                        ? Colors.red
+                                        : Colors.grey,
+                                  ),
+                                  onPressed: () => _toggleFavorite(schedule.id),
                                 ),
-
+                                Text(
+                                  schedule.totalLikes.toString(),
+                                  style: const TextStyle(
+                                      color: Colors.black, fontSize: 12),
+                                ),
+                              ],
+                            ),
                             Row(
                               children: [
                                 IconButton(
@@ -560,7 +566,23 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                       borderRadius: BorderRadius.circular(15),
                       border: Border.all(color: Colors.black, width: 1),
                     ),
-                    child: _buildDestinationList(schedule.destinations),
+                    child: Column(
+                      children: [
+                        _buildDestinationGrid(schedule.destinations),
+                        if (isCurrentUser)
+                          IconButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const SearchPage(),
+                                ),
+                              );
+                            },
+                            icon: Icon(Icons.add_circle, size: 30),
+                          ),
+                      ],
+                    ),
                   ),
               ],
             ),
@@ -597,175 +619,257 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
 
   void _deleteSchedule(int scheduleId) async {
     var result = await _scheduleService.DeleteSchedule(scheduleId);
-    if(result){
+    if (result) {
       fetchData();
     }
   }
 
-  Widget _buildDestinationList(
-      List<DestinationModel> scheduleDestinations) {
-
-
-    void updateStartDate(DestinationModel destination, DateTime? newDate) {
-      setState(() {
-        destination.startDate = newDate;
-      });
+  Widget _buildDestinationGrid(List<DestinationModel> destinations) {
+if (destinations.isEmpty) {
+      return const Center(
+        child: Text('No destinations available.'),
+      );
     }
 
-    void updateEndDate(DestinationModel destination, DateTime? newDate) {
-      setState(() {
-        destination.endDate = newDate;
-      });
-    }
+    List<Widget> rows = [];
+    int index = 0;
+    int columns = 4;
+    double connectorWidth = 41; // Horizontal connector width
+    double connectorHeight = 30; // Vertical connector height
+    double circleSize = 40; // Diameter of CircleAvatar
 
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      ...scheduleDestinations.map((destination) {
+    while (index < destinations.length) {
+      // Get the destinations for the current row
+      List<DestinationModel> rowItems = destinations.sublist(
+        index,
+        (index + columns > destinations.length) ? destinations.length : index + columns,
+      );
 
+      // Determine if the row should be reversed
+      bool isEvenRow = (index ~/ columns) % 2 == 1;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            GestureDetector(
-              onTap: () {
-                _navigateToDetail(
-                  destination.placeId,
-                );
-              },
-              onLongPress: () {
-                //DeleteIconButton(
-                //                     icon: const Icon(Icons.delete, color: Colors.red),
-                //                     onPressed: () {
-                 _showDeleteDestinationConfirmationDialog(destination);
-                //                     },
-                //                   ),
+      // Build the row with connectors
+      List<Widget> rowWidgets = [];
+      for (int i = 0; i < rowItems.length; i++) {
+        DestinationModel destination = rowItems[i];
 
-
-              },
-              child: Row(
-                children: [
-                  Text(bullet),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      destination.placeName ?? "Unknown Place",
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      destination.placePhotoDisplay ?? 'assets/images/default.png',
-                      width: 70,
-                      height: 70,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        width: 50,
-                        height: 50,
-                        color: Colors.grey,
-                        child: const Icon(Icons.image, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 10,),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildDateField(
-                  "Start Date",
-                  true,
-                  destination.startDate,
-                  (newDate) => updateStartDate(destination, newDate),
-                  clearable: isCurrentUser,
-                  onClear: () {
-                    setState(() {
-                      destination.startDate = null;
-                    });
-                  },
-                  isOwner: isCurrentUser,
-                ),
-                const SizedBox(width: 6),
-                _buildDateField(
-                  "End Date",
-                  false,
-                  destination.endDate,
-                  (newDate) => updateEndDate(destination, newDate),
-                  clearable: isCurrentUser,
-                  onClear: () {
-                    setState(() {
-                      destination.endDate = null;
-                    });
-                  },
-                  isOwner: isCurrentUser,
-                ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            _buildDetailSection(
-              destination.detail ?? "No details available",
-              (newDetail) {
-                if (isCurrentUser) {
-                  setState(() {
-                    destination.detail = newDetail;
-                  });
-                }
-              },
-              isCurrentUser,
-            ),
-
-            if (isCurrentUser)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  // isArrived checkbox
-                  Checkbox(
-                    value: destination.isArrived,
-                    onChanged: (bool? value)  async {
+        Widget imageWidget = GestureDetector(
+          onTap: () => _showDestinationDetails(destination),
+          onLongPress: () => _showDeleteDestinationConfirmationDialog(destination),
+          child: Column(
+            children: [
+              if (isCurrentUser)
+                Checkbox(
+                  value: destination.isArrived,
+                  onChanged: (bool? value)  async {
                     var result = await _scheduleService.UpdateDestination(destination.id, destination.scheduleId,destination.placeId ,null, null, destination.detail, value);
                     if(result){
                       fetchData();
                     }
-                    },
-                  ),
-                ],
-              ),
-            const Divider(),
-          ],
-        );
-      }).toList(),
-      if (isCurrentUser)
-        Center(
-          child: ElevatedButton(
-            onPressed: () {
-              // Navigate to SearchPage
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SearchPage(),
+                  },
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+              CircleAvatar(
+                radius: circleSize / 2,
+                backgroundImage: NetworkImage(
+                  destination.placePhotoDisplay ?? 'assets/images/default.png',
+                ),
+                backgroundColor: Colors.grey,
               ),
+            ],
+          ),
+        );
+
+        rowWidgets.add(imageWidget);
+
+        // Add horizontal dashed connector except after the last item
+        if (i < rowItems.length - 1) {
+          rowWidgets.add(
+            DashedLine(
+              isHorizontal: true,
+              length: connectorWidth,
             ),
-            child: const Text(
-              'Add More Place',
-              style: TextStyle(color: Colors.white, fontSize: 16),
-            ),
+          );
+        }
+      }
+
+      // Reverse the row if it's an even row
+      if (isEvenRow) {
+        rowWidgets = rowWidgets.reversed.toList();
+      }
+
+      // Build the row widget
+      Widget rowWidget = Row(
+        mainAxisAlignment: MainAxisAlignment.start, // Left-align all rows initially
+        children: rowWidgets,
+      );
+
+      // Adjust alignment for even rows
+      if (isEvenRow) {
+        rowWidget = Row(
+          mainAxisAlignment: MainAxisAlignment.end, // Right-align even rows
+          children: rowWidgets,
+        );
+      }
+
+      rows.add(rowWidget);
+
+      // Add vertical dashed connector under the last item of the previous row
+      if (index + columns < destinations.length) {
+        rows.add(
+          Row(
+            mainAxisAlignment: isEvenRow ? MainAxisAlignment.start : MainAxisAlignment.end,
+            children: [
+              DashedLine(
+                isHorizontal: false,
+                length: connectorHeight,
+              ),
+            ],
+          ),
+        );
+      }
+
+      index += columns;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: rows,
+    );
+  }
+
+  void _showDestinationDetails(DestinationModel destination) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            void updateStartDate(DateTime? newDate) {
+              setState(() {
+                destination.startDate = newDate;
+              });
+              this.setState(() {}); // Notify the parent widget of changes
+            }
+
+            void updateEndDate(DateTime? newDate) {
+              setState(() {
+                destination.endDate = newDate;
+              });
+              this.setState(() {}); // Notify the parent widget of changes
+            }
+
+            return _buildDestinationDetailSheet(destination, updateStartDate, updateEndDate);
+          },
+        );
+      },
+    );
+  }
+
+
+  Widget _buildDestinationDetailSheet(
+      DestinationModel destination,
+      Function(DateTime?) updateStartDate,
+      Function(DateTime?) updateEndDate,
+      ) {
+    return SizedBox(
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height * (2 / 3),
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          top: 16,
+          left: 16,
+          right: 16,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () {
+                  // Navigate to detail page when placeName is tapped
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DetailPage(
+                        placeId: destination.placeId,
+                      ),
+                    ),
+                  );
+                },
+                child: Text(
+                  destination.placeName ?? 'Unknown Place',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () {
+                  // Navigate to detail page when placePhotoDisplay is tapped
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DetailPage(
+                        placeId: destination.placeId,
+                      ),
+                    ),
+                  );
+                },
+                child: Image.network(
+                  destination.placePhotoDisplay ?? 'assets/images/default.png',
+                  height: 150,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(height: 10),
+              _buildDateField(
+                "Start Date",
+                true,
+                destination.startDate,
+                updateStartDate,
+                clearable: isCurrentUser,
+                onClear: () => updateStartDate(null),
+                isOwner: isCurrentUser,
+              ),
+              const SizedBox(height: 6),
+              _buildDateField(
+                "End Date",
+                false,
+                destination.endDate,
+                updateEndDate,
+                clearable: isCurrentUser,
+                onClear: () => updateEndDate(null),
+                isOwner: isCurrentUser,
+              ),
+              const SizedBox(height: 10),
+              _buildDetailSection(
+                destination.detail ?? "No details available",
+                    (newDetail) async {
+                  if (isCurrentUser) {
+                    setState(() {
+                      destination.detail = newDetail;
+                    });
+                    await _scheduleService.UpdateDestination(
+                      destination.id,
+                      destination.scheduleId,
+                      destination.placeId,
+                      destination.startDate,
+                      destination.endDate,
+                      destination.detail,
+                      destination.isArrived,
+                    );
+                  }
+                },
+                isCurrentUser,
+              ),
+            ],
           ),
         ),
-    ]);
+      ),
+    );
   }
+
 
   Widget _buildDetailSection(
       String detailText, Function(String) onSave, bool isCurrentUser) {
@@ -776,60 +880,73 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       child: LayoutBuilder(
         builder: (context, constraints) {
           final textSpan = TextSpan(
-            text: "Detail:\n",
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
-            children: [
-              TextSpan(
-                text: detailText,
-                style: const TextStyle(color: Colors.black),
-              ),
-            ],
+            text: detailText,
+            style: const TextStyle(color: Colors.black),
           );
 
           final textPainter = TextPainter(
-              text: textSpan, maxLines: 4, textDirection: ui.TextDirection.ltr)
-            ..layout(maxWidth: constraints.maxWidth);
+            text: textSpan,
+            maxLines: 25,
+            textDirection: ui.TextDirection.ltr,
+          )..layout(maxWidth: constraints.maxWidth);
 
           final isOverflowing = textPainter.didExceedMaxLines;
 
-          return RichText(
-            maxLines: 4,
-            overflow: TextOverflow.ellipsis,
-            text: TextSpan(
-              text: "Detail:\n",
-              style: const TextStyle(color: Colors.black),
-              children: [
-                TextSpan(
-                  text: detailText,
-                  style: const TextStyle(color: Colors.black),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () {
-                      _showDetailDialog(detailText, onSave, isCurrentUser);
-                    },
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Detail:",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.black,
+                  decoration: TextDecoration.underline,
                 ),
-                if (isOverflowing)
-                  const TextSpan(
-                    text: " ...",
-                    style: TextStyle(
-                        color: Colors.blue,
-                        decoration: TextDecoration.underline),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: constraints.maxWidth,
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: RichText(
+                  maxLines: 25,
+                  overflow: TextOverflow.ellipsis,
+                  text: TextSpan(
+                    text: detailText,
+                    style: const TextStyle(color: Colors.black),
+                    children: [
+                      if (isOverflowing)
+                        const TextSpan(
+                          text: " ...",
+                          style: TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                    ],
                   ),
-              ],
-            ),
+                ),
+              ),
+              SizedBox(height: 20,)
+            ],
           );
         },
       ),
     );
   }
 
-  void _showDeleteDestinationConfirmationDialog(
-      DestinationModel destination) {
+  void _showDeleteDestinationConfirmationDialog(DestinationModel destination) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Delete Destination'),
-          content: Text('Are you sure you want to delete "${destination.placeName}"?'),
+          content:
+          Text('Are you sure you want to delete "${destination.placeName}"?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -838,9 +955,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: ()  async {
+              onPressed: () async {
                 var result = await _scheduleService.DeleteDestination(destination.id);
-                if(result){
+                if (result) {
                   fetchData();
                 }
                 Navigator.of(context).pop();
@@ -853,10 +970,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     );
   }
 
-
   void _navigateToDetail(int placeId) {
-
-
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -867,25 +981,29 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     );
   }
 
-  Future<void> _filterSchedule() async{
+  Future<void> _filterSchedule() async {
     String searchText = searchController.text.toLowerCase();
     var search = _listScheduleInit;
-    if(searchText != null && searchText != ''){
-      search = search.where((element) => element.scheduleName.toLowerCase().contains(searchText),).toList();
+    if (searchText != '') {
+      search = search
+          .where(
+            (element) => element.scheduleName.toLowerCase().contains(searchText),
+      )
+          .toList();
     }
-    if(_fromDate != null){
+    if (_fromDate != null) {
       search = search.where((element) {
-        if(element.startDate != null){
+        if (element.startDate != null) {
           return element.startDate!.isAfter(_fromDate!);
         }
         return false;
       }).toList();
     }
 
-    if(_toDate != null){
+    if (_toDate != null) {
       search = search.where((element) {
-        if(element.endDate != null){
-          return element.endDate!.isBefore(_fromDate!);
+        if (element.endDate != null) {
+          return element.endDate!.isBefore(_toDate!);
         }
         return false;
       }).toList();
@@ -894,24 +1012,17 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     setState(() {
       _listSchedule = search;
     });
-
-    /* widget.schedules.where((schedule) {
-      final matchesName =
-      schedule.scheduleName.toLowerCase().contains(searchText);
-      final matchesDate =
-          (_fromDate == null || schedule.createdAt.isAfter(_fromDate!)) &&
-              (_toDate == null || schedule.createdAt.isBefore(_toDate!));*/
   }
 
   Widget _buildDateField(
-    String labelText,
-    bool isStartDate,
-    DateTime? initialDate,
-    Function(DateTime?) onDateChanged, {
-    bool clearable = false,
-    VoidCallback? onClear,
-    bool isOwner = true,
-  }) {
+      String labelText,
+      bool isStartDate,
+      DateTime? initialDate,
+      Function(DateTime?) onDateChanged, {
+        bool clearable = false,
+        VoidCallback? onClear,
+        bool isOwner = true,
+      }) {
     return GestureDetector(
       onTap: () async {
         DateTime? selectedDate =
@@ -979,9 +1090,11 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     );
   }
 
-  Future<void> _addSchedule(String scheduleName, DateTime? startDate, DateTime? endDate) async{
-    var result = await _scheduleService.CreateSchedule(scheduleName, startDate, endDate);
-    if(result){
+  Future<void> _addSchedule(
+      String scheduleName, DateTime? startDate, DateTime? endDate) async {
+    var result =
+    await _scheduleService.CreateSchedule(scheduleName, startDate, endDate);
+    if (result) {
       fetchData();
     }
   }
@@ -992,20 +1105,21 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       children: [
         ElevatedButton.icon(
           onPressed: () {
-            showAddScheduleDialog(context, (scheduleName, startDate, endDate) {
-
-              _addSchedule(scheduleName,startDate,endDate);
+            showAddScheduleDialog(
+                context, (scheduleName, startDate, endDate) {
+              _addSchedule(scheduleName, startDate, endDate);
             });
           },
           icon: const Icon(Icons.add, color: Colors.white),
           label: const Text(
             "Add Schedule",
-            style: TextStyle(fontSize: 13.6),
+            style: TextStyle(fontSize: 13.6, color: Colors.white),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.grey,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(color: Colors.black, width: 2), // Black border
             ),
           ),
         ),
@@ -1013,19 +1127,21 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           onPressed: _showSuggestScheduleBottomSheet,
           icon: const Icon(Icons.add, color: Colors.white),
           label: const Text(
-            "Suggest Schedule",
-            style: TextStyle(fontSize: 14),
+            "Suggestion",
+            style: TextStyle(fontSize: 14, color: Colors.white),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(color: Colors.black, width: 2), // Black border
             ),
           ),
         ),
       ],
     );
   }
+
 
   void _showSuggestScheduleBottomSheet() {
     showModalBottomSheet(
@@ -1037,3 +1153,5 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     );
   }
 }
+
+

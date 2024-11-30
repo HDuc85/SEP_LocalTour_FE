@@ -302,8 +302,7 @@ class _ReviewCardState extends State<ReviewCard> {
   }
 
   ImageProvider _getUserProfileImage() {
-    if (feedBackCard.profileUrl == null ||
-        feedBackCard.profileUrl.isEmpty) {
+    if (feedBackCard.profileUrl.isEmpty) {
       return const AssetImage('assets/images/default_profile_picture.png');
     } else {
       return NetworkImage(feedBackCard.profileUrl);

@@ -285,6 +285,12 @@ class _ReviewDialogState extends State<ReviewDialog> {
               ElevatedButton(
                 onPressed: () {
                   if (selectedRating > 0) {
+                    if (contentController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please enter review content.')),
+                      );
+                      return;
+                    }
                     if (_hasChanges()) {
                       widget.onSubmit(
                         selectedRating,

@@ -186,74 +186,80 @@ class _PostTabBarState extends State<PostTabBar> {
 
   @override
   Widget build(BuildContext context) {
-    return
-      isLoading? const Center(child: CircularProgressIndicator()) :
-          Stack(
-          children: [
-            GestureDetector(
-              onTap: () => FocusScope.of(context).unfocus(),
-              child:
-              ListView.builder(
-                controller: _scrollController,
-                itemCount:
-                4 + (listPost.isNotEmpty ? listPost.length : 1) + 2,
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return _buildFilterSection();
-                  } else if (index == 1) {
-                    return const SizedBox(height: 10);
-                  } else if (index == 2 && isCurrentUser) {
-                    return _buildButtonsSection();
-                  } else if (index == 3) {
-                    return const SizedBox(height: 10);
-                  } else if (index <=
-                      3 + (listPost.isNotEmpty ? listPost.length : 1)) {
-                    if (listPost.isNotEmpty) {
-                      final post = listPost[index - 4];
-                      return Container(
-                        margin: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: _buildSinglePostItem(post),
-                      );
-                    } else {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20.0),
-                        child: Center(
-                          child: Text(
-                            "No posts found",
-                            style: TextStyle(fontSize: 18, color: Colors.grey),
-                          ),
-                        ),
-                      );
-                    }
-                  } else {
-                    return const SizedBox(height: 50);
-                  }
-                },
-              ),
-            ),
-            Positioned(
-              bottom: 10,
-              left: 55,
-              child: WeatherIconButton(
-                onPressed: _navigateToWeatherPage,
-                assetPath: 'assets/icons/weather.png',
-              ),
-            ),
-            Positioned(
-              bottom: 50,
-              left: 110,
-              child: AnimatedOpacity(
-                opacity: _showBackToTopButton ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 300),
-                child: _showBackToTopButton
-                    ? BackToTopButton(
-                  onPressed: _scrollToTop,
-                )
-                    : const SizedBox.shrink(),
-              ),
-            ),
-          ],
-        );
+    return isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : Stack(
+      children: [
+        GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: ListView.builder(
+            controller: _scrollController,
+            itemCount: 4 + (listPost.isNotEmpty ? listPost.length : 1) + 2,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return _buildFilterSection();
+              } else if (index == 1) {
+                return const SizedBox(height: 10);
+              } else if (index == 2 && isCurrentUser) {
+                return Column(
+                  children: [
+                    const Divider(
+                      color: Colors.grey, // Divider color
+                      thickness: 1, // Divider thickness
+                    ),
+                    _buildButtonsSection(),
+                  ],
+                );
+              } else if (index == 3) {
+                return const SizedBox(height: 10);
+              } else if (index <=
+                  3 + (listPost.isNotEmpty ? listPost.length : 1)) {
+                if (listPost.isNotEmpty) {
+                  final post = listPost[index - 4];
+                  return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: _buildSinglePostItem(post),
+                  );
+                } else {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20.0),
+                    child: Center(
+                      child: Text(
+                        "No posts found",
+                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                      ),
+                    ),
+                  );
+                }
+              } else {
+                return const SizedBox(height: 50);
+              }
+            },
+          ),
+        ),
+        Positioned(
+          bottom: 10,
+          left: 55,
+          child: WeatherIconButton(
+            onPressed: _navigateToWeatherPage,
+            assetPath: 'assets/icons/weather.png',
+          ),
+        ),
+        Positioned(
+          bottom: 50,
+          left: 110,
+          child: AnimatedOpacity(
+            opacity: _showBackToTopButton ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 300),
+            child: _showBackToTopButton
+                ? BackToTopButton(
+              onPressed: _scrollToTop,
+            )
+                : const SizedBox.shrink(),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildFilterSection() {

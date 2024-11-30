@@ -21,65 +21,74 @@ class ViewProfilePage extends StatefulWidget {
 }
 
 class _ViewProfilePageState extends State<ViewProfilePage> {
-
   bool isCurrentUserId = false;
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     fetch();
   }
 
-  Future<void> fetch() async{
+  Future<void> fetch() async {
     String? myUserId = await SecureStorageHelper().readValue(AppConfig.userId);
-    if(myUserId != null){
-      if(myUserId == widget.userId){
-        setState(() {
-          isCurrentUserId = true;
-        });
-      }
-
+    if (myUserId != null && myUserId == widget.userId) {
+      setState(() {
+        isCurrentUserId = true;
+      });
     }
-
   }
 
   @override
   Widget build(BuildContext context) {
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('${widget.user.fullName} Profile', maxLines: 2),
-      ),
-      body: DefaultTabController(
-        length: isCurrentUserId ? 2 : 3,
-        child: Column(
-          children: [
-            TabBar(
-              tabs: [
-                const Tab(text: "Posts"),
-                const Tab(text: "Reviews"),
-                if (!isCurrentUserId) const Tab(text: "Schedules"),
-              ],
-            ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  PostTabBar(
-                    userId: widget.userId,
-                    user: widget.user,
-                    isCurrentUser: isCurrentUserId,
-                  ),
-                  ReviewedTabbar(
-                      userId: widget.userId,
-                  ),
-                  if (!isCurrentUserId)
-                    ScheduleTabbar(
-                      userId: widget.userId,
+    return DefaultTabController(
+      length: isCurrentUserId ? 2 : 3,
+      child: Scaffold(
+        body: NestedScrollView(
+          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+            return [
+              SliverAppBar(
+                title: Text('${widget.user.fullName} Profile', maxLines: 2),
+                pinned: true,
+                floating: true,
+                snap: false,
+                forceElevated: innerBoxIsScrolled,
+                bottom: TabBar(
+                  indicatorColor: Colors.black,
+                  tabs: [
+                    Tab(
+                      icon: Icon(Icons.post_add, color: Colors.blue),
+                      text: "Posts",
                     ),
-                ],
+                    Tab(
+                      icon: Icon(Icons.rate_review, color: Colors.green),
+                      text: "Reviews",
+                    ),
+                    if (!isCurrentUserId)
+                      Tab(
+                        icon: Icon(Icons.schedule, color: Colors.red),
+                        text: "Schedules",
+                      ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ];
+          },
+          body: TabBarView(
+            children: [
+              PostTabBar(
+                userId: widget.userId,
+                user: widget.user,
+                isCurrentUser: isCurrentUserId,
+              ),
+              ReviewedTabbar(
+                userId: widget.userId,
+              ),
+              if (!isCurrentUserId)
+                ScheduleTabbar(
+                  userId: widget.userId,
+                ),
+            ],
+          ),
         ),
       ),
     );

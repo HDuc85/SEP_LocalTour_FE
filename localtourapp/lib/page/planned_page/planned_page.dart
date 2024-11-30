@@ -17,27 +17,48 @@ class PlannedPage extends StatefulWidget {
 class _PlannedPageState extends State<PlannedPage> {
   @override
   Widget build(BuildContext context) {
-    // Fetching all schedules from ScheduleProvider
-
     return DefaultTabController(
       length: 2, // Schedule and History
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Planned Page"),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Schedule'),
-              Tab(text: 'History'),
+        body: NestedScrollView(
+          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+            return [
+              SliverAppBar(
+                title: const Text("Planned Page"),
+                floating: true,
+                pinned: true,
+                bottom: TabBar(
+                  tabs: const [
+                    Tab(
+                      text: 'Schedule',
+                      icon: Icon(Icons.schedule),
+                    ),
+                    Tab(
+                      text: 'History',
+                      icon: Icon(Icons.history),
+                    ),
+                  ],
+                  labelColor: Colors.black, // Selected tab text color
+                  unselectedLabelColor: Colors.black54, // Unselected tab text color
+                  indicatorColor: Colors.black, // Underline indicator color
+                  indicatorWeight: 3.0, // Underline thickness
+                  indicatorPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  labelStyle: const TextStyle(fontWeight: FontWeight.bold), // Selected tab text style
+                  unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal), // Unselected tab text style
+                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+                  splashBorderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+            ];
+          },
+          body: TabBarView(
+            children: [
+              ScheduleTabbar(
+                userId: widget.userId,
+              ),
+              const HistoryTabbar(),
             ],
           ),
-        ),
-        body: TabBarView(
-          children: [
-            ScheduleTabbar(
-              userId: widget.userId,
-            ),
-            const HistoryTabbar(),
-          ],
         ),
       ),
     );

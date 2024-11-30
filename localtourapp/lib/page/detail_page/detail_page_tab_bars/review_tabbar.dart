@@ -116,6 +116,12 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
 
   /// Method to add or update a user's review using the ReviewProvider.
   void addOrUpdateUserReview(int rating, String content, List<File> images, List<File> videos,[int? feedbackId]) async {
+    if (content.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Review content cannot be empty.')),
+      );
+      return;
+    }
     List<File> combinedList = [];
     combinedList.addAll(images);
     combinedList.addAll(videos);
@@ -210,9 +216,12 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                     children: [
                       CircleAvatar(
                         radius: 30,
-                        backgroundImage: NetworkImage(
-                          _userprofile.userProfileImage,
-                        ),
+                        backgroundImage: _userprofile.userProfileImage != ''
+                            ? NetworkImage(_userprofile.userProfileImage)
+                            : null,
+                        child: _userprofile.userProfileImage == ''
+                            ? const Icon(Icons.account_circle, size: 60, color: Colors.grey)
+                            : null,
                       ),
                       const SizedBox(height: 10),
                       Text(
