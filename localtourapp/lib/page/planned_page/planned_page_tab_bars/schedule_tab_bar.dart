@@ -20,6 +20,7 @@ import 'package:intl/intl.dart';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dashed_line.dart';
 
@@ -99,8 +100,40 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     });
   }
 
+  // Save the order
+  Future<void> saveDestinationOrder(int scheduleId, List<DestinationModel> destinations) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> destinationOrder = destinations.map((d) => d.id.toString()).toList();
+    await prefs.setStringList('destination_order_$scheduleId', destinationOrder);
+  }
+
+// Get the saved order
+  Future<List<int>> getSavedDestinationOrder(int scheduleId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? orderList = prefs.getStringList('destination_order_$scheduleId');
+    return orderList?.map(int.parse).toList() ?? [];
+  }
+
+// Apply the saved order
+  void applySavedOrder(List<DestinationModel> destinations, List<int> savedOrder) {
+    destinations.sort((a, b) {
+      int indexA = savedOrder.indexOf(a.id);
+      int indexB = savedOrder.indexOf(b.id);
+      return indexA.compareTo(indexB);
+    });
+  }
+
   Future<void> fetchData() async {
     var listschedule = await _scheduleService.getListSchedule(_userId);
+
+    // For each schedule, apply the saved order
+    for (var schedule in listschedule) {
+      List<int> savedOrder = await getSavedDestinationOrder(schedule.id);
+      if (savedOrder.isNotEmpty) {
+        applySavedOrder(schedule.destinations, savedOrder);
+      }
+    }
+
     setState(() {
       _listScheduleInit = listschedule;
       _listSchedule = listschedule;
@@ -655,59 +688,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       for (int i = 0; i < rowItems.length; i++) {
         DestinationModel destination = rowItems[i];
 
-        // Create the CircleAvatar without GestureDetector
-        Widget circleAvatar = CircleAvatar(
-          radius: circleSize / 2,
-          backgroundImage: NetworkImage(
-            destination.placePhotoDisplay ?? 'assets/images/default.png',
-          ),
-          backgroundColor: Colors.grey,
-        );
-
-        // Wrap the CircleAvatar with LongPressDraggable
-        Widget draggableCircleAvatar = LongPressDraggable<DestinationModel>(
-          data: destination,
-          feedback: Material(
-            color: Colors.transparent,
-            child: circleAvatar,
-          ),
-          childWhenDragging: Opacity(
-            opacity: 0.5,
-            child: circleAvatar,
-          ),
-          child: DragTarget<DestinationModel>(
-            builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
-              return GestureDetector(
-                onTap: () => _showDestinationDetails(destination),
-                child: circleAvatar,
-              );
-            },
-            onWillAccept: (data) {
-              // Optional: Add visual feedback here
-              return true;
-            },
-            onAccept: (draggedDestination) {
-              setState(() {
-                // Swap positions of draggedDestination and destination
-                int oldIndex = destinations.indexOf(draggedDestination);
-                int newIndex = destinations.indexOf(destination);
-
-                if (oldIndex != -1 && newIndex != -1) {
-                  // Remove dragged item
-                  final removedItem = destinations.removeAt(oldIndex);
-                  // Insert dragged item at new position
-                  destinations.insert(newIndex, removedItem);
-
-                  // Optionally, update the schedule's destinations in your backend or state
-                  // For example:
-                  // schedule.destinations = destinations;
-                  // _updateScheduleDestinations(schedule);
-                }
-              });
-            },
-          ),
-        );
-
         // Wrap the Checkbox with GestureDetector for onLongPress to show delete dialog
         Widget checkboxWidget = GestureDetector(
           onLongPress: () => _showDeleteDestinationConfirmationDialog(destination),
@@ -730,17 +710,69 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           ),
         );
 
-        // Build the imageWidget with the updated Checkbox and CircleAvatar
+        // Wrap the CircleAvatar with GestureDetector for onTap to show details
+        Widget circleAvatar = GestureDetector(
+          onTap: () => _showDestinationDetails(destination),
+          child: CircleAvatar(
+            radius: circleSize / 2,
+            backgroundImage: NetworkImage(
+              destination.placePhotoDisplay ?? 'assets/images/default.png',
+            ),
+            backgroundColor: Colors.grey,
+          ),
+        );
+
+        // Build the imageWidget that contains the Checkbox and CircleAvatar
         Widget imageWidget = Column(
           mainAxisSize: MainAxisSize.min, // Take minimum space
           children: [
             if (isCurrentUser)
               checkboxWidget,
-            draggableCircleAvatar,
+            circleAvatar,
           ],
         );
 
-        rowWidgets.add(imageWidget);
+        // Wrap the imageWidget with LongPressDraggable
+        Widget draggable = LongPressDraggable<DestinationModel>(
+          data: destination,
+          feedback: Material(
+            color: Colors.transparent,
+            child: imageWidget, // Drag the whole widget, including Checkbox and CircleAvatar
+          ),
+          childWhenDragging: Opacity(
+            opacity: 0.5,
+            child: imageWidget,
+          ),
+          child: DragTarget<DestinationModel>(
+            builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
+              return imageWidget;
+            },
+            onWillAccept: (data) {
+              // Optional: Add visual feedback here
+              return true;
+            },
+            onAccept: (draggedDestination) async {
+              setState(() {
+                // Swap positions of draggedDestination and destination
+                int oldIndex = destinations.indexOf(draggedDestination);
+                int newIndex = destinations.indexOf(destination);
+
+                if (oldIndex != -1 && newIndex != -1) {
+                  // Remove dragged item
+                  final removedItem = destinations.removeAt(oldIndex);
+                  // Insert dragged item at new position
+                  destinations.insert(newIndex, removedItem);
+                }
+              });
+
+              // Save the new order locally
+              await saveDestinationOrder(schedule.id, destinations);
+            },
+
+          ),
+        );
+
+        rowWidgets.add(draggable);
 
         // Add horizontal dashed connector except after the last item
         if (i < rowItems.length - 1) {
