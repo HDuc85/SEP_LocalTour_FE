@@ -39,8 +39,21 @@ class DestinationModel {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      "id": id,
+      "scheduleId": scheduleId,
+      "placeId": placeId,
+      "startDate": startDate!.toUtc().toIso8601String(),
+      "endDate": endDate!.toUtc().toIso8601String(),
+      "detail": detail,
+      "isArrived": isArrived,
+      "placePhotoDisplay": placePhotoDisplay,
+      "placeName": placeName,
+    };
+  }
 }
 
-List<DestinationModel> mapJsonToScheduleModel(List<dynamic> jsonData) {
+List<DestinationModel> mapJsonToDestinationModel(List<dynamic> jsonData) {
   return jsonData.map((data) => DestinationModel.fromJson(data)).toList();
 }

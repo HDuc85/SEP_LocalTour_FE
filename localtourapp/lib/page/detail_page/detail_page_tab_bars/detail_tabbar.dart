@@ -305,15 +305,20 @@ class _DetailTabbarState extends State<DetailTabbar> {
       children: [
         const Icon(Icons.link, color: Colors.black38),
         const SizedBox(width: 8),
-        GestureDetector(
-          onTap: () {
-            _launchURL(widget.placeDetail.contactLink);
-          },
-          child: Text(
-            widget.placeDetail.contactLink,
-            style: const TextStyle(
-              color: Colors.blue,
-              decoration: TextDecoration.underline,
+        Container(
+          width: 250,
+          child: GestureDetector(
+            onTap: () {
+              _launchURL(widget.placeDetail.contactLink);
+            },
+            child: Text(
+              widget.placeDetail.contactLink,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: const TextStyle(
+                color: Colors.blue,
+                decoration: TextDecoration.underline,
+              ),
             ),
           ),
         ),

@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:intl/intl.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/constants/getListApi.dart';
+import 'package:localtourapp/models/schedule/destination_model.dart';
 import 'package:localtourapp/models/schedule/schedule_model.dart';
 import 'package:localtourapp/services/api_service.dart';
 
@@ -67,8 +69,8 @@ class ScheduleService {
   Future<bool> CreateSchedule(String scheduleName, DateTime? startDate, DateTime? endDate, [bool? isPublic]) async {
     var body = {
       "scheduleName": "$scheduleName",
-      "startDate": startDate != null? startDate.toIso8601String() : null,
-      "endDate": endDate != null? endDate.toIso8601String() : null,
+      "startDate": startDate != null? startDate.toUtc().toIso8601String() : null,
+      "endDate": endDate != null? endDate.toUtc().toIso8601String() : null,
       "isPublic": isPublic ?? false
     };
     
@@ -86,8 +88,8 @@ class ScheduleService {
       {
         "scheduleId": scheduleId,
         "scheduleName": "$scheduleName",
-        "startDate": startDate != null ? startDate.toIso8601String() : null,
-        "endDate": endDate != null ? endDate.toIso8601String() : null,
+        "startDate": startDate != null ? startDate.toUtc().toIso8601String() : null,
+        "endDate": endDate != null ? endDate.toUtc().toIso8601String() : null,
         "isPublic": isPublic ?? false
     };
 
@@ -128,8 +130,8 @@ class ScheduleService {
     var body = {
       "scheduleId": scheduleId,
       "placeId": placeId,
-      "startDate": startDate != null? startDate.toIso8601String() : null,
-      "endDate": endDate != null? endDate.toIso8601String() : null,
+      "startDate": startDate != null? startDate.toUtc().toIso8601String() : null,
+      "endDate": endDate != null? endDate.toUtc().toIso8601String() : null,
       "detail": detail,
       "isArrived": isArrive != null ? isArrive : false
     };
@@ -153,6 +155,71 @@ class ScheduleService {
   Future<bool> CloneSchedule(int scheduleId) async {
     var response = await _apiService.makeRequest('Schedule/cloneSchedule?scheduleId=$scheduleId', "POST");
     if(response.statusCode == 201){
+      return true;
+    }
+    return false;
+  }
+
+  Future<List<DestinationModel>> SuggestSchedule(double long, double lat,DateTime startDate,int day) async {
+    String? languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+
+    var body = {
+      "userLongitude": long,
+      "userLatitude": lat,
+      "languageCode": languageCode,
+      "startDate": startDate.toUtc().toIso8601String(),
+      "days": day
+    };
+    
+    var response = await _apiService.makeRequest('Schedule/suggestSchedule', 'POST',body);
+
+    if(response.statusCode == 200){
+      final jsonResponse = json.decode(response.body);
+      if(jsonResponse['data'] == null){
+        return [];
+      }
+      List<dynamic> jsonData = jsonResponse['data'];
+
+      List<DestinationModel> destinations = jsonData.asMap().entries.map((entry) {
+        int index = entry.key + 1;
+        Map<String, dynamic> item = entry.value;
+
+        return DestinationModel(
+          id: index,
+          scheduleId: -1,
+          placeId: item['placeId'],
+          startDate: DateTime.tryParse(item['startDate']),
+          endDate: DateTime.tryParse(item['endDate']),
+          detail: item['detail'] ?? "",
+          isArrived: item['isArrived'] ?? false,
+          placePhotoDisplay: item['placePhotoDisplay'],
+          placeName: item['placeName'],
+        );
+      }).toList();
+      return destinations;
+    }
+    return [];
+  
+  }
+
+  Future<bool> SaveSuggestSchedule(DateTime startDate, DateTime endDate, List<DestinationModel> listDestination) async {
+
+    var jsonDestination = listDestination.map((e) => e.toJson(),).toList();
+
+    var body = {
+      "scheduleName": "Suggest schedule ${DateFormat('dd-MM-yyyy').format(startDate)} - ${DateFormat('dd-MM-yyyy').format(endDate)}",
+      "startDate": startDate.toUtc().toIso8601String(),
+      "endDate": endDate.toUtc().toIso8601String(),
+      "isPublic": false,
+      "destinations": jsonDestination
+    };
+
+    var userId = await SecureStorageHelper().readValue(AppConfig.userId);
+    
+    var response = await _apiService.makeRequest('Schedule/saveSuggestedSchedule?userId=$userId', "POST", body);
+    final jsonResponse = json.decode(response.body);
+
+    if(response.statusCode == 200){
       return true;
     }
     return false;

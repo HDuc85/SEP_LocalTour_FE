@@ -1,11 +1,15 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:localtourapp/models/schedule/destination.dart';
 import 'package:localtourapp/models/schedule/destination_model.dart';
 import 'package:localtourapp/models/schedule/schedule.dart';
 
 import 'package:localtourapp/models/places/place.dart';
+import 'package:localtourapp/models/schedule/schedule_model.dart';
+import 'package:localtourapp/services/location_Service.dart';
+import 'package:localtourapp/services/schedule_service.dart';
 
 class SuggestSchedulePage extends StatefulWidget {
   final String userId;
@@ -17,8 +21,15 @@ class SuggestSchedulePage extends StatefulWidget {
 }
 
 class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
-  late Schedule suggestedSchedule;
+  final ScheduleService _scheduleService = ScheduleService();
+  final LocationService _locationService = LocationService();
+
+  String suggestedScheduleName = '';
+  late DateTime? StartTime ;
+  late DateTime? EndTime;
   late List<DestinationModel> suggestedDestinations;
+  late Position _currentPosition;
+
   late DateTime currentTime;
   Random random = Random();
 
@@ -33,19 +44,31 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
   void initState() {
     super.initState();
     currentTime = DateTime.now();
-
-    // Generate the suggested schedule and destinations upon initialization
-    _generateSuggestedSchedule();
-  }
-
-  void _generateSuggestedSchedule() {
-
-
-    final DateTime startDate = _calculateStartDate(currentTime, timeslots);
-    final DateTime endDate = startDate.add(const Duration(days: 3)); // A 3-day schedule
-
+    StartTime = DateTime.now().add(Duration(days: 1));
+    StartTime = DateTime(StartTime!.year, StartTime!.month, StartTime!.day, 9,0,0);
+    EndTime = StartTime!.add(Duration(days: 2));
+    suggestedDestinations =[];
+    fetchInit();
 
   }
+
+  Future<void> fetchInit() async {
+    Position? position = await _locationService.getCurrentPosition();
+    double long = position != null ? position.longitude : 106.8096761;
+    double lat =  position != null ? position.latitude : 10.8411123;
+    if(position != null){
+      _currentPosition = position;
+    }else{
+      _currentPosition = new Position(longitude: long, latitude: lat, timestamp: DateTime.timestamp(), accuracy: 1, altitude: 1, altitudeAccuracy: 1, heading: 1, headingAccuracy: 1, speed: 1, speedAccuracy: 1);
+    }
+
+    var suggestlistDestination = await _scheduleService.SuggestSchedule(long, lat, StartTime!, 3);
+
+    setState(() {
+      suggestedDestinations = suggestlistDestination;
+    });
+  }
+
 
   Schedule _createEmptySchedule() {
     return Schedule(
@@ -59,75 +82,54 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
     );
   }
 
-  DateTime _calculateStartDate(DateTime now, List<List<int>> timeslots) {
-    // Determine the first available timeslot today or next day
-    final int currentHour = now.hour;
-    for (var slot in timeslots) {
-      final startHour = slot[0];
-      if (currentHour < startHour || (currentHour == startHour && now.minute < 59)) {
-        // We can start at this timeslot today
-        return DateTime(now.year, now.month, now.day, startHour, 0);
-      }
-    }
-    // If all timeslots for today are past, start the schedule from tomorrow morning at 8:00
-    return DateTime(now.year, now.month, now.day + 1, 8, 0);
-  }
-
-  List<Destination> _generateDestinations(List<Place> userPreferredPlaces, DateTime scheduleStartDate) {
-    // We have 3 days, each day with 3 timeslots = 9 destinations
-    List<Destination> destinations = [];
-    DateTime currentDate = scheduleStartDate;
-
-    for (int day = 0; day < 3; day++) {
-      for (int slotIndex = 0; slotIndex < timeslots.length; slotIndex++) {
-        final slot = timeslots[slotIndex];
-        DateTime slotStart = DateTime(currentDate.year, currentDate.month, currentDate.day, slot[0], 0);
-        DateTime slotEnd = DateTime(currentDate.year, currentDate.month, currentDate.day, slot[1], 0);
-
-        // If this is the first day, adjust if the day is partially past
-        if (day == 0 && slotIndex == 0 && currentDate.isAfter(slotStart)) {
-          // Adjust the slot start time if we've passed the start hour
-          slotStart = _adjustSlotStart(currentDate, slotStart);
-          if (slotStart.isAfter(slotEnd)) {
-            // If the timeslot end is passed, skip to the next slot
-            continue;
-          }
-        }
-
-
-
-        currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day).add(Duration(days: day));
-      }
-      currentDate = currentDate.add(const Duration(days: 1));
-    }
-
-    return destinations;
-  }
-
-  DateTime _adjustSlotStart(DateTime now, DateTime slotStart) {
-    // If current time is after the start of this timeslot,
-    // start from the next available hour or partial timeslot if desired
-    if (now.isAfter(slotStart)) {
-      return now.add(const Duration(hours: 1));
-    }
-    return slotStart;
-  }
-
-  void _onChooseSchedule() {
+  void _onChooseSchedule() async {
     // Add the suggested schedule to the schedule list and destinations
-    if (suggestedSchedule.id == 0) {
+    if(suggestedDestinations.length == 0){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Nothing to save'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+   var result = await _scheduleService.SaveSuggestSchedule(StartTime!, EndTime!, suggestedDestinations);
       // No suggested schedule available
+      if(result){
       Navigator.pop(context);
       return;
     }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Some thing wrong while saving'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
 
-    Navigator.pop(context);
   }
-
-  void _onOtherSchedule() {
-    // Generate another suggested schedule
+  void _onDateSelected(DateTime? newDate, bool isFromDate) {
+    if (isFromDate) {
+      StartTime = newDate != null ? newDate.add(Duration(hours: 9)) : newDate;
+    } else {
+      EndTime = newDate != null ? newDate.add(Duration(hours: 9)) : newDate;
+    }
     setState(() {
-      _generateSuggestedSchedule();
+
+    });
+  }
+  void _onOtherSchedule() async {
+    if(StartTime == null){
+      StartTime = DateTime.now().add(Duration(days: 1));
+    }
+
+    if(EndTime == null){
+      EndTime = StartTime!.add(Duration(days: 3));
+    }
+    int different = EndTime!.difference(StartTime!).inDays +1;
+
+    var suggestlistDestination = await _scheduleService.SuggestSchedule(_currentPosition.longitude, _currentPosition.latitude, StartTime!, different);
+
+    setState(() {
+      suggestedDestinations = suggestlistDestination;
     });
   }
 
@@ -143,7 +145,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
         children: [
           // Schedule Name
           Text(
-            suggestedSchedule.scheduleName,
+            suggestedScheduleName,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
@@ -155,14 +157,32 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
               Column(
                 children: [
                   const Text("Start Date", style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text(DateFormat('yyyy-MM-dd hh:mm').format(suggestedSchedule.startDate ?? DateTime.now())),
+                  _buildDateField("Start Date",
+                    false,
+                    StartTime,
+                        (newDate) {
+                      _onDateSelected(newDate, true);
+                    },
+                    clearable: true,
+                    onClear: () {
+                      _onDateSelected(null, true);
+                    },),
                 ],
               ),
               // End Date
               Column(
                 children: [
                   const Text("End Date", style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text(DateFormat('yyyy-MM-dd hh:mm').format(suggestedSchedule.endDate ?? DateTime.now())),
+                  _buildDateField("End Date",
+                    false,
+                    EndTime,
+                        (newDate) {
+                      _onDateSelected(newDate, false);
+                    },
+                    clearable: true,
+                    onClear: () {
+                      _onDateSelected(null, false);
+                    },),
                 ],
               ),
             ],
@@ -212,6 +232,70 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
     );
   }
 
+  Widget _buildDateField(
+      String labelText,
+      bool isStartDate,
+      DateTime? initialDate,
+      Function(DateTime?) onDateChanged, {
+        bool clearable = false,
+        VoidCallback? onClear,
+        bool isOwner = true,
+      }) {
+    return GestureDetector(
+      onTap: () async {
+        DateTime? selectedDate =
+            initialDate; // Temporarily store the initial date
+        if (isOwner) {
+          // Date picker
+          final DateTime? date = await showDatePicker(
+            context: context,
+            initialDate: selectedDate ?? DateTime.now(),
+            firstDate: DateTime(2000),
+            lastDate: DateTime(2100),
+          );
+
+          // If date is selected, proceed to time selection
+          if (date != null) {
+            selectedDate = DateTime(date.year, date.month, date.day,
+                selectedDate?.hour ?? 0, selectedDate?.minute ?? 0);
+              selectedDate = DateTime(
+                  date.year, date.month, date.day, 0, 0); // Default time
+            onDateChanged(selectedDate);
+          }
+        }
+      },
+      child: Stack(
+        children: [
+          AbsorbPointer(
+            child: SizedBox(
+              height: 30,
+              width: 120,
+              child: TextFormField(
+                decoration: InputDecoration(
+                  hintText: initialDate != null
+                      ? DateFormat('yyyy-MM-dd').format(initialDate)
+                      : labelText,
+                  hintStyle: const TextStyle(fontSize: 12),
+                  border: const OutlineInputBorder(),
+                  suffixIcon:(initialDate == null) ? Icon(Icons.calendar_today) : null,
+                ),
+              ),
+            ),
+          ),
+          if (clearable && initialDate != null)
+            Positioned(
+              right: 5,
+              top: 3,
+              child: GestureDetector(
+                onTap: onClear,
+                child: Icon(Icons.close, size: 22, color: Colors.grey[600]),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDestinationList(BuildContext context, List<DestinationModel> destinations) {
 
     // Group destinations by day
@@ -252,8 +336,8 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
                     leading: dest.placePhotoDisplay != null
                         ? Image.network(
                       dest.placePhotoDisplay!,
-                      width: 60,
-                      height: 60,
+                      width: 70,
+                      height: 70,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return const Icon(Icons.photo);

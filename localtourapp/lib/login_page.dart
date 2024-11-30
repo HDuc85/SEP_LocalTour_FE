@@ -138,7 +138,7 @@ class _LoginPageState extends State<LoginPage> {
                       border: const OutlineInputBorder(),
                       errorText: phoneError ? phoneErrorText : null,
                     ),
-                    keyboardType: TextInputType.phone,
+
                   ),
                   const SizedBox(height: 20),
 

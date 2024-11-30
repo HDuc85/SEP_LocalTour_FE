@@ -72,7 +72,6 @@ class _BookmarkPageState extends State<BookmarkPage> {
     final fetchedmarkData = await _markplaceService.getAllMarkPlace();
     setState(() {
       markPlaces = fetchedmarkData;
-
     });
   }
 

@@ -41,7 +41,7 @@ class ScheduleModel {
       startDate: json['startDate'] != null ?DateTime.parse(json['startDate']) : null,
       endDate: json['endDate'] != null ?DateTime.parse(json['endDate']) : null,
       createdDate: DateTime.parse(json['createdDate']),
-      status: json['status'],
+      status: json['status']?? '',
       isPublic: json['isPublic'],
       destinations: (json['destinations'] as List)
           .map((e) => DestinationModel.fromJson(e))
