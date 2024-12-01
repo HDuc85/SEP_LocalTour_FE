@@ -83,6 +83,20 @@ class TagService {
     }
   }
 
+  Future<bool> UpdateTagsPreferencs(List<int> tagIds) async{
 
+    final Map<String, dynamic> body = {
+      "tagIds": tagIds
+    };
+    var userId = await SecureStorageHelper().readValue(AppConfig.userId);
+
+    final response = await apiService.makeRequest('UserPreferenceTags/$userId', 'PUT',body);
+    if(response.statusCode == 200){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
 }
 

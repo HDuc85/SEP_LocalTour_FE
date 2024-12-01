@@ -497,7 +497,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                 style: TextStyle(
                                   color: Colors.white, // Màu chữ đỏ
                                   fontWeight: FontWeight.w600, // Chữ đậm
-                                  fontSize: 16,
+                                  fontSize: 15,
                                 ),
                               ),
                             ],

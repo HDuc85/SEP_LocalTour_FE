@@ -75,6 +75,7 @@ class ApiService {
       return true;
     }
     await storage.saveBoolValue(AppConfig.isLogin, false);
+    await storage.deleteValue(AppConfig.userId);
     return false;
   }
 

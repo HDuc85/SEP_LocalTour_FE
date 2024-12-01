@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart'; // Needed for TapGestureRecognizer
 import 'package:localtourapp/config/appConfig.dart';
@@ -61,8 +63,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   Map<int, bool> scheduleVisibility = {};
   final Set<int> _editingScheduleIds = {};
   bool isCurrentUser = false;
-  late List<DestinationModel> _listDestination;
-
+  bool isDragging = false;
   @override
   void initState() {
     super.initState();
@@ -280,6 +281,12 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     setState(() {});
   }
 
+  void _swapDestination(DestinationModel old, DestinationModel newD) async {
+    var result = await _scheduleService.UpdateDestination(old.id, old.scheduleId, newD.placeId, newD.startDate, newD.endDate, newD.detail, newD.isArrived);
+    var resuldt = await _scheduleService.UpdateDestination(newD.id, newD.scheduleId, old.placeId, old.startDate, old.endDate, old.detail, old.isArrived);
+    fetchData();
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -325,6 +332,40 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             assetPath: 'assets/icons/weather.png',
           ),
         ),
+        Positioned(
+            bottom: 30,
+            left: MediaQuery.of(context).size.width/2.3,
+            child: isDragging ? Align(
+          alignment: Alignment.bottomCenter,
+          child: DragTarget<DestinationModel>(
+            builder: (context, candidateData, rejectedData) {
+              return Container(
+                margin: EdgeInsets.only(bottom: 20),
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: candidateData.isNotEmpty
+                      ? Colors.redAccent
+                      : Colors.grey.shade400,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.delete,
+                  color: Colors.white,
+                  size: 40,
+                ),
+              );
+            },
+            onWillAccept: (data) {
+              return true;
+            },
+            onAccept: (data) {
+              setState(() {
+                _showDeleteDestinationConfirmationDialog(data);
+              });
+            },
+          ),
+        ) : SizedBox()),
         Positioned(
           bottom: 12,
           left: 110,
@@ -665,11 +706,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
         child: Text('No destinations available.'),
       );
     }
-
     List<Widget> rows = [];
     int index = 0;
     int columns = 3;
-    double connectorWidth = 78; // Horizontal connector width
     double connectorHeight = 40; // Vertical connector height
     double circleSize = 50; // Diameter of CircleAvatar
 
@@ -713,12 +752,22 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
         // Wrap the CircleAvatar with GestureDetector for onTap to show details
         Widget circleAvatar = GestureDetector(
           onTap: () => _showDestinationDetails(destination),
-          child: CircleAvatar(
-            radius: circleSize / 2,
-            backgroundImage: NetworkImage(
-              destination.placePhotoDisplay ?? 'assets/images/default.png',
-            ),
-            backgroundColor: Colors.grey,
+          child: Column(
+            children: [
+              CircleAvatar(
+                radius: circleSize / 2,
+                backgroundImage: NetworkImage(
+                  destination.placePhotoDisplay ?? 'assets/images/default.png',
+                ),
+                backgroundColor: Colors.grey,
+              ),
+              Container(
+                width: 70,
+                child: Text(destination.placeName ,
+                            maxLines: 1,
+                overflow: TextOverflow.ellipsis,),
+              )
+            ],
           ),
         );
 
@@ -743,10 +792,21 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             opacity: 0.5,
             child: imageWidget,
           ),
+            onDragStarted: () {
+              setState(() {
+                isDragging = true;
+              });
+            },
+          onDragEnd: (_) {
+            setState(() {
+              isDragging = false;
+            });
+          },
           child: DragTarget<DestinationModel>(
             builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
               return imageWidget;
             },
+
             onWillAccept: (data) {
               // Optional: Add visual feedback here
               return true;
@@ -759,9 +819,19 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
 
                 if (oldIndex != -1 && newIndex != -1) {
                   // Remove dragged item
-                  final removedItem = destinations.removeAt(oldIndex);
-                  // Insert dragged item at new position
-                  destinations.insert(newIndex, removedItem);
+                  _swapDestination(draggedDestination,destination);
+                  // if(oldIndex > newIndex) {
+                  //   oldIndex = oldIndex + newIndex;
+                  //   newIndex = oldIndex - newIndex;
+                  //   oldIndex = oldIndex - newIndex;
+                  // }
+                  // final removedItem = destinations.removeAt(oldIndex);
+                  // destinations.insert(newIndex-1, removedItem);
+                  //
+                  // final removedNewItem = destinations.removeAt(newIndex);
+                  // destinations.insert(oldIndex, removedNewItem);
+
+
                 }
               });
 
@@ -778,11 +848,15 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
         if (i < rowItems.length - 1) {
           rowWidgets.add(
             Container(
+              padding: isEvenRow ? EdgeInsets.only(top: circleSize/1.5) : EdgeInsets.only(top: circleSize/1.5),
               height: circleSize, // Same height as CircleAvatar
               alignment: Alignment.center, // Center vertically
-              child: DashedLine(
-                isHorizontal: true,
-                length: connectorWidth,
+              child: Transform.rotate(
+                angle: isEvenRow ? pi : 0,
+                child: DashedLine(
+                  isHorizontal: true,
+                  length: MediaQuery.of(context).size.width / 7.1,
+                ),
               ),
             ),
           );
@@ -795,10 +869,13 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       }
 
       // Build the row widget
-      Widget rowWidget = Row(
+      Widget rowWidget = Container(
+        padding: !isEvenRow ? EdgeInsets.only(left: 13) : EdgeInsets.only(right: 13),
+        child: Row(
         mainAxisAlignment: isEvenRow ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center, // Align children at center vertically
-        children: rowWidgets,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: rowWidgets,
+        ),
       );
 
       rows.add(rowWidget);
@@ -807,18 +884,15 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       if (index + columns < destinations.length) {
         rows.add(
           Row(
+            mainAxisAlignment: !isEvenRow ? MainAxisAlignment.end : MainAxisAlignment.start,
             children: [
-              Expanded(
-                child: Align(
-                  alignment: isEvenRow ? Alignment.centerLeft : Alignment.centerRight,
-                  child: Container(
-                    width: circleSize,
-                    alignment: Alignment.center,
-                    child: DashedLine(
-                      isHorizontal: false,
-                      length: connectorHeight,
-                    ),
-                  ),
+              Container(
+                padding:!isEvenRow? EdgeInsets.only(right: circleSize/1.1) : EdgeInsets.only(left: circleSize/1.1),
+                width: circleSize,
+                alignment: Alignment.center,
+                child: DashedLine(
+                  isHorizontal: false,
+                  length: connectorHeight,
                 ),
               ),
             ],
@@ -828,7 +902,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
 
       index += columns;
     }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: rows,

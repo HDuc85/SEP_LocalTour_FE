@@ -93,7 +93,7 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
     }
     formattedDistance += ' km';
     return Container(
-      height: 70,
+      height: 90,
       color: Colors.white, // Set background color to white
       padding: const EdgeInsets.only(right: 10), // Optional padding
       child: Row(
@@ -120,19 +120,25 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      widget.placeName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                    Expanded(
+
+                      child: Text(
+                        widget.placeName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     if(widget.event != null)
                     if(differentDay(widget.event!.endDate)  > 1)
-                      Text("${differentDay(widget.event!.endDate)} ${differentDay(widget.event!.endDate) > 1 ? 'DAYS' : 'DAY'} LEFT" ,
+                      Text("Ongoing" ,
                         style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold, color: Colors.green),)
+                    else if(differentDay(widget.event!.startDate!) > 0)
+                      Text("COMING ${differentDay(widget.event!.startDate)} ${differentDay(widget.event!.startDate) > 1 ? 'DAYS' : 'DAY'}" ,
+                        style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold, color: Colors.red,))
                   ],
                 ),
                 Text(
@@ -165,23 +171,35 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
                     ),
                   ],
                 ) : 
-                Row(children: [
-                  Image.asset(
-                    'assets/icons/logo.png',
-                    width: 16,
-                    height: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  Text('Start ${DateFormat("h:mma dd-MM-yyyy").format(widget.event!.startDate)}', style: TextStyle(color:differentDay(widget.event!.startDate!) < 0? Colors.grey: Colors.red),),
-                  const Spacer(),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on, color: Colors.red, size: 16),
+                Column(
+                  children: [
+                    Row(children: [
+                      Image.asset(
+                        'assets/icons/logo.png',
+                        width: 16,
+                        height: 16,
+                      ),
                       const SizedBox(width: 4),
-                      Text(formattedDistance),
-                    ],
-                  ),
-                ],)
+                      Text('Start ${DateFormat("h:mma dd-MM-yyyy").format(widget.event!.startDate)}', style: TextStyle(color:differentDay(widget.event!.startDate!) < 0? Colors.grey: Colors.red),),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on, color: Colors.red, size: 16),
+                          const SizedBox(width: 4),
+                          Text(formattedDistance),
+                        ],
+                      ),
+                    ],),
+                    Row(
+                      children: [
+                        SizedBox(width: 20,),
+                        Text('End   ${DateFormat("h:mma dd-MM-yyyy").format(widget.event!.endDate)}', style: TextStyle(color:differentDay(widget.event!.endDate!) < 0? Colors.grey: Colors.green),),
+                        Spacer(),
+                      ],
+                    ),
+                  ],
+                )
+
                 ,
               ],
             ),
