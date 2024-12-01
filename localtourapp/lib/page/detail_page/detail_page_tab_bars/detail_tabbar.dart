@@ -7,10 +7,11 @@ import 'package:localtourapp/constants/getListApi.dart';
 import 'package:localtourapp/models/Tag/tag_model.dart';
 import 'package:localtourapp/models/event/event_model.dart';
 import 'package:localtourapp/models/places/place_detail_model.dart';
+import 'package:localtourapp/page/my_map/features/map_screen/maps_screen.dart';
 import 'package:vietmap_flutter_navigation/models/options.dart';
 import '../../../base/custom_button.dart';
 import '../../../base/weather_icon_button.dart';
-import '../../my_map/map_page.dart';
+import '../../my_map/features/routing_screen/routing_screen.dart';
 import '../../search_page/search_page.dart';
 import '../detail_card/activity_card.dart';
 import '../detail_card/activity_card_info.dart';
@@ -318,7 +319,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => MapPage(
+        builder: (context) => RoutingScreen(
           destinationLatitude: widget.placeDetail.latitude,
           destinationLongitude: widget.placeDetail.longitude,
         ),

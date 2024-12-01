@@ -29,12 +29,7 @@ class _BasePageState extends State<BasePage> {
         title: Text(widget.title!,maxLines: 2,style: const TextStyle(fontSize: 16),),
       )
           : null,
-      body: GestureDetector(
-        onTap: () {
-          // Implement any tap-related functionality if needed
-        },
-        child: widget.body,
-      ),
+      body: widget.body,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: widget.currentIndex,
         onTap: widget.onTabTapped,

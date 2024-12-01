@@ -197,7 +197,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                           ),
                         );
                       },
-                      child: const Text("See all"),
+                      child: const Text("See all", style: TextStyle(color: Colors.blue),),
                     ),
                   ],
                 ),

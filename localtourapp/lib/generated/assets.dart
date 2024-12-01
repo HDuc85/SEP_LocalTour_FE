@@ -116,7 +116,7 @@ class Assets {
   static const String modelsRoles = 'lib/models/roles.dart';
   static const String modelsTraveledplace = 'lib/models/traveledplace.dart';
   static const String modelsWeatherModel = 'lib/weather/models/weather_model.dart';
-  static const String myMapMapPage = 'lib/page/my_map/map_page.dart';
+  static const String myMapMapPage = 'lib/page/my_map/map_screen.dart';
   static const String navigationSymbolArriveLeft = 'assets/navigation_symbol/arrive_left.svg';
   static const String navigationSymbolArriveRight = 'assets/navigation_symbol/arrive_right.svg';
   static const String navigationSymbolArriveStraight = 'assets/navigation_symbol/arrive_straight.svg';

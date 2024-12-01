@@ -603,8 +603,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 8),
           // Toggle buttons for Nearest and Featured
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          Container(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

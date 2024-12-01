@@ -4,11 +4,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:localtourapp/models/event/event_model.dart';
+import 'package:localtourapp/page/my_map/features/map_screen/maps_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vietmap_flutter_navigation/models/options.dart';
 import 'package:vietmap_flutter_navigation/navigation_plugin.dart';
 
-import '../my_map/map_page.dart';
+import '../my_map/features/routing_screen/routing_screen.dart';
 
 class EventDetailPage extends StatefulWidget {
   final EventModel eventModel;
@@ -249,7 +250,7 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => MapPage(
+        builder: (context) => RoutingScreen(
           destinationLatitude: widget.eventModel.latitude,
           destinationLongitude: widget.eventModel.longitude,
         ),

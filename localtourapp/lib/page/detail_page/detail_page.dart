@@ -285,17 +285,19 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
                           ),
                           tabs: [
                             Container(
-                              color: Colors.blue[100], // Background color for 'Detail' tab
+                              height: 60, // Increase the height of each tab
+                              color: Colors.blue[100],
                               child: const Tab(
                                 icon: Icon(Icons.details),
-                                text: '          Detail          ',
+                                text: 'Detail',
                               ),
                             ),
                             Container(
-                              color: Colors.green[100], // Background color for 'Review' tab
+                              height: 60, // Increase the height of each tab
+                              color: Colors.green[100],
                               child: const Tab(
                                 icon: Icon(Icons.reviews),
-                                text: '          Review          ',
+                                text: 'Review',
                               ),
                             ),
                           ],
