@@ -1,13 +1,16 @@
 // lib/page/detail_page/detail_page_tab_bars/detail_tabbar.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/constants/getListApi.dart';
 import 'package:localtourapp/models/Tag/tag_model.dart';
 import 'package:localtourapp/models/event/event_model.dart';
 import 'package:localtourapp/models/places/place_detail_model.dart';
+import 'package:vietmap_flutter_navigation/models/options.dart';
 import '../../../base/custom_button.dart';
 import '../../../base/weather_icon_button.dart';
+import '../../my_map/map_page.dart';
 import '../../search_page/search_page.dart';
 import '../detail_card/activity_card.dart';
 import '../detail_card/activity_card_info.dart';
@@ -44,15 +47,19 @@ class DetailTabbar extends StatefulWidget {
 }
 
 class _DetailTabbarState extends State<DetailTabbar> {
-
+  late MapOptions _navigationOption;
   bool isLoading = true;
-
   List<ActivityCardInfo> activityCards = [];
 
 
   @override
   void initState() {
     super.initState();
+    _navigationOption = MapOptions(
+      simulateRoute: false,
+      apiKey: dotenv.get('VIETMAP_API_KEY'),
+      mapStyle: dotenv.get('VIETMAP_MAP_STYLE_URL'),
+    );
   }
 
   @override
@@ -274,21 +281,51 @@ class _DetailTabbarState extends State<DetailTabbar> {
   Widget _buildMapImage() {
     final double latitude = widget.placeDetail.latitude;
     final double longitude = widget.placeDetail.longitude;
-    final String apiKey =  AppConfig.vietMapApiKey;
+    final String apiKey = AppConfig.vietMapApiKey;
     final String mapStyleUrl = AppConfig.vietMapStyleUrl;
 
-    return SizedBox(
-      width: double.infinity,
-      height: 150,
-      child: Image.network(
-        'https://maps.vietmap.vn/maps/api/staticmap?center=$latitude,$longitude&zoom=15&size=400x300&key=$apiKey&style=$mapStyleUrl',
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(child: Text('Map not available'));
-        },
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: GestureDetector(
+        onTap: _openMaps,
+        child: Container(
+          height: 150,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.5),
+                spreadRadius: 2,
+                blurRadius: 5,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.asset(
+              'assets/images/map_placeholder.png',
+              fit: BoxFit.cover,
+              width: double.infinity,
+            ),
+          ),
+        ),
       ),
     );
   }
+
+  void _openMaps() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MapPage(
+          destinationLatitude: widget.placeDetail.latitude,
+          destinationLongitude: widget.placeDetail.longitude,
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildContactRow() {
     return Row(

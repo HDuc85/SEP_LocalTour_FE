@@ -4,6 +4,7 @@ class EventModel {
   final double latitude;
   final double longitude;
   final String? eventPhoto;
+  final String? placePhoto;
   final String eventName;
   final double distance;
   final String description;
@@ -17,6 +18,7 @@ class EventModel {
     required this.latitude,
     required this.longitude,
     this.eventPhoto,
+    this.placePhoto,
     required this.eventName,
     required this.distance,
     required this.description,
@@ -32,6 +34,7 @@ class EventModel {
       latitude: json['latitude'] as double,
       longitude: json['longitude'] as double,
       eventPhoto: json['eventPhoto'] as String?,
+      placePhoto: json['placePhoto'] as String?,
       eventName: json['eventName'] as String,
       distance: (json['distance'] as num).toDouble(),
       description: json['description'] as String,
