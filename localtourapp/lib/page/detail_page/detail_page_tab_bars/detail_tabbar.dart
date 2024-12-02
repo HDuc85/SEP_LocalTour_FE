@@ -1,14 +1,10 @@
-// lib/page/detail_page/detail_page_tab_bars/detail_tabbar.dart
-
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/constants/getListApi.dart';
 import 'package:localtourapp/models/Tag/tag_model.dart';
 import 'package:localtourapp/models/event/event_model.dart';
 import 'package:localtourapp/models/places/place_detail_model.dart';
-import 'package:localtourapp/page/my_map/features/map_screen/maps_screen.dart';
-import 'package:vietmap_flutter_navigation/models/options.dart';
+import 'package:vietmap_flutter_gl/vietmap_flutter_gl.dart';
 import '../../../base/custom_button.dart';
 import '../../../base/weather_icon_button.dart';
 import '../../my_map/features/routing_screen/routing_screen.dart';
@@ -48,7 +44,7 @@ class DetailTabbar extends StatefulWidget {
 }
 
 class _DetailTabbarState extends State<DetailTabbar> {
-  late MapOptions _navigationOption;
+  VietmapController? _mapController;
   bool isLoading = true;
   List<ActivityCardInfo> activityCards = [];
 
@@ -56,11 +52,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
   @override
   void initState() {
     super.initState();
-    _navigationOption = MapOptions(
-      simulateRoute: false,
-      apiKey: dotenv.get('VIETMAP_API_KEY'),
-      mapStyle: dotenv.get('VIETMAP_MAP_STYLE_URL'),
-    );
+
   }
 
   @override
@@ -282,36 +274,40 @@ class _DetailTabbarState extends State<DetailTabbar> {
   Widget _buildMapImage() {
     final double latitude = widget.placeDetail.latitude;
     final double longitude = widget.placeDetail.longitude;
-    final String apiKey = AppConfig.vietMapApiKey;
     final String mapStyleUrl = AppConfig.vietMapStyleUrl;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: GestureDetector(
-        onTap: _openMaps,
-        child: Container(
-          height: 150,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.5),
-                spreadRadius: 2,
-                blurRadius: 5,
-                offset: const Offset(0, 3),
-              ),
-            ],
+    return Container(
+        width: MediaQuery.of(context).size.width,
+        height: 200,
+        child: Stack(
+          children: [
+    VietmapGL(
+      styleString:
+      mapStyleUrl,
+      initialCameraPosition:
+      CameraPosition(target: LatLng(latitude, longitude), zoom: 14),
+      trackCameraPosition: true,
+      onMapCreated: (VietmapController controller) {
+        setState(() {
+          _mapController = controller;
+        });
+      },
+      onMapClick: (point, coordinates) {
+        _openMaps();
+      },
+    ),
+    if (_mapController != null)
+      MarkerLayer(
+        mapController: _mapController!,
+        markers: [
+          Marker(
+            latLng: LatLng(latitude, longitude), // Tọa độ marker
+            child: Icon(Icons.location_on, color: Colors.red, size: 40),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              'assets/images/map_placeholder.png',
-              fit: BoxFit.cover,
-              width: double.infinity,
-            ),
-          ),
-        ),
+        ],
       ),
+          ],
+        ),
     );
   }
 

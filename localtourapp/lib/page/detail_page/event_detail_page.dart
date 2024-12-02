@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/models/event/event_model.dart';
 import 'package:localtourapp/page/my_map/features/map_screen/maps_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vietmap_flutter_gl/vietmap_flutter_gl.dart';
 import 'package:vietmap_flutter_navigation/models/options.dart';
 import 'package:vietmap_flutter_navigation/navigation_plugin.dart';
 
@@ -24,7 +26,7 @@ class EventDetailPage extends StatefulWidget {
 
 class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMixin{
   bool _isDescriptionExpanded = false;
-  late MapOptions _navigationOption;
+  VietmapController? _vietmapController;
   String _getEventStatus() {
     final now = DateTime.now();
     if (widget.eventModel.startDate.isAfter(now)) {
@@ -39,11 +41,6 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
   @override
   void initState() {
     super.initState();
-    _navigationOption = MapOptions(
-      simulateRoute: false,
-      apiKey: dotenv.get('VIETMAP_API_KEY'),
-      mapStyle: dotenv.get('VIETMAP_MAP_STYLE_URL'),
-    );
   }
 
   @override
@@ -166,7 +163,7 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
             // Bản đồ
             const SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -212,29 +209,37 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: GestureDetector(
-                onTap: _openMaps,
-                child: Container(
-                  height: 150,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.5),
-                        spreadRadius: 2,
-                        blurRadius: 5,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      'assets/images/map_placeholder.png',
-                      fit: BoxFit.cover,
-                      width: double.infinity,
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                height: 200,
+                child: Stack(
+                  children: [
+                    VietmapGL(
+                      styleString:
+                      AppConfig.vietMapStyleUrl,
+                      initialCameraPosition:
+                      CameraPosition(target: LatLng(widget.eventModel.latitude, widget.eventModel.longitude), zoom: 14),
+                      trackCameraPosition: true,
+                      onMapCreated: (VietmapController controller) {
+                        setState(() {
+                          _vietmapController = controller;
+                        });
+                      },
+                      onMapClick: (point, coordinates) {
+                        _openMaps();
+                      },
                     ),
-                  ),
+                    if (_vietmapController != null)
+                      MarkerLayer(
+                        mapController: _vietmapController!,
+                        markers: [
+                          Marker(
+                            latLng: LatLng(widget.eventModel.latitude, widget.eventModel.longitude), // Tọa độ marker
+                            child: Icon(Icons.location_on, color: Colors.red, size: 40),
+                          ),
+                        ],
+                      ),
+                  ],
                 ),
               ),
             ),

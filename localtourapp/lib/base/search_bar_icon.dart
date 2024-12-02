@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/models/event/event_model.dart';
+import 'package:localtourapp/page/detail_page/event_detail_page.dart';
 import 'package:localtourapp/services/event_service.dart';
 
 import '../constants/getListApi.dart';
@@ -178,15 +179,14 @@ class _SearchBarIconState extends State<SearchBarIcon> {
                             ),
                           );
                         }else {
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (_) => DetailPage(
-                          //       placeId: placeItem!.placeId,
-                          //     ),
-                          //   ),
-                          // );
-                          print("object");
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EventDetailPage(
+                                eventModel: eventItem!,
+                              ),
+                            ),
+                          );
                         }
 
                       }

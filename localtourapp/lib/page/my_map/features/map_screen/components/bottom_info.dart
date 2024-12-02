@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:intl/intl.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
+import 'package:localtourapp/models/HomePage/placeCard.dart';
+import 'package:localtourapp/models/event/event_model.dart';
+import 'package:localtourapp/models/places/place_detail_model.dart';
+import '../../../../../full_media/full_place_media_viewer.dart';
+import '../../../../../models/media_model.dart';
 import '../../../components/map_action_button.dart';
 import '../../../constants/colors.dart';
 import '../../../constants/route.dart';
@@ -9,31 +17,33 @@ import '../bloc/map_bloc.dart';
 import '../bloc/map_state.dart';
 
 class BottomSheetInfo extends StatelessWidget {
-  const BottomSheetInfo({super.key, required this.onClose});
+  final bool? isEvent;
+  final EventModel? eventModel;
+  final PlaceCardModel? placeCardModel;
+  final String? language;
+  final PlaceDetailModel? detailModel;
+  const BottomSheetInfo({super.key, required this.onClose, this.eventModel,this.placeCardModel,this.isEvent, this.language, this.detailModel,});
   final VoidCallback onClose;
+
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MapBloc, MapState>(
-      buildWhen: (previous, current) =>
-          current is MapStateGetPlaceDetailSuccess ||
-          current is MapStateGetLocationFromCoordinateSuccess,
-      builder: (_, state) {
-        if (state is MapStateGetPlaceDetailSuccess) {
           return Container(
-            height: 200,
+            height: 350,
             width: double.infinity,
-            margin: const EdgeInsets.symmetric(horizontal: 15),
-            padding: const EdgeInsets.only(bottom: 10),
+            margin: const EdgeInsets.only(left: 15,right: 15),
+            padding: const EdgeInsets.only(bottom: 0),
             decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(20), topRight: Radius.circular(20)),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: GestureDetector(
+            onVerticalDragStart: (details) {
+            },
+            child: ListView(
+              physics: const ClampingScrollPhysics(),
               children: [
-                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -47,141 +57,384 @@ class BottomSheetInfo extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: Text(
-                    state.response.name ?? '',
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(state.response.getAddress(),
-                    style: const TextStyle(fontSize: 16)),
-                const Spacer(),
                 Row(
                   children: [
-                    MapActionButton(
-                        onPressed: () async {
-                          EasyLoading.show();
-                          Navigator.pushNamed(context, Routes.routingScreen,
-                              arguments: RoutingParamsModel.fromVietmapModel(
-                                  state.response, false));
-                        },
-                        child: const Row(
-                          children: [
-                            Icon(Icons.directions, color: Colors.white),
-                            SizedBox(width: 5),
-                            Text('Chỉ đường')
-                          ],
-                        )),
-                    const SizedBox(width: 10),
-                    MapActionButtonOutline(
-                        onPressed: () {
-                          Navigator.pushNamed(context, Routes.routingScreen,
-                              arguments: RoutingParamsModel.fromVietmapModel(
-                                  state.response, true));
-                        },
-                        child: const Row(
-                          children: [
-                            Icon(Icons.navigation_sharp, color: vietmapColor),
-                            SizedBox(width: 5),
-                            Text('Bắt đầu',
-                                style: TextStyle(color: vietmapColor)),
-                          ],
-                        ))
-                  ],
-                )
-              ],
-            ),
-          );
-        }
-        if (state is MapStateGetLocationFromCoordinateSuccess) {
-          return Container(
-            height: 200,
-            width: double.infinity,
-            margin: const EdgeInsets.symmetric(horizontal: 15),
-            padding: const EdgeInsets.only(bottom: 10),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 50,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
+                    Flexible(
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: Text(
+                              (isEvent!)? eventModel!.eventName : placeCardModel!.placeName ,
+                              style: const TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.bold),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 230,
+                                child: !isEvent! ? _TimeString() :
+                                Text(language == 'vi' ? 'Tại ${eventModel!.placeName} ' : 'At ${eventModel!.placeName}',
+                                  style: const TextStyle(fontSize: 11, color: Colors.deepOrangeAccent),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 225,
+                                child: Text( isEvent! ? detailModel!.address : placeCardModel!.address,
+                                    style: const TextStyle(fontSize: 12,color: Colors.grey),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
+                    Container(
+                      width: 100,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(11),
+                        image: DecorationImage(
+                          image: NetworkImage(isEvent! ? eventModel!.eventPhoto! : placeCardModel!.photoDisplayUrl),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    )
                   ],
                 ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: Text(
-                    state.response.name ?? '',
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                SizedBox(height: 5,),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    isEvent! ?
+                    _EventStatusString()
+                      : buildStarRating(placeCardModel!.rateStar),
+                    SizedBox(width: 20,),
+                    Text( isEvent! ? FormatDistance(eventModel!.distance) :  FormatDistance(placeCardModel!.distance),
+                        style: const TextStyle(fontSize: 16)),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                Text(state.response.address ?? '',
-                    style: const TextStyle(fontSize: 16)),
-                const Spacer(),
+                const SizedBox(height: 10,),
                 Row(
                   children: [
                     MapActionButton(
-                        onPressed: () async {
-                          EasyLoading.show();
+                        onPressed: ()  {
+                          RoutingParamsModel state = RoutingParamsModel(isStartNavigation: true,lat: detailModel!.latitude,lng: detailModel!.longitude);
+
                           Navigator.pushNamed(context, Routes.routingScreen,
                               arguments: RoutingParamsModel.fromVietmapModel(
-                                  state.response, false));
+                                  state, false));
                         },
-                        child: const Row(
+                        child: Row(
                           children: [
-                            Icon(Icons.directions, color: Colors.white),
-                            SizedBox(width: 5),
-                            Text('Chỉ đường')
+                            const Icon(Icons.directions, color: Colors.blue),
+                            const SizedBox(width: 5),
+                            Text(language! == 'vi' ? 'Chỉ đường' : 'Directions')
                           ],
                         )),
                     const SizedBox(width: 10),
                     MapActionButtonOutline(
                         onPressed: () {
+                          RoutingParamsModel state = RoutingParamsModel(isStartNavigation: true,lat: detailModel!.latitude,lng: detailModel!.longitude);
                           Navigator.pushNamed(context, Routes.routingScreen,
                               arguments: RoutingParamsModel.fromVietmapModel(
-                                  state.response, true));
+                                  state, true));
                         },
-                        child: const Row(
+                        child: Row(
                           children: [
                             Icon(Icons.navigation_sharp, color: vietmapColor),
                             SizedBox(width: 5),
-                            Text('Bắt đầu',
+                            Text(language! == 'vi' ? 'Bắt đầu' : 'Start',
                                 style: TextStyle(color: vietmapColor)),
                           ],
                         ))
                   ],
+                ),
+                SizedBox(height: 10,),
+                Stack(
+                  children: [
+                    detailModel!.placeMedias.isNotEmpty
+                        ? GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => FullScreenPlaceMediaViewer(
+                              mediaList: detailModel!.placeMedias,
+                              initialIndex: 0,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Image.network(
+                        detailModel!.placeMedias[0].url,
+                        width: double.infinity,
+                        height: 250, // Adjust height as needed
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                        const Center(child: Text('No media available')),
+                      ),
+                    )
+                        : const Center(child: Text('No media available')),
+                    // Positioned WeatherIconButton
+                  ],
+                ),
+                const SizedBox(height: 1),
+                // Thumbnails Section
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: detailModel!.placeMedias.length > 1
+                      ? detailModel!.placeMedias.skip(1).take(4).toList().asMap().entries.map((entry) {
+                    int index = entry.key;
+                    MediaModel media = entry.value;
+
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenPlaceMediaViewer(
+                                mediaList: detailModel!.placeMedias,
+                                initialIndex: index + 1,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Stack(
+                          children: [
+                            Image.network(
+                              media.url,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: 77.5,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                    width: double.infinity,
+                                    height: 77.5,
+                                    color: Colors.grey,
+                                    child: const Icon(Icons.image, color: Colors.white),
+                                  ),
+                            ),
+                            if (index == 3 && detailModel!.placeMedias.length > 5)
+                              Container(
+                                color: Colors.black.withOpacity(0.5),
+                                height: 77.5,
+                                child: const Center(
+                                  child: Text(
+                                    'See more',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList()
+                      : [],
                 )
               ],
-            ),
+            ),)
           );
-        }
-        return const SizedBox.shrink();
-      },
-    );
+
   }
+  String FormatDistance(double distance){
+    String formattedDistance = '${distance.toStringAsFixed(1)}';
+    if (formattedDistance.endsWith('.0')) {
+      formattedDistance = formattedDistance.substring(0, formattedDistance.length - 2);
+    }
+    formattedDistance += ' km';
+    return formattedDistance;
+  }
+
+
+  Widget buildStarRating(double score) {
+    int fullStars = score.floor(); // Full stars
+    bool hasHalfStar =
+        (score - fullStars) >= 0.5; // Determine if there’s a half-star
+
+    return Row(
+      children: List.generate(5, (index) {
+        if (index < fullStars) {
+          return const Icon(Icons.star, color: Colors.red, size: 16);
+        } else if (index == fullStars && hasHalfStar) {
+          return const Icon(Icons.star_half, color: Colors.red, size: 16);
+        } else {
+          return const Icon(Icons.star_border, color: Colors.red, size: 16);
+        }
+      }),
+    );
+    }
+
+  Widget _TimeString() {
+    DateTime now = DateTime.now();
+
+    DateTime timeOpen = DateTime(now.year, now.month, now.day, detailModel!.timeOpen!.hour, detailModel!.timeOpen!.minute);
+    DateTime timeClose = DateTime(now.year, now.month, now.day, detailModel!.timeClose!.hour, detailModel!.timeClose!.minute);
+
+    if (now.isAfter(timeOpen) && now.isBefore(timeClose)) {
+      return RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: 'Đang mở cửa',
+              style: TextStyle(color: Colors.green, fontSize: 13),
+            ),
+            TextSpan(
+              text: ' - Đóng cửa lúc ${DateFormat('HH:mm').format(timeClose)}',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+          ],
+        ),
+      );
+    } else if (now.isAfter(timeClose)) {
+      return RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: 'Đã đóng cửa',
+              style: TextStyle(color: Colors.red, fontSize: 13),
+            ),
+            TextSpan(
+              text: ' - Mở cửa lúc ${DateFormat('HH:mm').format(timeOpen)}',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+          ],
+        ),
+      );
+    } else if (now.isBefore(timeOpen)) {
+      return RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: 'Sắp mở cửa',
+              style: TextStyle(color: Colors.orange, fontSize: 13),
+            ),
+            TextSpan(
+              text: ' - Mở cửa lúc ${DateFormat('HH:mm').format(timeOpen)}',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SizedBox();
+  }
+
+  Widget _EventStatusString() {
+    DateTime now = DateTime.now();
+    DateTime eventStart = eventModel!.startDate;
+    DateTime eventEnd = eventModel!.endDate;
+    if (now.isAfter(eventStart) && now.isBefore(eventEnd)) {
+      int daysLeft = eventEnd.difference(now).inDays;
+      return RichText(
+        text: TextSpan(
+          children: [
+            language == 'vi'?
+            TextSpan(
+              text: 'Đang diễn ra',
+              style: TextStyle(color: Colors.green, fontSize: 12),
+            ) :
+            TextSpan(
+              text: 'Ongoing',
+              style: TextStyle(color: Colors.green, fontSize: 12),
+            ),
+            language == 'vi'?
+            TextSpan(
+              text: ' - Kết thúc ${daysLeft} ngày nữa',
+              style: TextStyle(color: Colors.green, fontSize: 12),
+            ) : TextSpan(
+              text: ' - End in ${daysLeft} ${daysLeft > 1 ? 'day' : 'days'}',
+              style: TextStyle(color: Colors.green, fontSize: 12),
+            ),
+          ],
+        ),
+      );
+    }
+    else if (now.isAfter(eventEnd.subtract(Duration(days: 1))) && now.isBefore(eventEnd)) {
+      return RichText(
+        text: TextSpan(
+          children: [
+            language == 'vi' ?
+            TextSpan(
+              text: 'Sắp kết thúc',
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ) :
+            TextSpan(
+              text: 'About to end',
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
+            TextSpan(
+              text: ' - End at ${DateFormat('HH:mm dd/MM/yyyy').format(eventEnd)}',
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ],
+        ),
+      );
+    }
+    else if (now.isBefore(eventStart)) {
+      return RichText(
+        text: TextSpan(
+          children: [
+            language == 'vi'?
+            TextSpan(
+              text: 'Sắp diễn ra',
+              style: TextStyle(color: Colors.orange, fontSize: 12),
+            ) : TextSpan(
+              text: 'Coming soon',
+              style: TextStyle(color: Colors.orange, fontSize: 12),
+            ),
+            language == 'vi'?
+            TextSpan(
+              text: ' - Diễn ra vào ${DateFormat('HH:mm dd/MM/yyyy').format(eventStart)}',
+              style: TextStyle(color: Colors.orange, fontSize: 12),
+            ) : TextSpan(
+              text: ' - Start at ${DateFormat('HH:mm dd/MM/yyyy').format(eventStart)}',
+              style: TextStyle(color: Colors.orange, fontSize: 12),
+            ),
+          ],
+        ),
+      );
+    }
+    else if (now.isAfter(eventEnd)) {
+      return RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: language == 'vi' ?  'Đã kết thúc' : 'Ended',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+            TextSpan(
+              text: ' - ${language == 'vi' ? 'Kết thúc vào' : 'Ends on'} ${DateFormat('dd/MM/yyyy').format(eventEnd)}',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SizedBox();
+  }
+
+
 }
