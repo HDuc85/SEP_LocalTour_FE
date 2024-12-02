@@ -67,13 +67,12 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     _searchFocus.addListener(() {
-      if(_searchFocus.hasFocus){
+      if (_searchFocus.hasFocus != OnSearch) {
         setState(() {
-          OnSearch = true;
+          OnSearch = _searchFocus.hasFocus;
         });
       }
-    },);
-    talker.enable();
+    });
     getCurrentPosition();
     getLanguage();
   }

@@ -12,6 +12,7 @@ import '../../../../../models/media_model.dart';
 import '../../../components/map_action_button.dart';
 import '../../../constants/colors.dart';
 import '../../../constants/route.dart';
+import '../../../navigation_page.dart';
 import '../../routing_screen/models/routing_params_model.dart';
 import '../bloc/map_bloc.dart';
 import '../bloc/map_state.dart';
@@ -133,11 +134,15 @@ class BottomSheetInfo extends StatelessWidget {
                   children: [
                     MapActionButton(
                         onPressed: ()  {
-                          RoutingParamsModel state = RoutingParamsModel(isStartNavigation: true,lat: detailModel!.latitude,lng: detailModel!.longitude);
-
-                          Navigator.pushNamed(context, Routes.routingScreen,
-                              arguments: RoutingParamsModel.fromVietmapModel(
-                                  state, false));
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => NavigationPage(
+                                lat: detailModel!.latitude,
+                                long: detailModel!.longitude,
+                              ),
+                            ),
+                          );
                         },
                         child: Row(
                           children: [
@@ -147,21 +152,7 @@ class BottomSheetInfo extends StatelessWidget {
                           ],
                         )),
                     const SizedBox(width: 10),
-                    MapActionButtonOutline(
-                        onPressed: () {
-                          RoutingParamsModel state = RoutingParamsModel(isStartNavigation: true,lat: detailModel!.latitude,lng: detailModel!.longitude);
-                          Navigator.pushNamed(context, Routes.routingScreen,
-                              arguments: RoutingParamsModel.fromVietmapModel(
-                                  state, true));
-                        },
-                        child: Row(
-                          children: [
-                            Icon(Icons.navigation_sharp, color: vietmapColor),
-                            SizedBox(width: 5),
-                            Text(language! == 'vi' ? 'Bắt đầu' : 'Start',
-                                style: TextStyle(color: vietmapColor)),
-                          ],
-                        ))
+
                   ],
                 ),
                 SizedBox(height: 10,),

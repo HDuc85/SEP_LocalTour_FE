@@ -19,6 +19,7 @@ import 'package:localtourapp/page/my_map/features/routing_screen/bloc/routing_bl
 import 'package:localtourapp/page/my_map/features/routing_screen/routing_screen.dart';
 import 'package:localtourapp/page/my_map/features/routing_screen/search_address.dart';
 import 'package:localtourapp/page/my_map/features/search_screen/search_screen.dart';
+import 'package:localtourapp/page/my_map/navigation_page.dart';
 import 'package:localtourapp/page/wheel/wheel_page.dart';
 import 'package:localtourapp/generated/l10n.dart';
 import 'package:localtourapp/page/account/account_page.dart';
