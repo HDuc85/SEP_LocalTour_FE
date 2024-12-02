@@ -249,8 +249,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             controller: _detailController,
             readOnly: true,
             maxLines: 10,
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
             ),
           ),
           actions: [
@@ -261,7 +261,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             if (isCurrentUser)
               TextButton(
                 onPressed: () {
-                  onSave(_detailController.text);
+                  final updatedText = _detailController.text;
+                  onSave(updatedText); // Pass empty string if all text is deleted
                   Navigator.of(context).pop();
                 },
                 child: const Text('Save'),
@@ -271,6 +272,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       },
     );
   }
+
 
   void _onDateSelected(DateTime? newDate, bool isFromDate) {
     if (isFromDate) {
@@ -469,201 +471,192 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     }
 
     return ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: filteredSchedules.length,
-        itemBuilder: (context, index) {
-          final schedule = filteredSchedules[index];
-          final isEditingName = _editingScheduleIds.contains(schedule.id);
-          bool isExpanded = _expandedIndex == index;
-          final bool isOwner = schedule.userId == _myUserId;
-          bool isVisible = schedule.isPublic || isOwner;
-          if (!isVisible) {
-            return const SizedBox.shrink();
-          }
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: filteredSchedules.length,
+      itemBuilder: (context, index) {
+        final schedule = filteredSchedules[index];
+        final isEditingName = _editingScheduleIds.contains(schedule.id);
+        bool isExpanded = _expandedIndex == index;
+        final bool isOwner = schedule.userId == _myUserId;
+        bool isVisible = schedule.isPublic || isOwner;
 
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _expandedIndex = _expandedIndex == index ? null : index;
-              });
-            },
-            child: Column(
-              children: [
-                Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                    side: const BorderSide(color: Colors.black, width: 1),
-                  ),
-                  margin: const EdgeInsets.only(bottom: 10),
-                  color: const Color(0xFFD6B588),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        GestureDetector(
-                          onTap: () => _toggleEditing(schedule.id),
-                          child: isEditingName
-                              ? TextFormField(
-                            controller: _nameController,
-                            focusNode: _nameFocusNode,
-                            onFieldSubmitted: (newValue) {
-                              _saveScheduleName();
-                              _EditPlaceName(schedule, newValue);
-                            },
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              contentPadding:
-                              EdgeInsets.symmetric(horizontal: 8),
-                            ),
-                          )
-                              : Text(
-                            schedule.scheduleName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+        if (!isVisible) {
+          return const SizedBox.shrink();
+        }
+
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _expandedIndex = _expandedIndex == index ? null : index;
+            });
+          },
+          child: Column(
+            children: [
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  side: const BorderSide(color: Colors.black, width: 1),
+                ),
+                margin: const EdgeInsets.only(bottom: 10),
+                color: const Color(0xFFD6B588),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _toggleEditing(schedule.id),
+                        child: isEditingName
+                            ? TextFormField(
+                          controller: _nameController,
+                          focusNode: _nameFocusNode,
+                          onFieldSubmitted: (newValue) {
+                            _saveScheduleName();
+                            _EditPlaceName(schedule, newValue);
+                          },
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            contentPadding:
+                            EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                        )
+                            : Text(
+                          schedule.scheduleName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
                         ),
-                        Row(
-                          children: [
-                            Text(
-                                "Created date: ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}"),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildDateField(
-                                "From Date",
-                                true,
-                                schedule.startDate,
-                                    (newDate) {
-                                  setState(() {
-                                    schedule.startDate = newDate;
-                                  });
-                                  _EditPlaceName(schedule, _nameController.text);
-                                },
-                                clearable: true,
-                                onClear: () {
-                                  setState(() {
-                                    schedule.startDate = null;
-                                  });
-                                },
-                              ),
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                              "Created date: ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}"),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildDateField(
+                              "From Date",
+                              true,
+                              schedule.startDate,
+                                  (newDate) {
+                                setState(() {
+                                  schedule.startDate = newDate;
+                                });
+                                _EditPlaceName(schedule, _nameController.text);
+                              },
+                              clearable: true,
+                              onClear: () {
+                                setState(() {
+                                  schedule.startDate = null;
+                                });
+                              },
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _buildDateField(
-                                "To Date",
-                                false,
-                                schedule.endDate,
-                                    (newDate) {
-                                  setState(() {
-                                    schedule.endDate = newDate;
-                                  });
-                                  _EditPlaceName(schedule, _nameController.text);
-                                },
-                                clearable: true,
-                                onClear: () {
-                                  setState(() {
-                                    schedule.endDate = null;
-                                  });
-                                },
-                              ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildDateField(
+                              "To Date",
+                              false,
+                              schedule.endDate,
+                                  (newDate) {
+                                setState(() {
+                                  schedule.endDate = newDate;
+                                });
+                                _EditPlaceName(schedule, _nameController.text);
+                              },
+                              clearable: true,
+                              onClear: () {
+                                setState(() {
+                                  schedule.endDate = null;
+                                });
+                              },
                             ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            if (isOwner)
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          if (isOwner)
+                            IconButton(
+                              icon: Icon(
+                                schedule.isPublic
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color:
+                                schedule.isPublic ? Colors.blue : Colors.red,
+                              ),
+                              onPressed: isOwner
+                                  ? () =>
+                                  _toggleVisibility(schedule, _nameController.text)
+                                  : null,
+                            ),
+                          Row(
+                            children: [
                               IconButton(
                                 icon: Icon(
-                                  schedule.isPublic
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                  color:
-                                  schedule.isPublic ? Colors.blue : Colors.red,
+                                  schedule.isLiked
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: schedule.isLiked
+                                      ? Colors.red
+                                      : Colors.grey,
                                 ),
-                                onPressed: isOwner
-                                    ? () =>
-                                    _toggleVisibility(schedule, _nameController.text)
-                                    : null,
+                                onPressed: () => _toggleFavorite(schedule.id),
                               ),
-                            Row(
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    schedule.isLiked
-                                        ? Icons.favorite
-                                        : Icons.favorite_border,
-                                    color: schedule.isLiked
-                                        ? Colors.red
-                                        : Colors.grey,
-                                  ),
-                                  onPressed: () => _toggleFavorite(schedule.id),
-                                ),
-                                Text(
-                                  schedule.totalLikes.toString(),
-                                  style: const TextStyle(
-                                      color: Colors.black, fontSize: 12),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      color: Color(0xFF4F4F4F)),
-                                  onPressed: () {
-                                    _showDeleteConfirmationDialog(
-                                        schedule.id, schedule.scheduleName);
-                                  },
-                                ),
-                              ],
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
+                              Text(
+                                schedule.totalLikes.toString(),
+                                style: const TextStyle(
+                                    color: Colors.black, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.delete,
+                                    color: Color(0xFF4F4F4F)),
+                                onPressed: () {
+                                  _showDeleteConfirmationDialog(
+                                      schedule.id, schedule.scheduleName);
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                if (isExpanded)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 20),
-                    padding: const EdgeInsets.all(8),
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.9,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.black, width: 1),
-                    ),
-                    child: Column(
-                      children: [
-                        _buildDestinationGrid(schedule.destinations, schedule),
-                        if (isCurrentUser)
-                          IconButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const SearchPage(),
-                                ),
-                              );
-                            },
-                            icon: Icon(Icons.add_circle, size: 30),
-                          ),
-                      ],
-                    ),
+              ),
+              if (isExpanded)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  padding: const EdgeInsets.all(8),
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.9,
                   ),
-              ],
-            ),
-          );
-        });
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.black, width: 1),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildDestinationGrid(schedule.destinations, schedule),
+                      // Only show the add button here if there are no destinations
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _showDeleteConfirmationDialog(int scheduleId, String scheduleName) {
@@ -701,22 +694,23 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   Widget _buildDestinationGrid(List<DestinationModel> destinations, ScheduleModel schedule) {
-    if (destinations.isEmpty) {
-      return const Center(
-        child: Text('No destinations available.'),
-      );
-    }
     List<Widget> rows = [];
     int index = 0;
     int columns = 3;
     double connectorHeight = 40; // Vertical connector height
     double circleSize = 50; // Diameter of CircleAvatar
 
-    while (index < destinations.length) {
-      // Get the destinations for the current row
-      List<DestinationModel> rowItems = destinations.sublist(
+    // Add a placeholder for the add button at the end of the destinations list
+    List<DestinationModel?> allItems = List.from(destinations);
+    if (isCurrentUser) {
+      allItems.add(null); // Add a null item to represent the add button
+    }
+
+    while (index < allItems.length) {
+      // Get the items for the current row
+      List<DestinationModel?> rowItems = allItems.sublist(
         index,
-        (index + columns > destinations.length) ? destinations.length : index + columns,
+        (index + columns > allItems.length) ? allItems.length : index + columns,
       );
 
       // Determine if the row should be reversed
@@ -725,137 +719,167 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       // Build the row with connectors
       List<Widget> rowWidgets = [];
       for (int i = 0; i < rowItems.length; i++) {
-        DestinationModel destination = rowItems[i];
+        DestinationModel? destination = rowItems[i];
 
-        // Wrap the Checkbox with GestureDetector for onLongPress to show delete dialog
-        Widget checkboxWidget = GestureDetector(
-          onLongPress: () => _showDeleteDestinationConfirmationDialog(destination),
-          child: Checkbox(
-            value: destination.isArrived,
-            onChanged: (bool? value) async {
-              var result = await _scheduleService.UpdateDestination(
-                destination.id,
-                destination.scheduleId,
-                destination.placeId,
-                null,
-                null,
-                destination.detail,
-                value,
-              );
-              if (result) {
-                fetchData();
-              }
-            },
-          ),
-        );
+        Widget itemWidget;
 
-        // Wrap the CircleAvatar with GestureDetector for onTap to show details
-        Widget circleAvatar = GestureDetector(
-          onTap: () => _showDestinationDetails(destination),
-          child: Column(
-            children: [
-              CircleAvatar(
-                radius: circleSize / 2,
-                backgroundImage: NetworkImage(
-                  destination.placePhotoDisplay ?? 'assets/images/default.png',
+        int addButtonIndex = index + i;
+
+        if (destination != null) {
+          // Existing destination item
+
+          // Wrap the Checkbox with GestureDetector for onLongPress to show delete dialog
+          Widget checkboxWidget = GestureDetector(
+            onLongPress: () => _showDeleteDestinationConfirmationDialog(destination),
+            child: Checkbox(
+              value: destination.isArrived,
+              onChanged: (bool? value) async {
+                var result = await _scheduleService.UpdateDestination(
+                  destination.id,
+                  destination.scheduleId,
+                  destination.placeId,
+                  null,
+                  null,
+                  destination.detail,
+                  value,
+                );
+                if (result) {
+                  fetchData();
+                }
+              },
+            ),
+          );
+
+          // Wrap the CircleAvatar with GestureDetector for onTap to show details
+          Widget circleAvatar = GestureDetector(
+            onTap: () => _showDestinationDetails(destination),
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: circleSize / 2,
+                  backgroundImage: NetworkImage(
+                    destination.placePhotoDisplay ?? 'assets/images/default.png',
+                  ),
+                  backgroundColor: Colors.grey,
                 ),
-                backgroundColor: Colors.grey,
-              ),
-              Container(
-                width: 70,
-                child: Text(destination.placeName ,
-                            maxLines: 1,
-                overflow: TextOverflow.ellipsis,),
-              )
+                Container(
+                  width: 65,
+                  child: Text(
+                    destination.placeName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          );
+
+          // Build the imageWidget that contains the Checkbox and CircleAvatar
+          Widget imageWidget = Column(
+            mainAxisSize: MainAxisSize.min, // Take minimum space
+            children: [
+              if (isCurrentUser)
+                checkboxWidget,
+              circleAvatar,
             ],
-          ),
-        );
+          );
 
-        // Build the imageWidget that contains the Checkbox and CircleAvatar
-        Widget imageWidget = Column(
-          mainAxisSize: MainAxisSize.min, // Take minimum space
-          children: [
-            if (isCurrentUser)
-              checkboxWidget,
-            circleAvatar,
-          ],
-        );
-
-        // Wrap the imageWidget with LongPressDraggable
-        Widget draggable = LongPressDraggable<DestinationModel>(
-          data: destination,
-          feedback: Material(
-            color: Colors.transparent,
-            child: imageWidget, // Drag the whole widget, including Checkbox and CircleAvatar
-          ),
-          childWhenDragging: Opacity(
-            opacity: 0.5,
-            child: imageWidget,
-          ),
+          // Wrap the imageWidget with LongPressDraggable
+          Widget draggable = LongPressDraggable<DestinationModel>(
+            data: destination,
+            feedback: Material(
+              color: Colors.transparent,
+              child: imageWidget, // Drag the whole widget, including Checkbox and CircleAvatar
+            ),
+            childWhenDragging: Opacity(
+              opacity: 0.5,
+              child: imageWidget,
+            ),
             onDragStarted: () {
               setState(() {
                 isDragging = true;
               });
             },
-          onDragEnd: (_) {
-            setState(() {
-              isDragging = false;
-            });
-          },
-          child: DragTarget<DestinationModel>(
-            builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
-              return imageWidget;
-            },
-
-            onWillAccept: (data) {
-              // Optional: Add visual feedback here
-              return true;
-            },
-            onAccept: (draggedDestination) async {
+            onDragEnd: (_) {
               setState(() {
-                // Swap positions of draggedDestination and destination
-                int oldIndex = destinations.indexOf(draggedDestination);
-                int newIndex = destinations.indexOf(destination);
-
-                if (oldIndex != -1 && newIndex != -1) {
-                  // Remove dragged item
-                  _swapDestination(draggedDestination,destination);
-                  // if(oldIndex > newIndex) {
-                  //   oldIndex = oldIndex + newIndex;
-                  //   newIndex = oldIndex - newIndex;
-                  //   oldIndex = oldIndex - newIndex;
-                  // }
-                  // final removedItem = destinations.removeAt(oldIndex);
-                  // destinations.insert(newIndex-1, removedItem);
-                  //
-                  // final removedNewItem = destinations.removeAt(newIndex);
-                  // destinations.insert(oldIndex, removedNewItem);
-
-
-                }
+                isDragging = false;
               });
-
-              // Save the new order locally
-              await saveDestinationOrder(schedule.id, destinations);
             },
+            child: DragTarget<DestinationModel>(
+              builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
+                return imageWidget;
+              },
+              onWillAccept: (data) {
+                // Optional: Add visual feedback here
+                return true;
+              },
+              onAccept: (draggedDestination) async {
+                setState(() {
+                  // Swap positions of draggedDestination and destination
+                  int oldIndex = destinations.indexOf(draggedDestination);
+                  int newIndex = destinations.indexOf(destination);
 
-          ),
-        );
+                  if (oldIndex != -1 && newIndex != -1) {
+                    _swapDestination(draggedDestination, destination);
+                  }
+                });
 
-        rowWidgets.add(draggable);
+                // Save the new order locally
+                await saveDestinationOrder(schedule.id, destinations);
+              },
+            ),
+          );
+
+          itemWidget = draggable;
+        } else {
+          Widget addButtonContent = GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SearchPage(),
+                ),
+              );
+            },
+            child: const Icon(Icons.add_circle, size: 30),
+          );
+
+          // Positions where we need to use Row (positions 4, 7, 10, ...)
+          if ((addButtonIndex + 1) % columns == 1) {
+            // Use Row
+            itemWidget = Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(width: 10,),
+                addButtonContent,
+              ],
+            );
+          } else {
+            // Use Column
+            itemWidget = Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(height: 30,),
+                addButtonContent,
+              ],
+            );
+          }
+        }
+
+        rowWidgets.add(itemWidget);
 
         // Add horizontal dashed connector except after the last item
         if (i < rowItems.length - 1) {
           rowWidgets.add(
             Container(
-              padding: isEvenRow ? EdgeInsets.only(top: circleSize/1.5) : EdgeInsets.only(top: circleSize/1.5),
-              height: circleSize, // Same height as CircleAvatar
-              alignment: Alignment.center, // Center vertically
+              padding: EdgeInsets.only(top: circleSize / 1.5),
+              height: circleSize,
+              alignment: Alignment.center,
               child: Transform.rotate(
                 angle: isEvenRow ? pi : 0,
                 child: DashedLine(
                   isHorizontal: true,
-                  length: MediaQuery.of(context).size.width / 7.1,
+                  length: MediaQuery.of(context).size.width / 6.55,
                 ),
               ),
             ),
@@ -870,9 +894,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
 
       // Build the row widget
       Widget rowWidget = Container(
-        padding: !isEvenRow ? EdgeInsets.only(left: 13) : EdgeInsets.only(right: 13),
+        padding: !isEvenRow ? EdgeInsets.only(left: 0) : EdgeInsets.only(right: 0),
         child: Row(
-        mainAxisAlignment: isEvenRow ? MainAxisAlignment.end : MainAxisAlignment.start,
+          mainAxisAlignment: isEvenRow ? MainAxisAlignment.end : MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: rowWidgets,
         ),
@@ -881,27 +905,30 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       rows.add(rowWidget);
 
       // Add vertical dashed connector under the last item of the previous row
-      if (index + columns < destinations.length) {
+      if (index + columns < allItems.length) {
         rows.add(
           Row(
-            mainAxisAlignment: !isEvenRow ? MainAxisAlignment.end : MainAxisAlignment.start,
             children: [
-              Container(
-                padding:!isEvenRow? EdgeInsets.only(right: circleSize/1.1) : EdgeInsets.only(left: circleSize/1.1),
-                width: circleSize,
-                alignment: Alignment.center,
-                child: DashedLine(
-                  isHorizontal: false,
-                  length: connectorHeight,
+              Expanded(
+                child: Align(
+                  alignment: isEvenRow ? Alignment.centerLeft : Alignment.centerRight,
+                  child: Container(
+                    width: circleSize,
+                    alignment: Alignment.center,
+                    child: DashedLine(
+                      isHorizontal: false,
+                      length: connectorHeight,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         );
       }
-
       index += columns;
     }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: rows,
@@ -1051,8 +1078,13 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       child: LayoutBuilder(
         builder: (context, constraints) {
           final textSpan = TextSpan(
-            text: detailText,
-            style: const TextStyle(color: Colors.black),
+            text: detailText.isNotEmpty
+                ? detailText
+                : "Tap to add details...", // Show hint text if empty
+            style: TextStyle(
+              color: detailText.isNotEmpty ? Colors.black : Colors.grey,
+              fontStyle: detailText.isEmpty ? FontStyle.italic : FontStyle.normal,
+            ),
           );
 
           final textPainter = TextPainter(
@@ -1087,8 +1119,15 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   maxLines: 25,
                   overflow: TextOverflow.ellipsis,
                   text: TextSpan(
-                    text: detailText,
-                    style: const TextStyle(color: Colors.black),
+                    text: detailText.isNotEmpty
+                        ? detailText
+                        : "Tap to add details...", // Hint text if empty
+                    style: TextStyle(
+                      color: detailText.isNotEmpty ? Colors.black : Colors.grey,
+                      fontStyle: detailText.isEmpty
+                          ? FontStyle.italic
+                          : FontStyle.normal,
+                    ),
                     children: [
                       if (isOverflowing)
                         const TextSpan(
@@ -1102,7 +1141,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   ),
                 ),
               ),
-              SizedBox(height: 20,)
             ],
           );
         },
@@ -1138,17 +1176,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           ],
         );
       },
-    );
-  }
-
-  void _navigateToDetail(int placeId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DetailPage(
-          placeId: placeId,
-        ),
-      ),
     );
   }
 
