@@ -55,16 +55,16 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
                 bottom: TabBar(
                   indicatorColor: Colors.black,
                   tabs: [
-                    Tab(
+                    const Tab(
                       icon: Icon(Icons.post_add, color: Colors.blue),
                       text: "Posts",
                     ),
-                    Tab(
+                    const Tab(
                       icon: Icon(Icons.rate_review, color: Colors.green),
                       text: "Reviews",
                     ),
                     if (!isCurrentUserId)
-                      Tab(
+                      const Tab(
                         icon: Icon(Icons.schedule, color: Colors.red),
                         text: "Schedules",
                       ),

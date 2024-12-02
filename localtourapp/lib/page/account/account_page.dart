@@ -33,11 +33,13 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
+  bool isLoadingProfile = false;
+  bool isFollowLoading = false;
   final AuthService _authService = AuthService();
   late UserService _userService = UserService();
   final storage = SecureStorageHelper();
-  late List<FollowUser> followers;
-  late List<FollowUser> followings;
+  List<FollowUserModel> followers = [];
+  List<FollowUserModel> followings = [];
   late Userprofile userprofile = Userprofile(
       fullName: "Unknown Full Name",
       userName: "Unknown",
@@ -71,17 +73,16 @@ class _AccountPageState extends State<AccountPage> {
     try {
       String? userIdStorage = await storage.readValue(AppConfig.userId);
       String? isLoginStorage = await storage.readValue(AppConfig.isLogin);
-      if(isLoginStorage != null){
+      if (isLoginStorage != null) {
         setState(() {
           isLogin = true;
         });
       }
 
       if (userIdStorage != null && userIdStorage.isNotEmpty) {
-
-        if(widget.userId == ''){
+        if (widget.userId == '') {
           readUserProfile(userIdStorage);
-        }else{
+        } else {
           readUserProfile(widget.userId);
         }
 
@@ -94,19 +95,42 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+
   Future<void> readUserProfile(String userId) async {
 
     final response = await _userService.getUserProfile(userId);
     setState(() {
       userprofile = response;
     });
-
+    debugPrint("Total Followers: ${userprofile.totalFollowers}");
+    debugPrint("Total Followings: ${userprofile.totalFollowed}");
     if ( userId == myUserId && myUserId.isNotEmpty) {
 
       setState(() {
         isCurrentUser = true;
-
       });
+    }
+    // Fetch followers and followings
+    fetchFollowersAndFollowings(userId);
+  }
+
+  Future<void> fetchFollowersAndFollowings(String userId) async {
+    try {
+      final followersResponse = await _userService.getFollowers(userId);
+      setState(() {
+        followers = followersResponse;
+      });
+    } catch (e) {
+      debugPrint("Error fetching followers: $e");
+    }
+
+    try {
+      final followingsResponse = await _userService.getFollowings(userId);
+      setState(() {
+        followings = followingsResponse;
+      });
+    } catch (e) {
+      debugPrint("Error fetching followings: $e");
     }
   }
 
@@ -115,12 +139,17 @@ class _AccountPageState extends State<AccountPage> {
 
     if (pickedFile != null) {
       File file = File(pickedFile.path);
-     var result = await _userService.sendUserDataRequest(new UpdateUserRequest(profilePicture: file));
-     setState(() {
-       userprofile = result;
-     });
-       }
+      try {
+        var result = await _userService.sendUserDataRequest(UpdateUserRequest(profilePicture: file));
+        setState(() {
+          userprofile = result;
+        });
+      } catch (e) {
+        debugPrint("Error updating avatar: $e");
+      }
+    }
   }
+
 
   @override
   void didChangeDependencies() {
@@ -146,53 +175,63 @@ class _AccountPageState extends State<AccountPage> {
     });
     // Determine if the current user is following the displayed user
 
-    return Stack(
-      children: [
-            ListView(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(8.0),
-              children: [
-                const SizedBox(height: 16),
-                if(isLogin) _buildProfileSection(userprofile),
-                const SizedBox(height: 16),
-                if (!isCurrentUser && isLogin) _buildFollowButton(userprofile.isFollowed),
-                if (isCurrentUser) ...[
-                  _buildPersonInfoSection(),
-                  const SizedBox(height: 12),
-                  _buildSettingSection(),
-                  const SizedBox(height: 12),
-                  _buildContactSection(),
-                  const SizedBox(height: 12),
-                  _buildFAQSection(),
-                  const SizedBox(height: 12),
-                  _buildUserPreference(),
-                  const SizedBox(height: 12), // Adjust spacing if needed
-                ],
-                if (isCurrentUser || !isLogin) _buildLogoutButton(), // Add the Logout button here
-                  const SizedBox(height: 36),
+    return Scaffold(
+      body: SafeArea(
+        child: Stack(
+          children: [
+                ListView(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(8.0),
+                  children: [
+                    const SizedBox(height: 16),
+                    if(isLogin) _buildProfileSection(userprofile),
+                    const SizedBox(height: 16),
+                    if (!isCurrentUser && isLogin) _buildFollowButton(userprofile.isFollowed),
+                    if (isCurrentUser) ...[
+                      _buildPersonInfoSection(),
+                      const SizedBox(height: 12),
+                      _buildSettingSection(),
+                      const SizedBox(height: 12),
+                      _buildContactSection(),
+                      const SizedBox(height: 12),
+                      _buildFAQSection(),
+                      const SizedBox(height: 12),
+                      _buildUserPreference(),
+                      const SizedBox(height: 12), // Adjust spacing if needed
+                    ],
+                    if (isCurrentUser || !isLogin) _buildLogoutButton(), // Add the Logout button here
+                      const SizedBox(height: 36),
+                  ],
+                ),
+                Positioned(
+                  bottom: 0,
+                  left: 20,
+                  child: WeatherIconButton(
+                    onPressed: _navigateToWeatherPage,
+                    assetPath: 'assets/icons/weather.png',
+                  ),
+                ),
               ],
             ),
-            Positioned(
-              bottom: 0,
-              left: 20,
-              child: WeatherIconButton(
-                onPressed: _navigateToWeatherPage,
-                assetPath: 'assets/icons/weather.png',
-              ),
-            ),
-          ],
-        );
+      ),
+    );
 
 
   }
 
-  Future<void> folowBtn(bool isFollowing) async {
-    bool result = await _userService.FollowOrUnFollowUser(widget.userId,isFollowing);
-    if(result){
+  Future<void> followBtn(bool isFollowing) async {
+    if (isFollowLoading) return;
+    setState(() => isFollowLoading = true);
+
+    bool result = await _userService.FollowOrUnFollowUser(widget.userId, isFollowing);
+
+    if (result) {
       setState(() {
         userprofile.isFollowed = !isFollowing;
       });
     }
+
+    setState(() => isFollowLoading = false);
   }
 
   // Add this method inside _AccountPageState
@@ -202,7 +241,7 @@ class _AccountPageState extends State<AccountPage> {
     return Center(
       child: ElevatedButton(
         onPressed: () {
-          folowBtn(isFollowing);
+          followBtn(isFollowing);
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: isFollowing ? Colors.red : Colors.blue,
@@ -291,18 +330,17 @@ class _AccountPageState extends State<AccountPage> {
                               MaterialPageRoute(
                                 builder: (context) => FollowListPage(
                                   followers: followers,
-                                  following: followings,
-                                  allUsers:[]// List of all users
+                                  followings: followings,
                                 ),
                               ),
                             );
                           },
                           child: Text(
-                            '${userProfile.totalFollowed} followers',
+                            '${userProfile.totalFollowers} followers',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
-                        const SizedBox(width: 24),
+                        const SizedBox(width: 12),
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -310,14 +348,13 @@ class _AccountPageState extends State<AccountPage> {
                               MaterialPageRoute(
                                 builder: (context) => FollowListPage(
                                   followers: followers,
-                                  following: followings,
-                                  allUsers: [], // List of all users
+                                  followings: followings,
                                 ),
                               ),
                             );
                           },
                           child: Text(
-                            '${userProfile.totalFollowers} following',
+                            '${userProfile.totalFollowed} followings',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),

@@ -6,15 +6,13 @@ import '../../models/users/users.dart';
 import 'account_page.dart';
 
 class FollowListPage extends StatefulWidget {
-  final List<FollowUser> followers;
-  final List<FollowUser> following;
-  final List<User> allUsers;
+  final List<FollowUserModel>? followers;
+  final List<FollowUserModel>? followings;
 
   const FollowListPage({
     Key? key,
-    required this.followers,
-    required this.following,
-    required this.allUsers,
+    this.followers,
+    this.followings,
   }) : super(key: key);
 
   @override
@@ -29,7 +27,7 @@ class _FollowListPageState extends State<FollowListPage> {
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: true,
-          title: const Text(''),
+          title: const Text('Followers & Following'),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Followers'),
@@ -39,68 +37,79 @@ class _FollowListPageState extends State<FollowListPage> {
         ),
         body: TabBarView(
           children: [
-            _buildUserList(widget.followers, isFollowerTab: true),
-            _buildUserList(widget.following, isFollowerTab: false),
+            _buildUserList(widget.followers ?? [], isFollowerTab: true),
+            _buildUserList(widget.followings ?? [], isFollowerTab: false),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildUserList(List<FollowUser> followList,
-      {required bool isFollowerTab}) {
+  // Build user list for followers or following
+  Widget _buildUserList(List<FollowUserModel> followList, {required bool isFollowerTab}) {
+    if (followList.isEmpty) {
+      return Center(
+        child: Text(
+          isFollowerTab ? 'No Followers' : 'No Following',
+          style: const TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      );
+    }
+
     return ListView.builder(
       itemCount: followList.length,
       itemBuilder: (context, index) {
         final followUser = followList[index];
-        // Determine whose profile to show based on isFollowerTab
-        final userIdToShow =
-            isFollowerTab ? followUser.userId : followUser.userFollow;
-
-        final user = widget.allUsers.firstWhere(
-          (u) => u.userId == userIdToShow,
-          orElse: () => User(
-            userId: 'default',
-            userName: 'Unknown User',
-            emailConfirmed: false,
-            phoneNumberConfirmed: false,
-            dateCreated: DateTime.now(),
-            dateUpdated: DateTime.now(),
-            reportTimes: 0,
-          ),
-        );
+        final userProfileImage = followUser.userProfileUrl != null && followUser.userProfileUrl!.isNotEmpty
+            ? NetworkImage(followUser.userProfileUrl!)
+            : const AssetImage('assets/images/default_profile_picture.png') as ImageProvider;
 
         return ListTile(
-          leading: CircleAvatar(
-            backgroundImage: user.profilePictureUrl != null
-                ? NetworkImage(user.profilePictureUrl!)
-                : null,
-            child: user.profilePictureUrl == null
-                ? const Icon(Icons.account_circle, color: Colors.grey)
-                : null,
-          ),
-          title: GestureDetector(
+          leading: GestureDetector(
             onTap: () {
-              // Use UserProvider to get the user's details
-
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => AccountPage(
-                    userId: '',
+                    userId: isFollowerTab ? followUser.userId : followUser.userFollow,
                   ),
                 ),
               );
             },
-            child: Text(user.userName ?? "Unknown User"),
+            child: CircleAvatar(
+              backgroundImage: userProfileImage,
+              child: (followUser.userProfileUrl == null || followUser.userProfileUrl!.isEmpty)
+                  ? const Icon(Icons.account_circle, color: Colors.grey)
+                  : null,
+            ),
           ),
-          subtitle: Text(
-            isFollowerTab
-                ? 'Followed you at: ${followUser.dateCreated.toLocal().toString().split(' ')[0]}'
-                : 'You followed at: ${followUser.dateCreated.toLocal().toString().split(' ')[0]}',
+          title: GestureDetector(
+            onTap: () {
+              final userIdToNavigate = isFollowerTab || followUser.userFollow.isEmpty
+                  ? followUser.userId
+                  : followUser.userFollow;
+
+              if (userIdToNavigate.isEmpty) {
+                print("Error: userIdToNavigate is empty");
+                return;
+              }
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AccountPage(userId: userIdToNavigate),
+                ),
+              );
+            },
+            child: Text(
+              followUser.userName.isNotEmpty ? followUser.userName : "Unknown User",
+              style: const TextStyle(fontSize: 16),
+            ),
           ),
         );
       },
     );
   }
+
 }
+

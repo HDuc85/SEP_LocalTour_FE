@@ -7,6 +7,7 @@ import 'package:localtourapp/models/users/userProfile.dart';
 import 'package:localtourapp/services/api_service.dart';
 import 'package:http/http.dart' as http;
 
+import '../models/users/followuser.dart';
 import '../models/users/update_user_request.dart';
 
 class UserService {
@@ -15,7 +16,7 @@ class UserService {
 
   Future<Userprofile> getUserProfile(String userId) async {
     final response =
-        await apiService.makeRequest('User/getProfile?userId=$userId', 'GET');
+    await apiService.makeRequest('User/getProfile?userId=$userId', 'GET');
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
@@ -84,5 +85,35 @@ class UserService {
     return false;
   }
 
+  Future<List<FollowUserModel>> getFollowers(String userId) async {
+    final response = await apiService.makeRequest(
+        'FollowUser/followed?userId=$userId', 'GET');
+    print('Followers API Response: ${response.body}');
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((e) => FollowUserModel.fromJson(e)).toList();
+    } else if (response.statusCode == 404) {
+      // Return an empty list if there are no followers
+      return [];
+    } else {
+      throw Exception(
+          "Could not load followers. Error code: ${response.statusCode}");
+    }
+  }
+
+  Future<List<FollowUserModel>> getFollowings(String userId) async {
+    final response = await apiService.makeRequest(
+        'FollowUser/follow?userId=$userId', 'GET');
+    print('Followings API Response: ${response.body}');
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((e) => FollowUserModel.fromJson(e)).toList(); // Ensure proper mapping
+    } else if (response.statusCode == 404) {
+      return []; // No followings
+    } else {
+      throw Exception("Could not load followings. Error code: ${response.statusCode}");
+    }
+  }
 
 }
+

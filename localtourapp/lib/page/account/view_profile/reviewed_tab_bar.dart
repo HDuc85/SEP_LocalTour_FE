@@ -4,6 +4,7 @@ import 'package:localtourapp/base/back_to_top_button.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
 import 'package:localtourapp/models/feedback/feedback_model.dart';
 import 'package:localtourapp/page/detail_page/detail_card/review_card.dart';
+import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/form/reportform.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/review_tabbar.dart';
 import 'package:localtourapp/services/review_service.dart';
@@ -87,56 +88,57 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
       isLoading? const Center(child: CircularProgressIndicator()) :
       Stack(
       children: [
-        SingleChildScrollView(
-          controller: _scrollController,
-          child: Column(
-            children: [
-              Container(
-                height: 40,
-                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.black, width: 1),
-                  borderRadius: BorderRadius.circular(50),
+        SafeArea(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              children: [
+                Container(
+                  height: 40,
+                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.black, width: 1),
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Text("Total Reviews: $totalReviews", style:  TextStyle(fontSize: 18,fontWeight: FontWeight.bold,)),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Text("Total Reviews: $totalReviews", style:  TextStyle(fontSize: 18,fontWeight: FontWeight.bold,)),
-                  ],
-                ),
-              ),
-              // Display user reviews
-              ..._listFeedback.map((feedback) {
-                return GestureDetector(
-                  onTap: () {
-                    // Navigate to ReviewTabbar with the selected placeId
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ReviewTabbar(
-                          placeId: feedback.placeId,
-                          userId: widget.userId,
-                        ),
-                      ),
-                    );
-                  },
-                  child: ReviewCard(
-                    placeId: feedback.placeId,
-                    feedBackCard: feedback,
-                    userId: widget.userId,
-                    onReport: () {
-                      ReportForm.show(
+                // Display user reviews
+                ..._listFeedback.map((feedback) {
+                  return GestureDetector(
+                    onTap: () {
+                      // Navigate to ReviewTabbar with the selected placeId
+                      Navigator.push(
                         context,
-                        'Have a problem with this person? Report them to us!',
-                        widget.userId,
-                        -1
+                        MaterialPageRoute(
+                          builder: (context) => DetailPage(
+                            placeId: feedback.placeId,
+                          ),
+                        ),
                       );
                     },
-                  ),
-                );
-              }).toList(),
-            ],
+                    child: ReviewCard(
+                      placeId: feedback.placeId,
+                      feedBackCard: feedback,
+                      userId: widget.userId,
+                      onReport: () {
+                        ReportForm.show(
+                          context,
+                          'Have a problem with this person? Report them to us!',
+                          widget.userId,
+                          -1
+                        );
+                      },
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
           ),
         ),
         Positioned(
