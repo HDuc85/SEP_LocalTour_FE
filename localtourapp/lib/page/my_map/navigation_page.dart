@@ -6,6 +6,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/services/location_Service.dart';
+import 'package:localtourapp/services/traveled_place_service.dart';
 import 'package:vietmap_flutter_navigation/models/options.dart';
 import 'package:vietmap_flutter_navigation/navigation_plugin.dart';
 import 'package:vietmap_flutter_navigation/vietmap_flutter_navigation.dart';
@@ -13,16 +14,20 @@ import 'package:vietmap_flutter_navigation/vietmap_flutter_navigation.dart';
 class NavigationPage extends StatefulWidget{
   final double lat;
   final double long;
+  final int placeId;
   const NavigationPage (
       {Key? key,
         required this.lat,
-        required this.long}) : super(key: key);
+        required this.long,
+        required this.placeId
+      }) : super(key: key);
 
   @override
   State<StatefulWidget> createState()  => _NavigationState();
 }
 class _NavigationState extends State<NavigationPage>{
   final LocationService _locationService = LocationService();
+  final TraveledPlaceService _placeService = TraveledPlaceService();
   late MapOptions _navigationOption;
   Position? _currentPosition;
   final _vietmapNavigationPlugin = VietMapNavigationPlugin();
@@ -116,6 +121,26 @@ class _NavigationState extends State<NavigationPage>{
               },
               onMapClick: (LatLng? latLng, Point? point) {
                 if (latLng == null) return;
+
+              },
+              onArrival: () async {
+                var result = await _placeService.AddTraveledPlace(widget.placeId);
+                if(result){
+                  showDialog(context: context, builder: (_) => AlertDialog(
+                    title: Text('Arrival'),
+                    content: Text('You have arrived'),
+                    actions: [
+                      TextButton(onPressed: () {
+                        Navigator.pop(context);
+                        setState(() {
+                          instructionImage = const SizedBox.shrink();
+                          routeProgressEvent = null;
+                        });
+                      }, child: Text('OK'))
+
+                    ],
+                  ));
+                }
 
               },
             ),
