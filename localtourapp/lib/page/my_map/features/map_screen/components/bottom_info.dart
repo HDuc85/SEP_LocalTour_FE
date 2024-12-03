@@ -67,7 +67,7 @@ class BottomSheetInfo extends StatelessWidget {
                           SizedBox(
                             width: double.infinity,
                             child: Text(
-                              (isEvent!)? eventModel!.eventName : placeCardModel!.placeName ,
+                              (isEvent!)? eventModel!.eventName : detailModel!.name ,
                               style: const TextStyle(
                                   fontSize: 17, fontWeight: FontWeight.bold),
                               maxLines: 2,
@@ -94,7 +94,7 @@ class BottomSheetInfo extends StatelessWidget {
                             children: [
                               Container(
                                 width: 225,
-                                child: Text( isEvent! ? detailModel!.address : placeCardModel!.address,
+                                child: Text( isEvent! ? detailModel!.address : detailModel!.address,
                                     style: const TextStyle(fontSize: 12,color: Colors.grey),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,),
@@ -110,7 +110,7 @@ class BottomSheetInfo extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(11),
                         image: DecorationImage(
-                          image: NetworkImage(isEvent! ? eventModel!.eventPhoto! : placeCardModel!.photoDisplayUrl),
+                          image: NetworkImage(isEvent! ? eventModel!.eventPhoto! : detailModel!.photoDisplay),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -123,7 +123,7 @@ class BottomSheetInfo extends StatelessWidget {
                   children: [
                     isEvent! ?
                     _EventStatusString()
-                      : buildStarRating(placeCardModel!.rateStar),
+                      : buildStarRating(detailModel!.rating),
                     SizedBox(width: 20,),
                     Text( isEvent! ? FormatDistance(eventModel!.distance) :  FormatDistance(placeCardModel!.distance),
                         style: const TextStyle(fontSize: 16)),
@@ -140,6 +140,7 @@ class BottomSheetInfo extends StatelessWidget {
                               builder: (_) => NavigationPage(
                                 lat: detailModel!.latitude,
                                 long: detailModel!.longitude,
+                                placeId: detailModel!.id,
                               ),
                             ),
                           );

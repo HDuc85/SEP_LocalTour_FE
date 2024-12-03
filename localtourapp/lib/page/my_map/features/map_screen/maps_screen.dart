@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/places/place_detail_model.dart';
+import 'package:localtourapp/models/schedule/destination_model.dart';
 import 'package:localtourapp/services/location_Service.dart';
 import 'package:sliding_up_panel2/sliding_up_panel2.dart';
 import 'package:vietmap_flutter_gl/vietmap_flutter_gl.dart';
@@ -43,7 +44,7 @@ class _MapScreenState extends State<MapScreen> {
   final TextEditingController _searchController = TextEditingController();
   String searchText = '';
   Timer? _debounce;
-  List<StaticMarker> _markers = [];
+  List<Marker> _markers = [];
   double panelPosition = 0.0;
   final PanelController _panelController = PanelController();
   MyLocationTrackingMode myLocationTrackingMode =
@@ -54,7 +55,7 @@ class _MapScreenState extends State<MapScreen> {
   EventModel? selectEvent;
   PlaceCardModel? selectPlace;
   PlaceDetailModel? detailSelect;
-  ScheduleModel? _selectedSchedule;
+  String? _selectedSchedule;
 
   bool isLoading = true;
   bool isSelected = false;
@@ -181,8 +182,8 @@ class _MapScreenState extends State<MapScreen> {
                     },
                   ),
                   if (_controller != null)
-                  StaticMarkerLayer(
-                    ignorePointer: true,
+                  MarkerLayer(
+                    ignorePointer: false,
                     mapController: _controller!,
                     markers: _markers,
                   )
@@ -265,6 +266,7 @@ class _MapScreenState extends State<MapScreen> {
                                 icon: const Icon(Icons.clear),
                                 onPressed: () {
                                   _searchController.clear();
+                                  _markers.clear();
                                  setState(() {
                                    searchText= '';
                                    setState(() {
@@ -278,7 +280,7 @@ class _MapScreenState extends State<MapScreen> {
                             ),
 
                           ) :
-                          DropdownButton<ScheduleModel>(
+                          DropdownButton<String>(
                             value: _selectedSchedule,
                             hint: const Text("Select your schedule"),
                             isDense: true,
@@ -287,11 +289,11 @@ class _MapScreenState extends State<MapScreen> {
                             underline: Container(),
                             items: _listSchedule
                                 .map((schedule) => DropdownMenuItem(
-                              value: schedule,
+                              value: '${schedule.scheduleName}_${schedule.id}',
                               child: SizedBox(
                                 width: 250,
                                 child: Text(
-                                  schedule.scheduleName,
+                                  '${schedule.scheduleName}-${schedule.id}',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -370,28 +372,37 @@ class _MapScreenState extends State<MapScreen> {
                 if(isPlace){
                   _markers.clear();
                   setState(() {
-                    _markers.add(StaticMarker(
+                    _markers.add(Marker(
                       latLng: LatLng(placeItem!.latitude, placeItem.longitude), // Tọa độ marker
-                      child: Row(
-                        children: [
-                          const Icon(Icons.location_on, color: Colors.red, size: 40),
-                          SizedBox(
-                            height: 100,
-                            width: 100,
-                            child: Text(
-                              placeItem.placeName,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 2,
-                              style: const TextStyle(color: Colors.red),),
-                          )
-                        ],), bearing: 0
+                      child: GestureDetector(
+                        onTap: () {
+                          _controller?.animateCamera(
+                            CameraUpdate.newLatLngZoom(
+                              LatLng(placeItem.latitude, placeItem.longitude),
+                              16,
+                            ),
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            const Icon(Icons.location_on, color: Colors.red, size: 40),
+                            SizedBox(
+                              height: 100,
+                              width: 100,
+                              child: Text(
+                                placeItem.placeName,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                                style: const TextStyle(color: Colors.red),),
+                            )
+                          ],),
+                      ),
                     ));
                     selectPlace = placeItem;
                     isEvent = false;
                   });
                   _controller?.animateCamera(
                     CameraUpdate.newLatLngZoom(
-
                       LatLng(placeItem!.latitude, placeItem.longitude),
                       16,
                     ),
@@ -402,22 +413,32 @@ class _MapScreenState extends State<MapScreen> {
                 }else {
                   setState(() {
                     _markers.clear();
-                    _markers.add(StaticMarker(
-                      bearing: 0,
+                    _markers.add(Marker(
                       latLng: LatLng(eventItem!.latitude, eventItem.longitude),
-                      child: Row(
-                        children: [
-                          const  Icon(Icons.location_on, color: Colors.red, size: 40),
-                          SizedBox(
-                            height: 100,
-                            width: 100,
-                            child: Text(
-                              eventItem.eventName,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 2,
-                              style: const TextStyle(color: Colors.red),),
-                          )
-                        ],
+                      child: GestureDetector(
+                        onTap: () {
+                          _controller?.animateCamera(
+                            CameraUpdate.newLatLngZoom(
+
+                              LatLng(eventItem!.latitude, eventItem.longitude),
+                              16,
+                            ),
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            const  Icon(Icons.location_on, color: Colors.red, size: 40),
+                            SizedBox(
+                              height: 100,
+                              width: 100,
+                              child: Text(
+                                eventItem.eventName,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                                style: const TextStyle(color: Colors.red),),
+                            )
+                          ],
+                        ),
                       ),
                     ));
                     selectEvent = eventItem;
@@ -450,7 +471,7 @@ class _MapScreenState extends State<MapScreen> {
         )),
               Positioned(
                   right: 10,
-                  top: MediaQuery.sizeOf(context).height * 0.2,
+                  top: MediaQuery.sizeOf(context).height * 0.25,
                   child: InkWell(
                     child: Container(
                         width: 45,
@@ -478,7 +499,7 @@ class _MapScreenState extends State<MapScreen> {
               if (panelPosition == 0.0)
                 Positioned(
                   bottom: 20,
-                  right: 20,
+                  right: 10,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -505,6 +526,13 @@ class _MapScreenState extends State<MapScreen> {
                     ],
                   ),
                 ),
+              if(!isSearchMode)
+              Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 110),
+                    child: _scheduleRoute(),
+                  ))
             ],
           );
   }
@@ -528,6 +556,71 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
+  Widget _scheduleRoute() {
+    if(_selectedSchedule == null){
+      return SizedBox();
+    }
+
+    String idPart = _selectedSchedule!.split('_')[1];
+    int scheduleId = int.parse(idPart);
+
+    var selectSchedule = _listSchedule.firstWhere((element) => element.id == scheduleId,);
+    int index = -1;
+    return Container(
+      padding: EdgeInsets.only(top: 0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(11),
+    gradient: LinearGradient(
+    colors: [
+    Colors.yellowAccent.withOpacity(0.5),
+    Colors.blueAccent.withOpacity(0.5),
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    )),
+      width: 300,
+      height: 80,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+            children: selectSchedule.destinations.map((entry) {
+              index++;
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          _controller?.animateCamera(
+                              CameraUpdate.newLatLngZoom(
+                                LatLng(entry!.latitude, entry.longitude),
+                                16,
+                              ));
+                          _selectDestination(entry);
+                        },
+                      icon: Icon(entry.isArrived?Icons.circle_rounded:Icons.circle_outlined),),
+                      Container(
+                        width: 45,
+                        child:
+                          Text(entry.placeName,
+                          maxLines: 2,
+                          style: TextStyle(fontSize: 9),),
+                      )
+                    ],
+                  ),
+                  if (index < selectSchedule.destinations.length - 1)
+                    Container(
+                      padding: EdgeInsets.only(top: 10),
+                        child: const Icon(Icons.arrow_forward, size: 25)),
+                ],
+              );
+            }).toList(),
+          ),
+      ),
+    );
+  }
+
   Future<void> _showPanel() async {
     PlaceDetailModel detailModel = await _placeService.GetPlaceDetail(isEvent?selectEvent!.placeId:selectPlace!.placeId);
      setState(() {
@@ -547,49 +640,65 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _ScheduleSelect() {
-    if(_selectedSchedule!.destinations.isEmpty){
+    if(_selectedSchedule!.isEmpty){
       return;
     }
-    double minLat = _selectedSchedule!.destinations.first.latitude;
-    double maxLat = _selectedSchedule!.destinations.first.latitude;
-    double minLng = _selectedSchedule!.destinations.first.longitude;
-    double maxLng = _selectedSchedule!.destinations.first.longitude;
 
-    for (var position in _selectedSchedule!.destinations) {
+    _markers.clear();
+    List<Marker> list = [];
+    String idPart = _selectedSchedule!.split('_')[1];
+    int scheduleId = int.parse(idPart);
+
+    var selectSchedule = _listSchedule.firstWhere((element) => element.id == scheduleId,);
+
+    double minLat = selectSchedule.destinations.first.latitude;
+    double maxLat = selectSchedule.destinations.first.latitude;
+    double minLng = selectSchedule.destinations.first.longitude;
+    double maxLng = selectSchedule.destinations.first.longitude;
+
+    for (var position in selectSchedule!.destinations) {
       if (position.latitude < minLat) minLat = position.latitude;
       if (position.latitude > maxLat) maxLat = position.latitude;
       if (position.longitude < minLng) minLng = position.longitude;
       if (position.longitude > maxLng) maxLng = position.longitude;
     }
 
-    _markers.clear();
-    List<StaticMarker> list = [];
-    for (var item in _selectedSchedule!.destinations){
-      list.add(StaticMarker(
-        bearing: 0,
+    for (var item in selectSchedule.destinations){
+      list.add(Marker(
         latLng: LatLng(item.latitude, item.longitude),
         child: Row(
           children: [
-                Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(
-                    color: Colors.blue,
-                    width: 1,
+            GestureDetector(
+              onTap: () {
+                _controller?.animateCamera(
+                  CameraUpdate.newLatLngZoom(
+                    LatLng(item!.latitude, item.longitude),
+                    16,
                   ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    item.placePhotoDisplay!,
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.cover,
+                );
+              _selectDestination(item);
+              },
+                  child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(
+                      color: Colors.blue,
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      item.placePhotoDisplay!,
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                                ),
                 ),
-              ),
             SizedBox(
               height: 100,
               width: 100,
@@ -612,6 +721,40 @@ class _MapScreenState extends State<MapScreen> {
       northeast: LatLng(maxLat, maxLng),
     );
     _controller?.animateCamera(CameraUpdate.newLatLngBounds(bound));
+  }
+
+    void _selectDestination(DestinationModel item){
+
+    double distance = calculateDistance(item.latitude, item.longitude, _currentPosition.latitude, _currentPosition.longitude);
+    var temp = new PlaceCardModel(
+                      placeId: item.placeId,
+                      placeName: item.placeName,
+                      latitude: item.latitude, longitude: item.longitude,
+                      address: '',
+                      countFeedback: 0,
+                      distance: distance,
+                      photoDisplayUrl:item.placePhotoDisplay!,
+                      rateStar: 0,
+                      wardName: 'x');
+    setState(() {
+      isEvent = false;
+      selectPlace = temp;
+    });
+    _showPanel();
+  }
+
+  double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const R = 6371;
+    double phi1 = lat1 * pi / 180;
+    double phi2 = lat2 * pi / 180;
+    double deltaPhi = (lat2 - lat1) * pi / 180;
+    double deltaLambda = (lon2 - lon1) * pi / 180;
+    double a = sin(deltaPhi / 2) * sin(deltaPhi / 2) +
+        cos(phi1) * cos(phi2) * sin(deltaLambda / 2) * sin(deltaLambda / 2);
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+    double distance = R * c;
+    return distance;
   }
 
 }
