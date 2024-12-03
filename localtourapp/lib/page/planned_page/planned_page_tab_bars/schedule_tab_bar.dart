@@ -845,12 +845,21 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           );
 
           // Positions where we need to use Row (positions 4, 7, 10, ...)
-          if ((addButtonIndex + 1) % columns == 1) {
-            // Use Row
+          if ((addButtonIndex + 1) % 6 == 4) {
+            // Positions: 4, 10, 16, 22, ...
             itemWidget = Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(width: 10,),
+                addButtonContent,
+                const SizedBox(width: 10),
+              ],
+            );
+          } else if ((addButtonIndex + 1) % 6 == 1) {
+            // Positions: 7, 13, 19, 25, ...
+            itemWidget = Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 10),
                 addButtonContent,
               ],
             );

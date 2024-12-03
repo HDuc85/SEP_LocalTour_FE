@@ -23,144 +23,173 @@ class BottomSheetInfo extends StatelessWidget {
   final PlaceCardModel? placeCardModel;
   final String? language;
   final PlaceDetailModel? detailModel;
-  const BottomSheetInfo({super.key, required this.onClose, this.eventModel,this.placeCardModel,this.isEvent, this.language, this.detailModel,});
+  const BottomSheetInfo({
+    super.key,
+    required this.onClose,
+    this.eventModel,
+    this.placeCardModel,
+    this.isEvent,
+    this.language,
+    this.detailModel,
+  });
   final VoidCallback onClose;
-
 
   @override
   Widget build(BuildContext context) {
-          return Container(
-            height: 350,
-            width: double.infinity,
-            margin: const EdgeInsets.only(left: 15,right: 15),
-            padding: const EdgeInsets.only(bottom: 0),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-            ),
-            child: GestureDetector(
-            onVerticalDragStart: (details) {
-            },
-            child: ListView(
-              physics: const ClampingScrollPhysics(),
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+    return Container(
+      height: 350,
+      width: double.infinity,
+      margin: const EdgeInsets.only(left: 15, right: 15),
+      padding: const EdgeInsets.only(bottom: 0),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+      ),
+      child: ListView(
+        physics: const ClampingScrollPhysics(),
+        shrinkWrap: true,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 50,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Flexible(
+                child: Column(
                   children: [
-                    Container(
-                      width: 50,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Text(
+                        (isEvent!) ? eventModel!.eventName : detailModel!.name,
+                        style: const TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.bold),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 230,
+                          child: !isEvent!
+                              ? _TimeString()
+                              : Text(
+                                  language == 'vi'
+                                      ? 'Tại ${eventModel!.placeName} '
+                                      : 'At ${eventModel!.placeName}',
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.deepOrangeAccent),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 225,
+                          child: Text(
+                            isEvent!
+                                ? detailModel!.address
+                                : placeCardModel!.address,
+                            style: const TextStyle(
+                                fontSize: 12, color: Colors.grey),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                Row(
-                  children: [
-                    Flexible(
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 10),
-                          SizedBox(
-                            width: double.infinity,
-                            child: Text(
-                              (isEvent!)? eventModel!.eventName : detailModel!.name ,
-                              style: const TextStyle(
-                                  fontSize: 17, fontWeight: FontWeight.bold),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 230,
-                                child: !isEvent! ? _TimeString() :
-                                Text(language == 'vi' ? 'Tại ${eventModel!.placeName} ' : 'At ${eventModel!.placeName}',
-                                  style: const TextStyle(fontSize: 11, color: Colors.deepOrangeAccent),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 5),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 225,
-                                child: Text( isEvent! ? detailModel!.address : detailModel!.address,
-                                    style: const TextStyle(fontSize: 12,color: Colors.grey),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: 100,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(11),
-                        image: DecorationImage(
-                          image: NetworkImage(isEvent! ? eventModel!.eventPhoto! : detailModel!.photoDisplay),
-                          fit: BoxFit.cover,
+              ),
+              Container(
+                width: 100,
+                height: 120,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(11),
+                  image: DecorationImage(
+                    image: NetworkImage(isEvent!
+                        ? eventModel!.eventPhoto!
+                        : placeCardModel!.photoDisplayUrl),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              )
+            ],
+          ),
+          SizedBox(
+            height: 5,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              isEvent!
+                  ? _EventStatusString()
+                  : buildStarRating(placeCardModel!.rateStar),
+              SizedBox(
+                width: 20,
+              ),
+              Text(
+                  isEvent!
+                      ? FormatDistance(eventModel!.distance)
+                      : FormatDistance(placeCardModel!.distance),
+                  style: const TextStyle(fontSize: 16)),
+            ],
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          Row(
+            children: [
+              MapActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => NavigationPage(
+                          lat: detailModel!.latitude,
+                          long: detailModel!.longitude,
+                          placeId: detailModel!.id,
                         ),
                       ),
-                    )
-                  ],
-                ),
-                SizedBox(height: 5,),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    isEvent! ?
-                    _EventStatusString()
-                      : buildStarRating(detailModel!.rating),
-                    SizedBox(width: 20,),
-                    Text( isEvent! ? FormatDistance(eventModel!.distance) :  FormatDistance(placeCardModel!.distance),
-                        style: const TextStyle(fontSize: 16)),
-                  ],
-                ),
-                const SizedBox(height: 10,),
-                Row(
-                  children: [
-                    MapActionButton(
-                        onPressed: ()  {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => NavigationPage(
-                                lat: detailModel!.latitude,
-                                long: detailModel!.longitude,
-                                placeId: detailModel!.id,
-                              ),
-                            ),
-                          );
-                        },
-                        child: Row(
-                          children: [
-                            const Icon(Icons.directions, color: Colors.blue),
-                            const SizedBox(width: 5),
-                            Text(language! == 'vi' ? 'Chỉ đường' : 'Directions')
-                          ],
-                        )),
-                    const SizedBox(width: 10),
-
-                  ],
-                ),
-                SizedBox(height: 10,),
-                Stack(
-                  children: [
-                    detailModel!.placeMedias.isNotEmpty
-                        ? GestureDetector(
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      const Icon(Icons.directions, color: Colors.blue),
+                      const SizedBox(width: 5),
+                      Text(language! == 'vi' ? 'Chỉ đường' : 'Directions')
+                    ],
+                  )),
+              const SizedBox(width: 10),
+            ],
+          ),
+          SizedBox(
+            height: 10,
+          ),
+          Stack(
+            children: [
+              detailModel!.placeMedias.isNotEmpty
+                  ? GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
@@ -178,19 +207,25 @@ class BottomSheetInfo extends StatelessWidget {
                         height: 250, // Adjust height as needed
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
-                        const Center(child: Text('No media available')),
+                            const Center(child: Text('No media available')),
                       ),
                     )
-                        : const Center(child: Text('No media available')),
-                    // Positioned WeatherIconButton
-                  ],
-                ),
-                const SizedBox(height: 1),
-                // Thumbnails Section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: detailModel!.placeMedias.length > 1
-                      ? detailModel!.placeMedias.skip(1).take(4).toList().asMap().entries.map((entry) {
+                  : const Center(child: Text('No media available')),
+              // Positioned WeatherIconButton
+            ],
+          ),
+          const SizedBox(height: 1),
+          // Thumbnails Section
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: detailModel!.placeMedias.length > 1
+                ? detailModel!.placeMedias
+                    .skip(1)
+                    .take(4)
+                    .toList()
+                    .asMap()
+                    .entries
+                    .map((entry) {
                     int index = entry.key;
                     MediaModel media = entry.value;
 
@@ -216,13 +251,15 @@ class BottomSheetInfo extends StatelessWidget {
                               height: 77.5,
                               errorBuilder: (context, error, stackTrace) =>
                                   Container(
-                                    width: double.infinity,
-                                    height: 77.5,
-                                    color: Colors.grey,
-                                    child: const Icon(Icons.image, color: Colors.white),
-                                  ),
+                                width: double.infinity,
+                                height: 77.5,
+                                color: Colors.grey,
+                                child: const Icon(Icons.image,
+                                    color: Colors.white),
+                              ),
                             ),
-                            if (index == 3 && detailModel!.placeMedias.length > 5)
+                            if (index == 3 &&
+                                detailModel!.placeMedias.length > 5)
                               Container(
                                 color: Colors.black.withOpacity(0.5),
                                 height: 77.5,
@@ -242,22 +279,22 @@ class BottomSheetInfo extends StatelessWidget {
                       ),
                     );
                   }).toList()
-                      : [],
-                )
-              ],
-            ),)
-          );
-
+                : [],
+          )
+        ],
+      ),
+    );
   }
-  String FormatDistance(double distance){
+
+  String FormatDistance(double distance) {
     String formattedDistance = '${distance.toStringAsFixed(1)}';
     if (formattedDistance.endsWith('.0')) {
-      formattedDistance = formattedDistance.substring(0, formattedDistance.length - 2);
+      formattedDistance =
+          formattedDistance.substring(0, formattedDistance.length - 2);
     }
     formattedDistance += ' km';
     return formattedDistance;
   }
-
 
   Widget buildStarRating(double score) {
     int fullStars = score.floor(); // Full stars
@@ -275,13 +312,15 @@ class BottomSheetInfo extends StatelessWidget {
         }
       }),
     );
-    }
+  }
 
   Widget _TimeString() {
     DateTime now = DateTime.now();
 
-    DateTime timeOpen = DateTime(now.year, now.month, now.day, detailModel!.timeOpen!.hour, detailModel!.timeOpen!.minute);
-    DateTime timeClose = DateTime(now.year, now.month, now.day, detailModel!.timeClose!.hour, detailModel!.timeClose!.minute);
+    DateTime timeOpen = DateTime(now.year, now.month, now.day,
+        detailModel!.timeOpen!.hour, detailModel!.timeOpen!.minute);
+    DateTime timeClose = DateTime(now.year, now.month, now.day,
+        detailModel!.timeClose!.hour, detailModel!.timeClose!.minute);
 
     if (now.isAfter(timeOpen) && now.isBefore(timeClose)) {
       return RichText(
@@ -342,82 +381,88 @@ class BottomSheetInfo extends StatelessWidget {
       return RichText(
         text: TextSpan(
           children: [
-            language == 'vi'?
+            language == 'vi'
+                ? TextSpan(
+                    text: 'Đang diễn ra',
+                    style: TextStyle(color: Colors.green, fontSize: 12),
+                  )
+                : TextSpan(
+                    text: 'Ongoing',
+                    style: TextStyle(color: Colors.green, fontSize: 12),
+                  ),
+            language == 'vi'
+                ? TextSpan(
+                    text: ' - Kết thúc ${daysLeft} ngày nữa',
+                    style: TextStyle(color: Colors.green, fontSize: 12),
+                  )
+                : TextSpan(
+                    text:
+                        ' - End in ${daysLeft} ${daysLeft > 1 ? 'day' : 'days'}',
+                    style: TextStyle(color: Colors.green, fontSize: 12),
+                  ),
+          ],
+        ),
+      );
+    } else if (now.isAfter(eventEnd.subtract(Duration(days: 1))) &&
+        now.isBefore(eventEnd)) {
+      return RichText(
+        text: TextSpan(
+          children: [
+            language == 'vi'
+                ? TextSpan(
+                    text: 'Sắp kết thúc',
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  )
+                : TextSpan(
+                    text: 'About to end',
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  ),
             TextSpan(
-              text: 'Đang diễn ra',
-              style: TextStyle(color: Colors.green, fontSize: 12),
-            ) :
-            TextSpan(
-              text: 'Ongoing',
-              style: TextStyle(color: Colors.green, fontSize: 12),
-            ),
-            language == 'vi'?
-            TextSpan(
-              text: ' - Kết thúc ${daysLeft} ngày nữa',
-              style: TextStyle(color: Colors.green, fontSize: 12),
-            ) : TextSpan(
-              text: ' - End in ${daysLeft} ${daysLeft > 1 ? 'day' : 'days'}',
-              style: TextStyle(color: Colors.green, fontSize: 12),
+              text:
+                  ' - End at ${DateFormat('HH:mm dd/MM/yyyy').format(eventEnd)}',
+              style: TextStyle(color: Colors.red, fontSize: 12),
             ),
           ],
         ),
       );
-    }
-    else if (now.isAfter(eventEnd.subtract(Duration(days: 1))) && now.isBefore(eventEnd)) {
+    } else if (now.isBefore(eventStart)) {
       return RichText(
         text: TextSpan(
           children: [
-            language == 'vi' ?
-            TextSpan(
-              text: 'Sắp kết thúc',
-              style: TextStyle(color: Colors.red, fontSize: 12),
-            ) :
-            TextSpan(
-              text: 'About to end',
-              style: TextStyle(color: Colors.red, fontSize: 12),
-            ),
-            TextSpan(
-              text: ' - End at ${DateFormat('HH:mm dd/MM/yyyy').format(eventEnd)}',
-              style: TextStyle(color: Colors.red, fontSize: 12),
-            ),
+            language == 'vi'
+                ? TextSpan(
+                    text: 'Sắp diễn ra',
+                    style: TextStyle(color: Colors.orange, fontSize: 12),
+                  )
+                : TextSpan(
+                    text: 'Coming soon',
+                    style: TextStyle(color: Colors.orange, fontSize: 12),
+                  ),
+            language == 'vi'
+                ? TextSpan(
+                    text:
+                        ' - Diễn ra vào ${DateFormat('HH:mm dd/MM/yyyy').format(eventStart)}',
+                    style: TextStyle(color: Colors.orange, fontSize: 12),
+                  )
+                : TextSpan(
+                    text:
+                        ' - Start at ${DateFormat('HH:mm dd/MM/yyyy').format(eventStart)}',
+                    style: TextStyle(color: Colors.orange, fontSize: 12),
+                  ),
           ],
         ),
       );
-    }
-    else if (now.isBefore(eventStart)) {
-      return RichText(
-        text: TextSpan(
-          children: [
-            language == 'vi'?
-            TextSpan(
-              text: 'Sắp diễn ra',
-              style: TextStyle(color: Colors.orange, fontSize: 12),
-            ) : TextSpan(
-              text: 'Coming soon',
-              style: TextStyle(color: Colors.orange, fontSize: 12),
-            ),
-            language == 'vi'?
-            TextSpan(
-              text: ' - Diễn ra vào ${DateFormat('HH:mm dd/MM/yyyy').format(eventStart)}',
-              style: TextStyle(color: Colors.orange, fontSize: 12),
-            ) : TextSpan(
-              text: ' - Start at ${DateFormat('HH:mm dd/MM/yyyy').format(eventStart)}',
-              style: TextStyle(color: Colors.orange, fontSize: 12),
-            ),
-          ],
-        ),
-      );
-    }
-    else if (now.isAfter(eventEnd)) {
+    } else if (now.isAfter(eventEnd)) {
       return RichText(
         text: TextSpan(
           children: [
             TextSpan(
-              text: language == 'vi' ?  'Đã kết thúc' : 'Ended',
+              text: language == 'vi' ? 'Đã kết thúc' : 'Ended',
               style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
             TextSpan(
-              text: ' - ${language == 'vi' ? 'Kết thúc vào' : 'Ends on'} ${DateFormat('dd/MM/yyyy').format(eventEnd)}',
+              text:
+                  ' - ${language == 'vi' ? 'Kết thúc vào' : 'Ends on'} ${DateFormat('dd/MM/yyyy').format(eventEnd)}',
               style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
           ],
@@ -427,6 +472,4 @@ class BottomSheetInfo extends StatelessWidget {
 
     return SizedBox();
   }
-
-
 }
