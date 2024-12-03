@@ -86,7 +86,7 @@ class _RegisterPageState extends State<RegisterPage> {
           currentStep = 2;
         });
       }else{
-        Navigator.pushNamed(context, '/homepage');
+        Navigator.pushNamed(context, '/');
       }
     }
 

@@ -194,6 +194,8 @@ class ScheduleService {
           isArrived: item['isArrived'] ?? false,
           placePhotoDisplay: item['placePhotoDisplay'],
           placeName: item['placeName'],
+          longitude: item['longitude'].toDouble(),
+          latitude: item['latitude'].toDouble()
         );
       }).toList();
       return destinations;

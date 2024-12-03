@@ -164,7 +164,6 @@ class _NavigationState extends State<NavigationPage>{
                     mini: true,
                     child: const Icon(Icons.close),
                     onPressed: () {
-                      _searchFocusNode.unfocus();
                       Navigator.pop(context);
                     },),
                 ],

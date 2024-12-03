@@ -3,26 +3,23 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/places/place_detail_model.dart';
 import 'package:localtourapp/services/location_Service.dart';
 import 'package:sliding_up_panel2/sliding_up_panel2.dart';
-import 'package:talker/talker.dart';
 import 'package:vietmap_flutter_gl/vietmap_flutter_gl.dart';
 import '../../../../constants/getListApi.dart';
 import '../../../../models/HomePage/placeCard.dart';
 import '../../../../models/event/event_model.dart';
+import '../../../../models/schedule/schedule_model.dart';
 import '../../../../services/event_service.dart';
 import '../../../../services/place_service.dart';
+import '../../../../services/schedule_service.dart';
 import '../../../search_page/search_page.dart';
 import '../../constants/colors.dart';
-
 import '../../di/app_context.dart';
-import 'bloc/map_bloc.dart';
-import 'bloc/map_event.dart';
 import 'components/bottom_info.dart';
 import 'components/select_map_tiles_modal.dart';
 
@@ -34,42 +31,45 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  LocationService _locationService = LocationService();
+  final LocationService _locationService = LocationService();
   final PlaceService _placeService = PlaceService();
   final EventService _eventService = EventService();
+  final ScheduleService _scheduleService = ScheduleService();
+
   List<PlaceCardModel> placeTranslations = [];
   List<EventModel> events =[];
+  List<ScheduleModel> _listSchedule = [];
   VietmapController? _controller;
   final TextEditingController _searchController = TextEditingController();
   String searchText = '';
   Timer? _debounce;
   List<StaticMarker> _markers = [];
-  List<Marker> _nearbyMarker = [];
   double panelPosition = 0.0;
-  bool isShowMarker = true;
   final PanelController _panelController = PanelController();
   MyLocationTrackingMode myLocationTrackingMode =
       MyLocationTrackingMode.Tracking;
   MyLocationRenderMode myLocationRenderMode = MyLocationRenderMode.COMPASS;
-  final talker = Talker();
   String tileMap = AppContext.getVietmapMapStyleUrl() ?? "";
   late Position _currentPosition;
   EventModel? selectEvent;
   PlaceCardModel? selectPlace;
   PlaceDetailModel? detailSelect;
+  ScheduleModel? _selectedSchedule;
+
   bool isLoading = true;
   bool isSelected = false;
   bool isEvent = false;
-  bool OnSearch = false;
+  bool isSearchMode = true;
+  bool onSearch = false;
   String? language;
   final FocusNode _searchFocus = FocusNode();
   @override
   void initState() {
     super.initState();
     _searchFocus.addListener(() {
-      if (_searchFocus.hasFocus != OnSearch) {
+      if (_searchFocus.hasFocus != onSearch) {
         setState(() {
-          OnSearch = _searchFocus.hasFocus;
+          onSearch = _searchFocus.hasFocus;
         });
       }
     });
@@ -92,10 +92,17 @@ class _MapScreenState extends State<MapScreen> {
       });
     }else{
       setState(() {
-        _currentPosition = new Position(longitude: long, latitude: lat, timestamp: DateTime.timestamp(), accuracy: 1, altitude: 1, altitudeAccuracy: 1, heading: 1, headingAccuracy: 1, speed: 1, speedAccuracy: 1);
+        _currentPosition = Position(longitude: long, latitude: lat, timestamp: DateTime.timestamp(), accuracy: 1, altitude: 1, altitudeAccuracy: 1, heading: 1, headingAccuracy: 1, speed: 1, speedAccuracy: 1);
         isLoading = false;
       });
     }
+    String? userId = await SecureStorageHelper().readValue(AppConfig.userId);
+
+    var listSchedule = await _scheduleService.getListSchedule(userId);
+   setState(() {
+     _listSchedule = listSchedule;
+   });
+
   }
 
   @override
@@ -172,14 +179,6 @@ class _MapScreenState extends State<MapScreen> {
                     },
                     onMapClick: (point, coordinates) async {
                     },
-                    onMapLongClick: (point, coordinates) {
-                      setState(() {
-                        _nearbyMarker = [];
-                      });
-                      context
-                          .read<MapBloc>()
-                          .add(MapEventOnUserLongTapOnMap(coordinates));
-                    },
                   ),
                   if (_controller != null)
                   StaticMarkerLayer(
@@ -217,12 +216,6 @@ class _MapScreenState extends State<MapScreen> {
                           )),
                       ignorePointer: true,
                     ),
-              _controller == null
-                  ? const SizedBox.shrink()
-                  : MarkerLayer(
-                      mapController: _controller!,
-                      markers: _nearbyMarker,
-                    ),
               Align(
                   key: const Key('searchBarKey'),
                   alignment: Alignment.topCenter,
@@ -245,17 +238,21 @@ class _MapScreenState extends State<MapScreen> {
                   child: Row(
                     children: [
                       IconButton(
-                        icon: Icon(Icons.search,
+                        icon: isSearchMode ? const Icon(Icons.search,
                           color: Colors.black,
-                        ),
+                        ) 
+                        : const Icon(Icons.travel_explore),
                         onPressed: () {
                           setState(() {
+                            isSearchMode = !isSearchMode;
                             FocusScope.of(context).unfocus();
                           });
                         },
                       ),
                         Expanded(
-                          child: TextField(
+                          child:
+                          isSearchMode ?
+                          TextField(
                             controller: _searchController,
                             onChanged: _onSearchChanged,
                             focusNode: _searchFocus,
@@ -265,7 +262,7 @@ class _MapScreenState extends State<MapScreen> {
                               border: InputBorder.none,
                               suffixIcon: _searchController.text.isNotEmpty
                                   ? IconButton(
-                                icon: Icon(Icons.clear),
+                                icon: const Icon(Icons.clear),
                                 onPressed: () {
                                   _searchController.clear();
                                  setState(() {
@@ -273,13 +270,42 @@ class _MapScreenState extends State<MapScreen> {
                                    setState(() {
                                      FocusScope.of(context).unfocus();
                                    });
-                                   OnSearch = false;
+                                   onSearch = false;
                                  });
                                 },
                               )
                                   : null
                             ),
 
+                          ) :
+                          DropdownButton<ScheduleModel>(
+                            value: _selectedSchedule,
+                            hint: const Text("Select your schedule"),
+                            isDense: true,
+                            isExpanded: false,
+                            icon: const Icon(Icons.arrow_drop_down),
+                            underline: Container(),
+                            items: _listSchedule
+                                .map((schedule) => DropdownMenuItem(
+                              value: schedule,
+                              child: SizedBox(
+                                width: 250,
+                                child: Text(
+                                  schedule.scheduleName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ))
+                                .toList(),
+                            onChanged: (value) {
+
+                              setState(() {
+                                _selectedSchedule = value;
+                              }
+                              );
+                              _ScheduleSelect();
+                            },
                           ),
                         ),
                     ],
@@ -289,7 +315,7 @@ class _MapScreenState extends State<MapScreen> {
       ),
             ),
         // Dropdown List
-        if (searchText.isNotEmpty && OnSearch)
+        if (searchText.isNotEmpty && onSearch)
 
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -322,7 +348,7 @@ class _MapScreenState extends State<MapScreen> {
                   return ListTile(
                     leading: lastItem
                         ? const Icon(Icons.search)
-                        : (isPlace ? Icon(Icons.location_on) : Icon(Icons.event_available_rounded)),
+                        : (isPlace ? const Icon(Icons.location_on) : const Icon(Icons.event_available_rounded)),
                     title: lastItem
                         ? Text("Search for $searchText") // Display the "Search for..." action
                         : (isPlace ? Text(placeItem!.placeName) : Text(eventItem!.eventName) ), // Display place name for PlaceTranslation
@@ -336,7 +362,7 @@ class _MapScreenState extends State<MapScreen> {
                     MaterialPageRoute(
                       builder: (_) => SearchPage(
                         sortBy: SortBy.distance,
-                        initialTags: [], //
+                        initialTags: const [], //
                         textSearch: searchText,
                       ),
                     ));
@@ -348,15 +374,15 @@ class _MapScreenState extends State<MapScreen> {
                       latLng: LatLng(placeItem!.latitude, placeItem.longitude), // Tọa độ marker
                       child: Row(
                         children: [
-                          Icon(Icons.location_on, color: Colors.red, size: 40),
-                          Container(
+                          const Icon(Icons.location_on, color: Colors.red, size: 40),
+                          SizedBox(
                             height: 100,
                             width: 100,
                             child: Text(
                               placeItem.placeName,
                               overflow: TextOverflow.ellipsis,
                               maxLines: 2,
-                              style: TextStyle(color: Colors.red),),
+                              style: const TextStyle(color: Colors.red),),
                           )
                         ],), bearing: 0
                     ));
@@ -371,7 +397,7 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   );
                   FocusScope.of(context).unfocus();
-                  OnSearch = false;
+                  onSearch = false;
                     _showPanel();
                 }else {
                   setState(() {
@@ -381,15 +407,15 @@ class _MapScreenState extends State<MapScreen> {
                       latLng: LatLng(eventItem!.latitude, eventItem.longitude),
                       child: Row(
                         children: [
-                          Icon(Icons.location_on, color: Colors.red, size: 40),
-                          Container(
+                          const  Icon(Icons.location_on, color: Colors.red, size: 40),
+                          SizedBox(
                             height: 100,
                             width: 100,
                             child: Text(
                               eventItem.eventName,
                               overflow: TextOverflow.ellipsis,
                               maxLines: 2,
-                              style: TextStyle(color: Colors.red),),
+                              style: const TextStyle(color: Colors.red),),
                           )
                         ],
                       ),
@@ -401,14 +427,14 @@ class _MapScreenState extends State<MapScreen> {
                   _controller?.animateCamera(
                     CameraUpdate.newCameraPosition(
                       CameraPosition(
-                        target: LatLng(eventItem!.latitude, eventItem!.longitude),
+                        target: LatLng(eventItem!.latitude, eventItem.longitude),
                         zoom: 15,
                         tilt: 45,
                       ),
                     ),
                   );
                   FocusScope.of(context).unfocus();
-                  OnSearch = false;
+                  onSearch = false;
                   _showPanel();
                 }
 
@@ -484,18 +510,18 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _onSearchChanged(String value) {
-    OnSearch = true;
+    onSearch = true;
     if (_debounce?.isActive ?? false) _debounce?.cancel();
 
     _debounce = Timer(const Duration(seconds: 2), () async {
       setState(() {
         searchText = value;
       });
-      final fetchedSearchList = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.asc,[],searchText);
+      final fetchedSearchList = await _placeService.getListPlace(_currentPosition.latitude, _currentPosition.longitude, SortBy.distance,SortOrder.asc,[],searchText);
       setState(() {
         placeTranslations = fetchedSearchList;
       });
-      final fetchedEventList = await _eventService.GetEventInPlace(null, _currentPosition!.latitude, _currentPosition!.longitude, SortOrder.asc,SortBy.distance,searchText);
+      final fetchedEventList = await _eventService.GetEventInPlace(null, _currentPosition.latitude, _currentPosition.longitude, SortOrder.asc,SortBy.distance,searchText);
       setState(() {
         events = fetchedEventList;
       });
@@ -520,5 +546,74 @@ class _MapScreenState extends State<MapScreen> {
         builder: (_) => const SelectMapTilesModal());
   }
 
+  void _ScheduleSelect() {
+    if(_selectedSchedule!.destinations.isEmpty){
+      return;
+    }
+    double minLat = _selectedSchedule!.destinations.first.latitude;
+    double maxLat = _selectedSchedule!.destinations.first.latitude;
+    double minLng = _selectedSchedule!.destinations.first.longitude;
+    double maxLng = _selectedSchedule!.destinations.first.longitude;
+
+    for (var position in _selectedSchedule!.destinations) {
+      if (position.latitude < minLat) minLat = position.latitude;
+      if (position.latitude > maxLat) maxLat = position.latitude;
+      if (position.longitude < minLng) minLng = position.longitude;
+      if (position.longitude > maxLng) maxLng = position.longitude;
+    }
+
+    _markers.clear();
+    List<StaticMarker> list = [];
+    for (var item in _selectedSchedule!.destinations){
+      list.add(StaticMarker(
+        bearing: 0,
+        latLng: LatLng(item.latitude, item.longitude),
+        child: Row(
+          children: [
+                Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(
+                    color: Colors.blue,
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    item.placePhotoDisplay!,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            SizedBox(
+              height: 100,
+              width: 100,
+              child: Text(
+                item.placeName,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+                style: const TextStyle(color: Colors.red),),
+            )
+          ],
+        ),
+      ));
+    }
+    setState(() {
+      _markers = list;
+    });
+
+    var bound = LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+    _controller?.animateCamera(CameraUpdate.newLatLngBounds(bound));
+  }
 
 }
+
+

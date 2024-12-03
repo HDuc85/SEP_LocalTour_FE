@@ -8,6 +8,8 @@ class DestinationModel {
   bool isArrived;
   String? placePhotoDisplay;
   String placeName;
+  double longitude;
+  double latitude;
 
   DestinationModel({
     required this.id,
@@ -19,6 +21,8 @@ class DestinationModel {
     required this.isArrived,
     this.placePhotoDisplay,
     required this.placeName,
+    required this.longitude,
+    required this.latitude
   });
 
   factory DestinationModel.fromJson(Map<String, dynamic> json) {
@@ -36,6 +40,8 @@ class DestinationModel {
       isArrived: json['isArrived'],
       placePhotoDisplay: json['placePhotoDisplay']??'',
       placeName: json['placeName']??'Unknown place name',
+      latitude: (json['latitude']).toDouble(),
+      longitude: (json['longitude']).toDouble()
     );
   }
 
