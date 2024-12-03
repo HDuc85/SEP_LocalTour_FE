@@ -680,7 +680,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         );
-                      },
+                      } ,
                       child: PlaceCard(
                         placeCardId: place.placeId,
                         placeName: place.placeName,
