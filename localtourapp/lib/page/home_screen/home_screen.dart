@@ -436,8 +436,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   GestureDetector(
                     onTap: () {
                       // Navigate to DetailPage and pass the filtered data
-
-
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -667,9 +665,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     GestureDetector(
                       onTap: () {
 
-                        Navigator.pushNamed(
+                        Navigator.push(
                           context,
-                          '/detail'
+                          MaterialPageRoute(
+                            builder: (_) => DetailPage(
+                              placeId: place.placeId,
+                            ),
+                          ),
                         );
                       },
                       child: PlaceCard(

@@ -23,6 +23,7 @@ class BottomSheetInfo extends StatelessWidget {
   final PlaceCardModel? placeCardModel;
   final String? language;
   final PlaceDetailModel? detailModel;
+  final ValueChanged<bool> onDraggableChanged;
   const BottomSheetInfo({
     super.key,
     required this.onClose,
@@ -31,13 +32,14 @@ class BottomSheetInfo extends StatelessWidget {
     this.isEvent,
     this.language,
     this.detailModel,
+    required this.onDraggableChanged,
   });
   final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 350,
+      height: 310,
       width: double.infinity,
       margin: const EdgeInsets.only(left: 15, right: 15),
       padding: const EdgeInsets.only(bottom: 0),
@@ -50,18 +52,26 @@ class BottomSheetInfo extends StatelessWidget {
         physics: const ClampingScrollPhysics(),
         shrinkWrap: true,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 50,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(10),
+          GestureDetector(
+            onLongPress: () {
+              onDraggableChanged(true);
+            },
+            onLongPressUp: () {
+              onDraggableChanged(false);
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 50,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           Row(
             children: [
@@ -72,7 +82,9 @@ class BottomSheetInfo extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: Text(
-                        (isEvent!) ? eventModel!.eventName : detailModel!.name,
+                        (isEvent!)
+                            ? eventModel!.eventName
+                            : detailModel!.name,
                         style: const TextStyle(
                             fontSize: 17, fontWeight: FontWeight.bold),
                         maxLines: 2,
@@ -88,15 +100,15 @@ class BottomSheetInfo extends StatelessWidget {
                           child: !isEvent!
                               ? _TimeString()
                               : Text(
-                                  language == 'vi'
-                                      ? 'Tại ${eventModel!.placeName} '
-                                      : 'At ${eventModel!.placeName}',
-                                  style: const TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.deepOrangeAccent),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                            language == 'vi'
+                                ? 'Tại ${eventModel!.placeName} '
+                                : 'At ${eventModel!.placeName}',
+                            style: const TextStyle(
+                                fontSize: 11,
+                                color: Colors.deepOrangeAccent),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
@@ -109,7 +121,7 @@ class BottomSheetInfo extends StatelessWidget {
                           child: Text(
                             isEvent!
                                 ? detailModel!.address
-                                : placeCardModel!.address,
+                                : detailModel!.address,
                             style: const TextStyle(
                                 fontSize: 12, color: Colors.grey),
                             maxLines: 2,
@@ -129,7 +141,7 @@ class BottomSheetInfo extends StatelessWidget {
                   image: DecorationImage(
                     image: NetworkImage(isEvent!
                         ? eventModel!.eventPhoto!
-                        : placeCardModel!.photoDisplayUrl),
+                        : detailModel!.photoDisplay),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -144,7 +156,7 @@ class BottomSheetInfo extends StatelessWidget {
             children: [
               isEvent!
                   ? _EventStatusString()
-                  : buildStarRating(placeCardModel!.rateStar),
+                  : buildStarRating(detailModel!.rating),
               SizedBox(
                 width: 20,
               ),
@@ -190,26 +202,27 @@ class BottomSheetInfo extends StatelessWidget {
             children: [
               detailModel!.placeMedias.isNotEmpty
                   ? GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => FullScreenPlaceMediaViewer(
-                              mediaList: detailModel!.placeMedias,
-                              initialIndex: 0,
-                            ),
-                          ),
-                        );
-                      },
-                      child: Image.network(
-                        detailModel!.placeMedias[0].url,
-                        width: double.infinity,
-                        height: 250, // Adjust height as needed
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Center(child: Text('No media available')),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FullScreenPlaceMediaViewer(
+                        mediaList: detailModel!.placeMedias,
+                        initialIndex: 0,
                       ),
-                    )
+                    ),
+                  );
+                },
+                child: Image.network(
+                  detailModel!.placeMedias[0].url,
+                  width: double.infinity,
+                  height: 250, // Adjust height as needed
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                  const Center(
+                      child: Text('No media available')),
+                ),
+              )
                   : const Center(child: Text('No media available')),
               // Positioned WeatherIconButton
             ],
@@ -220,65 +233,67 @@ class BottomSheetInfo extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: detailModel!.placeMedias.length > 1
                 ? detailModel!.placeMedias
-                    .skip(1)
-                    .take(4)
-                    .toList()
-                    .asMap()
-                    .entries
-                    .map((entry) {
-                    int index = entry.key;
-                    MediaModel media = entry.value;
+                .skip(1)
+                .take(4)
+                .toList()
+                .asMap()
+                .entries
+                .map((entry) {
+              int index = entry.key;
+              MediaModel media = entry.value;
 
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => FullScreenPlaceMediaViewer(
-                                mediaList: detailModel!.placeMedias,
-                                initialIndex: index + 1,
-                              ),
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            FullScreenPlaceMediaViewer(
+                              mediaList: detailModel!.placeMedias,
+                              initialIndex: index + 1,
                             ),
-                          );
-                        },
-                        child: Stack(
-                          children: [
-                            Image.network(
-                              media.url,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: 77.5,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                width: double.infinity,
-                                height: 77.5,
-                                color: Colors.grey,
-                                child: const Icon(Icons.image,
-                                    color: Colors.white),
-                              ),
-                            ),
-                            if (index == 3 &&
-                                detailModel!.placeMedias.length > 5)
-                              Container(
-                                color: Colors.black.withOpacity(0.5),
-                                height: 77.5,
-                                child: const Center(
-                                  child: Text(
-                                    'See more',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
                       ),
                     );
-                  }).toList()
+                  },
+                  child: Stack(
+                    children: [
+                      Image.network(
+                        media.url,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: 77.5,
+                        errorBuilder:
+                            (context, error, stackTrace) =>
+                            Container(
+                              width: double.infinity,
+                              height: 77.5,
+                              color: Colors.grey,
+                              child: const Icon(Icons.image,
+                                  color: Colors.white),
+                            ),
+                      ),
+                      if (index == 3 &&
+                          detailModel!.placeMedias.length > 5)
+                        Container(
+                          color: Colors.black.withOpacity(0.5),
+                          height: 77.5,
+                          child: const Center(
+                            child: Text(
+                              'See more',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList()
                 : [],
           )
         ],
@@ -383,23 +398,23 @@ class BottomSheetInfo extends StatelessWidget {
           children: [
             language == 'vi'
                 ? TextSpan(
-                    text: 'Đang diễn ra',
-                    style: TextStyle(color: Colors.green, fontSize: 12),
-                  )
+              text: 'Đang diễn ra',
+              style: TextStyle(color: Colors.green, fontSize: 12),
+            )
                 : TextSpan(
-                    text: 'Ongoing',
-                    style: TextStyle(color: Colors.green, fontSize: 12),
-                  ),
+              text: 'Ongoing',
+              style: TextStyle(color: Colors.green, fontSize: 12),
+            ),
             language == 'vi'
                 ? TextSpan(
-                    text: ' - Kết thúc ${daysLeft} ngày nữa',
-                    style: TextStyle(color: Colors.green, fontSize: 12),
-                  )
+              text: ' - Kết thúc ${daysLeft} ngày nữa',
+              style: TextStyle(color: Colors.green, fontSize: 12),
+            )
                 : TextSpan(
-                    text:
-                        ' - End in ${daysLeft} ${daysLeft > 1 ? 'day' : 'days'}',
-                    style: TextStyle(color: Colors.green, fontSize: 12),
-                  ),
+              text:
+              ' - End in ${daysLeft} ${daysLeft > 1 ? 'day' : 'days'}',
+              style: TextStyle(color: Colors.green, fontSize: 12),
+            ),
           ],
         ),
       );
@@ -410,16 +425,16 @@ class BottomSheetInfo extends StatelessWidget {
           children: [
             language == 'vi'
                 ? TextSpan(
-                    text: 'Sắp kết thúc',
-                    style: TextStyle(color: Colors.red, fontSize: 12),
-                  )
+              text: 'Sắp kết thúc',
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            )
                 : TextSpan(
-                    text: 'About to end',
-                    style: TextStyle(color: Colors.red, fontSize: 12),
-                  ),
+              text: 'About to end',
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
             TextSpan(
               text:
-                  ' - End at ${DateFormat('HH:mm dd/MM/yyyy').format(eventEnd)}',
+              ' - End at ${DateFormat('HH:mm dd/MM/yyyy').format(eventEnd)}',
               style: TextStyle(color: Colors.red, fontSize: 12),
             ),
           ],
@@ -431,24 +446,24 @@ class BottomSheetInfo extends StatelessWidget {
           children: [
             language == 'vi'
                 ? TextSpan(
-                    text: 'Sắp diễn ra',
-                    style: TextStyle(color: Colors.orange, fontSize: 12),
-                  )
+              text: 'Sắp diễn ra',
+              style: TextStyle(color: Colors.orange, fontSize: 12),
+            )
                 : TextSpan(
-                    text: 'Coming soon',
-                    style: TextStyle(color: Colors.orange, fontSize: 12),
-                  ),
+              text: 'Coming soon',
+              style: TextStyle(color: Colors.orange, fontSize: 12),
+            ),
             language == 'vi'
                 ? TextSpan(
-                    text:
-                        ' - Diễn ra vào ${DateFormat('HH:mm dd/MM/yyyy').format(eventStart)}',
-                    style: TextStyle(color: Colors.orange, fontSize: 12),
-                  )
+              text:
+              ' - Diễn ra vào ${DateFormat('HH:mm dd/MM/yyyy').format(eventStart)}',
+              style: TextStyle(color: Colors.orange, fontSize: 12),
+            )
                 : TextSpan(
-                    text:
-                        ' - Start at ${DateFormat('HH:mm dd/MM/yyyy').format(eventStart)}',
-                    style: TextStyle(color: Colors.orange, fontSize: 12),
-                  ),
+              text:
+              ' - Start at ${DateFormat('HH:mm dd/MM/yyyy').format(eventStart)}',
+              style: TextStyle(color: Colors.orange, fontSize: 12),
+            ),
           ],
         ),
       );
@@ -462,7 +477,7 @@ class BottomSheetInfo extends StatelessWidget {
             ),
             TextSpan(
               text:
-                  ' - ${language == 'vi' ? 'Kết thúc vào' : 'Ends on'} ${DateFormat('dd/MM/yyyy').format(eventEnd)}',
+              ' - ${language == 'vi' ? 'Kết thúc vào' : 'Ends on'} ${DateFormat('dd/MM/yyyy').format(eventEnd)}',
               style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
           ],

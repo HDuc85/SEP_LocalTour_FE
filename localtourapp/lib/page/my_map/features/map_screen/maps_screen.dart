@@ -56,7 +56,7 @@ class _MapScreenState extends State<MapScreen> {
   PlaceCardModel? selectPlace;
   PlaceDetailModel? detailSelect;
   String? _selectedSchedule;
-
+  bool _isPanelDraggable = false;
   bool isLoading = true;
   bool isSelected = false;
   bool isEvent = false;
@@ -132,14 +132,13 @@ class _MapScreenState extends State<MapScreen> {
           : Stack(
               children: [
                 SlidingUpPanel(
-                  isDraggable: false, // Disable dragging
-                  backdropEnabled: true, // Enable backdrop
-                  backdropTapClosesPanel: true, // Tap on backdrop closes panel
+                  isDraggable: _isPanelDraggable,
+                  backdropEnabled: true,
+                  backdropTapClosesPanel: true,
                   controller: _panelController,
-                  maxHeight: 350, // Adjust to match BottomSheetInfo's height
+                  maxHeight: 330,
                   minHeight: 0,
-                  parallaxEnabled:
-                      false, // Disable parallax to prevent unexpected behavior
+                  parallaxEnabled:false,
                   onPanelSlide: (position) {
                     setState(() {
                       panelPosition = position;
@@ -154,6 +153,9 @@ class _MapScreenState extends State<MapScreen> {
                       detailModel: detailSelect,
                       onClose: () {
                         _panelController.hide();
+                      },
+                      onDraggableChanged: (value) {
+                        _isPanelDraggable = value;
                       },
                     );
                   },
@@ -266,7 +268,11 @@ class _MapScreenState extends State<MapScreen> {
                                       onPressed: () {
                                         setState(() {
                                           isSearchMode = !isSearchMode;
+                                          _markers.clear();
                                           FocusScope.of(context).unfocus();
+                                          if(!isSearchMode){
+                                            _ScheduleSelect();
+                                          }
                                         });
                                       },
                                     ),

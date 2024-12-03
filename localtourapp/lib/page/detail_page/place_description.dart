@@ -34,13 +34,12 @@ class _PlaceDescriptionState extends State<PlaceDescription> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final int maxDescriptionLength = 500; // Limit for showing the "More description" link
+    final int maxDescriptionLength = 170; // Limit for showing the "More description" link
     final bool isLongDescription = descriptionText!.length > maxDescriptionLength;
 
     return Container(
       padding: const EdgeInsets.all(16.0),
       width: 400,
-      height: 200,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
