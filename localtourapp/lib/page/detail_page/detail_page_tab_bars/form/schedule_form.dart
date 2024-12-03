@@ -209,10 +209,9 @@ class _ScheduleFormState extends State<ScheduleForm> {
                     );
                   }
 
-                  Navigator.pop(context);
+                  Navigator.pop(context, true);
                 }
               },
-              child: const Text("DONE"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFDCA1A1),
                 shape: RoundedRectangleBorder(
@@ -224,6 +223,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
                   vertical: 10,
                 ),
               ),
+              child: const Text("DONE"),
             ),
           ],
         ),

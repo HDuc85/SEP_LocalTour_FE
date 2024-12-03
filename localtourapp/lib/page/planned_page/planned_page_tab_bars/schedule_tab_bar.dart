@@ -1,10 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart'; // Needed for TapGestureRecognizer
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
-import 'package:localtourapp/models/schedule/destination.dart';
 import 'package:localtourapp/models/schedule/destination_model.dart';
 import 'package:localtourapp/models/schedule/schedule_model.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
@@ -16,12 +14,6 @@ import 'package:localtourapp/base/back_to_top_button.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
-
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dashed_line.dart';
@@ -71,6 +63,16 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     _nameFocusNode.addListener(_onNameFieldFocusChange);
 
     fetchInit();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ModalRoute.of(context)?.isCurrent == true) {
+        fetchData(); // Refresh your data here
+      }
+    });
   }
 
   Future<void> fetchInit() async {
@@ -833,13 +835,17 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           itemWidget = draggable;
         } else {
           Widget addButtonContent = GestureDetector(
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const SearchPage(),
                 ),
               );
+
+              if (result == true) {
+                fetchData(); // Refresh the schedule data
+              }
             },
             child: const Icon(Icons.add_circle, size: 30),
           );

@@ -666,10 +666,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (index == 0) const SizedBox(width: 20),
                     GestureDetector(
                       onTap: () {
-
-                        Navigator.pushNamed(
+                        Navigator.push(
                           context,
-                          '/detail'
+                          MaterialPageRoute(
+                            builder: (_) => DetailPage(
+                              placeId: place.placeId,
+                            ),
+                          ),
                         );
                       },
                       child: PlaceCard(

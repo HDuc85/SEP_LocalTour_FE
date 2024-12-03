@@ -615,29 +615,23 @@ class _AccountPageState extends State<AccountPage> {
       margin:  EdgeInsets.only(top: !isLogin?300:8,bottom: 8,left: 8,right: 8),
       child: ElevatedButton(
         onPressed: () {
-          // Trigger the logout process
-          _logout();
+          if (!isLogin) {
+            // Navigate to the login page
+            Navigator.pushNamed(context, '/login');
+          } else {
+            _logout();
+          }
         },
-        style: !isLogin? ElevatedButton.styleFrom(
-          backgroundColor: Colors.blueAccent, // Choose a color that signifies logout
+        style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16.0),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
-          )) : ElevatedButton.styleFrom(
-          backgroundColor: Colors.red, // Choose a color that signifies logout
-          padding: const EdgeInsets.symmetric(vertical: 12.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
           ),
+          backgroundColor: isLogin ? Colors.red : Colors.blueAccent,
         ),
         child: Text(
-          !isLogin ?'Login':
-          'Logout',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+          isLogin ? 'Logout' : 'Login',
+          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -645,18 +639,23 @@ class _AccountPageState extends State<AccountPage> {
 
   // Function to handle logout
   void _logout() {
-
     _authService.signOut();
 
-    // Navigate to the login screen or any desired screen after logout
-    Navigator.pushReplacementNamed(
-        context, '/login'); // Adjust the route as needed
+    // Update the login status
+    setState(() {
+      isLogin = false;
+    });
 
-    // Optionally, show a confirmation message
+    // Navigate to the login screen using pushNamed
+    Navigator.pushNamed(context, '/login');
+
+    // Show the notification for logout
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Logged out successfully'),
+        duration: Duration(milliseconds: 500), // Optional: Control how long the message appears
       ),
     );
   }
+
 }

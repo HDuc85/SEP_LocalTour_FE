@@ -310,7 +310,7 @@ class _SearchPageState extends State<SearchPage> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 28),
+        padding: const EdgeInsets.symmetric(horizontal: 22),
       ),
       child: Text(
         text,
@@ -325,9 +325,6 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-
-
-    // Optionally, show a loading indicator while fetching the location
     if (_currentPosition == null) {
       return Scaffold(
         backgroundColor: const Color(0xFFF2EAD3),
@@ -435,8 +432,7 @@ class _SearchPageState extends State<SearchPage> {
                     borderRadius: BorderRadius.circular(30),
                     borderSide: const BorderSide(color: Colors.black),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10)
-                  ,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
             ),
@@ -482,7 +478,6 @@ class _SearchPageState extends State<SearchPage> {
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Color(0xFFD6B588)),
                       backgroundColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(vertical: 0),
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -537,7 +532,6 @@ class _SearchPageState extends State<SearchPage> {
           // List of place cards with dividers
           Expanded(
             child:
-
                 (listPlaces.isNotEmpty && isPlace) || (listEvent.isNotEmpty && !isPlace)
                 ? Column(
                   children: [
@@ -578,8 +572,8 @@ class _SearchPageState extends State<SearchPage> {
                         ),
                         itemBuilder: (context, index) {
                           final eventInfo =  listEvent[index % listEvent.length];
-                          return (index == listEvent.length)? SizedBox(height: 42,) :
-                          GestureDetector(
+                          return (index == listEvent.length)?
+                          SizedBox(height: 42,) : GestureDetector(
                             onTap: () {
                               //_navigateToDetail(cardInfo.placeId);
                             },
@@ -595,13 +589,9 @@ class _SearchPageState extends State<SearchPage> {
                             ),
                           );
                         },
-
-                      )
-                      ,
-
+                      ),
                     ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
+                  Container(
                     child: _isLoading
                     ? const SizedBox(child: CircularProgressIndicator())
                     : const SizedBox(),
@@ -646,6 +636,7 @@ class _SearchPageState extends State<SearchPage> {
             ),
           ),
         );
+
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
