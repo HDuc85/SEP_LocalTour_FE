@@ -175,20 +175,12 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Expanded(
-                        flex: 5,
-                        child: Container(),
-                      ),
-                      Expanded(
-                        flex: 4,
-                        child:
                           TextButton(
-
                             onPressed: () {
                               ForgotPasswordDialog.show(
                                 context,'',() {
-
                                 },
                               );
                             },
@@ -200,8 +192,6 @@ class _LoginPageState extends State<LoginPage> {
                                   fontSize: 15),
                             ),
                           ),
-
-                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -216,7 +206,7 @@ class _LoginPageState extends State<LoginPage> {
                       Navigator.pushNamed(context, '/');
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 13,horizontal: 95), // Adjust spacing
+                      padding: const EdgeInsets.symmetric(vertical: 13,horizontal: 70), // Adjust spacing
 
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
