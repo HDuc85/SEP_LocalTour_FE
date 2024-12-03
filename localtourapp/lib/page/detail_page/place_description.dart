@@ -34,7 +34,11 @@ class _PlaceDescriptionState extends State<PlaceDescription> {
       return const Center(child: CircularProgressIndicator());
     }
 
+<<<<<<< HEAD
     final int maxDescriptionLength = 170; // Limit for showing the "More description" link
+=======
+    final int maxDescriptionLength = 500;
+>>>>>>> 85aa8582d7c38e06cc0b2def476905afe8666848
     final bool isLongDescription = descriptionText!.length > maxDescriptionLength;
 
     return Container(
@@ -45,34 +49,37 @@ class _PlaceDescriptionState extends State<PlaceDescription> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.black),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Description',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            isExpanded || !isLongDescription
-                ? descriptionText!
-                : "${descriptionText!.substring(0, maxDescriptionLength)}...",
-            style: const TextStyle(fontSize: 14),
-          ),
-          if (isLongDescription)
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  isExpanded = !isExpanded; // Toggle the expanded state
-                });
-              },
-              child: Text(
-                isExpanded ? "Less description" : "More description",
-                style: const TextStyle(color: Colors.pink),
-              ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Description',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              isExpanded || !isLongDescription
+                  ? descriptionText!
+                  : "${descriptionText!.substring(0, maxDescriptionLength)}...",
+              style: const TextStyle(fontSize: 14),
+            ),
+            if (isLongDescription)
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    isExpanded = !isExpanded;
+                  });
+                },
+                child: Text(
+                  isExpanded ? "Less description" : "More description",
+                  style: const TextStyle(color: Colors.pink),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
+
 }

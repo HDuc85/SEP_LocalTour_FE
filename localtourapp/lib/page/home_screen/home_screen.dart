@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/constants/getListApi.dart';
@@ -90,8 +89,6 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.pushNamed(context, '/wheel');
   }
 
-
-
   // Function to scroll back to the top
   void _scrollToTop() {
     _scrollController.animateTo(
@@ -105,38 +102,52 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       Position? position = await _locationService.getCurrentPosition();
       double long = position != null ? position.longitude : 106.8096761;
-      double lat =  position != null ? position.latitude : 10.8411123;
-      if(position != null){
+      double lat = position != null ? position.latitude : 10.8411123;
+      if (position != null) {
         _currentPosition = position;
-      }else{
-        _currentPosition = new Position(longitude: long, latitude: lat, timestamp: DateTime.timestamp(), accuracy: 1, altitude: 1, altitudeAccuracy: 1, heading: 1, headingAccuracy: 1, speed: 1, speedAccuracy: 1);
+      } else {
+        _currentPosition = new Position(
+            longitude: long,
+            latitude: lat,
+            timestamp: DateTime.timestamp(),
+            accuracy: 1,
+            altitude: 1,
+            altitudeAccuracy: 1,
+            heading: 1,
+            headingAccuracy: 1,
+            speed: 1,
+            speedAccuracy: 1);
       }
 
-      final fetchedListPlaceNearest = await _placeService.getListPlace(lat, long, SortBy.distance,SortOrder.asc);
-      var fetchedListEvent = await _eventService.GetEventInPlace(null, lat, long,SortOrder.asc, SortBy.distance);
+      final fetchedListPlaceNearest = await _placeService.getListPlace(
+          lat, long, SortBy.distance, SortOrder.asc);
+      var fetchedListEvent = await _eventService.GetEventInPlace(
+          null, lat, long, SortOrder.asc, SortBy.distance);
       final topTags = await _tagService.getTopTagPlace();
 
-      for(var tag in topTags){
-        listPlaceTags[tag.id] = await _placeService.getListPlace(lat, long, SortBy.distance,SortOrder.asc,[tag.id]);
+      for (var tag in topTags) {
+        listPlaceTags[tag.id] = await _placeService
+            .getListPlace(lat, long, SortBy.distance, SortOrder.asc, [tag.id]);
       }
 
       for (var tag in topTags) {
         tagSectionKeys[tag.id] = GlobalKey();
       }
       DateTime now = DateTime.now();
-      fetchedListEvent = fetchedListEvent.where((element) {
-        Duration difference = now.difference(element.startDate);
-        Duration differenceEnd = now.difference(element.endDate);
-        if(difference.inHours > 0 && differenceEnd.inHours < 0 ){
-          return true;
-        }
-        if(difference.inHours < 0){
-          return true;
-        }
+      fetchedListEvent = fetchedListEvent.where(
+        (element) {
+          Duration difference = now.difference(element.startDate);
+          Duration differenceEnd = now.difference(element.endDate);
+          if (difference.inHours > 0 && differenceEnd.inHours < 0) {
+            return true;
+          }
+          if (difference.inHours < 0) {
+            return true;
+          }
 
-        return false;
-      },).toList();
-
+          return false;
+        },
+      ).toList();
 
       listTagTop = topTags;
       listPlaceNearest = fetchedListPlaceNearest;
@@ -153,111 +164,107 @@ class _HomeScreenState extends State<HomeScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return
-      isLoading?
-      const Center(child: CircularProgressIndicator()):
-      Stack(
-      children: [
-        // Main Scrollable Content
-        SingleChildScrollView(
-          controller: _scrollController,
-          child: Column(
+    return isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : Stack(
             children: [
-              const NowLocation(),
-              const SizedBox(height: 10),
-              SearchBarIcon(position: _currentPosition,),
-              const SizedBox(height: 10),
-              _buildTagGrid(listTagTop),
-              const SizedBox(height: 40),
-              _buildNearFeaturedSection('assets/icons/Nearest Places.png',
-                  'Nearest Location', listPlaceNearest, SortBy.distance),
-              const SizedBox(height: 40),
-              _buildNearEventNearest('assets/icons/event.png',
-                  'Nearest Events', listEvent, SortBy.distance),
-              const SizedBox(height: 40),
-              ...listTagTop.map((tag) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 30.0),
-                  child: _buildTagSection(tag),
-                );
-              }).toList(),
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
-
-        // Positioned Weather Icon Button (Bottom Left)
-        Positioned(
-          bottom: 10,
-          left: 10,
-          child:
-          PopupMenuButton<int>(
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            offset: Offset(0, -100),
-            itemBuilder:
-                (context) => [
-              PopupMenuItem(
-                value: 1,
-                child: Row(
-                  children: [WeatherIconButton(
-                    onPressed: _navigateToWeatherPage,
-                    assetPath: 'assets/icons/weather.png',
-                  ),
-                  Text('Thời tiết')
-                  ]
+              // Main Scrollable Content
+              SingleChildScrollView(
+                controller: _scrollController,
+                child: Column(
+                  children: [
+                    const NowLocation(),
+                    const SizedBox(height: 10),
+                    SearchBarIcon(
+                      position: _currentPosition,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildTagGrid(listTagTop),
+                    const SizedBox(height: 40),
+                    _buildNearFeaturedSection('assets/icons/Nearest Places.png',
+                        'Nearest Location', listPlaceNearest, SortBy.distance),
+                    const SizedBox(height: 40),
+                    _buildNearEventNearest('assets/icons/event.png',
+                        'Nearest Events', listEvent, SortBy.distance),
+                    const SizedBox(height: 40),
+                    ...listTagTop.map((tag) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 30.0),
+                        child: _buildTagSection(tag),
+                      );
+                    }).toList(),
+                    const SizedBox(height: 40),
+                  ],
                 ),
               ),
-              PopupMenuItem(
-                value: 2,
-                child: Row(
-                    children: [WeatherIconButton(
-                      onPressed: _navigateToWeatherPage,
-                      assetPath: 'assets/icons/wheel.png',
-                    ),
-                      Text('Hôm nay ăn gì')
-                    ]
-                )),
-            ],
-            onSelected: (value) {
-              if (value == 1) {
-                _navigateToWeatherPage();
-              } else if (value == 2) {
-                _navigateToWheelPage();
-              }
-            },
-            child: Container(
-              padding: EdgeInsets.all(8.0),
-              decoration: BoxDecoration(
-                color: Colors.green[300], // Màu nền khi chưa click
-                shape: BoxShape.circle, // Hình dạng tròn
-              ),
-              child: Icon(
-                Icons.more_vert,
-                color: Colors.black,
-              ),
-            ), // Icon hiển thị trên nút
-          )
-        ),
 
-        // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
-        Positioned(
-          bottom: 12,
-          left: 110,
-          child: AnimatedOpacity(
-            opacity: _showBackToTopButton ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 300),
-            child: _showBackToTopButton
-                ? BackToTopButton(
-                    onPressed: _scrollToTop,
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ),
-      ],
-    );
+              // Positioned Weather Icon Button (Bottom Left)
+              Positioned(
+                  bottom: 10,
+                  left: 10,
+                  child: PopupMenuButton<int>(
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    offset: Offset(0, -100),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 1,
+                        child: Row(children: [
+                          WeatherIconButton(
+                            onPressed: _navigateToWeatherPage,
+                            assetPath: 'assets/icons/weather.png',
+                          ),
+                          Text('Thời tiết')
+                        ]),
+                      ),
+                      PopupMenuItem(
+                          value: 2,
+                          child: Row(children: [
+                            WeatherIconButton(
+                              onPressed: _navigateToWeatherPage,
+                              assetPath: 'assets/icons/wheel.png',
+                            ),
+                            Text('Hôm nay ăn gì')
+                          ])),
+                    ],
+                    onSelected: (value) {
+                      if (value == 1) {
+                        _navigateToWeatherPage();
+                      } else if (value == 2) {
+                        _navigateToWheelPage();
+                      }
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        color: Colors.green[300], // Màu nền khi chưa click
+                        shape: BoxShape.circle, // Hình dạng tròn
+                      ),
+                      child: Icon(
+                        Icons.more_vert,
+                        color: Colors.black,
+                      ),
+                    ), // Icon hiển thị trên nút
+                  )),
+
+              // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
+              Positioned(
+                bottom: 12,
+                left: 110,
+                child: AnimatedOpacity(
+                  opacity: _showBackToTopButton ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: _showBackToTopButton
+                      ? BackToTopButton(
+                          onPressed: _scrollToTop,
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ),
+            ],
+          );
   }
 
   // 3/ _buildTagGrid function to list all tags
@@ -282,15 +289,16 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         },
-        child: _buildTagItem('https://api.localtour.space/Media/image_4fc69903-324c-4765-96f4-f338815e4aad.png',
+        child: _buildTagItem(
+            'https://api.localtour.space/Media/image_4fc69903-324c-4765-96f4-f338815e4aad.png',
             'Schedule Page'), // Example image for "Schedule Page"
-      ),GestureDetector(
+      ),
+      GestureDetector(
         onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => WheelPage(
-              ),
+              builder: (_) => WheelPage(),
             ),
           );
         },
@@ -482,8 +490,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildNearEventNearest(String iconPath, String title,
-      List<EventModel> events, SortBy sortBy) {
+  Widget _buildNearEventNearest(
+      String iconPath, String title, List<EventModel> events, SortBy sortBy) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -572,11 +580,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (sectionKey == null) {
       return Container();
     }
-    List<PlaceCardModel> listPlaceCards = listPlaceTags[tag.id]??[];
+    List<PlaceCardModel> listPlaceCards = listPlaceTags[tag.id] ?? [];
 
-    if(isFeatured){
+    if (isFeatured) {
       listPlaceCards.sort((a, b) => a.distance.compareTo(b.distance));
-    }else{
+    } else {
       listPlaceCards.sort((a, b) => b.rateStar.compareTo(a.rateStar));
     }
 
@@ -664,7 +672,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (index == 0) const SizedBox(width: 20),
                     GestureDetector(
                       onTap: () {
-
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -697,8 +704,7 @@ class _HomeScreenState extends State<HomeScreen> {
             text: 'SEE ALL',
             onPressed: () {
               // Determine the filter based on toggle state
-              SortBy sortBy =
-                  isFeatured ? SortBy.distance : SortBy.rating;
+              SortBy sortBy = isFeatured ? SortBy.distance : SortBy.rating;
               Navigator.push(
                 context,
                 MaterialPageRoute(

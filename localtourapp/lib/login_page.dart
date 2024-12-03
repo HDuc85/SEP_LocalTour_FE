@@ -40,7 +40,7 @@ class _LoginPageState extends State<LoginPage> {
   // Helper function to validate the password
   bool validatePassword(String password) {
     final passwordRegExp =
-    RegExp(r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,16}$');
+        RegExp(r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,16}$');
     return passwordRegExp.hasMatch(password);
   }
 
@@ -50,7 +50,7 @@ class _LoginPageState extends State<LoginPage> {
     String password = passwordController.text.trim();
     bool isValid = true;
 
-    setState(()  {
+    setState(() {
       // Validate phone number
 
       if (phoneNumber.isEmpty) {
@@ -69,38 +69,35 @@ class _LoginPageState extends State<LoginPage> {
       } else if (!validatePassword(password)) {
         passwordError = true;
         passwordErrorText =
-        'Password must have:\n• 1 uppercase letter • 1 special character\n• 1 number • 8-16 characters long.';
+            'Password must have:\n• 1 uppercase letter • 1 special character\n• 1 number • 8-16 characters long.';
         isValid = false;
       } else {
         passwordError = false;
         passwordErrorText = '';
       }
-
-
-        }
-    );
+    });
     if (isValid) {
       try {
         await _authService.signInWithPassword(phoneNumber, password);
         widget.onLogin();
         Navigator.pushNamed(context, '/');
-      }catch(e){
+      } catch (e) {
         String error = e.toString();
-        if(error.toLowerCase().contains('password')){
-         setState(() {
-           passwordError = true;
-           passwordErrorText = error;
-           isValid = false;
-         });
-        }else{
-        setState(() {
-          phoneError = true;
-          phoneErrorText = error;
-          isValid = false;
-        });
+        if (error.toLowerCase().contains('password')) {
+          setState(() {
+            passwordError = true;
+            passwordErrorText = error;
+            isValid = false;
+          });
+        } else {
+          setState(() {
+            phoneError = true;
+            phoneErrorText = error;
+            isValid = false;
+          });
         }
-    }}
-
+      }
+    }
   }
 
   @override
@@ -138,7 +135,6 @@ class _LoginPageState extends State<LoginPage> {
                       border: const OutlineInputBorder(),
                       errorText: phoneError ? phoneErrorText : null,
                     ),
-
                   ),
                   const SizedBox(height: 20),
 
@@ -158,40 +154,47 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 10),
                   // Login and Register buttons
-                      Container(
-                        width: 380,
-                        child: ElevatedButton(
-                          onPressed: _handleLogin,
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: Colors.blue, // Button color
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 50,vertical: 13), // Button padding
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8), // Rounded corners
-                            ),
-                          ),
-                          child: Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17), textAlign: TextAlign.center,),
+                  Container(
+                    width: 380,
+                    child: ElevatedButton(
+                      onPressed: _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.blue, // Button color
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 50, vertical: 13), // Button padding
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(8), // Rounded corners
                         ),
                       ),
+                      child: Text(
+                        'Sign In',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 17),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                          TextButton(
-                            onPressed: () {
-                              ForgotPasswordDialog.show(
-                                context,'',() {
-                                },
-                              );
-                            },
-                            child: const Text(
-                              'Forgot Password?',
-                              style: TextStyle(
-                                  color: Colors.deepOrange,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15),
-                            ),
-                          ),
+                      TextButton(
+                        onPressed: () {
+                          ForgotPasswordDialog.show(
+                            context,
+                            '',
+                            () {},
+                          );
+                        },
+                        child: const Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                              color: Colors.deepOrange,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -199,21 +202,22 @@ class _LoginPageState extends State<LoginPage> {
                     onTap: () async {
                       await _authService.signInWithGoogle();
                       var result = await _authService.sendUserIdToBackend();
-                      if(result.firstTime){
+                      if (result.firstTime) {
                         navigatorKey.currentState?.pushNamed('/register');
                       }
-                     widget.onLogin();
+                      widget.onLogin();
                       Navigator.pushNamed(context, '/');
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 13,horizontal: 70), // Adjust spacing
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 13, horizontal: 70), // Adjust spacing
 
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
                         color: Colors.redAccent.withOpacity(0.8),
                         // Background color
                       ),
-                      child:  Row(
+                      child: Row(
                         children: [
                           // Icon Google
                           Container(
@@ -221,9 +225,9 @@ class _LoginPageState extends State<LoginPage> {
                             width: 24,
                             decoration: BoxDecoration(
                               image: DecorationImage(
-                                image: AssetImage('assets/images/google_logo.png'),
+                                image:
+                                    AssetImage('assets/images/google_logo.png'),
                                 fit: BoxFit.contain,
-
                               ),
                             ),
                           ),
@@ -243,13 +247,22 @@ class _LoginPageState extends State<LoginPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Don't have an account? ", style: TextStyle(fontSize: 17, color: Colors.blue.shade900,)),
+                      Text("Don't have an account? ",
+                          style: TextStyle(
+                            fontSize: 17,
+                            color: Colors.blue.shade900,
+                          )),
                       TextButton(
                         onPressed: () {
                           // Use navigatorKey to navigate to '/register'
                           navigatorKey.currentState?.pushNamed('/register');
                         },
-                        child: const Text("Create here", style: TextStyle(fontSize: 17, color: Colors.blueAccent,decoration: TextDecoration.underline,decorationColor: Colors.blueAccent)),
+                        child: const Text("Create here",
+                            style: TextStyle(
+                                fontSize: 17,
+                                color: Colors.blueAccent,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.blueAccent)),
                       ),
                     ],
                   ),
@@ -283,16 +296,18 @@ class _LoginPageState extends State<LoginPage> {
                   // TextButton
                   TextButton(
                     onPressed: () {
-                  widget.onLogin();
-                  Navigator.pushNamed(context, '/');
-
-                  },
+                      widget.onLogin();
+                      Navigator.pushNamed(context, '/');
+                    },
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.black,
                     ),
                     child: Text(
                       "Continue Without Sign In",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, decoration: TextDecoration.underline),
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline),
                     ),
                   ),
                 ],

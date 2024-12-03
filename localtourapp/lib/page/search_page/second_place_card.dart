@@ -87,28 +87,28 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
   @override
   Widget build(BuildContext context) {
     // Format distance for display
-    String formattedDistance = '${widget.distance.toStringAsFixed(1)}';
+    String formattedDistance = widget.distance.toStringAsFixed(1);
     if (formattedDistance.endsWith('.0')) {
       formattedDistance = formattedDistance.substring(0, formattedDistance.length - 2);
     }
     formattedDistance += ' km';
     return Container(
-      height: 90,
+      height: 70,
       color: Colors.white, // Set background color to white
       padding: const EdgeInsets.only(right: 10), // Optional padding
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 3,),
+          const SizedBox(width: 3,),
           // Image section on the left
           ClipRRect(
+            borderRadius: BorderRadius.circular(6),
             child: Image.network(
               widget.photoDisplay,
               width: 70,
               height: 70,
               fit: BoxFit.cover,
             ),
-            borderRadius: BorderRadius.circular(6),
           ),
           const SizedBox(width: 12),
           // Details section on the right
@@ -134,15 +134,15 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
                     ),
                     if(widget.event != null)
                     if(differentDay(widget.event!.endDate)  > 1)
-                      Text("Ongoing" ,
+                      const Text("Ongoing" ,
                         style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold, color: Colors.green),)
-                    else if(differentDay(widget.event!.startDate!) > 0)
+                    else if(differentDay(widget.event!.startDate) > 0)
                       Text("COMING ${differentDay(widget.event!.startDate)} ${differentDay(widget.event!.startDate) > 1 ? 'DAYS' : 'DAY'}" ,
-                        style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold, color: Colors.red,))
+                        style: const TextStyle(fontSize: 15,fontWeight: FontWeight.bold, color: Colors.red,))
                   ],
                 ),
                 Text(
-                  '${widget.wardName}',
+                  widget.wardName,
                   style: const TextStyle(
                     fontSize: 12,
                   ),
@@ -180,7 +180,7 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
                         height: 16,
                       ),
                       const SizedBox(width: 4),
-                      Text('Start ${DateFormat("h:mma dd-MM-yyyy").format(widget.event!.startDate)}', style: TextStyle(color:differentDay(widget.event!.startDate!) < 0? Colors.grey: Colors.red),),
+                      Text('Start ${DateFormat("h:mma dd-MM-yyyy").format(widget.event!.startDate)}', style: TextStyle(color:differentDay(widget.event!.startDate) < 0? Colors.grey: Colors.red),),
                       const Spacer(),
                       Row(
                         children: [
@@ -192,9 +192,9 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
                     ],),
                     Row(
                       children: [
-                        SizedBox(width: 20,),
-                        Text('End   ${DateFormat("h:mma dd-MM-yyyy").format(widget.event!.endDate)}', style: TextStyle(color:differentDay(widget.event!.endDate!) < 0? Colors.grey: Colors.green),),
-                        Spacer(),
+                        const SizedBox(width: 20,),
+                        Text('End   ${DateFormat("h:mma dd-MM-yyyy").format(widget.event!.endDate)}', style: TextStyle(color:differentDay(widget.event!.endDate) < 0? Colors.grey: Colors.green),),
+                        const Spacer(),
                       ],
                     ),
                   ],
