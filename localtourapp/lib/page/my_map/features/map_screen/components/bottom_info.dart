@@ -12,8 +12,10 @@ import '../../../../../models/media_model.dart';
 import '../../../components/map_action_button.dart';
 import '../../../constants/colors.dart';
 import '../../../constants/route.dart';
+import '../../../domain/entities/vietmap_model.dart';
 import '../../../navigation_page.dart';
 import '../../routing_screen/models/routing_params_model.dart';
+import '../../routing_screen/routing_screen.dart';
 import '../bloc/map_bloc.dart';
 import '../bloc/map_state.dart';
 
@@ -177,9 +179,13 @@ class BottomSheetInfo extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => NavigationPage(
-                          lat: detailModel!.latitude,
-                          long: detailModel!.longitude,
+                        builder: (context) => RoutingScreen(
+                          vietmapModel: VietmapModel(
+                            address: detailModel!.name,
+                            lat: detailModel!.latitude,
+                            name: detailModel!.name,
+                            lng: detailModel!.longitude,
+                          ),
                           placeId: detailModel!.id,
                         ),
                       ),

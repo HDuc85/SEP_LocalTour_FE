@@ -11,6 +11,7 @@ import 'package:vietmap_flutter_gl/vietmap_flutter_gl.dart';
 import 'package:vietmap_flutter_navigation/models/options.dart';
 import 'package:vietmap_flutter_navigation/navigation_plugin.dart';
 
+import '../my_map/domain/entities/vietmap_model.dart';
 import '../my_map/features/routing_screen/routing_screen.dart';
 
 class EventDetailPage extends StatefulWidget {
@@ -256,8 +257,13 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
       context,
       MaterialPageRoute(
         builder: (context) => RoutingScreen(
-          destinationLatitude: widget.eventModel.latitude,
-          destinationLongitude: widget.eventModel.longitude,
+          vietmapModel: VietmapModel(
+            address: widget.eventModel.placeName,
+            lat: widget.eventModel.latitude,
+            name: widget.eventModel.placeName,
+            lng: widget.eventModel.longitude,
+          ),
+          placeId: widget.eventModel.placeId,
         ),
       ),
     );

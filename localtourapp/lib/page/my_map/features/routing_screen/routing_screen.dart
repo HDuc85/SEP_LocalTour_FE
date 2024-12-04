@@ -3,8 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/page/my_map/extension/latlng_extension.dart';
+import 'package:localtourapp/services/place_service.dart';
 import 'package:sliding_up_panel2/sliding_up_panel2.dart';
+import 'package:talker/talker.dart';
 import 'package:vietmap_flutter_gl/vietmap_flutter_gl.dart';
 import 'package:vietmap_flutter_navigation/embedded/controller.dart';
 import 'package:vietmap_flutter_navigation/models/direction_route.dart';
@@ -12,6 +15,7 @@ import 'package:vietmap_flutter_navigation/models/options.dart';
 import 'package:vietmap_flutter_navigation/models/route_progress_event.dart';
 import 'package:vietmap_flutter_navigation/navigation_plugin.dart';
 import 'package:vietmap_flutter_navigation/views/navigation_view.dart';
+import '../../../../services/traveled_place_service.dart';
 import '../../constants/colors.dart';
 import '../../di/app_context.dart';
 import '../../domain/entities/vietmap_model.dart';
@@ -25,13 +29,12 @@ import 'components/vietmap_bottom_view.dart';
 import 'models/routing_params_model.dart';
 
 class RoutingScreen extends StatefulWidget {
-  final double? destinationLatitude;
-  final double? destinationLongitude;
-
+  final VietmapModel vietmapModel;
+  final int placeId;
   const RoutingScreen({
     Key? key,
-    this.destinationLatitude,
-    this.destinationLongitude,
+    required this.placeId,
+    required this.vietmapModel
   }) : super(key: key);
 
   @override
@@ -39,6 +42,8 @@ class RoutingScreen extends StatefulWidget {
 }
 
 class _RoutingScreenState extends State<RoutingScreen> {
+  final TraveledPlaceService _placeService = TraveledPlaceService();
+  final talker = Talker();
   bool isFromOrigin = true;
   final PanelController _panelController = PanelController();
   double panelPosition = 0.0;
@@ -47,10 +52,7 @@ class _RoutingScreenState extends State<RoutingScreen> {
   late MapOptions _navigationOption;
   final _vietmapPlugin = VietMapNavigationPlugin();
 
-  List<LatLng> wayPoints = const [
-    LatLng(10.759091, 106.675817),
-    LatLng(10.762528, 106.653099)
-  ];
+
   String guideDirection = "";
   Widget recenterButton = const SizedBox.shrink();
   RouteProgressEvent? routeProgressEvent;
@@ -63,10 +65,10 @@ class _RoutingScreenState extends State<RoutingScreen> {
     _navigationOption = _vietmapPlugin.getDefaultOptions();
     _navigationOption.simulateRoute = false;
     _navigationOption.isCustomizeUI = true;
-    _navigationOption.apiKey = AppContext.getVietmapAPIKey() ?? "";
-    _navigationOption.mapStyle = AppContext.getVietmapMapStyleUrl() ?? "";
+    _navigationOption.apiKey = AppConfig.vietMapApiKey;
+    _navigationOption.mapStyle = AppConfig.vietMapStyleUrl;
     _navigationOption.padding = const EdgeInsets.all(100);
-
+    _navigationOption.language = 'en';
     _vietmapPlugin.setDefaultOptions(_navigationOption);
   }
 
@@ -79,10 +81,10 @@ class _RoutingScreenState extends State<RoutingScreen> {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       Future.delayed(const Duration(milliseconds: 200))
           .then((value) => _panelController.hide());
-      if (ModalRoute.of(context)!.settings.arguments != null) {
-        var args = ModalRoute.of(context)!.settings.arguments as VietmapModel;
+      if (widget.vietmapModel != null) {
+        var args = widget.vietmapModel;
         routingBloc.add(RoutingEventUpdateRouteParams(
-            destinationDescription: args.getAddress() ?? 'Vị trí đã chọn',
+            destinationDescription:  args!.address ?? 'Vị trí đã chọn',
             destinationPoint: LatLng(args.lat ?? 0, args.lng ?? 0)));
       }
 
@@ -100,15 +102,15 @@ class _RoutingScreenState extends State<RoutingScreen> {
       var currentPosition = await Geolocator.getCurrentPosition();
 
       if (_navigationController == null ||
-          widget.destinationLatitude == null ||
-          widget.destinationLongitude == null) {
+          widget.vietmapModel.lat == null ||
+          widget.vietmapModel.lng == null) {
         return;
       }
 
       // Convert the current position to LatLng
       var currentLocation = LatLng(currentPosition.latitude, currentPosition.longitude);
 
-      _destinationLocation = LatLng(widget.destinationLatitude!, widget.destinationLongitude!);
+      _destinationLocation = LatLng(widget.vietmapModel.lat!, widget.vietmapModel.lng!);
 
       // Build the route
       await _navigationController?.buildRoute(
@@ -116,11 +118,11 @@ class _RoutingScreenState extends State<RoutingScreen> {
           currentLocation,
           _destinationLocation!,
         ],
-        profile: DrivingProfile.drivingTraffic,
+        profile: DrivingProfile.motorcycle,
       );
 
       // Start navigation
-      await _navigationController?.startNavigation();
+     // await _navigationController?.startNavigation();
     } catch (e) {
       print('Error building route: $e');
       // Handle any errors (e.g., show a message to the user)
@@ -263,7 +265,8 @@ class _RoutingScreenState extends State<RoutingScreen> {
                           this.routeProgressEvent = routeProgressEvent;
                         });
                       },
-                      onArrival: () {
+                      onArrival: () async {
+                        var result = await _placeService.addTraveledPlace(widget.placeId);
                         showDialog(
                             barrierDismissible: false,
                             context: context,
@@ -337,6 +340,27 @@ class _RoutingScreenState extends State<RoutingScreen> {
                                   },
                                   routingBloc: routingBloc,
                                 ))
+                    ,
+                    Positioned(
+                      right: 10,
+                      bottom: 150,
+                      child: Column(
+                        children: [
+                          FloatingActionButton(
+                            mini: true,
+                            child: const Icon(Icons.alt_route),
+                            onPressed: () {
+                              _navigationController?.overview();
+                            },),
+                          FloatingActionButton(
+                            mini: true,
+                            child: const Icon(Icons.gps_fixed),
+                            onPressed: () {
+                              _navigationController?.recenter();
+                            },),
+                        ],
+                      ),
+                    )
                   ],
                 ),
               )

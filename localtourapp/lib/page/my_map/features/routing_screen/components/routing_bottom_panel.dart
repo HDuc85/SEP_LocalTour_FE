@@ -117,11 +117,11 @@ class RoutingBottomPanel extends StatelessWidget {
                                   child: Row(
                                     children: [
                                       Icon(Icons.navigation_sharp,
-                                          color: Colors.white),
+                                          color: Colors.blue),
                                       SizedBox(width: 10),
                                       Text('Bắt đầu',
                                           style:
-                                              TextStyle(color: Colors.white)),
+                                              TextStyle(color: Colors.blue)),
                                     ],
                                   ),
                                 ))

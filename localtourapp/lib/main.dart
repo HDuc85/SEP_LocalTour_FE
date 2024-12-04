@@ -12,6 +12,7 @@ import 'package:localtourapp/base/const.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/page/my_map/constants/route.dart';
+import 'package:localtourapp/page/my_map/domain/entities/vietmap_model.dart';
 import 'package:localtourapp/page/my_map/features/map_screen/bloc/map_bloc.dart';
 import 'package:localtourapp/page/my_map/features/map_screen/maps_screen.dart';
 import 'package:localtourapp/page/my_map/features/pick_address_screen/pick_address_screen.dart';
@@ -250,7 +251,14 @@ class _MyAppState extends State<MyApp> {
         }
         if (settings.name == Routes.routingScreen) {
           return MaterialPageRoute(
-            builder: (context) => const RoutingScreen(),
+            builder: (context) => RoutingScreen(
+                vietmapModel: VietmapModel(
+              address: '',
+              lat: -1,
+              name:'',
+              lng: -1,
+            ),
+                placeId: -1),
           );
         }
         if (settings.name == Routes.pickAddressScreen) {

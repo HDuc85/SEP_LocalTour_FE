@@ -285,7 +285,7 @@ class _MapScreenState extends State<MapScreen> {
                                               autofocus: false,
                                               decoration: InputDecoration(
                                                   hintText:
-                                                      "Where do you want to go?",
+                                                  language != 'vi' ? "Where do you want to go?" : "Bạn muốn đi đâu?",
                                                   border: InputBorder.none,
                                                   suffixIcon: _searchController
                                                           .text.isNotEmpty
@@ -310,8 +310,8 @@ class _MapScreenState extends State<MapScreen> {
                                             )
                                           : DropdownButton<String>(
                                               value: _selectedSchedule,
-                                              hint: const Text(
-                                                  "Select your schedule"),
+                                              hint:  Text(
+                                                  language != 'vi' ? "Select your schedule" : "Chọn lịch trình của bạn"),
                                               isDense: true,
                                               isExpanded: false,
                                               icon: const Icon(
