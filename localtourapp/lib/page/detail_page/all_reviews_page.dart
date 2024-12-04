@@ -377,7 +377,8 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
                             context,
                             'Have a problem with this person? Report them to us!',
                             feedback.userId,
-                            -1
+                            -1,
+                            ''
                           );
                         },
                         userId: currentUserId,

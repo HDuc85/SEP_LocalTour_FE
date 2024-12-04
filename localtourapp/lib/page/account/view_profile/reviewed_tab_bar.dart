@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/feedback/feedback_model.dart';
 import 'package:localtourapp/page/detail_page/detail_card/review_card.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
@@ -27,7 +29,7 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
   final ScrollController _scrollController = ScrollController();
   late int totalReviews;
   late List<FeedBackModel> _listFeedback;
-
+  String _language = 'vi';
 
   bool isLoading = true;
   FeedBackModel feedBackModel = FeedBackModel(id: 1, userId: 'userId',placeId: 1,placeName: '',placePhotoDisplay: '' ,profileUrl: 'profileUrl', userName: 'userName', rating: 1, content: 'content', totalLike: 1, createDate: DateTime(2000), isLiked: true, placeFeedbackMedia: []);
@@ -41,7 +43,10 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
 
   Future<void> fetchInt() async{
     var (listfeedback, totalreview) = await _reviewService.getFeedback(null,widget.userId);
+    var language = await SecureStorageHelper().readValue(AppConfig.language);
+
     setState(() {
+      _language = language!;
       _listFeedback = listfeedback;
       totalReviews = totalreview;
       isLoading = false;
@@ -104,7 +109,7 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Text("Total Reviews: $totalReviews", style:  TextStyle(fontSize: 18,fontWeight: FontWeight.bold,)),
+                      Text("${_language != 'vi'?'Total Reviews:':'Tổng số đánh giá:'} $totalReviews", style:  TextStyle(fontSize: 18,fontWeight: FontWeight.bold,)),
                     ],
                   ),
                 ),
@@ -129,9 +134,10 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
                       onReport: () {
                         ReportForm.show(
                           context,
-                          'Have a problem with this person? Report them to us!',
+                            _language != 'vi'?'Have a problem with this person? Report them to us!':'Bạn có vấn đề với người dùng này? Hãy báo cáo cho chúng tôi!',
                           widget.userId,
-                          -1
+                          -1,
+                            _language
                         );
                       },
                     ),

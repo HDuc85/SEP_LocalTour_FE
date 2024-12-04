@@ -251,7 +251,10 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
         listFilePick.add(new File(item.url));
       }
     }
-    int scheduleId = myListSchedule.firstWhere((element) => element.scheduleName == selectedSchedule!,).id;
+    int? scheduleId = null;
+    if(selectedSchedule != null){
+      scheduleId = myListSchedule.firstWhere((element) => element.scheduleName == selectedSchedule!,).id;
+    }
 
 
     if (isUpdateMode) {

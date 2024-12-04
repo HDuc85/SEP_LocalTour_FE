@@ -5,6 +5,7 @@ class ReportForm extends StatefulWidget {
   final String message;
   final String? userId;
   final int?  placeId;
+  final String language;
   final ValueChanged<String>? onSubmit; // Changing the callback to pass the report message
 
   const ReportForm({
@@ -13,10 +14,11 @@ class ReportForm extends StatefulWidget {
     this.userId,
     this.placeId,
     this.onSubmit,
+    required this.language
   }) : super(key: key);
 
   // Static method to display the ReportForm dialog
-  static void show(BuildContext context, String message,String? userId, int? placeId , {ValueChanged<String>? onSubmit}) {
+  static void show(BuildContext context, String message,String? userId, int? placeId , String language, {ValueChanged<String>? onSubmit}) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -35,7 +37,7 @@ class ReportForm extends StatefulWidget {
               ),
             ),
             padding: const EdgeInsets.all(20),
-            child: ReportForm(message: message,userId: userId,placeId: placeId, onSubmit: onSubmit),
+            child: ReportForm(message: message,userId: userId,placeId: placeId, onSubmit: onSubmit, language: language,),
           ),
         );
       },
@@ -92,8 +94,8 @@ class _ReportFormState extends State<ReportForm> {
     return Column(
       mainAxisSize: MainAxisSize.min, // Adjusts based on content size
       children: [
-        const Text(
-          "Report",
+        Text(
+         widget.language != 'vi' ? "Report" : 'Báo cáo',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 5),
@@ -109,13 +111,13 @@ class _ReportFormState extends State<ReportForm> {
             controller: _controller,
             maxLength: 500,
             maxLines: 4,
-            decoration: const InputDecoration(
+            decoration:  InputDecoration(
               border: OutlineInputBorder(),
-              hintText: "Describe the issue...",
+              hintText: widget.language != 'vi' ?"Describe the issue..." : "Mô tả vấn đề ...",
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please, describe your issue';
+                return widget.language != 'vi' ?'Please, describe your issue':'Xin hãy mô tả vấn đề của bạn ....';
               }
               return null;
             },
@@ -133,8 +135,8 @@ class _ReportFormState extends State<ReportForm> {
             ),
             padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
           ),
-          child: const Text(
-            "Report",
+          child:  Text(
+            widget.language != 'vi' ?"Report" : 'Báo cáo',
             style: TextStyle(
                 fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white
             ),

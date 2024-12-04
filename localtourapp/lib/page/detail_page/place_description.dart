@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class PlaceDescription extends StatefulWidget {
   final String placeDescription;
-
-  const PlaceDescription({Key? key, required this.placeDescription})
+  final String language;
+  const PlaceDescription({Key? key, required this.placeDescription, required this.language})
       : super(key: key);
 
   @override
@@ -48,8 +48,8 @@ class _PlaceDescriptionState extends State<PlaceDescription> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Description',
+           Text(
+            widget.language != 'vi'? 'Description': 'Mô tả',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 8),
@@ -67,7 +67,7 @@ class _PlaceDescriptionState extends State<PlaceDescription> {
                 });
               },
               child: Text(
-                isExpanded ? "Less description" : "More description",
+                isExpanded ? (widget.language != 'vi'? "Less description": 'Thu gọn') : (widget.language != 'vi' ? "More description" : 'Mở rộng'),
                 style: const TextStyle(color: Colors.pink),
               ),
             ),

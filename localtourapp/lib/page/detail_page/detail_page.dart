@@ -246,10 +246,10 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
                                         Container(
                                           color: Colors.black.withOpacity(0.5),
                                           height: 77.5,
-                                          child: const Center(
+                                          child: Center(
                                             child: Text(
-                                              'See more',
-                                              style: TextStyle(
+                                              _languageCode != 'vi' ? 'See more' : 'Xem thêm',
+                                              style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
@@ -287,17 +287,17 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
                             Container(
                               height: 60, // Increase the height of each tab
                               color: Colors.blue[100],
-                              child: const Tab(
+                              child: Tab(
                                 icon: Icon(Icons.details),
-                                text: 'Detail',
+                                text: _languageCode != 'vi'?'Detail':'Chi tiết',
                               ),
                             ),
                             Container(
                               height: 60, // Increase the height of each tab
                               color: Colors.green[100],
-                              child: const Tab(
+                              child: Tab(
                                 icon: Icon(Icons.reviews),
-                                text: 'Review',
+                                text: _languageCode != 'vi'?'Review':'Đánh giá',
                               ),
                             ),
                           ],

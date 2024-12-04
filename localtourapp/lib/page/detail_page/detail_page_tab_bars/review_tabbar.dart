@@ -45,6 +45,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
     Navigator.pushNamed(context, '/weather');
   }
   bool userHasReviewed = false;
+  String _language = 'vi';
   @override
   void initState() {
     super.initState();
@@ -90,8 +91,10 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
         _userFeedback = listDate.first;
       });
     }
+    var language = await SecureStorageHelper().readValue(AppConfig.language);
 
     setState(() {
+      _language = language!;
       _isLogin = isLogin;
       totalReviewers = totalReview;
       currentUser = userId!;
@@ -118,7 +121,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
   void addOrUpdateUserReview(int rating, String content, List<File> images, List<File> videos,[int? feedbackId]) async {
     if (content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Review content cannot be empty.')),
+         SnackBar(content: Text(_language != 'vi' ? 'Review content cannot be empty.':'Nội dung đánh giá không được để trống.')),
       );
       return;
     }
@@ -143,7 +146,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
     }
     else{
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Your review has been added/updated.')));
+           SnackBar(content: Text(_language != 'vi'? 'Your review has been added/ updated.':'Đánh giá của bạn đã được thêm/ sửa.')));
       fetchListReview();
     }
 
@@ -182,7 +185,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Text(
-                      "reviewers: $totalReviewers",
+                      "${_language != 'vi'?'reviewers':'Tổng đánh giá'}: $totalReviewers",
                       style: const TextStyle(fontSize: 13),
                     ),
                     buildStarRating(_placeDetailModel.rating),
@@ -197,7 +200,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                           ),
                         );
                       },
-                      child: const Text("See all", style: TextStyle(color: Colors.blue),),
+                      child:  Text(_language != 'vi'?"See all":"Xem tất cả", style: TextStyle(color: Colors.blue),),
                     ),
                   ],
                 ),
@@ -225,7 +228,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        "${_userprofile.userName}, you have no reviews yet, let's explore and review it!",
+                        "${_userprofile.userName},${_language != 'vi'? "you have no reviews yet, let's explore and review it!" : 'Bạn chưa có đánh giá nào trước dây, hãy trải nghiệm và đánh giá!'}",
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 16),
                       ),
@@ -255,8 +258,8 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                           elevation: 2,
                           side: const BorderSide(color: Colors.black, width: 1),
                         ),
-                        child: const Text(
-                          'Review !!!',
+                        child:  Text(
+                          _language != 'vi'?'Review !!!':'Đánh giá!!!',
                           style: TextStyle(
                               fontWeight: FontWeight.bold, color: Colors.white),
                         ),
@@ -293,9 +296,10 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                 onReport: (userId) {
                   ReportForm.show(
                     context,
-                    'Have a problem with this person’s feedback? Please report it to us.',
+                    _language != 'vi' ? 'Have a problem with this person’s feedback? Please report it to us.' : 'Có vấn đề với đánh giá của người dùng này? Hãy báo cáo cho chúng tôi',
                     userId,
                     -1,
+                    _language,
                     onSubmit: (reportMessage) {
 
                     },

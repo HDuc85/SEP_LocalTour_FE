@@ -8,8 +8,8 @@ import '../../../planned_page/planned_page_tab_bars/add_schedule_dialog.dart';
 class ScheduleForm extends StatefulWidget {
   final String userId;
   final int placeId;
-
-  const ScheduleForm({super.key, required this.userId, required this.placeId});
+  final String language;
+  const ScheduleForm({super.key, required this.userId, required this.placeId, required this.language});
 
   @override
   State<ScheduleForm> createState() => _ScheduleFormState();
@@ -31,7 +31,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
   Future<void> fetchInit() async {
     var listschedule = await _scheduleService.GetScheduleCurrentUser();
 
-    if(listschedule.length >0){
+    if(listschedule.isNotEmpty){
       setState(() {
         _listSchedule = listschedule;
       });
@@ -60,9 +60,9 @@ class _ScheduleFormState extends State<ScheduleForm> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              "ADD PLACE TO SCHEDULE",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Text(
+              widget.language != 'vi' ? "ADD PLACE TO SCHEDULE":"Thêm địa điểm vào lịch trình",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const Divider(
               thickness: 2,
@@ -83,7 +83,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
                 });
               },
               icon: const Icon(Icons.add),
-              label: const Text("Add Schedule"),
+              label:  Text(widget.language != 'vi' ? "Add Schedule" : 'Thêm lịch trình'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 shape: RoundedRectangleBorder(
@@ -97,11 +97,11 @@ class _ScheduleFormState extends State<ScheduleForm> {
             const SizedBox(height: 20),
 
             // Schedule Dropdown
-            const Align(
+             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                "Schedule:",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                widget.language != 'vi' ? "Schedule:" : "Lịch trình",
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 5),
@@ -130,7 +130,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
 
             // From Date-Time Picker
             _buildDateTimePicker(
-              label: "From:",
+              label: widget.language != 'vi' ? "From:" : "Từ",
               selectedDate: _fromDate,
               onDateTimeSelected: (selectedDateTime) {
                 setState(() {
@@ -148,7 +148,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
 
             // To Date-Time Picker
             _buildDateTimePicker(
-              label: "To:",
+              label: widget.language != 'vi' ? "To:" : "Tới",
               selectedDate: _toDate,
               onDateTimeSelected: (selectedDateTime) {
                 setState(() {
@@ -169,9 +169,9 @@ class _ScheduleFormState extends State<ScheduleForm> {
               onPressed: () async {
                 if (_selectedSchedule == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please select a schedule.'),
-                      duration: Duration(seconds: 2),
+                     SnackBar(
+                      content: Text(widget.language != 'vi' ? 'Please select a schedule.' : "Vui lòng chọn 1 lịch trình"),
+                      duration: const Duration(seconds: 2),
                     ),
                   );
                 } else {
@@ -179,20 +179,20 @@ class _ScheduleFormState extends State<ScheduleForm> {
                       _toDate != null &&
                       _fromDate!.isAfter(_toDate!)) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
+                      SnackBar(
                         content:
-                        Text('The "From" date cannot be after the "To" date.'),
-                        duration: Duration(seconds: 2),
+                        Text(widget.language != 'vi' ?'The "From" date cannot be after the "To" date.' : 'Không được chọn ngày bắt đầu sau ngày kết thúc'),
+                        duration: const Duration(seconds: 2),
                       ),
                     );
                     return;
                   }else{
                     if(_fromDate != null && _fromDate!.isBefore(DateTime.now())){
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
+                         SnackBar(
                           content:
-                          Text('The "From" date cannot be after Now.'),
-                          duration: Duration(seconds: 2),
+                          Text(widget.language != 'vi' ? 'The "From" date cannot be after Now.': 'Ngày bắt đầu không thể sau bây giờ'),
+                          duration: const Duration(seconds: 2),
                         ),
                       );
                     }
@@ -204,7 +204,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                            'Place has been added to Schedule: $_selectedSchedule'),
+                            '${widget.language != 'vi'?'Place has been added to Schedule':'Địa danh đã được thêm vào lịch trình'}: $_selectedSchedule'),
                       ),
                     );
                   }
@@ -223,7 +223,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
                   vertical: 10,
                 ),
               ),
-              child: const Text("DONE"),
+              child: Text(widget.language != 'vi' ? "DONE" : "Xong"),
             ),
           ],
         ),
@@ -256,7 +256,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
             decoration: InputDecoration(
               hintText: selectedDate != null
                   ? DateFormat('yyyy-MM-dd HH:mm').format(selectedDate)
-                  : 'Choose Date & Time',
+                  :   (widget.language != 'vi' ?'Choose Date & Time' : 'Chọn ngày & giờ'),
               hintStyle: const TextStyle(
                 fontSize: 12,
               ),

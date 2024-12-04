@@ -508,6 +508,7 @@ class _SearchPageState extends State<SearchPage> {
                       orElse: () => TagModel(
                         id: tagId,
                         tagPhotoUrl: 'assets/icons/default.png',
+                        tagVi: '',
                         tagName: 'Unknown',
                       ),
                     );

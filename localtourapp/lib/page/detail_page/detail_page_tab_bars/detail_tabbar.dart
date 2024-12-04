@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/constants/getListApi.dart';
 import 'package:localtourapp/models/Tag/tag_model.dart';
 import 'package:localtourapp/models/event/event_model.dart';
@@ -47,13 +48,21 @@ class _DetailTabbarState extends State<DetailTabbar> {
   VietmapController? _mapController;
   bool isLoading = true;
   List<ActivityCardInfo> activityCards = [];
-
+  String _language = 'vi';
 
   @override
   void initState() {
     super.initState();
-
+    getLanguage();
   }
+
+  Future<void> getLanguage() async {
+    var language = await SecureStorageHelper().readValue(AppConfig.language);
+    setState(() {
+      _language = language!;
+    });
+  }
+
 
   @override
   void dispose() {
@@ -120,7 +129,8 @@ class _DetailTabbarState extends State<DetailTabbar> {
                             return Dialog(
                               child: ScheduleForm(
                                 userId: widget.userId, // Pass the required userId
-                                placeId: widget.placeDetail.id, // Pass the required placeId
+                                placeId: widget.placeDetail.id,
+                                language: _language,// Pass the required placeId
                               ),
                             );
                           },
@@ -144,9 +154,10 @@ class _DetailTabbarState extends State<DetailTabbar> {
                         onPressed: () {
                           ReportForm.show(
                             context,
-                            'Have a problem with this place? Report it to us!',
+                            _language !='vi'? 'Have a problem with this place? Report it to us!' : 'Bạn có vấn đề với địa danh này? Hãy báo cáo với chúng tôi!',
                             null,
                             widget.placeDetail.id,
+                            _language,
                             onSubmit: (reportMessage) {
 
                             },
@@ -182,6 +193,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
                   const SizedBox(height: 10),
                   PlaceDescription(
                     placeDescription: widget.placeDetail.description,
+                    language: _language,
                   ),
                 ],
               ),
@@ -226,14 +238,14 @@ class _DetailTabbarState extends State<DetailTabbar> {
       final oneHourBeforeClose = closeInMinutes - 60;
 
       if (nowInMinutes >= openInMinutes && nowInMinutes < closeInMinutes) {
-        statusText = "Open • Closes at ${_formatTimeOfDay(closeTime)}";
+        statusText = "${_language != 'vi' ? 'Open • Closes at' : 'Đang mở cửa • Đóng cửa lúc'} ${_formatTimeOfDay(closeTime)}";
         if (nowInMinutes >= oneHourBeforeClose) {
           iconColor = Colors.orange;
         } else {
           iconColor = Colors.green;
         }
       } else {
-        statusText = "Closed • Opens at ${_formatTimeOfDay(openTime)}";
+        statusText = "${_language != 'vi' ? 'Closed • Opens at' : 'Đã đóng cửa • Mở cửa lúc'} ${_formatTimeOfDay(openTime)}";
         if (nowInMinutes >= oneHourBeforeOpen && nowInMinutes < openInMinutes) {
           iconColor = Colors.lightBlue;
         } else {
@@ -241,7 +253,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
         }
       }
     } else {
-      statusText = "Operating hours not available";
+      statusText = _language != 'vi'?  "Operating hours not available": 'Thời gian không xác định';
       iconColor = Colors.grey;
     }
 
@@ -316,6 +328,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
       context,
       MaterialPageRoute(
         builder: (context) => RoutingScreen(
+
           destinationLatitude: widget.placeDetail.latitude,
           destinationLongitude: widget.placeDetail.longitude,
         ),
@@ -379,7 +392,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
           },
           child: Chip(
             label: Text(
-              tags[i].tagName,
+              _language != 'vi'? tags[i].tagName : tags[i].tagVi,
               style: const TextStyle(
                 color: Colors.green,
               ),
@@ -399,9 +412,9 @@ class _DetailTabbarState extends State<DetailTabbar> {
           onTap: () {
             _showAllTagsDialog(context);
           },
-          child: const Chip(
-            label: Text('See more tags'),
-            shape: StadiumBorder(
+          child: Chip(
+            label: Text(_language != 'vi'?'See more tags':'Xem thêm'),
+            shape: const StadiumBorder(
               side: BorderSide(color: Colors.green),
             ),
             backgroundColor: Colors.transparent,
@@ -471,10 +484,10 @@ class _DetailTabbarState extends State<DetailTabbar> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Center(
+        Center(
           child: Text(
-            "PRODUCTS",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            _language != 'vi' ? "PRODUCTS" : 'Sản phẩm',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
         ),
         const SizedBox(height: 20),
@@ -518,7 +531,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
         ),
         const SizedBox(height: 30),
         CustomSeeAllButton(
-          text: "SEE ALL",
+          text: _language != 'vi' ? "SEE ALL": "Xem tất cả",
           onPressed: () {
             Navigator.push(
               context,
@@ -544,17 +557,17 @@ class _DetailTabbarState extends State<DetailTabbar> {
 
   Widget _buildEventSection() {
     if (widget.listEvents.isEmpty) {
-      return const Center(child: Text('No events available for this place.'));
+      return Center(child: Text(_language != 'vi' ? 'No events available for this place.' : 'Không có sự kiện trong địa điểm này.'));
     }
     return Column(
       children: [
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event, color: Colors.black),
-            SizedBox(width: 8),
-            Text("EVENT",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const Icon(Icons.event, color: Colors.black),
+            const SizedBox(width: 8),
+            Text(_language != 'vi'? "EVENT": 'Sự kiện',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           ],
         ),
         const SizedBox(height: 10),
