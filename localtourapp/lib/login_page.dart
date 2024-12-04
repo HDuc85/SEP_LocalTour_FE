@@ -58,7 +58,7 @@ class _LoginPageState extends State<LoginPage> {
       _languageCode = languageCode!;
       if (phoneNumber.isEmpty) {
         phoneError = true;
-        phoneErrorText =  _languageCode != 'vi' ? 'Vui lòng nhập số điện thoại':'Please enter your phone number.';
+        phoneErrorText =  _languageCode == 'vi' ? 'Vui lòng nhập số điện thoại':'Please enter your phone number.';
         isValid = false;
       } else {
         phoneError = false;
@@ -67,11 +67,11 @@ class _LoginPageState extends State<LoginPage> {
       // Validate password
       if (password.isEmpty) {
         passwordError = true;
-        passwordErrorText = _languageCode != 'vi' ? 'Vui lòng nhập mật khẩu':'Please enter your password.';
+        passwordErrorText = _languageCode == 'vi' ? 'Vui lòng nhập mật khẩu':'Please enter your password.';
         isValid = false;
       } else if (!validatePassword(password)) {
         passwordError = true;
-        passwordErrorText = _languageCode != 'vi' ? 'Mật khẩu phải có:\n• 1 chữ cái viết hoa • 1 ký tự đặc biệt\n• 1 chữ số • Độ dài 8-16 ký tự.':
+        passwordErrorText = _languageCode == 'vi' ? 'Mật khẩu phải có:\n• 1 chữ cái viết hoa • 1 ký tự đặc biệt\n• 1 chữ số • Độ dài 8-16 ký tự.':
             'Password must have:\n• 1 uppercase letter • 1 special character\n• 1 number • 8-16 characters long.';
         isValid = false;
       } else {
@@ -133,7 +133,7 @@ class _LoginPageState extends State<LoginPage> {
                   TextField(
                     controller: phoneController,
                     decoration: InputDecoration(
-                      labelText: _languageCode != 'vi' ? 'Số điện thoại hoặc email':'Phone Number or Email',
+                      labelText: _languageCode == 'vi' ? 'Số điện thoại hoặc email':'Phone Number or Email',
                       prefixIcon: const Icon(Icons.phone),
                       border: const OutlineInputBorder(),
                       errorText: phoneError ? phoneErrorText : null,
@@ -145,7 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                   TextField(
                     controller: passwordController,
                     decoration: InputDecoration(
-                      labelText: _languageCode != 'vi' ? 'Mật khẩu':'Password',
+                      labelText: _languageCode == 'vi' ? 'Mật khẩu':'Password',
                       prefixIcon: const Icon(Icons.lock),
                       border: const OutlineInputBorder(),
                       errorText: passwordError ? passwordErrorText : null,
@@ -171,7 +171,7 @@ class _LoginPageState extends State<LoginPage> {
                               BorderRadius.circular(8), // Rounded corners
                         ),
                       ),
-                      child: Text(_languageCode != 'vi' ? 'Đăng nhập':'Sign In',
+                      child: Text(_languageCode == 'vi' ? 'Đăng nhập':'Sign In',
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 17),
                         textAlign: TextAlign.center,
@@ -189,7 +189,7 @@ class _LoginPageState extends State<LoginPage> {
                             () {},
                           );
                         },
-                        child: Text(_languageCode != 'vi' ? 'Quên mật khẩu?':'Forgot Password?',
+                        child: Text(_languageCode == 'vi' ? 'Quên mật khẩu?':'Forgot Password?',
                           style: const TextStyle(
                               color: Colors.deepOrange,
                               fontWeight: FontWeight.bold,
@@ -233,7 +233,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Text(_languageCode != 'vi' ? 'Đăng nhập với Google':'Sign In with Google',
+                          Text(_languageCode == 'vi' ? 'Đăng nhập với Google':'Sign In with Google',
                             style: const TextStyle(
                               color: Colors.white, // Màu chữ đỏ
                               fontWeight: FontWeight.w600, // Chữ đậm
@@ -247,7 +247,7 @@ class _LoginPageState extends State<LoginPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(_languageCode != 'vi' ? 'Bạn chưa có tài khoản?':"Don't have an account? ",
+                      Text(_languageCode == 'vi' ? 'Bạn chưa có tài khoản?':"Don't have an account? ",
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.blue.shade900,
@@ -257,7 +257,7 @@ class _LoginPageState extends State<LoginPage> {
                           // Use navigatorKey to navigate to '/register'
                           navigatorKey.currentState?.pushNamed('/register');
                         },
-                        child: Text(_languageCode != 'vi' ? 'Tạo tài khoản tại đây':"Create here",
+                        child: Text(_languageCode == 'vi' ? 'Tạo tài khoản tại đây':"Create here",
                             style: const TextStyle(
                                 fontSize: 17,
                                 color: Colors.blueAccent,
@@ -276,7 +276,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text(_languageCode != 'vi' ? 'Hoặc':"OR",
+                        child: Text(_languageCode == 'vi' ? 'Hoặc':"OR",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.grey.shade600,
@@ -301,7 +301,7 @@ class _LoginPageState extends State<LoginPage> {
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.black,
                     ),
-                    child: Text(_languageCode != 'vi' ? 'Tiếp tục mà không cần đăng nhập':"Continue Without Sign In",
+                    child: Text(_languageCode == 'vi' ? 'Tiếp tục mà không cần đăng nhập':"Continue Without Sign In",
                       style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,

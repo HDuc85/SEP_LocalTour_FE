@@ -141,7 +141,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
 
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_languageCode != 'vi' ?'Thông tin cá nhân đã được lưu':'Personal information saved')),
+        SnackBar(content: Text(_languageCode == 'vi' ?'Thông tin cá nhân đã được lưu':'Personal information saved')),
       );
     }
   }
@@ -162,7 +162,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_languageCode != 'vi' ? 'Thông tin cá nhân':'Personal Information'),
+        title: Text(_languageCode == 'vi' ? 'Thông tin cá nhân':'Personal Information'),
         backgroundColor: Colors.orangeAccent, // Customize as needed
       ),
       body: SingleChildScrollView(
@@ -175,7 +175,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                 // Required Information Section
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(_languageCode != 'vi' ?'Thông tin cá nhân': 'Required Information',
+                  child: Text(_languageCode == 'vi' ?'Thông tin cá nhân': 'Required Information',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
@@ -201,7 +201,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       // Full Name
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(_languageCode != 'vi' ? 'Họ tên':
+                        child: Text(_languageCode == 'vi' ? 'Họ tên':
                         'Full Name',
                           style: const TextStyle(
                               fontSize: 16,
@@ -213,11 +213,11 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                         controller: _fullNameController,
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
-                          hintText: _languageCode != 'vi' ? 'Nhập đầy đủ họ tên':'Enter your full name',
+                          hintText: _languageCode == 'vi' ? 'Nhập đầy đủ họ tên':'Enter your full name',
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return _languageCode != 'vi' ? 'Họ tên đầy đủ là bắt buộc':'Full Name is required';
+                            return _languageCode == 'vi' ? 'Họ tên đầy đủ là bắt buộc':'Full Name is required';
                           }
                           return null;
                         },
@@ -228,7 +228,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       // Password Section
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(_languageCode != 'vi' ? 'Mật khẩu':'Password',
+                        child: Text(_languageCode == 'vi' ? 'Mật khẩu':'Password',
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                         ),
                       ),
@@ -251,7 +251,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                   bool currentPasswordError = false;
                                   bool newPasswordError = false;
                                   bool confirmPasswordError = false;
-                                  String newPasswordErrorText = _languageCode != 'vi' ?'Mật khẩu phải có 1 chữ cái viết hoa, 1 ký tự đặc biệt, 1 số và dài ít nhất 8 ký tự':'Password must have 1 uppercase letter, 1 special character, 1 number, and be at least 8 characters long';
+                                  String newPasswordErrorText = _languageCode == 'vi' ?'Mật khẩu phải có 1 chữ cái viết hoa, 1 ký tự đặc biệt, 1 số và dài ít nhất 8 ký tự':'Password must have 1 uppercase letter, 1 special character, 1 number, and be at least 8 characters long';
                                   String oldPasswordErrorText = '';
                                   // Helper function to validate the new password
                                   bool validateNewPassword(String password) {
@@ -267,7 +267,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                       return GestureDetector(
                                         onTap: () => FocusScope.of(context).unfocus(), // Unfocus to close keyboard
                                         child: AlertDialog(
-                                          title: Text(_languageCode != 'vi' ? 'Đổi mật khẩu':'Change Password'),
+                                          title: Text(_languageCode == 'vi' ? 'Đổi mật khẩu':'Change Password'),
                                           content: SingleChildScrollView(
                                             child: Column(
                                               mainAxisSize: MainAxisSize.min,
@@ -275,7 +275,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                 // Current Password Field
                                                 Align(
                                                   alignment: Alignment.centerLeft,
-                                                  child: Text(_languageCode != 'vi' ? 'Mật khẩu hiện tại':'Your Current Password:'),
+                                                  child: Text(_languageCode == 'vi' ? 'Mật khẩu hiện tại':'Your Current Password:'),
                                                 ),
                                                 const SizedBox(height: 8),
                                                 TextField(
@@ -284,7 +284,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                   obscureText: true,
                                                   decoration: InputDecoration(
                                                     border: const OutlineInputBorder(),
-                                                    hintText: _languageCode != 'vi' ? 'Nhập mật khẩu hiện tại':'Enter your current password',
+                                                    hintText: _languageCode == 'vi' ? 'Nhập mật khẩu hiện tại':'Enter your current password',
                                                     errorText: currentPasswordError ? oldPasswordErrorText : null,
                                                   ),
                                                 ),
@@ -293,7 +293,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                 // New Password Field
                                                 Align(
                                                   alignment: Alignment.centerLeft,
-                                                  child: Text(_languageCode != 'vi' ? 'Thêm mật khẩu':'Add New Password:'),
+                                                  child: Text(_languageCode == 'vi' ? 'Thêm mật khẩu':'Add New Password:'),
                                                 ),
                                                 const SizedBox(height: 8),
                                                 TextField(
@@ -303,7 +303,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                   decoration: InputDecoration(
                                                     errorMaxLines: 3,
                                                     border: const OutlineInputBorder(),
-                                                    hintText: _languageCode != 'vi' ? 'Nhập mật khẩu mới':'Enter your new password',
+                                                    hintText: _languageCode == 'vi' ? 'Nhập mật khẩu mới':'Enter your new password',
                                                     errorText: newPasswordError
                                                         ? newPasswordErrorText
                                                         : null,
@@ -317,7 +317,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                 const SizedBox(height: 16),
                                                 Align(
                                                   alignment: Alignment.centerLeft,
-                                                  child: Text(_languageCode != 'vi' ? 'Xác nhận mật khẩu mới':'Confirm New Password:'),
+                                                  child: Text(_languageCode == 'vi' ? 'Xác nhận mật khẩu mới':'Confirm New Password:'),
                                                 ),
                                                 const SizedBox(height: 8),
                                                 TextField(
@@ -327,7 +327,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                   decoration: InputDecoration(
                                                     errorMaxLines: 3,
                                                     border: const OutlineInputBorder(),
-                                                    hintText: _languageCode != 'vi' ? 'Nhập mật khẩu mới':'Enter your confirm new password',
+                                                    hintText: _languageCode == 'vi' ? 'Nhập mật khẩu mới':'Enter your confirm new password',
                                                     errorText: confirmPasswordError
                                                         ? (_languageCode == 'vi'
                                                         ? 'Mật khẩu mới và mật khẩu xác nhận không khớp'
@@ -387,7 +387,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                   borderRadius: BorderRadius.circular(12),
                                                 ),
                                               ),
-                                              child: Text(_languageCode != 'vi' ? 'Thay đổi mật khẩu':'Change Password',
+                                              child: Text(_languageCode == 'vi' ? 'Thay đổi mật khẩu':'Change Password',
                                                 style: TextStyle(color: Colors.white),
                                               ),
                                             ),
@@ -400,7 +400,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                               );
                             },
                             child: Text(
-                                _languageCode != 'vi' ? 'Thay đổi mật khẩu':'Change Password',
+                                _languageCode == 'vi' ? 'Thay đổi mật khẩu':'Change Password',
                               style: const TextStyle(color: Colors.blue),
                             ),
                           ),
@@ -410,7 +410,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                               },);
                             },
                             child: Text(
-                              _languageCode != 'vi' ? 'Quên mật khẩu':'Forgot Password',
+                              _languageCode == 'vi' ? 'Quên mật khẩu':'Forgot Password',
                               style: const TextStyle(color: Colors.red),
                             ),
                           ),
@@ -434,18 +434,18 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                         controller: _emailController,
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
-                          hintText: _languageCode != 'vi' ? 'Nhập email của bạn':'Enter your email',
+                          hintText: _languageCode == 'vi' ? 'Nhập email của bạn':'Enter your email',
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return _languageCode != 'vi' ?'Email là bắt buộc':'Email is required';
+                            return _languageCode == 'vi' ?'Email là bắt buộc':'Email is required';
                           }
                           // Simple email validation
                           if (!RegExp(
                               r'^[^@]+@[^@]+\.[^@]+')
                               .hasMatch(value.trim())) {
-                            return _languageCode != 'vi' ?'Nhập email hợp lệ ':'Enter a valid email';
+                            return _languageCode == 'vi' ?'Nhập email hợp lệ ':'Enter a valid email';
                           }
                           return null;
                         },
@@ -485,7 +485,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              Text(_languageCode != 'vi' ? 'Thêm Google Email':'Add Google Email',
+                              Text(_languageCode == 'vi' ? 'Thêm Google Email':'Add Google Email',
                                 style: const TextStyle(
                                   color: Colors.white, // Màu chữ đỏ
                                   fontWeight: FontWeight.w600, // Chữ đậm
@@ -502,7 +502,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       // Date of Birth
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(_languageCode != 'vi' ? 'Ngày sinh':'Date of Birth',
+                        child: Text(_languageCode == 'vi' ? 'Ngày sinh':'Date of Birth',
                           style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500),
@@ -514,7 +514,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                         readOnly: true,
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
-                          hintText: _languageCode != 'vi' ?'Chọn ngày sinh của bạn':'Select your date of birth',
+                          hintText: _languageCode == 'vi' ?'Chọn ngày sinh của bạn':'Select your date of birth',
                           suffixIcon: IconButton(
                             icon: const Icon(Icons.calendar_today),
                             onPressed: () => _selectDate(context),
@@ -522,7 +522,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return _languageCode != 'vi' ?'Ngày sinh là bắt buộc':'Date of Birth is required';
+                            return _languageCode == 'vi' ?'Ngày sinh là bắt buộc':'Date of Birth is required';
                           }
                           return null;
                         },
@@ -532,7 +532,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       // Phone Number
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(_languageCode != 'vi' ?'Số điện thoại':'Phone Number',
+                        child: Text(_languageCode == 'vi' ?'Số điện thoại':'Phone Number',
                           style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500),
@@ -544,25 +544,25 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                         controller: _phoneNumberController,
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
-                          hintText: _languageCode != 'vi' ?'Nhập số điện thoại của bạn':'Enter your phone number',
+                          hintText: _languageCode == 'vi' ?'Nhập số điện thoại của bạn':'Enter your phone number',
                         ),
                         keyboardType: TextInputType.phone,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return _languageCode != 'vi' ? 'Số điện thoại là bắt buộc':'Phone Number is required';
+                            return _languageCode == 'vi' ? 'Số điện thoại là bắt buộc':'Phone Number is required';
                           }
                           // Simple phone number validation
                           if (!RegExp(
                               r'^\+?[0-9]{7,15}$')
                               .hasMatch(value.trim())) {
-                            return _languageCode != 'vi' ? 'Nhập số điện thoại hợp lệ':'Enter a valid phone number';
+                            return _languageCode == 'vi' ? 'Nhập số điện thoại hợp lệ':'Enter a valid phone number';
                           }
                           return null;
                         },
                       ):
                       GestureDetector(
                         onTap: () async {
-                          ForgotPasswordDialog.show(context,_languageCode != 'vi' ? 'thêm':'add', ()  {
+                          ForgotPasswordDialog.show(context,_languageCode == 'vi' ? 'thêm':'add', ()  {
                             addPhoneNumber();
                           },);
 
@@ -591,7 +591,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              Text(_languageCode != 'vi' ? 'Thêm số điện thoại':'Add Phone Number',
+                              Text(_languageCode == 'vi' ? 'Thêm số điện thoại':'Add Phone Number',
                                 style: const TextStyle(
                                   color: Colors.white, // Màu chữ đỏ
                                   fontWeight: FontWeight.w600, // Chữ đậm
@@ -612,7 +612,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                 // Additional Information Section
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(_languageCode != 'vi' ? 'Thông tin bổ sung':'Additional Information',
+                  child: Text(_languageCode == 'vi' ? 'Thông tin bổ sung':'Additional Information',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
@@ -638,7 +638,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       // Gender
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(_languageCode != 'vi' ?'Giới tính':'Gender',
+                        child: Text(_languageCode == 'vi' ?'Giới tính':'Gender',
                           style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500),

@@ -83,7 +83,7 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
         traveledPlaces.isEmpty
             ? Center(
                 child: Text(
-                  _languageCode != 'vi'
+                  _languageCode == 'vi'
                       ? "Địa điểm đã đi đang trống. Hãy đi đâu đó để thêm vào!"
                       : "Traveled place is empty. Go somewhere to add it!",
                   style: const TextStyle(fontSize: 16, color: Colors.grey),

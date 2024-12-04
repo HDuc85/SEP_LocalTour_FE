@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:localtourapp/models/media_model.dart';
 import '../../../base/const.dart';
+import '../../../config/appConfig.dart';
+import '../../../config/secure_storage_helper.dart';
 import '../../../full_media/full_feedback_media_viewer.dart';
 import '../../../models/feedback/feedback_model.dart';
 import '../../../services/review_service.dart';
@@ -32,6 +34,7 @@ class ReviewCard extends StatefulWidget {
 }
 
 class _ReviewCardState extends State<ReviewCard> {
+  String _languageCode = '';
   final ReviewService _reviewService = ReviewService();
   late FeedBackModel feedBackCard;
   bool isLoading = true;
@@ -40,10 +43,12 @@ class _ReviewCardState extends State<ReviewCard> {
     super.initState();
     fetchdata();
   }
-  void fetchdata(){
+  Future<void> fetchdata() async {
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     setState(() {
       feedBackCard = widget.feedBackCard;
       isLoading =false;
+      _languageCode = languageCode!;
     });
   }
 
@@ -76,16 +81,16 @@ class _ReviewCardState extends State<ReviewCard> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Delete Review'),
-          content: const Text('Are you sure you want to delete this review?'),
+          title: Text(_languageCode == 'vi' ? 'Xóa đánh giá':'Delete Review'),
+          content: Text(_languageCode == 'vi' ? 'Bạn có muốn xóa đánh giá này không?':'Are you sure you want to delete this review?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('No'),
+              child: Text(_languageCode == 'vi' ? 'Không':'No'),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Yes'),
+              child: Text(_languageCode == 'vi' ? 'Có':'Yes'),
             ),
           ],
         );
@@ -156,7 +161,7 @@ class _ReviewCardState extends State<ReviewCard> {
     }
     else {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Your review has been added/updated.')));
+          SnackBar(content: Text(_languageCode == 'vi' ? 'Đánh giá của bạn đã được cập nhật':'Your review has been updated.')));
     }
     onUpdateTogget(feedbackId);
   }

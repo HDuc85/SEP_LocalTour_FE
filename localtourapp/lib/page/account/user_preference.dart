@@ -49,7 +49,7 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_languageCode != 'vi' ? "Sở thích của ${widget.userprofile.userName}": "Preferences's ${widget.userprofile.userName}"),
+        title: Text(_languageCode == 'vi' ? "Sở thích của ${widget.userprofile.userName}": "Preferences's ${widget.userprofile.userName}"),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () async {
@@ -66,7 +66,7 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
       isLoading?  Center(child: CircularProgressIndicator()) :Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Text(_languageCode != 'vi' ? "Chọn sở thích của bạn":"Choose your preferences" , style: TextStyle(fontSize: 18)),
+          Text(_languageCode == 'vi' ? "Chọn sở thích của bạn":"Choose your preferences" , style: TextStyle(fontSize: 18)),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Wrap(
@@ -98,7 +98,7 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(_languageCode != 'vi' ? 'Chọn ít nhất 5 sở thích':'You must select at least 5 preferences.'),
+                    content: Text(_languageCode == 'vi' ? 'Chọn ít nhất 5 sở thích':'You must select at least 5 preferences.'),
                   ),
                 );
               }

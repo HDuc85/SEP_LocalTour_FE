@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../config/appConfig.dart';
+import '../../../../config/secure_storage_helper.dart';
 import '../../../../models/media_model.dart';
 import '../../../../services/media_service.dart';
 
@@ -36,6 +38,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
   int initSize = 0;
   final int maxItems = 10;
   final int maxTotalSize = 200; // 200MB limit
+  String _languageCode = '';
 
   @override
   void initState() {
@@ -54,6 +57,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
   }
 
   Future<void> _convertListMedia() async {
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     if(widget.initialMedia != null){
       for(var item in widget.initialMedia!){
         if(item.type == 'Video'){
@@ -70,9 +74,9 @@ class _ReviewDialogState extends State<ReviewDialog> {
         }
       }
     }
-
     setState(() {
       initSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
+      _languageCode = languageCode!;
     });
   }
   
@@ -169,7 +173,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
                 maxLength: 200,
                 maxLines: 10,
                 decoration: InputDecoration(
-                  hintText: 'Write your review...',
+                  hintText: _languageCode == 'vi' ? 'Viết đánh giá của bạn':'Write your review...',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -272,7 +276,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
                   if (selectedRating > 0) {
                     if (contentController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please enter review content.')),
+                        SnackBar(content: Text(_languageCode == 'vi' ? 'Hãy nhập nội dung':'Please enter review content.')),
                       );
                       return;
                     }
@@ -286,13 +290,13 @@ class _ReviewDialogState extends State<ReviewDialog> {
                       Navigator.of(context).pop(); // Close the dialog
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('You have not changed anything')),
+                        SnackBar(content: Text(_languageCode == 'vi' ? 'Bạn không thay đổi điều gì':'You have not changed anything')),
                       );
                       Navigator.of(context).pop(); // Close the dialog if desired
                     }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please select a rating.')),
+                      SnackBar(content: Text(_languageCode == 'vi' ? 'Vui lòng chọn xếp hạng.':'Please select a rating.')),
                     );
                   }
                 },
@@ -306,9 +310,8 @@ class _ReviewDialogState extends State<ReviewDialog> {
                   elevation: 2,
                   side: const BorderSide(color: Colors.black, width: 1),
                 ),
-                child: const Text(
-                  'Submit Review',
-                  style: TextStyle(
+                child: Text(_languageCode == 'vi' ? 'Gửi Đánh giá': 'Submit Review',
+                  style: const TextStyle(
                       fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ),

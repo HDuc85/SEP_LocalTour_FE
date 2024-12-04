@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/history_tab_bar.dart';
+import '../../config/appConfig.dart';
+import '../../config/secure_storage_helper.dart';
 import 'planned_page_tab_bars/schedule_tab_bar.dart';
 
 class PlannedPage extends StatefulWidget {
@@ -15,6 +17,15 @@ class PlannedPage extends StatefulWidget {
 }
 
 class _PlannedPageState extends State<PlannedPage> {
+  String _languageCode = '';
+
+  Future<void> fetchLanguageCode() async {
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+    setState(() {
+      _languageCode = languageCode!; // Default to 'en' if no value is found
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -28,14 +39,14 @@ class _PlannedPageState extends State<PlannedPage> {
                 floating: true,
                 pinned: true,
                 bottom: TabBar(
-                  tabs: const [
+                  tabs: [
                     Tab(
-                      text: 'Schedule',
-                      icon: Icon(Icons.schedule),
+                      text: _languageCode == 'vi' ? 'Schedule':'Lịch trình',
+                      icon: const Icon(Icons.schedule),
                     ),
                     Tab(
-                      text: 'History',
-                      icon: Icon(Icons.history),
+                      text: _languageCode == 'vi' ? 'History':'Lịch sử',
+                      icon: const Icon(Icons.history),
                     ),
                   ],
                   labelColor: Colors.black, // Selected tab text color

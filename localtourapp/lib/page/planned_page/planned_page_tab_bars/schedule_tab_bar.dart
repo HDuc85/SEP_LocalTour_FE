@@ -32,9 +32,9 @@ class ScheduleTabbar extends StatefulWidget {
 
 class _ScheduleTabbarState extends State<ScheduleTabbar>
     with AutomaticKeepAliveClientMixin {
+  String _languageCode = '';
   @override
   bool get wantKeepAlive => true;
-
   final ScheduleService _scheduleService = ScheduleService();
   late List<ScheduleModel> _listSchedule;
   late List<ScheduleModel> _listScheduleInit;
@@ -76,6 +76,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   Future<void> fetchInit() async {
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     String? userid = '';
     if (widget.userId == '') {
       userid = await SecureStorageHelper().readValue(AppConfig.userId);
@@ -83,6 +84,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
         setState(() {
           _listSchedule = [];
           isLoading = false;
+          _languageCode = languageCode!;
         });
         return;
       }
@@ -236,15 +238,15 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(isCurrentUser ? 'Edit Detail' : 'Detail'),
+          title: Text(_languageCode == 'vi' ? (isCurrentUser ? 'Sửa chi tiết' : 'Chi tiết'):(isCurrentUser ? 'Edit Detail' : 'Detail')),
           content: isCurrentUser
               ? TextFormField(
             controller: _detailController,
             maxLines: 10,
             maxLength: 500,
-            decoration: const InputDecoration(
-              hintText: "Enter detail (max 500 words)",
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              hintText: _languageCode == 'vi' ? " Nhập tối đa 500 từ":"Enter detail (max 500 words)",
+              border: const OutlineInputBorder(),
             ),
           )
               : TextFormField(
@@ -258,7 +260,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
+              child: Text(_languageCode == 'vi' ? 'Đóng':'Close'),
             ),
             if (isCurrentUser)
               TextButton(
@@ -267,7 +269,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   onSave(updatedText); // Pass empty string if all text is deleted
                   Navigator.of(context).pop();
                 },
-                child: const Text('Save'),
+                child: Text(_languageCode == 'vi' ? 'Lưu':'Save'),
               ),
           ],
         );
@@ -397,9 +399,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           child: TextField(
             controller: searchController,
             focusNode: searchFocusNode,
-            decoration: const InputDecoration(
-              labelText: "Search by name",
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: _languageCode == 'vi' ? 'Tìm theo tên':"Search by name",
+              border: const OutlineInputBorder(),
             ),
             onChanged: (value) {
               setState(() {}); // Trigger filtering as user types
@@ -410,8 +412,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildDateField(
-              "From Date",
+            _buildDateField(_languageCode == 'vi' ? 'Từ ngày':
+            "From Date",
               true,
               _fromDate,
                   (newDate) {
@@ -423,7 +425,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               },
             ),
             const SizedBox(width: 5),
-            _buildDateField(
+            _buildDateField(_languageCode == 'vi' ? 'Tới ngày':
               "To Date",
               false,
               _toDate,
@@ -452,9 +454,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             ),
             padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
           ),
-          child: const Text(
+          child: Text(_languageCode == 'vi' ? 'Tìm kiếm':
             "Search",
-            style: TextStyle(
+            style: const TextStyle(
                 fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
@@ -464,10 +466,10 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
 
   Widget _buildScheduleSection(List<ScheduleModel> filteredSchedules) {
     if (filteredSchedules.isEmpty) {
-      return const Center(
-        child: Text(
-          "No schedules found.",
-          style: TextStyle(fontSize: 18),
+      return Center(
+        child: Text(_languageCode == 'vi' ?'Không tìm thấy lịch trình':
+        "No schedules found.",
+          style: const TextStyle(fontSize: 18),
         ),
       );
     }
@@ -533,14 +535,14 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                       ),
                       Row(
                         children: [
-                          Text(
+                          Text(_languageCode == 'vi' ? 'Ngày tạo: ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}':
                               "Created date: ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}"),
                         ],
                       ),
                       Row(
                         children: [
                           Expanded(
-                            child: _buildDateField(
+                            child: _buildDateField(_languageCode == 'vi' ? 'Từ ngày':
                               "From Date",
                               true,
                               schedule.startDate,
@@ -560,7 +562,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: _buildDateField(
+                            child: _buildDateField(_languageCode == 'vi' ? 'Tới ngày':
                               "To Date",
                               false,
                               schedule.endDate,
@@ -666,21 +668,21 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Confirm Delete'),
-          content: Text('Are you sure you want to delete "$scheduleName"?'),
+          title: Text(_languageCode == 'vi' ? 'Xác nhận xóa':'Confirm Delete'),
+          content: Text(_languageCode == 'vi' ? 'Bạn có muốn xóa "$scheduleName" không?':'Are you sure you want to delete "$scheduleName"?'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('No'),
+              child: Text(_languageCode == 'vi' ?'Không':'No'),
             ),
             TextButton(
               onPressed: () {
                 _deleteSchedule(scheduleId);
                 Navigator.of(context).pop();
               },
-              child: const Text('Yes'),
+              child: Text(_languageCode == 'vi' ? 'Có':'Yes'),
             ),
           ],
         );
@@ -1036,8 +1038,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                 ),
               ),
               const SizedBox(height: 10),
-              _buildDateField(
-                "Start Date",
+              _buildDateField(_languageCode == 'vi' ? 'Từ ngày':
+              "Start Date",
                 true,
                 destination.startDate,
                 updateStartDate,
@@ -1046,7 +1048,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                 isOwner: isCurrentUser,
               ),
               const SizedBox(height: 6),
-              _buildDateField(
+              _buildDateField(_languageCode == 'vi' ? 'Tới ngày':
                 "End Date",
                 false,
                 destination.endDate,
@@ -1095,6 +1097,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           final textSpan = TextSpan(
             text: detailText.isNotEmpty
                 ? detailText
+                : _languageCode == 'vi'
+                ? "Nhấn để thêm chi tiết..."
                 : "Tap to add details...", // Show hint text if empty
             style: TextStyle(
               color: detailText.isNotEmpty ? Colors.black : Colors.grey,
@@ -1113,9 +1117,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text( _languageCode == 'vi' ? 'Chi tiết':
                 "Detail:",
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
                   color: Colors.black,
@@ -1136,7 +1140,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   text: TextSpan(
                     text: detailText.isNotEmpty
                         ? detailText
-                        : "Tap to add details...", // Hint text if empty
+                        : _languageCode == 'vi'
+                        ? "Nhấn để thêm chi tiết..."
+                        : "Tap to add details...",  // Hint text if empty
                     style: TextStyle(
                       color: detailText.isNotEmpty ? Colors.black : Colors.grey,
                       fontStyle: detailText.isEmpty
@@ -1168,7 +1174,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Delete Destination'),
+          title: Text(_languageCode == 'vi' ?'Xóa điểm này?':'Delete this Destination?'),
           content:
           Text('Are you sure you want to delete "${destination.placeName}"?'),
           actions: [
@@ -1176,7 +1182,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Cancel'),
+              child: Text(_languageCode == 'vi' ? 'Thoát':'Cancel'),
             ),
             TextButton(
               onPressed: () async {
@@ -1186,7 +1192,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                 }
                 Navigator.of(context).pop();
               },
-              child: const Text('Delete'),
+              child: Text(_languageCode == 'vi' ? 'Xóa':'Delete'),
             ),
           ],
         );
@@ -1324,9 +1330,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             });
           },
           icon: const Icon(Icons.add, color: Colors.white),
-          label: const Text(
-            "Add Schedule",
-            style: TextStyle(fontSize: 13.6, color: Colors.white),
+          label: Text(_languageCode == 'vi' ?'Thêm lịch trình':
+          "Add Schedule",
+            style: const TextStyle(fontSize: 13.6, color: Colors.white),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.grey,
@@ -1339,9 +1345,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
         ElevatedButton.icon(
           onPressed: _showSuggestScheduleBottomSheet,
           icon: const Icon(Icons.add, color: Colors.white),
-          label: const Text(
+          label: Text(_languageCode == 'vi' ?'Đề nghị':
             "Suggestion",
-            style: TextStyle(fontSize: 14, color: Colors.white),
+            style: const TextStyle(fontSize: 14, color: Colors.white),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,

@@ -328,10 +328,11 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
         return SingleChildScrollView(
           controller: scrollController,
           child: Container(
-            decoration: const BoxDecoration(
-              color: Color.fromRGBO(255, 236, 179, 1),
+            decoration: BoxDecoration(
+              color: const Color.fromRGBO(255, 236, 179, 1),
               borderRadius:
-              BorderRadius.vertical(top: Radius.circular(20)),
+              const BorderRadius.vertical(top: Radius.circular(20)),
+              border:Border.all(width: 1),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -379,6 +380,7 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
                   // Schedule dropdown
                   const Text('Choose Schedule:'),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     decoration: const InputDecoration(
                       contentPadding:
                       EdgeInsets.symmetric(horizontal: 10),

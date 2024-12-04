@@ -88,7 +88,7 @@ class _FilterCellState extends State<FilterCell> {
 
 class _AllReviewsPageState extends State<AllReviewsPage> {
   final ReviewService _reviewService = ReviewService();
-
+  String _languageCode = '';
   List<FeedBackModel> _feedbackList = [];
   List<FeedBackModel> _feedbackListInit =[];
   int totalReview = -1;
@@ -106,8 +106,16 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
   @override
   void initState() {
     super.initState();
+    fetchLanguageCode();
     _scrollController.addListener(_scrollListener);
     _fetchFeedbackDate();
+  }
+
+  Future<void> fetchLanguageCode() async {
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+    setState(() {
+      _languageCode = languageCode!; // Default to 'en' if no value is found
+    });
   }
 
   Future<void> _fetchFeedbackDate() async{
@@ -284,7 +292,6 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
 
 
   Future<void> onFavoriteToggle(int feedbackId) async{
-
   }
 
   @override
@@ -317,7 +324,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
             children: [
               Flexible(
                 child: FilterCell(
-                  label: "All",
+                  label: _languageCode == 'vi' ? "Tất cả":"All",
                   count: "(${totalReview})",
                   isSelected: !filterWithMedia && sortByStars == "All" && sortOrder == "Latest",
                   onTap: () {
@@ -331,7 +338,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
               ),
               Flexible(
                 child: FilterCell(
-                  label: "With photo/video",
+                  label: _languageCode == 'vi' ? "Với hình/video":"With photo/video",
                   count: "($MediaCount)",
                   isSelected: filterWithMedia,
                   onTap: () {
@@ -343,7 +350,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
               ),
               Flexible(
                 child: FilterCell(
-                  label: "Sort by ⭐",
+                  label: _languageCode == 'vi' ? "Xếp theo ⭐":"Sort by ⭐",
                   count: "($sortByStars)",
                   isSelected: sortByStars != "All",
                   onTap: _showSortByStarsDialog,
@@ -351,7 +358,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
               ),
               Flexible(
                 child: FilterCell(
-                  label: "Sort by ⬇️",
+                  label: _languageCode == 'vi' ? "Xếp theo ⬇️":"Sort by ⬇️",
                   count: "($sortOrder)",
                   labelColor: sortOrderColor,
                   isSelected: sortOrder != "Latest",
@@ -374,8 +381,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
                         placeId: widget.placeId,
                         onReport: () {
                           ReportForm.show(
-                            context,
-                            'Have a problem with this person? Report them to us!',
+                            context,_languageCode == 'vi' ? 'Bạn có vấn đề với người này? Hãy báo cáo cho chúng tôi':'Have a problem with this person? Report them to us!',
                             feedback.userId,
                             -1,
                             ''

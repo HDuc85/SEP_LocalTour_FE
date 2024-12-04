@@ -79,6 +79,15 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     // Handle scroll events if needed
   }
 
+  // Helper method to get parent comment's user name
+  String? _getParentUserName(int commentId) {
+    try {
+      final parentComment = _listComment.firstWhere((c) => c.id == commentId);
+      return parentComment.userFullName;
+    } catch (e) {
+      return null; // Parent comment not found
+    }
+  }
 
   void _addComment({int? parentId}) async {
     final commentText = _commentController.text.trim();
@@ -347,88 +356,98 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   @override
   Widget build(BuildContext context) {
 
-    return
-      isLoading ? const Center(child: CircularProgressIndicator()) :
-      Container(
-      height: MediaQuery.of(context).size.height * 1,
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          // Header with title and close button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : GestureDetector(
+        child: Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: Container(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
             children: [
-              const Text(
-                'Comments',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          // Banner if replying to a comment
-          if (_replyingToCommentId != null)
-            Container(
-              padding: const EdgeInsets.all(8.0),
-              color: Colors.grey[300],
-              child: Row(
+              // Header with title and close button
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-
+                  const Text(
+                    'Comments',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed: _cancelReply,
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
-            ),
-          const SizedBox(height: 10),
-          // Comments List
-          Expanded(
-            child: _listComment.isEmpty
-                ?
-            const Center(
-                    child: Text(
-                      'No comments yet. Be the first to comment!',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
-                : ListView(
-                    controller: _commentsScrollController,
-                    children: _buildComments(null, 0),
+              const SizedBox(height: 10),
+              // Banner if replying to a comment
+              if (_replyingToCommentId != null)
+                Container(
+                  padding: const EdgeInsets.all(8.0),
+                  color: Colors.grey[300],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'You are replying to ${_getParentUserName(_replyingToCommentId!) ?? "someone"}',
+                        style: const TextStyle(
+                          fontStyle: FontStyle.italic,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: _cancelReply,
+                      ),
+                    ],
                   ),
-          ),
-          const Divider(),
-          // Input Field to Add Comment
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _commentController,
-                  focusNode: _commentFocusNode,
-                  decoration: InputDecoration(
-                    hintText: _replyingToCommentId != null
-                        ? 'Write a reply...'
-                        : 'Write a comment...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20.0),
-                    ),
-                  ),
-                  onSubmitted: (_) =>
-                      _addComment(parentId: _replyingToCommentId),
                 ),
+              const SizedBox(height: 10),
+              // Comments List
+              Expanded(
+                child: _listComment.isEmpty
+                    ?
+                const Center(
+                        child: Text(
+                          'No comments yet. Be the first to comment!',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      )
+                    : ListView(
+                        controller: _commentsScrollController,
+                        children: _buildComments(null, 0),
+                      ),
               ),
-              IconButton(
-                icon: const Icon(Icons.send, color: Colors.blue),
-                onPressed: () => _addComment(parentId: _replyingToCommentId),
+              const Divider(),
+              // Input Field to Add Comment
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _commentController,
+                      focusNode: _commentFocusNode,
+                      decoration: InputDecoration(
+                        hintText: _replyingToCommentId != null
+                            ? 'Write a reply...'
+                            : 'Write a comment...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                      ),
+                      onSubmitted: (_) =>
+                          _addComment(parentId: _replyingToCommentId),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.send, color: Colors.blue),
+                    onPressed: () => _addComment(parentId: _replyingToCommentId),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
-    );
+              ),
+        ),
+      );
   }
 }

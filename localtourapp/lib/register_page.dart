@@ -146,13 +146,13 @@ class _RegisterPageState extends State<RegisterPage> {
     if (phoneNumber.isEmpty) {
       setState(() {
         phoneError = true;
-        phoneErrorText = _languageCode != 'vi' ? 'Vui lòng nhập số điện thoại của bạn.':'Please enter your phone number.';
+        phoneErrorText = _languageCode == 'vi' ? 'Vui lòng nhập số điện thoại của bạn.':'Please enter your phone number.';
       });
       return;
     } else if (!validatePhoneNumber(phoneNumber)) {
       setState(() {
         phoneError = true;
-        phoneErrorText = _languageCode != 'vi' ? 'Vui lòng nhập số điện thoại hợp lệ.': 'Please enter a valid phone number.';
+        phoneErrorText = _languageCode == 'vi' ? 'Vui lòng nhập số điện thoại hợp lệ.': 'Please enter a valid phone number.';
       });
       return;
     } else {
@@ -216,11 +216,11 @@ class _RegisterPageState extends State<RegisterPage> {
       setState(() {
         isAuthenticating = false;
         phoneError = true;
-        phoneErrorText = _languageCode != 'vi' ? 'Có lỗi khi gửi mã SMS. Vui lòng thử lại.': 'Error sending SMS code. Please try again.';
+        phoneErrorText = _languageCode == 'vi' ? 'Có lỗi khi gửi mã SMS. Vui lòng thử lại.': 'Error sending SMS code. Please try again.';
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_languageCode != 'vi' ? 'Lỗi':'Error: ${e.toString()}'),
+          content: Text(_languageCode == 'vi' ? 'Lỗi':'Error: ${e.toString()}'),
         ),
       );
     }
@@ -238,13 +238,13 @@ class _RegisterPageState extends State<RegisterPage> {
     if (smsCode.isEmpty) {
       setState(() {
         smsError = true;
-        smsErrorText = _languageCode != 'vi' ? 'Vui lòng nhập mã SMS.':'Please enter the SMS code.';
+        smsErrorText = _languageCode == 'vi' ? 'Vui lòng nhập mã SMS.':'Please enter the SMS code.';
       });
       return;
     } else if (!validateSMSCode(smsCode)) {
       setState(() {
         smsError = true;
-        smsErrorText = _languageCode != 'vi' ? 'Vui lòng nhập mã SMS 6 chữ số hợp lệ.':'Please enter a valid 6-digit SMS code.';
+        smsErrorText = _languageCode == 'vi' ? 'Vui lòng nhập mã SMS 6 chữ số hợp lệ.':'Please enter a valid 6-digit SMS code.';
       });
       return;
     } else {
@@ -266,7 +266,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_languageCode != 'vi' ? 'Số điện thoại đã được xác minh thành công.': 'Phone number verified successfully.'),
+          content: Text(_languageCode == 'vi' ? 'Số điện thoại đã được xác minh thành công.': 'Phone number verified successfully.'),
         ),
       );
 
@@ -277,11 +277,11 @@ class _RegisterPageState extends State<RegisterPage> {
       setState(() {
         isAuthenticating = false;
         smsError = true;
-        smsErrorText = _languageCode != 'vi' ? 'Mã SMS không hợp lệ. Vui lòng thử lại.': 'Invalid SMS code. Please try again.';
+        smsErrorText = _languageCode == 'vi' ? 'Mã SMS không hợp lệ. Vui lòng thử lại.': 'Invalid SMS code. Please try again.';
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_languageCode != 'vi' ? 'Lỗi: Mã xác minh không hợp lệ.':'Error: Invalid verification code.'),
+          content: Text(_languageCode == 'vi' ? 'Lỗi: Mã xác minh không hợp lệ.':'Error: Invalid verification code.'),
         ),
       );
     }
@@ -377,7 +377,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(_languageCode != 'vi' ? 'Đăng ký thành công!':'Registration Successful!'),
+        content: Text(_languageCode == 'vi' ? 'Đăng ký thành công!':'Registration Successful!'),
       ),
     );
 
@@ -395,7 +395,7 @@ class _RegisterPageState extends State<RegisterPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(_languageCode != 'vi' ? 'Đăng ký':'Register'),
+          title: Text(_languageCode == 'vi' ? 'Đăng ký':'Register'),
           leading: currentStep > 1
               ? IconButton(
             icon: const Icon(Icons.arrow_back),
@@ -462,7 +462,7 @@ class _RegisterPageState extends State<RegisterPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(_languageCode != 'vi' ? 'Bước 1: Xác minh số điện thoại của bạn':'Step 1: Verify Your Phone Number',
+        Text(_languageCode == 'vi' ? 'Bước 1: Xác minh số điện thoại của bạn':'Step 1: Verify Your Phone Number',
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
@@ -473,7 +473,7 @@ class _RegisterPageState extends State<RegisterPage> {
             focusNode: phoneFocusNode,
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
-              labelText: _languageCode != 'vi' ? 'Số điện thoại':'Phone Number',
+              labelText: _languageCode == 'vi' ? 'Số điện thoại':'Phone Number',
               prefixIcon: const Icon(Icons.phone),
               border: const OutlineInputBorder(),
               errorText: phoneError ? phoneErrorText : null,
@@ -495,7 +495,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     strokeWidth: 2,
                   ),
                 )
-                    : Text(_languageCode != 'vi' ? 'Xác thực':'Authenticate'),
+                    : Text(_languageCode == 'vi' ? 'Xác thực':'Authenticate'),
               ),
             ],
           ),
@@ -506,7 +506,7 @@ class _RegisterPageState extends State<RegisterPage> {
             focusNode: smsCodeFocusNode,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              labelText: _languageCode != 'vi' ? 'Mã SMS':'SMS Code',
+              labelText: _languageCode == 'vi' ? 'Mã SMS':'SMS Code',
               prefixIcon: const Icon(Icons.sms),
               border: const OutlineInputBorder(),
               errorText: smsError ? smsErrorText : null,
@@ -521,7 +521,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (isCountdownActive)
-                    Text(_languageCode != 'vi' ? 'Gửi lại mã OTP sau $resendCountdown giây': "Resend OTP in $resendCountdown seconds",
+                    Text(_languageCode == 'vi' ? 'Gửi lại mã OTP sau $resendCountdown giây': "Resend OTP in $resendCountdown seconds",
                       style: const TextStyle(fontSize: 14, color: Colors.grey),
                     )
                   else
@@ -529,7 +529,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       onPressed: () {
                         _resendOtp();
                       },
-                      child: Text(_languageCode != 'vi' ? 'Gửi lại mã OTP':'Resend OTP'),
+                      child: Text(_languageCode == 'vi' ? 'Gửi lại mã OTP':'Resend OTP'),
                     ),
                 ],
               ),
@@ -545,7 +545,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     strokeWidth: 2,
                   ),
                 )
-                    : Text(_languageCode != 'vi' ? 'Xác minh': 'Verify'),
+                    : Text(_languageCode == 'vi' ? 'Xác minh': 'Verify'),
               ),
             ],
           ),
@@ -559,7 +559,7 @@ class _RegisterPageState extends State<RegisterPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(_languageCode != 'vi' ? 'Bước 2: Đặt mật khẩu của bạn':'Step 2: Set Your Password',
+        Text(_languageCode == 'vi' ? 'Bước 2: Đặt mật khẩu của bạn':'Step 2: Set Your Password',
           style: const  TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
@@ -568,7 +568,7 @@ class _RegisterPageState extends State<RegisterPage> {
           focusNode: passwordFocusNode,
           obscureText: true, // Always obscure text
           decoration: InputDecoration(
-            labelText: _languageCode != 'vi' ? 'Mật khẩu':'Password',
+            labelText: _languageCode == 'vi' ? 'Mật khẩu':'Password',
             prefixIcon: const Icon(Icons.lock),
             border: const OutlineInputBorder(),
             errorText: passwordError ? passwordErrorText : null,
@@ -583,7 +583,7 @@ class _RegisterPageState extends State<RegisterPage> {
           focusNode: confirmPasswordFocusNode,
           obscureText: true, // Always obscure text
           decoration: InputDecoration(
-            labelText: _languageCode != 'vi' ? 'Xác nhận mật khẩu': 'Confirm Password',
+            labelText: _languageCode == 'vi' ? 'Xác nhận mật khẩu': 'Confirm Password',
             prefixIcon: const Icon(Icons.lock_outline),
             border: const OutlineInputBorder(),
             errorText:
@@ -608,11 +608,11 @@ class _RegisterPageState extends State<RegisterPage> {
                   // Validate Password
                   if (password.isEmpty) {
                     passwordError = true;
-                    passwordErrorText = _languageCode != 'vi' ? 'Vui lòng nhập mật khẩu của bạn.':'Please enter your password.';
+                    passwordErrorText = _languageCode == 'vi' ? 'Vui lòng nhập mật khẩu của bạn.':'Please enter your password.';
                     isValid = false;
                   } else if (!validatePassword(password)) {
                     passwordError = true;
-                    passwordErrorText = _languageCode != 'vi' ? 'Mật khẩu phải có:\n• 1 chữ cái viết hoa • 1 ký tự đặc biệt\n• 1 chữ số • Độ dài 8-16 ký tự.':
+                    passwordErrorText = _languageCode == 'vi' ? 'Mật khẩu phải có:\n• 1 chữ cái viết hoa • 1 ký tự đặc biệt\n• 1 chữ số • Độ dài 8-16 ký tự.':
                     'Password must have:\n• 1 uppercase letter • 1 special character\n• 1 number • 8-16 characters long.';
                     isValid = false;
                   } else {
@@ -623,13 +623,13 @@ class _RegisterPageState extends State<RegisterPage> {
                   // Validate Confirm Password
                   if (confirmPassword.isEmpty) {
                     confirmPasswordError = true;
-                    confirmPasswordErrorText = _languageCode != 'vi' ? 'Vui lòng xác nhận mật khẩu của bạn.':
+                    confirmPasswordErrorText = _languageCode == 'vi' ? 'Vui lòng xác nhận mật khẩu của bạn.':
                     'Please confirm your password.';
                     isValid = false;
                   } else if (!validateConfirmPassword(
                       password, confirmPassword)) {
                     confirmPasswordError = true;
-                    confirmPasswordErrorText = _languageCode != 'vi' ? 'Mật khẩu không khớp.':
+                    confirmPasswordErrorText = _languageCode == 'vi' ? 'Mật khẩu không khớp.':
                     'Passwords do not match.';
                     isValid = false;
                   } else {
@@ -652,7 +652,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   }
                 });
               },
-              child: Text(_languageCode != 'vi' ? 'Đồng ý':'Agree'),
+              child: Text(_languageCode == 'vi' ? 'Đồng ý':'Agree'),
             ),
           ],
         ),
@@ -665,7 +665,7 @@ class _RegisterPageState extends State<RegisterPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(_languageCode != 'vi' ? 'Bước 3: Chọn một biệt danh':
+        Text(_languageCode == 'vi' ? 'Bước 3: Chọn một biệt danh':
           'Step 3: Choose a Nickname',
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
@@ -674,7 +674,7 @@ class _RegisterPageState extends State<RegisterPage> {
           controller: usernameController,
           focusNode: usernameFocusNode,
           decoration: InputDecoration(
-            labelText: _languageCode != 'vi' ? 'Biệt danh':'Nickname',
+            labelText: _languageCode == 'vi' ? 'Biệt danh':'Nickname',
             prefixIcon: const Icon(Icons.person),
             border: const OutlineInputBorder(),
             errorText: usernameError ? usernameErrorText : null,
@@ -696,7 +696,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 if (username.isEmpty) {
                   setState(() {
                     usernameError = true;
-                    usernameErrorText = _languageCode != 'vi' ? 'Vui lòng nhập biệt danh':'Please enter a nickname.';
+                    usernameErrorText = _languageCode == 'vi' ? 'Vui lòng nhập biệt danh':'Please enter a nickname.';
                   });
                 } else {
                   setState(() {
@@ -720,7 +720,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   });
                 }
               },
-              child: Text(_languageCode != 'vi' ? 'Đồng ý':'Agree'),
+              child: Text(_languageCode == 'vi' ? 'Đồng ý':'Agree'),
             ),
           ],
         ),
@@ -733,12 +733,12 @@ class _RegisterPageState extends State<RegisterPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(_languageCode != 'vi' ? 'Bước 4: Chọn tùy chọn của bạn':
+        Text(_languageCode == 'vi' ? 'Bước 4: Chọn tùy chọn của bạn':
           'Step 4: Select Your Preferences',
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        Text(_languageCode != 'vi' ? 'Chọn sở thích của bạn':
+        Text(_languageCode == 'vi' ? 'Chọn sở thích của bạn':
           'Choose your preferences',
           style: const TextStyle(fontSize: 16),
         ),
@@ -757,14 +757,14 @@ class _RegisterPageState extends State<RegisterPage> {
                 if (listTagIdSelected.length < 5) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(_languageCode != 'vi' ? 'Vui lòng chọn ít nhất 5 tùy chọn':'Please select at least 5 preferences.'),
+                      content: Text(_languageCode == 'vi' ? 'Vui lòng chọn ít nhất 5 tùy chọn':'Please select at least 5 preferences.'),
                     ),
                   );
                 } else {
                   _completeRegistration();
                 }
               },
-              child: Text(_languageCode != 'vi' ? 'Hoàn thành':'Complete'),
+              child: Text(_languageCode == 'vi' ? 'Hoàn thành':'Complete'),
             ),
           ],
         ),
@@ -787,7 +787,7 @@ class _RegisterPageState extends State<RegisterPage> {
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(_languageCode != 'vi' ? 'Bạn phải chọn ít nhất 5 tùy chọn':'You must select at least 5 preferences.'),
+                    content: Text(_languageCode == 'vi' ? 'Bạn phải chọn ít nhất 5 tùy chọn':'You must select at least 5 preferences.'),
                   ),
                 );
               }
