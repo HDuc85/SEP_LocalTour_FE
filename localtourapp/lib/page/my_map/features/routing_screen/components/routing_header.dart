@@ -80,8 +80,8 @@ class RoutingHeader extends StatelessWidget {
                           estimatedTime: state
                                       .routingModel?.paths?.first.time ==
                                   null
-                              ? null
-                              : '${(state.routingModel!.paths!.first.time! / 60000).round()} phút',
+                              ? null 
+                              : '',
                           vehicleType: e,
                           currentVehicleType:
                               state.routingParams?.vehicle ?? VehicleType.car,
