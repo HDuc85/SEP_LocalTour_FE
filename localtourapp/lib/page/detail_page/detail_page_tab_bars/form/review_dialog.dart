@@ -134,21 +134,6 @@ class _ReviewDialogState extends State<ReviewDialog> {
     return contentChanged || ratingChanged  || mediaChanged;
   }
 
-  bool _areFilesEqual(List<File> initialFiles, List<XFile> selectedFiles) {
-    if (initialFiles.length != selectedFiles.length) return false;
-
-    List<String> initialPaths = initialFiles.map((file) => file.path).toList();
-    List<String> selectedPaths = selectedFiles.map((file) => file.path).toList();
-
-    initialPaths.sort();
-    selectedPaths.sort();
-
-    for (int i = 0; i < initialPaths.length; i++) {
-      if (initialPaths[i] != selectedPaths[i]) return false;
-    }
-    return true;
-  }
-
   @override
   Widget build(BuildContext context) {
     return AlertDialog(

@@ -12,7 +12,6 @@ import 'package:localtourapp/services/place_service.dart';
 import 'package:localtourapp/services/post_service.dart';
 import 'package:localtourapp/services/schedule_service.dart';
 
-
 class CreatePostOverlay extends StatefulWidget {
   final int? placeId;
   final PostModel? existingPost;
@@ -22,7 +21,7 @@ class CreatePostOverlay extends StatefulWidget {
     Key? key,
     this.placeId,
     this.existingPost,
-    this.callback
+    this.callback,
   }) : super(key: key);
 
   @override
@@ -40,11 +39,9 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController contentController = TextEditingController();
   List<PostMedia> mediaList = [];
-  String placeName = "Unknown Place";
-  String photoDisplay = "";
   bool isUpdateMode = false;
   late List<ScheduleModel> myListSchedule;
-  List<File> listFilePick =[];
+  List<File> listFilePick = [];
   bool isLoading = true;
 
   @override
@@ -57,66 +54,75 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
   }
 
   void _initializeForUpdate(PostModel post) {
-    // Set update mode and initialize fields
     isUpdateMode = true;
-
+    titleController.text = post.title;
+    contentController.text = post.content;
+    // Initialize other fields as necessary
   }
 
   Future<void> _fetchPlaceDetails() async {
-      try{
-        var result = await _scheduleService.GetScheduleCurrentUser();
+    try {
+      var result = await _scheduleService.GetScheduleCurrentUser();
 
-        if(isUpdateMode){
-          PostModel postmodel = widget.existingPost!;
+      if (isUpdateMode) {
+        PostModel postmodel = widget.existingPost!;
 
-          if(postmodel.placeId != null){
+        if (postmodel.placeId != null) {
+          var p = await _placeService.GetPlaceDetail(postmodel.placeId!);
 
-            var p = await _placeService.GetPlaceDetail(widget.existingPost!.placeId!);
-
-            selectedPlace = new PlaceCardModel(placeId: p.id,
-                wardName: '',
-                photoDisplayUrl: p.photoDisplay,
-                latitude: 0,
-                longitude: 0,
-                placeName: p.name,
-                rateStar: p.rating,
-                countFeedback: 0,
-                distance: 0,
-                address: '');
-
-          }
-          if(widget.existingPost!.scheduleId != null){
-            selectedSchedule = result.firstWhere((element) => element.id == postmodel.scheduleId!,).scheduleName;
-          }
-          titleController.text = widget.existingPost!.title;
-          contentController.text = widget.existingPost!.content;
-          if(postmodel.media != null){
-            for(var item in postmodel.media){
-               var result = await _mediaService.downloadAndConvertToXFile(item.url);
-               if(result != null){
-                 mediaList.add(new PostMedia(
-                   createdAt: DateTime.now(),
-                   id: DateTime.now().millisecondsSinceEpoch,
-                   type: '${item.type}',
-                   url: result.path,)
-                 );
-               }
-            }
-          }
-
+          selectedPlace = PlaceCardModel(
+            placeId: p.id,
+            wardName: '',
+            photoDisplayUrl: p.photoDisplay,
+            latitude: 0,
+            longitude: 0,
+            placeName: p.name,
+            rateStar: p.rating,
+            countFeedback: 0,
+            distance: 0,
+            address: '',
+          );
         }
 
-        setState(() {
-          myListSchedule = result;
-          isLoading = false;
-        });
-      }catch (e){
+        if (postmodel.scheduleId != null) {
+          selectedSchedule = result
+              .firstWhere(
+                (element) => element.id == postmodel.scheduleId!,
+          )
+              .scheduleName;
+        }
 
+        if (postmodel.media != null) {
+          for (var item in postmodel.media) {
+            var result =
+            await _mediaService.downloadAndConvertToXFile(item.url);
+            if (result != null) {
+              mediaList.add(PostMedia(
+                createdAt: DateTime.now(),
+                id: DateTime.now().millisecondsSinceEpoch,
+                type: item.type.toLowerCase(), // Ensure type consistency
+                url: result.path,
+              ));
+            }
+          }
+        }
       }
+
+      setState(() {
+        myListSchedule = result;
+        isLoading = false;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching schedule: $e')),
+      );
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   void _selectPlace(PlaceCardModel place) {
-
     setState(() {
       selectedPlace = place;
     });
@@ -125,8 +131,6 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
   void _removePlace() {
     setState(() {
       selectedPlace = null;
-      placeName = "Unknown Place";
-      photoDisplay = "";
     });
   }
 
@@ -178,12 +182,20 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
           break; // Stop adding more files
         }
 
+        // Check if adding exceeds the max number of media items
+        if (mediaList.length + newMediaList.length >= 10) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cannot add more than 10 media items.')),
+          );
+          break;
+        }
+
         newMediaList.add(PostMedia(
           id: DateTime.now().millisecondsSinceEpoch,
           url: pickedFile.path,
-          type: 'photo',
+          type: 'image',
           createdAt: DateTime.now(),
-          postId: widget.existingPost?.id ?? 0, // Temporary, updated later
+          postId: widget.existingPost?.id ?? 0,
         ));
         totalSize += fileSize;
       }
@@ -193,7 +205,6 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
       });
     }
   }
-
 
   Future<void> _pickVideo() async {
     final XFile? pickedFile =
@@ -209,84 +220,107 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
         return;
       }
 
+      if (mediaList.length >= 10) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cannot add more than 10 media items.')),
+        );
+        return;
+      }
+
       setState(() {
         mediaList.add(PostMedia(
           id: DateTime.now().millisecondsSinceEpoch,
           url: pickedFile.path,
           type: 'video',
           createdAt: DateTime.now(),
-          postId: widget.existingPost?.id ?? 0, // Temporary, updated later
+          postId: widget.existingPost?.id ?? 0,
         ));
       });
     }
   }
 
   int _calculateTotalMediaSize() {
-    return mediaList.fold(0, (sum, media) {
+    int total = 0;
+    for (var media in mediaList) {
       final file = File(media.url);
-      return sum + (file.existsSync() ? file.lengthSync() : 0);
-    });
+      if (file.existsSync()) {
+        total += file.lengthSync();
+      }
+    }
+    return total;
   }
 
   Future<void> _createOrUpdatePost() async {
     final title = titleController.text.trim();
     final content = contentController.text.trim();
-    //final scheduleId = _getSelectedScheduleId();
-    final hasContent = content.isNotEmpty;
-    //final hasPlace = selectedPlace != null;
+    final hasContent = title.isNotEmpty || content.isNotEmpty;
     final hasMedia = mediaList.isNotEmpty;
-    //final hasSchedule = scheduleId != null;
-    if (!hasContent && !hasContent) {
+
+    if (!hasContent && !hasMedia) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please provide at least one of: Title, Content.'),
+          content: Text('Please provide at least a title, content, or media.'),
         ),
       );
       return;
     }
 
-    if(hasMedia){
+    if (hasMedia) {
       listFilePick.clear();
-      for(var item in mediaList){
-        listFilePick.add(new File(item.url));
+      for (var item in mediaList) {
+        listFilePick.add(File(item.url));
       }
     }
-    int? scheduleId = null;
-    if(selectedSchedule != null){
-      scheduleId = myListSchedule.firstWhere((element) => element.scheduleName == selectedSchedule!,).id;
+
+    int? scheduleId;
+    if (selectedSchedule != null) {
+      scheduleId = myListSchedule
+          .firstWhere(
+            (element) => element.scheduleName == selectedSchedule!,
+      )
+          .id;
     }
 
+    String resultMessage;
 
     if (isUpdateMode) {
-      var result = await _postService.UpdatePost(widget.existingPost!.id, title, content, selectedPlace !=null ? selectedPlace!.placeId : null, scheduleId, listFilePick);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(content: Text(result)),
+      var result = await _postService.UpdatePost(
+        widget.existingPost!.id,
+        title,
+        content,
+        selectedPlace?.placeId,
+        scheduleId,
+        listFilePick,
       );
+
+      resultMessage = result;
     } else {
-
-      var result = await _postService.CreatePost(title, content, selectedPlace !=null ? selectedPlace!.placeId : null, scheduleId, listFilePick);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(content: Text('$result')),
+      var result = await _postService.CreatePost(
+        title,
+        content,
+        selectedPlace?.placeId,
+        scheduleId,
+        listFilePick,
       );
+
+      resultMessage = result;
     }
 
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(resultMessage)),
+    );
 
-    widget.callback;
+    if (widget.callback != null) {
+      widget.callback!();
+    }
     Navigator.pop(context);
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
-
-
-    return
-      isLoading ? const Center(child: CircularProgressIndicator()) :
-      DraggableScrollableSheet(
+    return isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : DraggableScrollableSheet(
       initialChildSize: 0.87,
       maxChildSize: 0.9,
       minChildSize: 0.4,
@@ -296,7 +330,8 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
           child: Container(
             decoration: const BoxDecoration(
               color: Color.fromRGBO(255, 236, 179, 1),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius:
+              BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -476,7 +511,7 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
                   // Display selected media list
                   if (mediaList.isNotEmpty)
                     SizedBox(
-                      height: 100, // Adjust height for thumbnails
+                      height: 120, // Adjust height for thumbnails
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         itemCount: mediaList.length,
@@ -490,29 +525,57 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
                                 ClipRRect(
                                   borderRadius:
                                   BorderRadius.circular(8),
-                                  child: media.type == 'Image'
+                                  child: media.type == 'image'
                                       ? Image.file(
                                     File(media.url),
                                     width: 100,
                                     height: 100,
                                     fit: BoxFit.cover,
                                   )
-                                      : Icon(Icons.videocam,
-                                      size: 100,
-                                      color: Colors.grey),
+                                      : Stack(
+                                    children: [
+                                      Container(
+                                        width: 100,
+                                        height: 100,
+                                        color: Colors.black12,
+                                        child: Icon(
+                                          Icons.videocam,
+                                          size: 50,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 8,
+                                        right: 8,
+                                        child: Icon(
+                                          Icons.play_circle_fill,
+                                          color: Colors.white70,
+                                          size: 24,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 Positioned(
                                   right: 0,
                                   top: 0,
-                                  child: IconButton(
-                                    icon: const Icon(
-                                        Icons.close,
-                                        color: Colors.red),
-                                    onPressed: () {
+                                  child: GestureDetector(
+                                    onTap: () {
                                       setState(() {
                                         mediaList.removeAt(index);
                                       });
                                     },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.black54,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],
