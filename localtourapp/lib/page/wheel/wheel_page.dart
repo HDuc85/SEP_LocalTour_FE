@@ -190,11 +190,11 @@ class _WheelPageState extends State<WheelPage> {
             backgroundColor: Colors.green,
             padding: const EdgeInsets.symmetric(vertical: 0),
           ),
-          child: const Row(
+          child:  Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Thể loại",
+                _languageCode == 'vi' ? "Thể loại" : 'Type',
                 style: TextStyle(color: Colors.black),
               ),
               Icon(Icons.arrow_forward, color: Colors.black),
@@ -239,13 +239,13 @@ class _WheelPageState extends State<WheelPage> {
             children: [
               Container(width: 50,
                   child: Text(item.placeName,  maxLines: 2,
-                      overflow: TextOverflow.ellipsis,style: TextStyle(color: item.placeId % 2 == 1? Colors.white : Colors.black, fontSize: 12),)),
+                      overflow: TextOverflow.ellipsis,style: TextStyle(color: item.placeId % 2 == 1? Colors.white : Colors.black, fontSize: 8),)),
               SizedBox(width: 10,),
               ClipOval(
                 child: Image.network(
                   item.photoDisplayUrl,
-                  width: 70,
-                  height: 70,
+                  width: 40,
+                  height: 40,
                   fit: BoxFit.cover, // Đảm bảo ảnh phủ đầy khu vực
                 ),
               ),

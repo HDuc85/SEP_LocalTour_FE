@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/constants/getListApi.dart';
 import 'package:localtourapp/models/HomePage/placeCard.dart';
 import 'package:localtourapp/models/Tag/tag_model.dart';
@@ -39,14 +41,13 @@ class _HomeScreenState extends State<HomeScreen> {
   final Map<int, GlobalKey> tagSectionKeys = {};
   List<TagModel> listTagTop = [];
   bool isLoading = true;
+  String _language = 'vi';
   List<PlaceCardModel> listPlaceNearest = [];
   List<EventModel> listEvent = [];
 
   List<CardInfo> nearestLocation = [];
   List<CardInfo> featuredPlaces = [];
   Map<int, bool> tagToggleStates = {};
-  Map<int, List<CardInfo>> nearestPlacesByTag = {};
-  Map<int, List<CardInfo>> featuredPlacesByTag = {};
 
   Map<int, List<PlaceCardModel>> listPlaceTags = {};
   Position? _currentPosition;
@@ -118,24 +119,33 @@ class _HomeScreenState extends State<HomeScreen> {
             speed: 1,
             speedAccuracy: 1);
       }
-
-      final fetchedListPlaceNearest = await _placeService.getListPlace(
-          lat, long, SortBy.distance, SortOrder.asc);
-      var fetchedListEvent = await _eventService.GetEventInPlace(
-          null, lat, long, SortOrder.asc, SortBy.distance);
       final topTags = await _tagService.getTopTagPlace();
 
-      for (var tag in topTags) {
-        listPlaceTags[tag.id] = await _placeService
-            .getListPlace(lat, long, SortBy.distance, SortOrder.asc, [tag.id]);
-      }
+      var language = await SecureStorageHelper().readValue(AppConfig.language);
+
+      _language = language!;
 
       for (var tag in topTags) {
         tagSectionKeys[tag.id] = GlobalKey();
       }
+      listTagTop = topTags;
+      setState(() {
+        isLoading = false;
+      });
+
+
+      final fetchedListPlaceNearest = await _placeService.getListPlace(
+          lat, long, SortBy.distance, SortOrder.asc);
+      setState(() {
+        listPlaceNearest = fetchedListPlaceNearest;
+      });
+
+      var fetchedListEvent = await _eventService.GetEventInPlace(
+          null, lat, long, SortOrder.asc, SortBy.distance);
+
       DateTime now = DateTime.now();
       fetchedListEvent = fetchedListEvent.where(
-        (element) {
+            (element) {
           Duration difference = now.difference(element.startDate);
           Duration differenceEnd = now.difference(element.endDate);
           if (difference.inHours > 0 && differenceEnd.inHours < 0) {
@@ -149,11 +159,18 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ).toList();
 
-      listTagTop = topTags;
-      listPlaceNearest = fetchedListPlaceNearest;
-      listEvent = fetchedListEvent;
       setState(() {
-        isLoading = false;
+        listEvent = fetchedListEvent;
+
+      });
+
+      for (var tag in topTags) {
+        listPlaceTags[tag.id] = await _placeService
+            .getListPlace(lat, long, SortBy.distance, SortOrder.asc, [tag.id]);
+      }
+
+      setState(() {
+
       });
     } catch (e) {}
   }
@@ -177,15 +194,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 10),
                     SearchBarIcon(
                       position: _currentPosition,
+                      language: _language,
                     ),
                     const SizedBox(height: 10),
                     _buildTagGrid(listTagTop),
                     const SizedBox(height: 40),
                     _buildNearFeaturedSection('assets/icons/Nearest Places.png',
-                        'Nearest Location', listPlaceNearest, SortBy.distance),
+                        _language != 'vi'?'Nearest Location': 'Địa điểm gần nhất', listPlaceNearest, SortBy.distance),
                     const SizedBox(height: 40),
                     _buildNearEventNearest('assets/icons/event.png',
-                        'Nearest Events', listEvent, SortBy.distance),
+                        _language != 'vi'?'Nearest Events':'Sự kiện gần nhất', listEvent, SortBy.distance),
                     const SizedBox(height: 40),
                     ...listTagTop.map((tag) {
                       return Padding(
@@ -216,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             onPressed: _navigateToWeatherPage,
                             assetPath: 'assets/icons/weather.png',
                           ),
-                          Text('Thời tiết')
+                          _language != 'vi'? Text('Weather') :Text('Thời tiết')
                         ]),
                       ),
                       PopupMenuItem(
@@ -226,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               onPressed: _navigateToWeatherPage,
                               assetPath: 'assets/icons/wheel.png',
                             ),
-                            Text('Hôm nay ăn gì')
+                            _language != 'vi'? Text('Today choose') : Text('Lựa chọn hôm nay')
                           ])),
                     ],
                     onSelected: (value) {
@@ -284,14 +302,15 @@ class _HomeScreenState extends State<HomeScreen> {
             context,
             MaterialPageRoute(
               builder: (_) => FeaturedSchedulePage(
-                userId: userId, // Pass in the actual userId
+                userId: userId,
+                language: _language,// Pass in the actual userId
               ),
             ),
           );
         },
         child: _buildTagItem(
             'https://api.localtour.space/Media/image_4fc69903-324c-4765-96f4-f338815e4aad.png',
-            'Schedule Page'), // Example image for "Schedule Page"
+            _language != 'vi' ? 'Top Schedule': "Top lịch trình"), // Example image for "Schedule Page"
       ),
       GestureDetector(
         onTap: () {
@@ -303,7 +322,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
         child: _buildTagItem('https://api.localtour.space/Media/wheel.png',
-            'Today choose'), // Example image for "Schedule Page"
+            _language != 'vi' ? 'Today choose' : 'Lựa chọn hôm nay'), // Example image for "Schedule Page"
       )
     ];
 
@@ -313,14 +332,14 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: () {
           _scrollToTagSection(tag.id);
         },
-        child: _buildTagItem(tag.tagPhotoUrl, tag.tagName),
+        child: _buildTagItem(tag.tagPhotoUrl, _language != 'vi' ? tag.tagName : tag.tagVi),
       );
     }).toList());
 
     return Center(
       child: Container(
         height: 200, // Adjust the height to fit two tag items vertically
-        margin: const EdgeInsets.symmetric(horizontal: 40),
+        margin: const EdgeInsets.symmetric(horizontal: 35),
         decoration: BoxDecoration(
           color: Constants.tagGridBackground,
           borderRadius: BorderRadius.circular(30),
@@ -472,7 +491,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 12),
         CustomSeeAllButton(
-          text: "SEE ALL",
+          text: _language != 'vi'? "SEE ALL" : 'Xem tất cả',
           onPressed: () {
             // Navigate to SearchPage with the corresponding filter
             Navigator.push(
@@ -553,7 +572,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 12),
         CustomSeeAllButton(
-          text: "SEE ALL",
+          text: _language != 'vi'?"SEE ALL":"Xem tất cả",
           onPressed: () {
             // Navigate to SearchPage with the corresponding filter
             Navigator.push(
@@ -600,7 +619,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Image.network(tag.tagPhotoUrl, width: 30, height: 30),
                 const SizedBox(width: 16),
                 Text(
-                  tag.tagName.toUpperCase(),
+                  _language != 'vi'? tag.tagName.toUpperCase() : tag.tagVi.toUpperCase(),
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 16),
                 ),
@@ -629,8 +648,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.symmetric(
                         vertical: 10, horizontal: 49),
                   ),
-                  child: const Text(
-                    'Nearest',
+                  child:  Text(
+                    _language != 'vi'?'Nearest':'Gần nhất',
                     style: TextStyle(fontSize: 15, color: Colors.white),
                   ),
                 ),
@@ -651,8 +670,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.symmetric(
                         vertical: 10, horizontal: 49),
                   ),
-                  child: const Text(
-                    'Featured',
+                  child:  Text(
+                    _language != 'vi'? 'Featured':'Nổi bật',
                     style: TextStyle(fontSize: 15, color: Colors.white),
                   ),
                 ),
@@ -701,7 +720,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 12),
           CustomSeeAllButton(
-            text: 'SEE ALL',
+            text: _language != 'vi'?'SEE ALL':'Xem tất cả',
             onPressed: () {
               // Determine the filter based on toggle state
               SortBy sortBy = isFeatured ? SortBy.distance : SortBy.rating;

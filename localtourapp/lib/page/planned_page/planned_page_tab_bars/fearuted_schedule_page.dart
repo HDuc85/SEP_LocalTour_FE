@@ -10,10 +10,11 @@ import 'dart:ui' as ui;
 
 class FeaturedSchedulePage extends StatefulWidget {
   final String userId;
-
+  final String language;
   const FeaturedSchedulePage({
     super.key,
     required this.userId,
+    required this.language
   });
 
   @override
@@ -198,8 +199,8 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Top Most Favorite Schedules",
+        title:  Text(
+         widget.language != 'vi'? "Top Most Favorite Schedules" : 'Top Lịch Trình Được Yêu Thích',
           maxLines: 2,
         ),
       ),
@@ -249,12 +250,12 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                 ),
                               ),
                               Text(
-                                  "Created date: ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}"),
+                                  "${ widget.language != 'vi'?'Created date:':'Tạo lúc'} ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}"),
                               Row(
                                 children: [
                                   Flexible(
                                     child: _buildDateField(
-                                      "From Date",
+                                      widget.language != 'vi'?"From Date":'Từ ngày',
                                       true,
                                       schedule.startDate,
                                           (_) {},
@@ -263,7 +264,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                   const SizedBox(width: 8),
                                   Flexible(
                                     child: _buildDateField(
-                                      "To Date",
+                                      widget.language != 'vi'?"To Date":'Tới ngày',
                                       false,
                                       schedule.endDate,
                                           (_) {},
@@ -273,7 +274,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                               ),
                               Row(
                                 children: [
-                                  Text("Created by: ${schedule.userName ?? 'Unknown'}"),
+                                  Text("${ widget.language != 'vi'?'Created by':'Tạo bởi'}: ${schedule.userName ?? 'Unknown'}"),
                                   const SizedBox(width: 8),
                                   IconButton(
                                     icon: Icon(
@@ -296,7 +297,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                 ],
                               ),
                               if (schedule.userId == widget.userId)
-                                const Text("This is your schedule"),
+                                 Text( widget.language != 'vi'? "This is your schedule":'Lịch trình của bạn'),
                               if (schedule.userId != widget.userId)
                                 TextButton(
                                   onPressed: () {
@@ -305,15 +306,15 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                       context: context,
                                       builder: (BuildContext context) {
                                         return AlertDialog(
-                                          title: const Text("Clone Schedule"),
-                                          content: const Text(
-                                              "Do you want to clone this schedule to yours?"),
+                                          title:  Text( widget.language != 'vi'?"Clone Schedule":'Sao chép Lịch trình'),
+                                          content:  Text(
+                                              widget.language != 'vi'? "Do you want to clone this schedule to yours?" : "Bạn có muốn sao chép lịch trình này không?"),
                                           actions: [
                                             TextButton(
                                               onPressed: () {
                                                 Navigator.of(context).pop(); // Close the dialog
                                               },
-                                              child: const Text("Cancel"),
+                                              child:  Text( widget.language != 'vi'?"Cancel":"Hủy"),
                                             ),
                                             TextButton(
                                               onPressed: () {
@@ -321,14 +322,14 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                                 _cloneSchedule(schedule);
                                                 Navigator.of(context).pop(); // Close the dialog after cloning
                                               },
-                                              child: const Text("Clone"),
+                                              child:  Text( widget.language != 'vi'?"Clone":"Sao chép"),
                                             ),
                                           ],
                                         );
                                       },
                                     );
                                   },
-                                  child: const Text("Clone this schedule to yours"),
+                                  child:  Text( widget.language != 'vi'?"Clone this schedule to yours":"Sao chép lịch trình"),
                                 ),
                             ],
                           ),

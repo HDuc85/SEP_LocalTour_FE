@@ -14,8 +14,8 @@ import '../services/place_service.dart';
 
 class SearchBarIcon extends StatefulWidget {
   final Position? position;
-
-  const SearchBarIcon({Key? key, this.position}) : super(key: key);
+  final String? language;
+  const SearchBarIcon({Key? key, this.position, this.language}) : super(key: key);
 
   @override
   State<SearchBarIcon> createState() => _SearchBarIconState();
@@ -101,8 +101,8 @@ class _SearchBarIconState extends State<SearchBarIcon> {
                           controller: _searchController,
                           onChanged: _onSearchChanged,
                           autofocus: true,
-                          decoration: const InputDecoration(
-                            hintText: "Where do you want to go?",
+                          decoration:  InputDecoration(
+                            hintText: widget.language != 'vi'? "Where do you want to go?" : 'Bạn muốn đi đâu?',
                             border: InputBorder.none,
                           ),
                         ),
@@ -150,7 +150,7 @@ class _SearchBarIconState extends State<SearchBarIcon> {
                         ? const Icon(Icons.search)
                         : (isPlace ? Icon(Icons.location_on) : Icon(Icons.event_available_rounded)),
                     title: lastItem
-                        ? Text("Search for $searchText") // Display the "Search for..." action
+                        ? Text(widget.language != 'vi'?"Search for $searchText" : 'Tìm kiếm với $searchText') // Display the "Search for..." action
                         : (isPlace ? Text(placeItem!.placeName) : Text(eventItem!.eventName) ), // Display place name for PlaceTranslation
                     subtitle: lastItem
                         ? null
