@@ -528,33 +528,6 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                       ],
                     )),
-                Positioned(
-                    right: 10,
-                    top: MediaQuery.sizeOf(context).height * 0.3,
-                    child: InkWell(
-                      child: Container(
-                          width: 45,
-                          height: 45,
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.5),
-                              spreadRadius: 1,
-                              blurRadius: 7,
-                              offset: const Offset(
-                                  0, 3), // changes position of shadow
-                            ),
-                          ], shape: BoxShape.circle, color: Colors.white),
-                          child: Icon(
-                            Icons.layers_rounded,
-                            size: 25,
-                            color: Colors.grey[800],
-                          )),
-                      onTap: () {
-                        _showSelectMapTilesModal();
-                      },
-                    )),
                 if (panelPosition == 0.0)
                   Positioned(
                     bottom: 20,

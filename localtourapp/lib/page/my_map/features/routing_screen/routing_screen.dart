@@ -68,7 +68,7 @@ class _RoutingScreenState extends State<RoutingScreen> {
     _navigationOption.apiKey = AppConfig.vietMapApiKey;
     _navigationOption.mapStyle = AppConfig.vietMapStyleUrl;
     _navigationOption.padding = const EdgeInsets.all(100);
-    _navigationOption.language = 'en';
+    _navigationOption.language = 'EN';
     _vietmapPlugin.setDefaultOptions(_navigationOption);
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/markPlace/markPlaceModel.dart';
 import 'package:localtourapp/services/location_Service.dart';
 import 'package:localtourapp/services/mark_place_service.dart';
@@ -17,19 +19,16 @@ class BookmarkPage extends StatefulWidget {
 }
 
 class _BookmarkPageState extends State<BookmarkPage> {
-  final LocationService _locationService = LocationService();
   final MarkplaceService _markplaceService = MarkplaceService();
   List<markPlaceModel> markPlaces = [];
   late String userId;
   final ScrollController _scrollController = ScrollController();
   bool _showBackToTopButton = false;
-
-  Position? _currentPosition;
+  String _language = 'vi';
 
   @override
   void initState() {
     _scrollController.addListener(_scrollListener);
-  // _fetchCurrentPosition();
     _fetchMarkPlaceData();
     super.initState();
   }
@@ -71,13 +70,18 @@ class _BookmarkPageState extends State<BookmarkPage> {
 
   Future<void> _fetchMarkPlaceData() async {
     final fetchedmarkData = await _markplaceService.getAllMarkPlace();
+    var language = await SecureStorageHelper().readValue(AppConfig.language);
+    
     setState(() {
+      _language = language!;
       markPlaces = fetchedmarkData;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    
+    
     if (markPlaces.isEmpty) {
       return const Center(
         child: Text(
@@ -86,7 +90,6 @@ class _BookmarkPageState extends State<BookmarkPage> {
         ),
       );
     }
-
     return Stack(
       children: [
         ListView.separated(
@@ -174,13 +177,13 @@ class _BookmarkPageState extends State<BookmarkPage> {
                               },
                             ),
                             Text(
-                              'Added on: ${place.createdDate.toLocal().toShortDateString()}',
+                              '${_language != 'vi' ? 'Added on': 'Thêm vào lúc:'}: ${place.createdDate.toLocal().toShortDateString()}',
                               style: const TextStyle(
                                   fontSize: 12.0, color: Colors.black),
                             ),
                             Row(
                               children: [
-                                const Text('Visited',
+                                 Text(_language != 'vi' ? 'Visited' : 'Đã đi',
                                     style: TextStyle(fontSize: 12.0)),
                                 Checkbox(
                                   value: place.isVisited,
