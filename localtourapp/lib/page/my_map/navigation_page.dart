@@ -124,7 +124,7 @@ class _NavigationState extends State<NavigationPage>{
 
               },
               onArrival: () async {
-                var result = await _placeService.AddTraveledPlace(widget.placeId);
+                var result = await _placeService.addTraveledPlace(widget.placeId);
                 if(result){
                   showDialog(context: context, builder: (_) => AlertDialog(
                     title: Text('Arrival'),

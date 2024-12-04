@@ -32,7 +32,6 @@ import 'package:localtourapp/services/location_Service.dart';
 import 'package:localtourapp/weather/weather_page.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
-
 import 'firebase_options.dart';
 import 'login_page.dart';
 import 'register_page.dart';
