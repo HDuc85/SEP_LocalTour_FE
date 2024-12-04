@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:collection/collection.dart'; // Import for firstWhereOrNull
 import '../../base/back_to_top_button.dart';
 import '../../base/weather_icon_button.dart';
+import '../detail_page/detail_page.dart';
 
 class BookmarkPage extends StatefulWidget {
   const BookmarkPage({Key? key}) : super(key: key);
@@ -74,8 +75,6 @@ class _BookmarkPageState extends State<BookmarkPage> {
       markPlaces = fetchedmarkData;
     });
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -236,14 +235,14 @@ class _BookmarkPageState extends State<BookmarkPage> {
   void _navigateToDetail(int placeId) {
     final selectedPlace =
         markPlaces.firstWhereOrNull((place) => place.placeId == placeId);
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (_) => DetailPage(
-    //       placeId: selectedPlace!.placeId,
-    //     ),
-    //   ),
-    // );
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DetailPage(
+          placeId: selectedPlace!.placeId,
+        ),
+      ),
+    );
   }
 }
 

@@ -102,10 +102,7 @@ class _AccountPageState extends State<AccountPage> {
     setState(() {
       userprofile = response;
     });
-    debugPrint("Total Followers: ${userprofile.totalFollowers}");
-    debugPrint("Total Followings: ${userprofile.totalFollowed}");
     if ( userId == myUserId && myUserId.isNotEmpty) {
-
       setState(() {
         isCurrentUser = true;
       });

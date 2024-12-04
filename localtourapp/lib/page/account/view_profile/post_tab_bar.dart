@@ -58,10 +58,10 @@ class _PostTabBarState extends State<PostTabBar> {
     var result = await _postService.getListPost(widget.userId);
     var userId = await SecureStorageHelper().readValue(AppConfig.userId);
 
-    if(userId != null){
+    if (userId != null) {
       isLogin = true;
     }
-    if(isLogin = true){
+    if (isLogin = true) {
       isCurrentUser = userId == widget.userId;
     }
     setState(() {
@@ -69,30 +69,43 @@ class _PostTabBarState extends State<PostTabBar> {
       initListPost = result;
       isLoading = false;
     });
-
   }
 
-  Future<void> SearchEvent()async{
-
+  Future<void> SearchEvent() async {
     var searchList = initListPost;
-    if(searchController.text != ''){
+    if (searchController.text != '') {
       String searchTxt = searchController.text;
-      searchList = searchList.where((element) =>
-                  element.title.toLowerCase().contains(searchTxt.toLowerCase())
-                      || element.scheduleName!.toLowerCase().contains(searchTxt.toLowerCase())
-                      || element.placeName!.toLowerCase().contains(searchTxt.toLowerCase()),).toList();
+      searchList = searchList
+          .where(
+            (element) =>
+                element.title.toLowerCase().contains(searchTxt.toLowerCase()) ||
+                element.scheduleName!
+                    .toLowerCase()
+                    .contains(searchTxt.toLowerCase()) ||
+                element.placeName!
+                    .toLowerCase()
+                    .contains(searchTxt.toLowerCase()),
+          )
+          .toList();
     }
-    if(_fromDate != null){
-      searchList = searchList.where((element) => element.createdDate!.isAfter(_fromDate!),).toList();
+    if (_fromDate != null) {
+      searchList = searchList
+          .where(
+            (element) => element.createdDate!.isAfter(_fromDate!),
+          )
+          .toList();
     }
-    if(_toDate != null){
-      searchList = searchList.where((element) => element.createdDate!.isBefore(_toDate!),).toList();
+    if (_toDate != null) {
+      searchList = searchList
+          .where(
+            (element) => element.createdDate!.isBefore(_toDate!),
+          )
+          .toList();
     }
 
     setState(() {
       listPost = searchList;
     });
-
   }
 
   @override
@@ -104,26 +117,27 @@ class _PostTabBarState extends State<PostTabBar> {
     super.dispose();
   }
 
-  Future<void> _toggleVisibility(int postId, bool ispublic,String tilte,String content) async {
-    var result = await _postService.UpdatePostStatus(postId, !ispublic,tilte,content);
-    if(result != null){
+  Future<void> _toggleVisibility(
+      int postId, bool ispublic, String tilte, String content) async {
+    var result =
+        await _postService.UpdatePostStatus(postId, !ispublic, tilte, content);
+    if (result != null) {
       fetchDate();
     }
   }
 
-  Future<void> _deletePost(int postId) async{
+  Future<void> _deletePost(int postId) async {
     var result = await _postService.DeletePost(postId);
-    if(result){
+    if (result) {
       fetchDate();
     }
   }
 
   void toggleLike(int postId) async {
     var result = await _postService.LikePost(postId);
-    if(result){
+    if (result) {
       fetchDate();
     }
-  
   }
 
   void _scrollListener() {
@@ -147,7 +161,6 @@ class _PostTabBarState extends State<PostTabBar> {
       }
     });
   }
-
 
   void _confirmDeletePost(PostModel post) {
     showDialog(
@@ -180,7 +193,8 @@ class _PostTabBarState extends State<PostTabBar> {
       context: context,
       isScrollControlled: true,
       builder: (context) => CommentsBottomSheet(
-        post: post,),
+        post: post,
+      ),
     );
   }
 
@@ -189,77 +203,79 @@ class _PostTabBarState extends State<PostTabBar> {
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : Stack(
-      children: [
-        GestureDetector(
-          onTap: () => FocusScope.of(context).unfocus(),
-          child: ListView.builder(
-            controller: _scrollController,
-            itemCount: 4 + (listPost.isNotEmpty ? listPost.length : 1) + 2,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return _buildFilterSection();
-              } else if (index == 1) {
-                return const SizedBox(height: 10);
-              } else if (index == 2 && isCurrentUser) {
-                return Column(
-                  children: [
-                    const Divider(
-                      color: Colors.grey, // Divider color
-                      thickness: 1, // Divider thickness
-                    ),
-                    _buildButtonsSection(),
-                  ],
-                );
-              } else if (index == 3) {
-                return const SizedBox(height: 10);
-              } else if (index <=
-                  3 + (listPost.isNotEmpty ? listPost.length : 1)) {
-                if (listPost.isNotEmpty) {
-                  final post = listPost[index - 4];
-                  return Container(
-                    margin: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: _buildSinglePostItem(post),
-                  );
-                } else {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20.0),
-                    child: Center(
-                      child: Text(
-                        "No posts found",
-                        style: TextStyle(fontSize: 18, color: Colors.grey),
-                      ),
-                    ),
-                  );
-                }
-              } else {
-                return const SizedBox(height: 50);
-              }
-            },
-          ),
-        ),
-        Positioned(
-          bottom: 10,
-          left: 55,
-          child: WeatherIconButton(
-            onPressed: _navigateToWeatherPage,
-            assetPath: 'assets/icons/weather.png',
-          ),
-        ),
-        Positioned(
-          bottom: 50,
-          left: 110,
-          child: AnimatedOpacity(
-            opacity: _showBackToTopButton ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 300),
-            child: _showBackToTopButton
-                ? BackToTopButton(
-              onPressed: _scrollToTop,
-            )
-                : const SizedBox.shrink(),
-          ),
-        ),
-      ],
-    );
+            children: [
+              GestureDetector(
+                onTap: () => FocusScope.of(context).unfocus(),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  itemCount:
+                      4 + (listPost.isNotEmpty ? listPost.length : 1) + 2,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return _buildFilterSection();
+                    } else if (index == 1) {
+                      return const SizedBox(height: 10);
+                    } else if (index == 2 && isCurrentUser) {
+                      return Column(
+                        children: [
+                          const Divider(
+                            color: Colors.grey, // Divider color
+                            thickness: 1, // Divider thickness
+                          ),
+                          _buildButtonsSection(),
+                        ],
+                      );
+                    } else if (index == 3) {
+                      return const SizedBox(height: 10);
+                    } else if (index <=
+                        3 + (listPost.isNotEmpty ? listPost.length : 1)) {
+                      if (listPost.isNotEmpty) {
+                        final post = listPost[index - 4];
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: _buildSinglePostItem(post),
+                        );
+                      } else {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20.0),
+                          child: Center(
+                            child: Text(
+                              "No posts found",
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.grey),
+                            ),
+                          ),
+                        );
+                      }
+                    } else {
+                      return const SizedBox(height: 50);
+                    }
+                  },
+                ),
+              ),
+              Positioned(
+                bottom: 10,
+                left: 55,
+                child: WeatherIconButton(
+                  onPressed: _navigateToWeatherPage,
+                  assetPath: 'assets/icons/weather.png',
+                ),
+              ),
+              Positioned(
+                bottom: 50,
+                left: 110,
+                child: AnimatedOpacity(
+                  opacity: _showBackToTopButton ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: _showBackToTopButton
+                      ? BackToTopButton(
+                          onPressed: _scrollToTop,
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ),
+            ],
+          );
   }
 
   Widget _buildFilterSection() {
@@ -272,25 +288,23 @@ class _PostTabBarState extends State<PostTabBar> {
           child: TextField(
             controller: searchController,
             focusNode: searchFocusNode,
-            decoration:  InputDecoration(
+            decoration: InputDecoration(
               labelText: "Search by title, schedule, place name, ...",
               border: OutlineInputBorder(),
               suffixIcon: searchController.text.isNotEmpty
-              ? IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-
-              searchController.clear();
-              setState(() {});
-              SearchEvent();
-              },
-              )
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        searchController.clear();
+                        setState(() {});
+                        SearchEvent();
+                      },
+                    )
                   : null,
             ),
             onChanged: (value) {
               setState(() {});
             },
-
           ),
         ),
         const SizedBox(height: 10),
@@ -301,7 +315,7 @@ class _PostTabBarState extends State<PostTabBar> {
               "From Date",
               true,
               _fromDate,
-                  (newDate) {
+              (newDate) {
                 _onDateSelected(newDate, true);
               },
               clearable: true,
@@ -315,7 +329,7 @@ class _PostTabBarState extends State<PostTabBar> {
               "To Date",
               false,
               _toDate,
-                  (newDate) {
+              (newDate) {
                 _onDateSelected(newDate, false);
               },
               clearable: true,
@@ -329,12 +343,9 @@ class _PostTabBarState extends State<PostTabBar> {
         const SizedBox(height: 10),
         ElevatedButton(
           onPressed: () {
+            SearchEvent();
 
-              SearchEvent();
-
-              return;
-
-
+            return;
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFDCA1A1),
@@ -355,13 +366,13 @@ class _PostTabBarState extends State<PostTabBar> {
   }
 
   Widget _buildDateField(
-      String labelText,
-      bool isFromDate,
-      DateTime? initialDate,
-      Function(DateTime) onDateChanged, {
-        bool clearable = false,
-        VoidCallback? onClear,
-      }) {
+    String labelText,
+    bool isFromDate,
+    DateTime? initialDate,
+    Function(DateTime) onDateChanged, {
+    bool clearable = false,
+    VoidCallback? onClear,
+  }) {
     return GestureDetector(
       onTap: () async {
         final DateTime? picked = await showDatePicker(
@@ -388,7 +399,8 @@ class _PostTabBarState extends State<PostTabBar> {
                       : labelText,
                   hintStyle: const TextStyle(fontSize: 12),
                   border: const OutlineInputBorder(),
-                  suffixIcon:  (initialDate == null)? Icon(Icons.calendar_today) : null,
+                  suffixIcon:
+                      (initialDate == null) ? Icon(Icons.calendar_today) : null,
                 ),
               ),
             ),
@@ -408,40 +420,42 @@ class _PostTabBarState extends State<PostTabBar> {
   }
 
   Widget _buildButtonsSection() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        SizedBox(
-          height: 40,
-          width: 150,
-          child: ElevatedButton.icon(
-            onPressed: () => showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              builder: (context) => CreatePostOverlay(callback: () {
-
-              },
-              ),
-            ).then((value) {
+    return Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+      SizedBox(
+        height: 40,
+        width: 150,
+        child: ElevatedButton.icon(
+          onPressed: () => showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (context) => CreatePostOverlay(
+              callback: () {},
+            ),
+          ).then(
+            (value) {
               fetchDate();
-            },),
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: Text("Add Post", style: TextStyle(color: Colors.white), ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+            },
+          ),
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: Text(
+            "Add Post",
+            style: TextStyle(color: Colors.white),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
         ),
-        SizedBox(width: 15,)
-      ]
-    );
+      ),
+      SizedBox(
+        width: 15,
+      )
+    ]);
   }
 
   Widget _buildSinglePostItem(PostModel post) {
-
     bool isExpandedLocal = expandedPosts[post.id] ?? false;
     return Container(
       margin: const EdgeInsets.all(8.0),
@@ -449,8 +463,7 @@ class _PostTabBarState extends State<PostTabBar> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: Colors.black, width: 1),
-        borderRadius:
-        BorderRadius.circular(10), // Optional: rounded corners
+        borderRadius: BorderRadius.circular(10), // Optional: rounded corners
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,14 +482,13 @@ class _PostTabBarState extends State<PostTabBar> {
               Row(
                 children: [
                   CircleAvatar(
-                    backgroundImage: NetworkImage(
-                        widget.user.userProfileImage),
+                    backgroundImage: NetworkImage(widget.user.userProfileImage),
                   ),
                   const SizedBox(width: 8),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.user.userName ,
+                      Text(widget.user.userName,
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                       Text(DateFormat('MM/dd/yyyy').format(post.createdDate!)),
                     ],
@@ -491,26 +503,34 @@ class _PostTabBarState extends State<PostTabBar> {
                         post.isPublic ? Icons.public : Icons.lock,
                         color: Colors.green,
                       ),
-                      onPressed: () => _toggleVisibility(post.id, post.isPublic,post.title,post.content),
+                      onPressed: () => _toggleVisibility(
+                          post.id, post.isPublic, post.title, post.content),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue,),
+                      icon: const Icon(
+                        Icons.edit,
+                        color: Colors.blue,
+                      ),
                       onPressed: () {
                         showModalBottomSheet(
                           context: context,
                           isScrollControlled: true,
                           builder: (context) => CreatePostOverlay(
                             existingPost: post,
-                            callback: () {
-                            },
+                            callback: () {},
                           ),
-                        ).then((value) {
-                          fetchDate();
-                        },);
+                        ).then(
+                          (value) {
+                            fetchDate();
+                          },
+                        );
                       },
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete,color: Colors.red,),
+                      icon: const Icon(
+                        Icons.delete,
+                        color: Colors.red,
+                      ),
                       onPressed: () => _confirmDeletePost(post),
                     ),
                   ],
@@ -518,36 +538,39 @@ class _PostTabBarState extends State<PostTabBar> {
               ],
             ],
           ),
-          post.scheduleId != null?// Schedule name
-          Text(
-            post.scheduleName!,
-            maxLines: 2,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ):SizedBox(),
-          post.placeId != null?
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  post.placeName!,
+          post.scheduleId != null
+              ? // Schedule name
+              Text(
+                  post.scheduleName!,
                   maxLines: 2,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
-                ),
-              ),
-              Image.network(
-                post.placePhotoDisplay!,
-                width: 60,
-                height: 60,
-                fit: BoxFit.cover,
-              )
-            ],
-          ): SizedBox(),
+                )
+              : SizedBox(),
+          post.placeId != null
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        post.placeName!,
+                        maxLines: 2,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    Image.network(
+                      post.placePhotoDisplay!,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                    )
+                  ],
+                )
+              : SizedBox(),
           const SizedBox(height: 10),
           // Post Content with See More/See Less
           if (post.content != null)
@@ -588,7 +611,8 @@ class _PostTabBarState extends State<PostTabBar> {
                   Text('${post.totalLikes}'),
                 ],
               ),
-              Text('${post.totalComments} comment${post.totalComments != 1 ? 's' : ''}'),
+              Text(
+                  '${post.totalComments} comment${post.totalComments != 1 ? 's' : ''}'),
             ],
           ),
           const Divider(),
@@ -666,12 +690,12 @@ class _PostTabBarState extends State<PostTabBar> {
                 children: [
                   mediaForPost[index].type == 'Image'
                       ? Image(
-                    image: mediaForPost[index].url.startsWith('http')
-                        ? NetworkImage(mediaForPost[index].url)
-                        : FileImage(File(mediaForPost[index].url))
-                    as ImageProvider,
-                    fit: BoxFit.cover,
-                  )
+                          image: mediaForPost[index].url.startsWith('http')
+                              ? NetworkImage(mediaForPost[index].url)
+                              : FileImage(File(mediaForPost[index].url))
+                                  as ImageProvider,
+                          fit: BoxFit.cover,
+                        )
                       : VideoThumbnail(videoPath: mediaForPost[index].url),
                   if (index == 5 && mediaForPost.length > 6)
                     Container(
