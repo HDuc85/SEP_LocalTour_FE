@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -7,15 +9,15 @@ import 'package:localtourapp/services/schedule_service.dart';
 import '../../../base/back_to_top_button.dart';
 import '../../../base/weather_icon_button.dart';
 import 'dart:ui' as ui;
+import '../../../models/schedule/destination_model.dart';
+import '../../detail_page/detail_page.dart';
+import 'dashed_line.dart';
 
 class FeaturedSchedulePage extends StatefulWidget {
   final String userId;
   final String language;
-  const FeaturedSchedulePage({
-    super.key,
-    required this.userId,
-    required this.language
-  });
+  const FeaturedSchedulePage(
+      {super.key, required this.userId, required this.language});
 
   @override
   State<FeaturedSchedulePage> createState() => _FeaturedSchedulePageState();
@@ -37,17 +39,18 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
     _initializeSchedules();
   }
 
-
-  Future<void> _initializeSchedules() async{
-    var listSchedule = await _scheduleService.getListSchedule('',SortBy.liked,SortOrder.desc,1,20);
+  Future<void> _initializeSchedules() async {
+    var listSchedule = await _scheduleService.getListSchedule(
+        '', SortBy.liked, SortOrder.desc, 1, 20);
     _listSchedule = listSchedule;
     setState(() {
       isLoading = false;
     });
   }
 
-  Future<void> _fetchData() async{
-    var listSchedule = await _scheduleService.getListSchedule('',SortBy.liked,SortOrder.desc,1,20);
+  Future<void> _fetchData() async {
+    var listSchedule = await _scheduleService.getListSchedule(
+        '', SortBy.liked, SortOrder.desc, 1, 20);
     setState(() {
       _listSchedule = listSchedule;
     });
@@ -87,43 +90,44 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
     );
   }
 
-
-
   void _toggleFavorite(int scheduleId) async {
     var result = await _scheduleService.LikeSchedule(scheduleId);
-    if(result){
+    if (result) {
       _fetchData();
     }
   }
 
-
-  Future<void> _cloneSchedule(ScheduleModel schedule) async{
+  Future<void> _cloneSchedule(ScheduleModel schedule) async {
     var result = await _scheduleService.CloneSchedule(schedule.id);
-    if(!result){
+    if (!result) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Some thing wrong went clone !'),
+          content: Text(widget.language != 'vi'
+              ? "Có gì đó không ổn khi sao chép!"
+              :'Some thing wrong went clone !'),
           duration: Duration(seconds: 3),
         ),
       );
-    }else{
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Schedule is cloned!'),
+          content: Text(widget.language != 'vi'
+              ? "Lịch trình đã được sao chép"
+              :'Schedule is cloned!'),
           duration: Duration(seconds: 3),
         ),
       );
     }
   }
-
-
 
   void _showDetailDialog(String detailText) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Detail'),
+          title: Text(widget.language != 'vi'
+              ? "Chi tiết"
+              :'Detail'),
           content: SingleChildScrollView(
             child: Text(
               detailText,
@@ -133,7 +137,9 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
+              child: Text(widget.language != 'vi'
+                  ? "Đóng"
+                  :'Close'),
             ),
           ],
         );
@@ -147,7 +153,9 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final textSpan = TextSpan(
-            text: "Detail:\n",
+            text: widget.language != 'vi'
+                ? "Chi tiết:\n"
+                :"Detail:\n",
             style: const TextStyle(fontWeight: FontWeight.bold),
             children: [
               TextSpan(
@@ -196,11 +204,12 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
-        title:  Text(
-         widget.language != 'vi'? "Top Most Favorite Schedules" : 'Top Lịch Trình Được Yêu Thích',
+        title: Text(
+          widget.language != 'vi'
+              ? "Top Most Favorite Schedules"
+              : 'Top Lịch Trình Được Yêu Thích',
           maxLines: 2,
         ),
       ),
@@ -216,7 +225,6 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
               }
 
               final schedule = _listSchedule[index];
-
 
               final isExpanded = _expandedIndex == index;
 
@@ -250,31 +258,36 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                 ),
                               ),
                               Text(
-                                  "${ widget.language != 'vi'?'Created date:':'Tạo lúc'} ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}"),
+                                  "${widget.language != 'vi' ? 'Created date:' : 'Tạo lúc'} ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}"),
                               Row(
                                 children: [
                                   Flexible(
                                     child: _buildDateField(
-                                      widget.language != 'vi'?"From Date":'Từ ngày',
+                                      widget.language != 'vi'
+                                          ? "From Date"
+                                          : 'Từ ngày',
                                       true,
                                       schedule.startDate,
-                                          (_) {},
+                                      (_) {},
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   Flexible(
                                     child: _buildDateField(
-                                      widget.language != 'vi'?"To Date":'Tới ngày',
+                                      widget.language != 'vi'
+                                          ? "To Date"
+                                          : 'Tới ngày',
                                       false,
                                       schedule.endDate,
-                                          (_) {},
+                                      (_) {},
                                     ),
                                   ),
                                 ],
                               ),
                               Row(
                                 children: [
-                                  Text("${ widget.language != 'vi'?'Created by':'Tạo bởi'}: ${schedule.userName ?? 'Unknown'}"),
+                                  Text(
+                                      "${widget.language != 'vi' ? 'Created by' : 'Tạo bởi'}: ${schedule.userName ?? 'Unknown'}"),
                                   const SizedBox(width: 8),
                                   IconButton(
                                     icon: Icon(
@@ -297,7 +310,9 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                 ],
                               ),
                               if (schedule.userId == widget.userId)
-                                 Text( widget.language != 'vi'? "This is your schedule":'Lịch trình của bạn'),
+                                Text(widget.language != 'vi'
+                                    ? "This is your schedule"
+                                    : 'Lịch trình của bạn'),
                               if (schedule.userId != widget.userId)
                                 TextButton(
                                   onPressed: () {
@@ -306,30 +321,42 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                       context: context,
                                       builder: (BuildContext context) {
                                         return AlertDialog(
-                                          title:  Text( widget.language != 'vi'?"Clone Schedule":'Sao chép Lịch trình'),
-                                          content:  Text(
-                                              widget.language != 'vi'? "Do you want to clone this schedule to yours?" : "Bạn có muốn sao chép lịch trình này không?"),
+                                          title: Text(widget.language != 'vi'
+                                              ? "Clone Schedule"
+                                              : 'Sao chép Lịch trình'),
+                                          content: Text(widget.language != 'vi'
+                                              ? "Do you want to clone this schedule to yours?"
+                                              : "Bạn có muốn sao chép lịch trình này không?"),
                                           actions: [
                                             TextButton(
                                               onPressed: () {
-                                                Navigator.of(context).pop(); // Close the dialog
+                                                Navigator.of(context)
+                                                    .pop(); // Close the dialog
                                               },
-                                              child:  Text( widget.language != 'vi'?"Cancel":"Hủy"),
+                                              child: Text(
+                                                  widget.language != 'vi'
+                                                      ? "Cancel"
+                                                      : "Hủy"),
                                             ),
                                             TextButton(
                                               onPressed: () {
-
                                                 _cloneSchedule(schedule);
-                                                Navigator.of(context).pop(); // Close the dialog after cloning
+                                                Navigator.of(context)
+                                                    .pop(); // Close the dialog after cloning
                                               },
-                                              child:  Text( widget.language != 'vi'?"Clone":"Sao chép"),
+                                              child: Text(
+                                                  widget.language != 'vi'
+                                                      ? "Clone"
+                                                      : "Sao chép"),
                                             ),
                                           ],
                                         );
                                       },
                                     );
                                   },
-                                  child:  Text( widget.language != 'vi'?"Clone this schedule to yours":"Sao chép lịch trình"),
+                                  child: Text(widget.language != 'vi'
+                                      ? "Clone this schedule to yours"
+                                      : "Sao chép lịch trình"),
                                 ),
                             ],
                           ),
@@ -344,7 +371,8 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                             borderRadius: BorderRadius.circular(15),
                             border: Border.all(color: Colors.black, width: 1),
                           ),
-                          child: _buildDestinationList(schedule),
+                          child: _buildDestinationGrid(
+                              schedule.destinations, schedule),
                         ),
                     ],
                   ),
@@ -370,8 +398,8 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
               duration: const Duration(milliseconds: 300),
               child: _showBackToTopButton
                   ? BackToTopButton(
-                onPressed: _scrollToTop,
-              )
+                      onPressed: _scrollToTop,
+                    )
                   : const SizedBox.shrink(),
             ),
           ),
@@ -404,62 +432,316 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
     );
   }
 
-  Widget _buildDestinationList(ScheduleModel schedule) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: schedule.destinations.map((destination) {
+  Widget _buildDestinationDetailSheet(
+    DestinationModel destination,
+  ) {
+    return SizedBox(
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height * (2 / 3),
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          top: 16,
+          left: 16,
+          right: 16,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () {
+                  // Navigate to detail page when placeName is tapped
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DetailPage(
+                        placeId: destination.placeId,
+                      ),
+                    ),
+                  );
+                },
+                child: Text(
+                  destination.placeName ?? 'Unknown Place',
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () {
+                  // Navigate to detail page when placePhotoDisplay is tapped
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DetailPage(
+                        placeId: destination.placeId,
+                      ),
+                    ),
+                  );
+                },
+                child: Image.network(
+                  destination.placePhotoDisplay ?? 'assets/images/default.png',
+                  height: 150,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(height: 10),
+              _buildDateField(
+                widget.language == 'vi' ? 'Từ ngày' : "From Date",
+                true,
+                destination.startDate,
+                (_) {},
+              ),
+              const SizedBox(height: 6),
+              _buildDateField(
+                widget.language == 'vi' ?'Tới ngày':
+                "End Date",
+                false,
+                destination.endDate,
+                (_) {},
+              ),
+              const SizedBox(height: 10),
+              _buildDetailSection(
+                destination.detail ?? "No details available",
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+  Widget _buildDetailSection(String detailText) {
+    return GestureDetector(
+      onTap: () {
+        _showDetailDialog(detailText);
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final textSpan = TextSpan(
+            text: detailText.isNotEmpty
+                ? detailText
+                : (widget.language == 'vi'
+                ? "Nhấn để thêm chi tiết..."
+                : "Tap to add details..."),
+
+            style: TextStyle(
+              color: detailText.isNotEmpty ? Colors.black : Colors.grey,
+              fontStyle:
+                  detailText.isEmpty ? FontStyle.italic : FontStyle.normal,
+            ),
+          );
+
+          final textPainter = TextPainter(
+            text: textSpan,
+            maxLines: 25,
+            textDirection: ui.TextDirection.ltr,
+          )..layout(maxWidth: constraints.maxWidth);
+
+          final isOverflowing = textPainter.didExceedMaxLines;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.language != 'vi'
+                  ? "Chi tiết"
+                  : "Detail:",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.black,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: constraints.maxWidth,
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: RichText(
+                  maxLines: 25,
+                  overflow: TextOverflow.ellipsis,
+                  text: TextSpan(
+                    text: detailText.isNotEmpty
+                        ? detailText
+                        : (widget.language == 'vi'
+                        ? "Nhấn để thêm chi tiết..."
+                        : "Tap to add details..."),
+
+                    style: TextStyle(
+                      color: detailText.isNotEmpty ? Colors.black : Colors.grey,
+                      fontStyle: detailText.isEmpty
+                          ? FontStyle.italic
+                          : FontStyle.normal,
+                    ),
+                    children: [
+                      if (isOverflowing)
+                        const TextSpan(
+                          text: " ...",
+                          style: TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _showDestinationDetails(DestinationModel destination) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return _buildDestinationDetailSheet(destination);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDestinationGrid(List<DestinationModel> destinations, ScheduleModel schedule) {
+    if (destinations.isEmpty) {
+      return Center(
+        child: Text(
+          widget.language != 'vi'
+              ? 'No destinations available.'
+              : 'Không có địa điểm nào.',
+          style: const TextStyle(fontSize: 16, color: Colors.black54),
+        ),
+      );
+    }
+
+    List<Widget> rows = [];
+    int index = 0;
+    int columns = 3;
+    double connectorHeight = 40; // Vertical connector height
+    double circleSize = 50; // Diameter of CircleAvatar
+
+    // Add a placeholder for the add button at the end of the destinations list
+    List<DestinationModel?> allItems = List.from(destinations);
+
+    while (index < allItems.length) {
+      // Get the items for the current row
+      List<DestinationModel?> rowItems = allItems.sublist(
+        index,
+        (index + columns > allItems.length) ? allItems.length : index + columns,
+      );
+
+      // Determine if the row should be reversed
+      bool isEvenRow = (index ~/ columns) % 2 == 1;
+
+      // Build the row with connectors
+      List<Widget> rowWidgets = [];
+      for (int i = 0; i < rowItems.length; i++) {
+        DestinationModel? destination = rowItems[i];
+
+        if (destination != null) {
+          // Wrap the CircleAvatar with GestureDetector for onTap to show details
+          Widget circleAvatar = GestureDetector(
+            onTap: () => _showDestinationDetails(destination),
+            child: Column(
               children: [
-                Text("•"),
-                const SizedBox(width: 4),
-                Expanded(
+                CircleAvatar(
+                  radius: circleSize / 2,
+                  backgroundImage: NetworkImage(
+                    destination.placePhotoDisplay ?? 'assets/images/default.png',
+                  ),
+                  backgroundColor: Colors.grey,
+                ),
+                SizedBox(
+                  width: 70,
                   child: Text(
                     destination.placeName,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          );
+          rowWidgets.add(circleAvatar);
+
+          // Add horizontal dashed connector except after the last item
+          if (i < rowItems.length - 1) {
+            rowWidgets.add(
+              Container(
+                padding: EdgeInsets.only(top: circleSize / 1.5),
+                height: circleSize,
+                alignment: Alignment.center,
+                child: Transform.rotate(
+                  angle: isEvenRow ? pi : 0,
+                  child: DashedLine(
+                    isHorizontal: true,
+                    length: MediaQuery.of(context).size.width / 6.55,
+                  ),
+                ),
+              ),
+            );
+          }
+        }
+      }
+
+      // Reverse the row if it's an even row
+      if (isEvenRow) {
+        rowWidgets = rowWidgets.reversed.toList();
+      }
+
+      // Build the row widget
+      rows.add(Row(
+        mainAxisAlignment:
+        isEvenRow ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: rowWidgets,
+      ));
+
+      // Add vertical dashed connector under the last item of the previous row
+      if (index + columns < allItems.length) {
+        rows.add(
+          Row(
+            children: [
+              Expanded(
+                child: Align(
+                  alignment: isEvenRow
+                      ? Alignment.centerLeft
+                      : Alignment.centerRight,
+                  child: Container(
+                    width: circleSize,
+                    alignment: Alignment.center,
+                    child: DashedLine(
+                      isHorizontal: false,
+                      length: connectorHeight,
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Image.network(
-                  destination.placePhotoDisplay!,
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.cover,
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                _buildDateField(
-                  "Start Date",
-                  true,
-                  destination.startDate,
-                  (_) {}, // Not editable in FeaturedPage
-                ),
-                const SizedBox(width: 6),
-                _buildDateField(
-                  "End Date",
-                  false,
-                  destination.endDate,
-                  (_) {}, // Not editable in FeaturedPage
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            _buildDestinationDetail(
-                destination.detail ),
-            const Divider(),
-          ],
+              ),
+            ],
+          ),
         );
-      }).toList(),
+      }
+
+      index += columns;
+    }
+
+    // Ensure a widget is always returned
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: rows,
     );
   }
+
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:localtourapp/models/places/traveled_place_model.dart';
 import 'package:localtourapp/page/bookmark/bookmark_page.dart';
@@ -5,6 +6,8 @@ import 'package:localtourapp/services/traveled_place_service.dart';
 
 import '../../../base/back_to_top_button.dart';
 import '../../../base/weather_icon_button.dart';
+import '../../../config/appConfig.dart';
+import '../../../config/secure_storage_helper.dart';
 
 class HistoryTabbar extends StatefulWidget {
   const HistoryTabbar({super.key});
@@ -18,7 +21,7 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
   final ScrollController _scrollController = ScrollController();
   final TraveledPlaceService _traveledPlaceService = TraveledPlaceService();
   List<TraveledPlaceModel> traveledPlaces = [];
-  final String _languageCode = 'vi';
+  String _languageCode = '';
 
   @override
   void initState() {
@@ -59,15 +62,17 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
   }
 
   Future<void> _fetchTraveledPlaceData() async {
-    print('Fetching traveled places...');
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     try {
       final fetchedData = await _traveledPlaceService.getAllTraveledPlace();
-      print('Fetched Data: $fetchedData');
       setState(() {
         traveledPlaces = fetchedData;
+        _languageCode = languageCode!;
       });
     } catch (e) {
-      print('Error fetching traveled places: $e');
+      if (kDebugMode) {
+        print('Error fetching traveled places: $e');
+      }
     }
   }
 
@@ -78,7 +83,7 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
         traveledPlaces.isEmpty
             ? Center(
                 child: Text(
-                  _languageCode == 'vi'
+                  _languageCode != 'vi'
                       ? "Địa điểm đã đi đang trống. Hãy đi đâu đó để thêm vào!"
                       : "Traveled place is empty. Go somewhere to add it!",
                   style: const TextStyle(fontSize: 16, color: Colors.grey),
@@ -151,8 +156,8 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
                                   ),
                                   Text(
                                     _languageCode == 'vi'
-                                        ? "Visited Times: ${place.traveledTimes}"
-                                        : "Số lần ghé thăm: ${place.traveledTimes}",
+                                        ? "Số lần ghé thăm: ${place.traveledTimes}"
+                                        : "Visited Times: ${place.traveledTimes}",
                                     style: const TextStyle(fontSize: 12.0),
                                   ),
                                 ],

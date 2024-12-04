@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:localtourapp/config/appConfig.dart';
@@ -33,10 +34,11 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
+  String _languageCode = '';
   bool isLoadingProfile = false;
   bool isFollowLoading = false;
   final AuthService _authService = AuthService();
-  late UserService _userService = UserService();
+  late final UserService _userService = UserService();
   final storage = SecureStorageHelper();
   List<FollowUserModel> followers = [];
   List<FollowUserModel> followings = [];
@@ -91,13 +93,15 @@ class _AccountPageState extends State<AccountPage> {
         });
       }
     } catch (e) {
-      print("Error in readUserId: $e");
+      if (kDebugMode) {
+        print("Error in readUserId: $e");
+      }
     }
   }
 
 
   Future<void> readUserProfile(String userId) async {
-
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     final response = await _userService.getUserProfile(userId);
     setState(() {
       userprofile = response;
@@ -105,6 +109,7 @@ class _AccountPageState extends State<AccountPage> {
     if ( userId == myUserId && myUserId.isNotEmpty) {
       setState(() {
         isCurrentUser = true;
+        _languageCode = languageCode!;
       });
     }
     // Fetch followers and followings
@@ -243,7 +248,11 @@ class _AccountPageState extends State<AccountPage> {
         style: ElevatedButton.styleFrom(
           backgroundColor: isFollowing ? Colors.red : Colors.blue,
         ),
-        child: Text(isFollowing ? "Unfollow" : "Follow"),
+        child: Text(
+          isFollowing
+              ? (_languageCode == 'vi' ? "Hủy theo dõi" : "Unfollow")
+              : (_languageCode == 'vi' ? "Theo dõi" : "Follow"),
+        ),
       ),
     );
   }
@@ -305,16 +314,16 @@ class _AccountPageState extends State<AccountPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      '${userProfile.totalSchedules} schedules created',
+                    Text(_languageCode != 'vi' ?
+                      '${userProfile.totalSchedules} lịch trình đã tạo':'${userProfile.totalSchedules} schedules created',
                       style: const TextStyle(fontSize: 14),
                     ),
-                    Text(
-                      '${userProfile.totalPosteds} posts created',
+                    Text(_languageCode != 'vi' ?
+                    '${userProfile.totalPosteds} bài đã tạo':'${userProfile.totalPosteds} posts created',
                       style: const TextStyle(fontSize: 14),
                     ),
-                    Text(
-                      '${userProfile.totalReviews} reviews',
+                    Text(_languageCode != 'vi' ?
+                      '${userProfile.totalReviews} đánh giá':'${userProfile.totalReviews} reviews',
                       style: const TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 8),
@@ -332,8 +341,8 @@ class _AccountPageState extends State<AccountPage> {
                               ),
                             );
                           },
-                          child: Text(
-                            '${userProfile.totalFollowers} followers',
+                          child: Text(_languageCode != 'vi' ?
+                            '${userProfile.totalFollowers} người theo dõi':'${userProfile.totalFollowers} followers',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
@@ -350,8 +359,8 @@ class _AccountPageState extends State<AccountPage> {
                               ),
                             );
                           },
-                          child: Text(
-                            '${userProfile.totalFollowed} followings',
+                          child: Text(_languageCode != 'vi' ?
+                          '${userProfile.totalFollowed} đang theo dõi':'${userProfile.totalFollowed} followings',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
@@ -384,9 +393,9 @@ class _AccountPageState extends State<AccountPage> {
                   borderRadius: BorderRadius.circular(15),
                 ),
               ),
-              child: const Text(
-                "View Profile",
-                style: TextStyle(
+              child: Text(_languageCode != 'vi' ?
+                "Xem Hồ sơ":"View Profile",
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
@@ -427,10 +436,10 @@ class _AccountPageState extends State<AccountPage> {
                 ),
               ],
             ),
-            child: const ListTile(
-              leading: Icon(Icons.person),
-              title: Text('Personal information'),
-              subtitle: Text('Edit or add your personal information'),
+            child: ListTile(
+              leading: const Icon(Icons.person),
+              title: Text(_languageCode != 'vi' ?'Thông tin cá nhân':'Personal information'),
+              subtitle: Text(_languageCode != 'vi' ?'Sửa hoặc thêm thông tin của bạn':'Edit or add your personal information'),
             )));
   }
 
@@ -461,10 +470,10 @@ class _AccountPageState extends State<AccountPage> {
                 ),
               ],
             ),
-            child: const ListTile(
-              leading: Icon(Icons.settings),
-              title: Text('Settings'),
-              subtitle: Text('View, find, and customize account settings'),
+            child: ListTile(
+              leading: const Icon(Icons.settings),
+              title: Text(_languageCode != 'vi' ?'Cài đặt':'Settings'),
+              subtitle: Text(_languageCode != 'vi' ?'Xem, tìm và tùy chỉnh cài đặt tài khoản':'View, find, and customize account settings'),
             )));
   }
 
@@ -487,8 +496,8 @@ class _AccountPageState extends State<AccountPage> {
         ),
         child: ListTile(
           leading: const Icon(Icons.contact_mail),
-          title: const Text('Contact Us'),
-          subtitle: const Text('Reach out with support requests or feedback'),
+          title: Text(_languageCode != 'vi' ?'Liên hệ':'Contact Us'),
+          subtitle: Text(_languageCode != 'vi' ?'Yêu cầu hỗ trợ hoặc phản hồi':'Reach out with support requests or feedback'),
           onTap: _sendEmail,
         ));
   }
@@ -503,7 +512,9 @@ class _AccountPageState extends State<AccountPage> {
         'body': 'Hello,', // Optional
       },
     );
-    print(emailUri.toString());
+    if (kDebugMode) {
+      print(emailUri.toString());
+    }
     try {
       // Check if the device can handle the mailto scheme
       if (await canLaunchUrl(emailUri)) {
@@ -524,7 +535,7 @@ class _AccountPageState extends State<AccountPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Error'),
+          title: Text(_languageCode != 'vi' ?'Lỗi':'Error'),
           content: Text(message),
           actions: [
             TextButton(
@@ -545,7 +556,7 @@ class _AccountPageState extends State<AccountPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const FAQPage(),
+              builder: (context) => FAQPage(languageCode: _languageCode),
             ),
           );
         },
@@ -564,10 +575,10 @@ class _AccountPageState extends State<AccountPage> {
                 ),
               ],
             ),
-            child: const ListTile(
-              leading: Icon(Icons.question_answer),
-              title: Text('FAQ'),
-              subtitle: Text('Find answers to frequently asked questions'),
+            child: ListTile(
+              leading: const Icon(Icons.question_answer),
+              title: const Text('FAQ'),
+              subtitle: Text(_languageCode != 'vi' ?'Tìm câu trả lời cho những câu hỏi thường gặp':'Find answers to frequently asked questions'),
             )));
   }
 
@@ -598,10 +609,10 @@ class _AccountPageState extends State<AccountPage> {
                 ),
               ],
             ),
-            child: const ListTile(
-              leading: Icon(Icons.question_answer),
-              title: Text('Your Preference'),
-              subtitle: Text('Add or update your preferences here'),
+            child: ListTile(
+              leading: const Icon(Icons.question_answer),
+              title: Text(_languageCode != 'vi' ? 'Sở thích của bạn':'Your Preference'),
+              subtitle: Text(_languageCode != 'vi' ? 'Thêm hoặc cập nhật sở thích của bạn':'Add or update your preferences here'),
             )));
   }
 
@@ -627,7 +638,7 @@ class _AccountPageState extends State<AccountPage> {
           backgroundColor: isLogin ? Colors.red : Colors.blueAccent,
         ),
         child: Text(
-          isLogin ? 'Logout' : 'Login',
+          isLogin ? (_languageCode != 'vi' ? 'Đăng xuất' : 'Đăng nhập'):(_languageCode != 'vi' ? 'Logout' : 'Login'),
           style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
@@ -648,9 +659,9 @@ class _AccountPageState extends State<AccountPage> {
 
     // Show the notification for logout
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Logged out successfully'),
-        duration: Duration(milliseconds: 500), // Optional: Control how long the message appears
+      SnackBar(
+        content: Text(_languageCode != 'vi' ? 'Đăng xuất thành công':'Logged out successfully'),
+        duration: const Duration(milliseconds: 500), // Optional: Control how long the message appears
       ),
     );
   }

@@ -6,6 +6,8 @@ import 'package:localtourapp/models/users/userProfile.dart';
 import 'package:localtourapp/services/auth_service.dart';
 import 'package:localtourapp/services/user_service.dart';
 import 'package:intl/intl.dart';
+import '../../config/appConfig.dart';
+import '../../config/secure_storage_helper.dart';
 import '../../models/users/update_user_request.dart';
 import 'view_profile/for_got_password.dart'; // Ensure you have intl package in pubspec.yaml
 
@@ -23,9 +25,9 @@ class PersonalInformationPage extends StatefulWidget {
 class _PersonalInformationPageState extends State<PersonalInformationPage> {
   // Form key to manage form state
   final _formKey = GlobalKey<FormState>();
-
-  AuthService _authService = AuthService();
-  UserService _userService = UserService();
+  String _languageCode = '';
+  final AuthService _authService = AuthService();
+  final UserService _userService = UserService();
   // Controllers for form fields
   late TextEditingController _fullNameController;
   late TextEditingController _passwordController;
@@ -64,7 +66,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
 
   Future<void> fetchData() async{
     var userfetched = await  _userService.getUserProfile(widget.userId);
-
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     _fullNameController =
         TextEditingController(text: userfetched.fullName);
     _passwordController = TextEditingController();
@@ -84,6 +86,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
 
     setState(() {
       _userprofile = userfetched;
+      _languageCode = languageCode!;
     });
   }
 
@@ -123,7 +126,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
 
   // Function to handle form submission
   void _savePersonalInformation() async {
-    UpdateUserRequest userdata = new UpdateUserRequest(
+    UpdateUserRequest userdata = UpdateUserRequest(
       username: _nicknameController.text == widget.userprofile.userName ? null : _nicknameController.text,
       address: _addressController.text,
       dateOfBirth: DateFormat('yyyy-MM-dd').parse(_dobController.text),
@@ -132,17 +135,13 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
     );
 
     var result = await _userService.sendUserDataRequest(userdata);
-    if(result != null){
-      setState(() {
-        _userprofile = result;
-      });
-    }
+    setState(() {
+      _userprofile = result;
+    });
 
     if (_formKey.currentState!.validate()) {
-      // Fetch the user provider
-      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Personal information saved')),
+        SnackBar(content: Text(_languageCode != 'vi' ?'Thông tin cá nhân đã được lưu':'Personal information saved')),
       );
     }
   }
@@ -150,22 +149,20 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
 
   Future<void> addPhoneNumber() async{
     String result = await _authService.AddPhoneNumber();
-    if(result != null){
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-            Text('$result.')),
-      );
-      fetchData();
-      widget.fetchData!();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content:
+          Text('$result.')),
+    );
+    fetchData();
+    widget.fetchData!();
     }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Personal Information'),
+        title: Text(_languageCode != 'vi' ? 'Thông tin cá nhân':'Personal Information'),
         backgroundColor: Colors.orangeAccent, // Customize as needed
       ),
       body: SingleChildScrollView(
@@ -178,8 +175,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                 // Required Information Section
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Required Information',
+                  child: Text(_languageCode != 'vi' ?'Thông tin cá nhân': 'Required Information',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
@@ -203,11 +199,11 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                   child: Column(
                     children: [
                       // Full Name
-                      const Align(
+                      Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Full Name',
-                          style: TextStyle(
+                        child: Text(_languageCode != 'vi' ? 'Họ tên':
+                        'Full Name',
+                          style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500),
                         ),
@@ -215,13 +211,13 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _fullNameController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: 'Enter your full name',
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(),
+                          hintText: _languageCode != 'vi' ? 'Nhập đầy đủ họ tên':'Enter your full name',
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Full Name is required';
+                            return _languageCode != 'vi' ? 'Họ tên đầy đủ là bắt buộc':'Full Name is required';
                           }
                           return null;
                         },
@@ -230,11 +226,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
 
                       // Password
                       // Password Section
-                      const Align(
+                      Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Password',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        child: Text(_languageCode != 'vi' ? 'Mật khẩu':'Password',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -256,7 +251,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                   bool currentPasswordError = false;
                                   bool newPasswordError = false;
                                   bool confirmPasswordError = false;
-                                  String newPasswordErrorText = 'Password must have 1 uppercase letter, 1 special character, 1 number, and be at least 8 characters long';
+                                  String newPasswordErrorText = _languageCode != 'vi' ?'Mật khẩu phải có 1 chữ cái viết hoa, 1 ký tự đặc biệt, 1 số và dài ít nhất 8 ký tự':'Password must have 1 uppercase letter, 1 special character, 1 number, and be at least 8 characters long';
                                   String oldPasswordErrorText = '';
                                   // Helper function to validate the new password
                                   bool validateNewPassword(String password) {
@@ -272,15 +267,15 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                       return GestureDetector(
                                         onTap: () => FocusScope.of(context).unfocus(), // Unfocus to close keyboard
                                         child: AlertDialog(
-                                          title: const Text('Change Password'),
+                                          title: Text(_languageCode != 'vi' ? 'Đổi mật khẩu':'Change Password'),
                                           content: SingleChildScrollView(
                                             child: Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 // Current Password Field
-                                                const Align(
+                                                Align(
                                                   alignment: Alignment.centerLeft,
-                                                  child: Text('Your Current Password:'),
+                                                  child: Text(_languageCode != 'vi' ? 'Mật khẩu hiện tại':'Your Current Password:'),
                                                 ),
                                                 const SizedBox(height: 8),
                                                 TextField(
@@ -289,16 +284,16 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                   obscureText: true,
                                                   decoration: InputDecoration(
                                                     border: const OutlineInputBorder(),
-                                                    hintText: 'Enter your current password',
+                                                    hintText: _languageCode != 'vi' ? 'Nhập mật khẩu hiện tại':'Enter your current password',
                                                     errorText: currentPasswordError ? oldPasswordErrorText : null,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 16),
 
                                                 // New Password Field
-                                                const Align(
+                                                Align(
                                                   alignment: Alignment.centerLeft,
-                                                  child: Text('Add New Password:'),
+                                                  child: Text(_languageCode != 'vi' ? 'Thêm mật khẩu':'Add New Password:'),
                                                 ),
                                                 const SizedBox(height: 8),
                                                 TextField(
@@ -308,7 +303,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                   decoration: InputDecoration(
                                                     errorMaxLines: 3,
                                                     border: const OutlineInputBorder(),
-                                                    hintText: 'Enter your new password',
+                                                    hintText: _languageCode != 'vi' ? 'Nhập mật khẩu mới':'Enter your new password',
                                                     errorText: newPasswordError
                                                         ? newPasswordErrorText
                                                         : null,
@@ -320,9 +315,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                   },
                                                 ),
                                                 const SizedBox(height: 16),
-                                                const Align(
+                                                Align(
                                                   alignment: Alignment.centerLeft,
-                                                  child: Text('Confirm New Password:'),
+                                                  child: Text(_languageCode != 'vi' ? 'Xác nhận mật khẩu mới':'Confirm New Password:'),
                                                 ),
                                                 const SizedBox(height: 8),
                                                 TextField(
@@ -332,9 +327,11 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                   decoration: InputDecoration(
                                                     errorMaxLines: 3,
                                                     border: const OutlineInputBorder(),
-                                                    hintText: 'Enter your confirm new password',
+                                                    hintText: _languageCode != 'vi' ? 'Nhập mật khẩu mới':'Enter your confirm new password',
                                                     errorText: confirmPasswordError
-                                                        ? 'New password and confirm password is not match'
+                                                        ? (_languageCode == 'vi'
+                                                        ? 'Mật khẩu mới và mật khẩu xác nhận không khớp'
+                                                        : 'New password and confirm password do not match')
                                                         : null,
                                                   ),
                                                   onChanged: (value) {
@@ -351,7 +348,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                               onPressed: () async {
 
                                                   var result = await _userService.changePassword(
-                                                      new PasswordChangeRequest(oldPassword: currentPasswordController.text,
+                                                      PasswordChangeRequest(oldPassword: currentPasswordController.text,
                                                           newPassword: newPasswordController.text,
                                                           confirmPassword: confirmPasswordController.text));
                                                   currentPasswordError = false;
@@ -360,7 +357,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                   if(result.success){
                                                     Navigator.of(context).pop();
                                                     ScaffoldMessenger.of(context).showSnackBar(
-                                                      const SnackBar(content: Text('Password changed successfully')),
+                                                      SnackBar(content: Text(_languageCode == 'vi' ? 'Mật khẩu đã được thay đổi thành công':'Password changed successfully')),
                                                     );
                                                   }else{
 
@@ -390,8 +387,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                                   borderRadius: BorderRadius.circular(12),
                                                 ),
                                               ),
-                                              child: const Text(
-                                                'Change Password',
+                                              child: Text(_languageCode != 'vi' ? 'Thay đổi mật khẩu':'Change Password',
                                                 style: TextStyle(color: Colors.white),
                                               ),
                                             ),
@@ -403,9 +399,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                 },
                               );
                             },
-                            child: const Text(
-                              'Change Password',
-                              style: TextStyle(color: Colors.blue),
+                            child: Text(
+                                _languageCode != 'vi' ? 'Thay đổi mật khẩu':'Change Password',
+                              style: const TextStyle(color: Colors.blue),
                             ),
                           ),
                           TextButton(
@@ -413,9 +409,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                               ForgotPasswordDialog.show(context,'',() {
                               },);
                             },
-                            child: const Text(
-                              'Forgot Password?',
-                              style: TextStyle(color: Colors.red),
+                            child: Text(
+                              _languageCode != 'vi' ? 'Quên mật khẩu':'Forgot Password',
+                              style: const TextStyle(color: Colors.red),
                             ),
                           ),
                         ],
@@ -436,20 +432,20 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       _userprofile.email != "" ?
                       TextFormField(
                         controller: _emailController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: 'Enter your email',
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(),
+                          hintText: _languageCode != 'vi' ? 'Nhập email của bạn':'Enter your email',
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Email is required';
+                            return _languageCode != 'vi' ?'Email là bắt buộc':'Email is required';
                           }
                           // Simple email validation
                           if (!RegExp(
                               r'^[^@]+@[^@]+\.[^@]+')
                               .hasMatch(value.trim())) {
-                            return 'Enter a valid email';
+                            return _languageCode != 'vi' ?'Nhập email hợp lệ ':'Enter a valid email';
                           }
                           return null;
                         },
@@ -457,15 +453,13 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       GestureDetector(
                         onTap: () async {
                          String result = await _authService.AddEmailGoogle();
-                         if(result != null){
-                           ScaffoldMessenger.of(context).showSnackBar(
-                             SnackBar(
-                                 content:
-                                 Text('$result.')),
-                           );
-                           fetchData();
-                           widget.fetchData!();
-                         }
+                         ScaffoldMessenger.of(context).showSnackBar(
+                           SnackBar(
+                               content:
+                               Text('$result.')),
+                         );
+                         fetchData();
+                         widget.fetchData!();
 
                         },
                         child: Container(
@@ -483,18 +477,16 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                               Container(
                                 height: 24,
                                 width: 24,
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                   image: DecorationImage(
                                     image: AssetImage('assets/images/google_logo.png'),
                                     fit: BoxFit.contain,
-
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 12),
-                              Text(
-                                'Add Google Email',
-                                style: TextStyle(
+                              const SizedBox(width: 12),
+                              Text(_languageCode != 'vi' ? 'Thêm Google Email':'Add Google Email',
+                                style: const TextStyle(
                                   color: Colors.white, // Màu chữ đỏ
                                   fontWeight: FontWeight.w600, // Chữ đậm
                                   fontSize: 15,
@@ -508,11 +500,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 16),
 
                       // Date of Birth
-                      const Align(
+                      Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Date of Birth',
-                          style: TextStyle(
+                        child: Text(_languageCode != 'vi' ? 'Ngày sinh':'Date of Birth',
+                          style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500),
                         ),
@@ -523,7 +514,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                         readOnly: true,
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
-                          hintText: 'Select your date of birth',
+                          hintText: _languageCode != 'vi' ?'Chọn ngày sinh của bạn':'Select your date of birth',
                           suffixIcon: IconButton(
                             icon: const Icon(Icons.calendar_today),
                             onPressed: () => _selectDate(context),
@@ -531,7 +522,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Date of Birth is required';
+                            return _languageCode != 'vi' ?'Ngày sinh là bắt buộc':'Date of Birth is required';
                           }
                           return null;
                         },
@@ -539,11 +530,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 16),
 
                       // Phone Number
-                      const Align(
+                      Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Phone Number',
-                          style: TextStyle(
+                        child: Text(_languageCode != 'vi' ?'Số điện thoại':'Phone Number',
+                          style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500),
                         ),
@@ -552,27 +542,27 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       _userprofile.phoneNumber != "" ?
                       TextFormField(
                         controller: _phoneNumberController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: 'Enter your phone number',
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(),
+                          hintText: _languageCode != 'vi' ?'Nhập số điện thoại của bạn':'Enter your phone number',
                         ),
                         keyboardType: TextInputType.phone,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Phone Number is required';
+                            return _languageCode != 'vi' ? 'Số điện thoại là bắt buộc':'Phone Number is required';
                           }
                           // Simple phone number validation
                           if (!RegExp(
                               r'^\+?[0-9]{7,15}$')
                               .hasMatch(value.trim())) {
-                            return 'Enter a valid phone number';
+                            return _languageCode != 'vi' ? 'Nhập số điện thoại hợp lệ':'Enter a valid phone number';
                           }
                           return null;
                         },
                       ):
                       GestureDetector(
                         onTap: () async {
-                          ForgotPasswordDialog.show(context,'add', ()  {
+                          ForgotPasswordDialog.show(context,_languageCode != 'vi' ? 'thêm':'add', ()  {
                             addPhoneNumber();
                           },);
 
@@ -592,7 +582,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                               Container(
                                 height: 24,
                                 width: 24,
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                   image: DecorationImage(
                                     image: AssetImage('assets/images/phone_logo.png'),
                                     fit: BoxFit.contain,
@@ -600,10 +590,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 12),
-                              Text(
-                                'Add Phone Number',
-                                style: TextStyle(
+                              const SizedBox(width: 12),
+                              Text(_languageCode != 'vi' ? 'Thêm số điện thoại':'Add Phone Number',
+                                style: const TextStyle(
                                   color: Colors.white, // Màu chữ đỏ
                                   fontWeight: FontWeight.w600, // Chữ đậm
                                   fontSize: 16,
@@ -623,8 +612,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                 // Additional Information Section
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Additional Information',
+                  child: Text(_languageCode != 'vi' ? 'Thông tin bổ sung':'Additional Information',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
@@ -648,11 +636,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                   child: Column(
                     children: [
                       // Gender
-                      const Align(
+                      Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Gender',
-                          style: TextStyle(
+                        child: Text(_languageCode != 'vi' ?'Giới tính':'Gender',
+                          style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500),
                         ),
@@ -660,14 +647,18 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
                         value: _selectedGender,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: 'Select your gender',
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(),
+                          hintText: _languageCode == 'vi' ? 'Chọn giới tính của bạn' : 'Select your gender',
                         ),
-                        items: ['Male', 'Female', 'Other', 'Prefer not to say','']
+                        items: (_languageCode == 'vi'
+                            ? ['Nam', 'Nữ', 'Khác', 'Không muốn tiết lộ', '']
+                            : ['Male', 'Female', 'Other', 'Prefer not to say', ''])
                             .map((gender) => DropdownMenuItem<String>(
                           value: gender,
-                          child: Text(gender),
+                          child: Text(
+                            gender.isEmpty ? (_languageCode == 'vi' ? 'Chọn giới tính' : 'Select Gender') : gender,
+                          ),
                         ))
                             .toList(),
                         onChanged: (value) {
@@ -677,7 +668,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                         },
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Gender is required';
+                            return _languageCode == 'vi'
+                                ? 'Vui lòng chọn giới tính'
+                                : 'Gender is required';
                           }
                           return null;
                         },
@@ -685,11 +678,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 16),
 
                       // Address
-                      const Align(
+                      Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Address',
-                          style: TextStyle(
+                        child: Text(_languageCode == 'vi'?'Địa chỉ':'Address',
+                          style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500),
                         ),
@@ -697,13 +689,13 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _addressController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: 'Enter your address',
+                        decoration:  InputDecoration(
+                          border: const OutlineInputBorder(),
+                          hintText: _languageCode == 'vi'?'Nhập địa chỉ của bạn':'Enter your address',
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Address is required';
+                            return _languageCode == 'vi'?'Địa chỉ là bắt buộc':'Address is required';
                           }
                           return null;
                         },
@@ -711,11 +703,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 16),
 
                       // Nickname
-                      const Align(
+                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Nickname',
-                          style: TextStyle(
+                        child: Text(_languageCode == 'vi'? 'Biệt danh':'Nickname',
+                          style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500),
                         ),
@@ -723,13 +714,13 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _nicknameController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: 'Enter your nickname',
+                        decoration:  InputDecoration(
+                          border: const OutlineInputBorder(),
+                          hintText: _languageCode == 'vi'?'Nhập biệt danh của bạn':'Enter your nickname',
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Nickname is required';
+                            return _languageCode == 'vi'?'Biệt danh là cần thiết':'Nickname is required';
                           }
                           return null;
                         },
@@ -752,9 +743,8 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      'Save',
-                      style: TextStyle(
+                    child: Text(_languageCode == 'vi'?'Lưu': 'Save',
+                      style: const TextStyle(
                         fontSize: 18,
                         color: Colors.white,
                       ),

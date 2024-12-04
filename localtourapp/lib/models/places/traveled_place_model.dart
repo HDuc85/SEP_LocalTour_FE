@@ -15,16 +15,15 @@ class TraveledPlaceModel {
     required this.traveledTimes,
   });
   factory TraveledPlaceModel.fromJson(Map<String, dynamic> json) {
-    final placeJson = json['place'] ?? {};
     return TraveledPlaceModel(
-      placeName: placeJson['placeName'] ?? 'Unknown placeName',
-      placePhotoDisplay: placeJson['placePhotoDisplay'] ?? '',
-      wardName: placeJson['wardName'] ?? 'Unknown Ward',
-      firstVisitDate: placeJson['firstVisitDate'] != null
-          ? DateTime.parse(placeJson['firstVisitDate']).toUtc()
+      placeName: json['placeName']??'Unknown place name',
+      placePhotoDisplay: json['placePhotoDisplay'],
+      wardName: json['wardName'] ?? 'Unknown Ward',
+      firstVisitDate: json['firstVisitDate'] != null
+          ? DateTime.parse(json['firstVisitDate']).toUtc()
           : DateTime.fromMillisecondsSinceEpoch(0).toUtc(), // Default to Unix epoch if null
-      lastVisitDate: placeJson['lastVisitDate'] != null
-          ? DateTime.parse(placeJson['lastVisitDate']).toUtc()
+      lastVisitDate: json['lastVisitDate'] != null
+          ? DateTime.parse(json['lastVisitDate']).toUtc()
           : DateTime.fromMillisecondsSinceEpoch(0).toUtc(),
       traveledTimes: json['traveledTimes'] ?? 0,
     );
