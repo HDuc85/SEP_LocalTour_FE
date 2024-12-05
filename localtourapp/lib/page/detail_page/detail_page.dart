@@ -334,7 +334,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
                   duration: const Duration(milliseconds: 300),
                   child: _showBackToTopButton
                       ? BackToTopButton(
-                    onPressed: _scrollToTop, // Link to the scrollToTop method
+                    onPressed: _scrollToTop, languageCode: 'vi', // Link to the scrollToTop method
                   )
                       : const SizedBox.shrink(),
                 ),

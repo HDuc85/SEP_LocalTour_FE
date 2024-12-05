@@ -380,7 +380,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             duration: const Duration(milliseconds: 300),
             child: _showBackToTopButton
                 ? BackToTopButton(
-              onPressed: _scrollToTop,
+              onPressed: _scrollToTop, languageCode: 'vi',
             )
                 : const SizedBox.shrink(),
           ),

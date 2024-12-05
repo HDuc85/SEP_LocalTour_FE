@@ -1,11 +1,9 @@
-// lib/widgets/back_to_top_button.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class BackToTopButton extends StatelessWidget {
   final VoidCallback onPressed;
-  final String label;
+  final String languageCode; // Add languageCode as a parameter
   final double iconSize;
   final Color backgroundColor;
   final Color textColor;
@@ -16,7 +14,7 @@ class BackToTopButton extends StatelessWidget {
   const BackToTopButton({
     Key? key,
     required this.onPressed,
-    this.label = 'Back To Top',
+    required this.languageCode, // Required for language-based label
     this.iconSize = 24.0,
     this.backgroundColor = Colors.white,
     this.textColor = Colors.black,
@@ -27,6 +25,9 @@ class BackToTopButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Set label based on languageCode
+    final String label = languageCode == 'vi' ? 'Lên Đầu Trang' : 'Back To Top';
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -58,7 +59,7 @@ class BackToTopButton extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                label,
+                label, // Use the dynamic label
                 style: TextStyle(
                   color: textColor,
                   fontSize: 16,

@@ -1,7 +1,8 @@
-
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:localtourapp/models/media_model.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 import 'package:intl/intl.dart';
 
@@ -13,65 +14,59 @@ class FullScreenPostMediaViewer extends StatefulWidget {
   final int initialIndex;
 
   const FullScreenPostMediaViewer({
-    super.key,
-    required this.postMediaList,
+    Key? key,
     required this.initialIndex,
-  });
+    required this.postMediaList,
+  }) : super(key: key);
 
   @override
-  _FullScreenPostMediaViewerState createState() => _FullScreenPostMediaViewerState();
+  _FullScreenPostMediaViewerState createState() =>
+      _FullScreenPostMediaViewerState();
 }
 
 class _FullScreenPostMediaViewerState extends State<FullScreenPostMediaViewer> {
   late PageController _pageController;
-  late int _currentIndex;
   VideoPlayerController? _videoController;
+  int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    if (widget.postMediaList.isEmpty) {
-      // Handle empty media list
-      _currentIndex = -1;
-    } else {
-      _currentIndex = widget.initialIndex;
-    }
-    _pageController = PageController(initialPage: _currentIndex >= 0 ? _currentIndex : 0);
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: _currentIndex);
     _initializeVideoController();
   }
 
-  // Initialize the video controller if the current media is a video
+  Future<File> _copyAssetToLocal(String assetPath) async {
+    final directory = await getTemporaryDirectory();
+    final localFile = File('${directory.path}/temp_video.mp4');
+
+    // Copy the asset to the local file
+    final byteData = await rootBundle.load(assetPath);
+    await localFile.writeAsBytes(byteData.buffer.asUint8List());
+
+    return localFile;
+  }
+
   void _initializeVideoController() async {
-    if (_currentIndex < 0 || widget.postMediaList.isEmpty) return; // Prevent accessing empty list
-
     final currentMedia = widget.postMediaList[_currentIndex];
-    await _videoController?.dispose();
+    _videoController?.dispose();
 
-    if (currentMedia.type.toLowerCase() == 'video') {
-      if (currentMedia.url.startsWith('http')) {
-        // Network video
-        print('Initializing network video: ${currentMedia.url}');
-        _videoController = VideoPlayerController.networkUrl(Uri.parse(currentMedia.url));
+    // Check if the video is from assets or local/network storage
+    if (currentMedia.type.toLowerCase() == 'Video') {
+      if (currentMedia.url.startsWith('assets')) {
+        // Copy asset to a temporary location and use that path
+        final localFile = await _copyAssetToLocal(currentMedia.url);
+        _videoController = VideoPlayerController.file(localFile);
+      } else if (currentMedia.url.startsWith('http')) {
+        _videoController = VideoPlayerController.network(currentMedia.url);
       } else {
-        // Asset video
-        print('Initializing asset video: ${currentMedia.url}');
-        _videoController = VideoPlayerController.asset(currentMedia.url);
+        _videoController = VideoPlayerController.file(File(currentMedia.url));
       }
-      try {
-        await _videoController!.initialize();
-        setState(() {});
-        _videoController!.play();
-      } catch (e) {
-        // Handle video initialization error
-        print('Error initializing video: $e');
-        _videoController = null;
-        // Optionally, show a user-friendly message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load video.')),
-        );
-      }
-    } else {
-      _videoController = null;
+
+      await _videoController!.initialize();
+      setState(() {}); // Refresh to show the video
+      _videoController!.play();
     }
   }
 
@@ -89,18 +84,6 @@ class _FullScreenPostMediaViewerState extends State<FullScreenPostMediaViewer> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.postMediaList.isEmpty || _currentIndex < 0) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Media Viewer')),
-        body: const Center(
-          child: Text(
-            "No media available for this post.",
-            style: TextStyle(color: Colors.white),
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: Colors.black, // Clean background
       body: Stack(
@@ -111,12 +94,12 @@ class _FullScreenPostMediaViewerState extends State<FullScreenPostMediaViewer> {
             onPageChanged: (index) {
               setState(() {
                 _currentIndex = index;
-                _initializeVideoController();
+                _initializeVideoController(); // Reinitialize video for the new page
               });
             },
             itemBuilder: (context, index) {
               final media = widget.postMediaList[index];
-              if (media.type.toLowerCase() == 'photo') {
+              if (media.type.toLowerCase() == 'image') {
                 return Center(
                   child: media.url.startsWith('http')
                       ? Image.network(
@@ -134,7 +117,8 @@ class _FullScreenPostMediaViewerState extends State<FullScreenPostMediaViewer> {
                 );
               } else if (media.type.toLowerCase() == 'video') {
                 return Center(
-                  child: _videoController != null && _videoController!.value.isInitialized
+                  child: _videoController != null &&
+                      _videoController!.value.isInitialized
                       ? GestureDetector(
                     onTap: () {
                       setState(() {
@@ -153,16 +137,16 @@ class _FullScreenPostMediaViewerState extends State<FullScreenPostMediaViewer> {
               } else {
                 return const Center(
                   child: Text(
-                    "Unsupported media type",
+                    'Unsupported media type',
                     style: TextStyle(color: Colors.white),
                   ),
                 );
               }
             },
           ),
-          // Back Button
+          // Back button
           Positioned(
-            top: MediaQuery.of(context).padding.top + 10,
+            top: MediaQuery.of(context).padding.top + 10, // Adjust for status bar
             left: 20,
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white, size: 30),
@@ -171,12 +155,13 @@ class _FullScreenPostMediaViewerState extends State<FullScreenPostMediaViewer> {
               },
             ),
           ),
-          // Current Index Indicator
+          // Current index indicator
           Positioned(
             bottom: 40,
             right: 20,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              padding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: Colors.black54,
                 borderRadius: BorderRadius.circular(20),
@@ -188,17 +173,6 @@ class _FullScreenPostMediaViewerState extends State<FullScreenPostMediaViewer> {
             ),
           ),
           // Display createDate at bottom-left corner
-          Positioned(
-            bottom: 40,
-            left: 20,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
         ],
       ),
     );

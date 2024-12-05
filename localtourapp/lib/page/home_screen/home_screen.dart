@@ -276,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   duration: const Duration(milliseconds: 300),
                   child: _showBackToTopButton
                       ? BackToTopButton(
-                          onPressed: _scrollToTop,
+                          onPressed: _scrollToTop, languageCode: 'vi',
                         )
                       : const SizedBox.shrink(),
                 ),
