@@ -192,7 +192,7 @@ class _SearchPageState extends State<SearchPage> {
     });
     size += 10;
     await Future.delayed(const Duration(seconds: 5));
-    final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.asc,selectedTags,searchText);
+    final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.asc,selectedTags,searchText,1,size);
     setState(() {
       listPlaces = fetchedListPlaces;
       _isLoading = false;
@@ -204,6 +204,12 @@ class _SearchPageState extends State<SearchPage> {
       listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
     }
 
+  }
+
+  void addList(List<PlaceCardModel> list){
+    setState(() {
+      listPlaces = list;
+    });
   }
 
   @override
@@ -228,22 +234,26 @@ class _SearchPageState extends State<SearchPage> {
       isSelected = _selectedFilter == sortBy;
     }
     return ElevatedButton(
-      onPressed: () {
-        setState(() {
+      onPressed: () async {
+
          if(isPlace){
            if (isSelected) {
              _selectedFilter = SortBy.none;
              if(sortBy == SortBy.distance){
-               listPlaces.sort((a, b) => b.distance.compareTo(a.distance));
+               final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.desc,selectedTags,searchText,1,size);
+               addList(fetchedListPlaces);
              }else{
-               listPlaces.sort((a, b) => a.rateStar.compareTo(b.rateStar));
+               final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.rating,SortOrder.desc,selectedTags,searchText,1,size);
+               addList(fetchedListPlaces);
              }
            } else {
              _selectedFilter = sortBy;
              if(sortBy == SortBy.distance){
-               listPlaces.sort((a, b) => a.distance.compareTo(b.distance));
+               final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.asc,selectedTags,searchText,1,size);
+               addList(fetchedListPlaces);
              }else{
-               listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
+               final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.rating,SortOrder.asc,selectedTags,searchText,1,size);
+                addList(fetchedListPlaces);
              }
            }
          }else{
@@ -301,7 +311,7 @@ class _SearchPageState extends State<SearchPage> {
              }
            }
          }
-        });
+
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: isSelected

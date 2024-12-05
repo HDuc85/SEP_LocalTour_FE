@@ -143,9 +143,12 @@ class _AccountPageState extends State<AccountPage> {
       File file = File(pickedFile.path);
       try {
         var result = await _userService.sendUserDataRequest(UpdateUserRequest(profilePicture: file));
+        String? userIdStorage = await storage.readValue(AppConfig.userId);
+        final response = await _userService.getUserProfile(userIdStorage!);
         setState(() {
-          userprofile = result;
+          userprofile = response;
         });
+
       } catch (e) {
         debugPrint("Error updating avatar: $e");
       }
@@ -284,7 +287,7 @@ class _AccountPageState extends State<AccountPage> {
                     onTap: isCurrentUser? _selectAvatar : (){}, // Gọi khi nhấn vào avatar
                     child: CircleAvatar(
                       radius: 40,
-                      backgroundImage: userProfile.userProfileImage == ''
+                      backgroundImage: userProfile.userProfileImage != ''
                           ? NetworkImage(userProfile.userProfileImage)
                           : null,
                       child: userProfile.userProfileImage == ''
