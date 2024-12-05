@@ -144,7 +144,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
     final int placeId = widget.placeId;
 
     return  isLoading
-        ? Center(child: CircularProgressIndicator())
+        ? const Center(child: CircularProgressIndicator())
         :
       Scaffold(
       appBar: AppBar(
