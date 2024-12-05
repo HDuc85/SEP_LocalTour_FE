@@ -83,10 +83,10 @@ class _BookmarkPageState extends State<BookmarkPage> {
     
     
     if (markPlaces.isEmpty) {
-      return const Center(
-        child: Text(
+      return Center(
+        child: Text(_language == 'vi'? 'Chưa có dấu trang nào':
           "No bookmarks yet.",
-          style: TextStyle(fontSize: 18),
+          style: const TextStyle(fontSize: 18),
         ),
       );
     }
@@ -171,8 +171,8 @@ class _BookmarkPageState extends State<BookmarkPage> {
                               onPressed: () {
                                 // xóa bookmark Fuction
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Bookmark removed')),
+                                  SnackBar(
+                                      content: Text(_language != 'vi' ?'Đã xóa dấu trang':'Bookmark removed')),
                                 );
                               },
                             ),

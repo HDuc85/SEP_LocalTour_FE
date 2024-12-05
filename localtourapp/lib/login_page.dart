@@ -26,7 +26,7 @@ class _LoginPageState extends State<LoginPage> {
   // Controllers for input fields
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  String _languageCode = '';
+  String _languageCode = 'vi';
   // Validation flags and messages
   bool phoneError = false;
   String phoneErrorText = '';

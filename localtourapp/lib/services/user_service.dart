@@ -103,7 +103,6 @@ class UserService {
   Future<List<FollowUserModel>> getFollowings(String userId) async {
     final response = await apiService.makeRequest(
         'FollowUser/follow?userId=$userId', 'GET');
-    print('Followings API Response: ${response.body}');
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       return data.map((e) => FollowUserModel.fromJson(e)).toList(); // Ensure proper mapping

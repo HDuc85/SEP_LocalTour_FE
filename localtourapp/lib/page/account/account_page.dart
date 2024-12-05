@@ -34,7 +34,7 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
-  String _languageCode = '';
+  String _languageCode = 'vi';
   bool isLoadingProfile = false;
   bool isFollowLoading = false;
   final AuthService _authService = AuthService();

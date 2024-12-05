@@ -25,7 +25,7 @@ class PersonalInformationPage extends StatefulWidget {
 class _PersonalInformationPageState extends State<PersonalInformationPage> {
   // Form key to manage form state
   final _formKey = GlobalKey<FormState>();
-  String _languageCode = '';
+  String _languageCode = 'vi';
   final AuthService _authService = AuthService();
   final UserService _userService = UserService();
   // Controllers for form fields
@@ -61,7 +61,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
     _nicknameController =
         TextEditingController(text: _userprofile.userName);
     _selectedGender = _userprofile.gender;
-
+    fetchData();
   }
 
   Future<void> fetchData() async{
@@ -126,10 +126,27 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
 
   // Function to handle form submission
   void _savePersonalInformation() async {
+    DateTime? parsedDate;
+    try {
+      if (_dobController.text.isNotEmpty) {
+        parsedDate = DateFormat('yyyy-MM-dd').parse(_dobController.text);
+      }
+    } catch (e) {
+      // Handle parsing error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_languageCode == 'vi'
+            ? 'Ngày sinh không hợp lệ'
+            : 'Invalid date of birth')),
+      );
+      return;
+    }
+
     UpdateUserRequest userdata = UpdateUserRequest(
-      username: _nicknameController.text == widget.userprofile.userName ? null : _nicknameController.text,
+      username: _nicknameController.text == widget.userprofile.userName
+          ? null
+          : _nicknameController.text,
       address: _addressController.text,
-      dateOfBirth: DateFormat('yyyy-MM-dd').parse(_dobController.text),
+      dateOfBirth: parsedDate,
       fullName: _fullNameController.text,
       gender: _selectedGender,
     );
@@ -141,10 +158,13 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
 
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_languageCode == 'vi' ?'Thông tin cá nhân đã được lưu':'Personal information saved')),
+        SnackBar(content: Text(_languageCode == 'vi'
+            ? 'Thông tin cá nhân đã được lưu'
+            : 'Personal information saved')),
       );
     }
   }
+
 
 
   Future<void> addPhoneNumber() async{
