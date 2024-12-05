@@ -41,25 +41,25 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     fetchDataInit();
   }
 
-  Future<void> fetchDataInit() async{
+  Future<void> fetchDataInit() async {
     var (post, listcomment) = await _postService.GetPostDetail(widget.post.id);
     var userid = await SecureStorageHelper().readValue(AppConfig.userId);
     var language = await SecureStorageHelper().readValue(AppConfig.language);
-    if(language != null){
+    if (language != null) {
       languageCode = language;
     }
 
-    if(userid != null){
+    if (userid != null) {
       _userId = userid;
     }
 
     setState(() {
-        _listComment = listcomment;
-        isLoading = false;
-      });
+      _listComment = listcomment;
+      isLoading = false;
+    });
   }
 
-  Future<void> fetchData() async{
+  Future<void> fetchData() async {
     var (post, listcomment) = await _postService.GetPostDetail(widget.post.id);
     setState(() {
       _listComment = listcomment;
@@ -93,8 +93,9 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     final commentText = _commentController.text.trim();
     if (commentText.isEmpty) return;
 
-    var result = await _postService.CreateComment(widget.post.id, parentId, commentText);
-    if(result){
+    var result =
+        await _postService.CreateComment(widget.post.id, parentId, commentText);
+    if (result) {
       fetchData();
     }
 
@@ -131,41 +132,39 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     final difference = now.difference(pastTime);
 
     if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} ${languageCode == 'vi'? 'phút trước':(difference.inMinutes > 1?'minutes':'minute')}';
+      return '${difference.inMinutes} ${languageCode == 'vi' ? 'phút trước' : (difference.inMinutes > 1 ? 'minutes' : 'minute')}';
     } else if (difference.inHours < 24) {
-      return '${difference.inHours} ${languageCode == 'vi'? 'tiếng trước': (difference.inHours > 1?'hours':'hour')}';
+      return '${difference.inHours} ${languageCode == 'vi' ? 'tiếng trước' : (difference.inHours > 1 ? 'hours' : 'hour')}';
     } else if (difference.inDays < 30) {
-      return '${difference.inDays} ${languageCode == 'vi'? 'ngày trước': (difference.inDays > 1?'days':'day')}';
+      return '${difference.inDays} ${languageCode == 'vi' ? 'ngày trước' : (difference.inDays > 1 ? 'days' : 'day')}';
     } else if (difference.inDays < 365) {
-      return '${(difference.inDays / 30).round()} ${languageCode == 'vi'? 'tháng trước': ((difference.inDays / 30).round() > 1?'months':'month')}';
+      return '${(difference.inDays / 30).round()} ${languageCode == 'vi' ? 'tháng trước' : ((difference.inDays / 30).round() > 1 ? 'months' : 'month')}';
     } else {
-      return '${(difference.inDays / 365).round()} ${languageCode == 'vi'? 'năm trước': ((difference.inDays / 30).round() > 1?'years':'year')}';
+      return '${(difference.inDays / 365).round()} ${languageCode == 'vi' ? 'năm trước' : ((difference.inDays / 30).round() > 1 ? 'years' : 'year')}';
     }
   }
 
   Future<void> _likeComment(int commentId) async {
-  var result = await _postService.LikeComment(commentId);
-  if(result){
-    fetchData();
-  }
+    var result = await _postService.LikeComment(commentId);
+    if (result) {
+      fetchData();
+    }
     // Obtain the current user's ID
-
   }
 
-  List<Widget> _buildComments(int? parentId, int depth, [List<CommentModel>? list]) {
-
+  List<Widget> _buildComments(int? parentId, int depth,
+      [List<CommentModel>? list]) {
     List<CommentModel> commentsList = [];
 
-    if(parentId != null){
-      if(list!.length > 0){
+    if (parentId != null) {
+      if (list!.length > 0) {
         commentsList = list;
       }
-    }else if(parentId == null){
+    } else if (parentId == null) {
       commentsList = _listComment;
     }
 
     if (commentsList.length == 0) return [];
-
 
     List<Widget> commentWidgets = [];
 
@@ -173,34 +172,37 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
       commentWidgets.add(_buildCommentItem(comment, depth));
 
       // Recursively add replies to this comment
-      commentWidgets.addAll(_buildComments(comment.id, depth + 1,comment.childComments));
+      commentWidgets
+          .addAll(_buildComments(comment.id, depth + 1, comment.childComments));
     }
 
     return commentWidgets;
   }
 
-  void _showDeleteConfirmationDialog(int commentId)  {
+  void _showDeleteConfirmationDialog(int commentId) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Comment'),
-        content: const Text('Are you sure you want to delete this comment?'),
+        title: Text(languageCode == 'vi' ? 'Xóa bình luận' : 'Delete Comment'),
+        content: Text(languageCode == 'vi'
+            ? 'Bạn có chắc là muốn xóa bình luận này?'
+            : 'Are you sure you want to delete this comment?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(languageCode == 'vi' ? 'Thoát' : 'Cancel'),
           ),
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop(); // Close the dialog
 
               var result = await _postService.DeleteComment(commentId);
-              if(result ){
+              if (result) {
                 fetchData();
               }
-
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(languageCode == 'vi' ? 'Xóa' : 'Delete',
+                style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -233,7 +235,6 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
           // Profile Picture
           GestureDetector(
             onTap: () {
-
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -265,7 +266,6 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                   children: [
                     GestureDetector(
                       onTap: () {
-
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -276,7 +276,10 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                         );
                       },
                       child: Text(
-                        comment.userFullName ?? "Unknown User",
+                        comment.userFullName ??
+                            (languageCode == 'vi'
+                                ? "Người dùng không xác định"
+                                : "Unknown User"),
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
@@ -295,7 +298,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                 const SizedBox(height: 5),
                 // Indicate if replying to someone
                 if (comment.parentId != null && parentUserName != null)
-                  Text(
+                  Text(languageCode == 'vi' ? 'Đang trả lời $parentUserName':
                     'Replying to $parentUserName',
                     style: const TextStyle(
                       fontStyle: FontStyle.italic,
@@ -355,99 +358,101 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : GestureDetector(
-        child: Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: Container(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // Header with title and close button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Comments',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              // Banner if replying to a comment
-              if (_replyingToCommentId != null)
-                Container(
-                  padding: const EdgeInsets.all(8.0),
-                  color: Colors.grey[300],
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'You are replying to ${_getParentUserName(_replyingToCommentId!) ?? "someone"}',
-                        style: const TextStyle(
-                          fontStyle: FontStyle.italic,
-                          color: Colors.black87,
+            child: Padding(
+              padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: Container(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    // Header with title and close button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(languageCode == 'vi' ?'Bình luận':
+                          'Comments',
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: _cancelReply,
-                      ),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 10),
-              // Comments List
-              Expanded(
-                child: _listComment.isEmpty
-                    ?
-                const Center(
-                        child: Text(
-                          'No comments yet. Be the first to comment!',
-                          style: TextStyle(color: Colors.grey),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.of(context).pop(),
                         ),
-                      )
-                    : ListView(
-                        controller: _commentsScrollController,
-                        children: _buildComments(null, 0),
-                      ),
-              ),
-              const Divider(),
-              // Input Field to Add Comment
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _commentController,
-                      focusNode: _commentFocusNode,
-                      decoration: InputDecoration(
-                        hintText: _replyingToCommentId != null
-                            ? 'Write a reply...'
-                            : 'Write a comment...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20.0),
-                        ),
-                      ),
-                      onSubmitted: (_) =>
-                          _addComment(parentId: _replyingToCommentId),
+                      ],
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.send, color: Colors.blue),
-                    onPressed: () => _addComment(parentId: _replyingToCommentId),
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    // Banner if replying to a comment
+                    if (_replyingToCommentId != null)
+                      Container(
+                        padding: const EdgeInsets.all(8.0),
+                        color: Colors.grey[300],
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(languageCode == 'vi' ? 'Bạn đang trả lời ${_getParentUserName(_replyingToCommentId!) ?? "chính bạn"}':
+                              'You are replying to ${_getParentUserName(_replyingToCommentId!) ?? "yourself"}',
+                              style: const TextStyle(
+                                fontStyle: FontStyle.italic,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: _cancelReply,
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 10),
+                    // Comments List
+                    Expanded(
+                      child: _listComment.isEmpty
+                          ? Center(
+                              child: Text(languageCode == 'vi'? 'Chưa có ai bình luận. Hãy là người đầu tiên':
+                                'No comments yet. Be the first to comment!',
+                                style: const TextStyle(color: Colors.grey),
+                              ),
+                            )
+                          : ListView(
+                              controller: _commentsScrollController,
+                              children: _buildComments(null, 0),
+                            ),
+                    ),
+                    const Divider(),
+                    // Input Field to Add Comment
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _commentController,
+                            focusNode: _commentFocusNode,
+                            decoration: InputDecoration(
+                              hintText: languageCode == 'vi'
+                                  ? (_replyingToCommentId != null ? 'Viết trả lời...' : 'Viết bình luận...')
+                                  : (_replyingToCommentId != null ? 'Write a reply...' : 'Write a comment...'),
+
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(20.0),
+                              ),
+                            ),
+                            onSubmitted: (_) =>
+                                _addComment(parentId: _replyingToCommentId),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.send, color: Colors.blue),
+                          onPressed: () =>
+                              _addComment(parentId: _replyingToCommentId),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
-              ),
-        ),
-      );
+            ),
+          );
   }
 }

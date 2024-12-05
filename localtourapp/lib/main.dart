@@ -165,7 +165,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       supportedLocales: const [
         Locale('en'),
-        Locale('vi'), // Corrected 'vn' to 'vi' for Vietnamese
+        Locale('vi'),
       ],
       localizationsDelegates: const [
         S.delegate,

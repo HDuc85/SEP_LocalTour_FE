@@ -32,7 +32,7 @@ class ScheduleTabbar extends StatefulWidget {
 
 class _ScheduleTabbarState extends State<ScheduleTabbar>
     with AutomaticKeepAliveClientMixin {
-  String _languageCode = '';
+  String _languageCode = 'vi';
   @override
   bool get wantKeepAlive => true;
   final ScheduleService _scheduleService = ScheduleService();

@@ -11,6 +11,9 @@ import 'package:localtourapp/models/schedule/schedule_model.dart';
 import 'package:localtourapp/services/location_Service.dart';
 import 'package:localtourapp/services/schedule_service.dart';
 
+import '../../../config/appConfig.dart';
+import '../../../config/secure_storage_helper.dart';
+
 class SuggestSchedulePage extends StatefulWidget {
   final String userId;
 
@@ -23,7 +26,7 @@ class SuggestSchedulePage extends StatefulWidget {
 class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
   final ScheduleService _scheduleService = ScheduleService();
   final LocationService _locationService = LocationService();
-
+  String _languageCode = '';
   String suggestedScheduleName = '';
   late DateTime? StartTime ;
   late DateTime? EndTime;
@@ -56,6 +59,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
     Position? position = await _locationService.getCurrentPosition();
     double long = position != null ? position.longitude : 106.8096761;
     double lat =  position != null ? position.latitude : 10.8411123;
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     if(position != null){
       _currentPosition = position;
     }else{
@@ -66,6 +70,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
 
     setState(() {
       suggestedDestinations = suggestlistDestination;
+      _languageCode = languageCode!;
     });
   }
 
@@ -87,7 +92,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
     if(suggestedDestinations.length == 0){
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Nothing to save'),
+          content: Text(_languageCode == 'vi' ? 'Không có gì để lưu':'Nothing to save'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -100,7 +105,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Some thing wrong while saving'),
+        content: Text(_languageCode == 'vi' ? 'Có gì đó không đúng khi lưu':'Some thing wrong while saving'),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -117,13 +122,9 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
     });
   }
   void _onOtherSchedule() async {
-    if(StartTime == null){
-      StartTime = DateTime.now().add(Duration(days: 1));
-    }
+    StartTime ??= DateTime.now().add(const Duration(days: 1));
 
-    if(EndTime == null){
-      EndTime = StartTime!.add(Duration(days: 3));
-    }
+    EndTime ??= StartTime!.add(const Duration(days: 3));
     int different = EndTime!.difference(StartTime!).inDays +1;
 
     var suggestlistDestination = await _scheduleService.SuggestSchedule(_currentPosition.longitude, _currentPosition.latitude, StartTime!, different);
@@ -156,8 +157,8 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
               // Start Date
               Column(
                 children: [
-                  const Text("Start Date", style: TextStyle(fontWeight: FontWeight.bold)),
-                  _buildDateField("Start Date",
+                  Text(_languageCode == 'vi' ?'Ngày bắt đầu':"Start Date", style: const TextStyle(fontWeight: FontWeight.bold)),
+                  _buildDateField(_languageCode == 'vi' ?'Ngày bắt đầu':"Start Date",
                     false,
                     StartTime,
                         (newDate) {
@@ -172,8 +173,8 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
               // End Date
               Column(
                 children: [
-                  const Text("End Date", style: TextStyle(fontWeight: FontWeight.bold)),
-                  _buildDateField("End Date",
+                  Text(_languageCode == 'vi' ?'Ngày kết thúc':"End Date", style: const TextStyle(fontWeight: FontWeight.bold)),
+                  _buildDateField(_languageCode == 'vi' ?'Ngày kết thúc':"End Date",
                     false,
                     EndTime,
                         (newDate) {
@@ -198,8 +199,8 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
                 ],
               ),
             )
-                : const Center(
-              child: Text("No destinations available based on your preferences."),
+                : Center(
+              child: Text(_languageCode == 'vi' ?'Không có điểm đến nào có sẵn theo sở thích của bạn.':"No destinations available based on your preferences."),
             ),
           ),
           Row(
@@ -213,7 +214,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
-                child: const Text("Other"),
+                child: Text(_languageCode == 'vi' ?'Khác':"Other"),
               ),
               ElevatedButton(
                 onPressed: hasPlaces ? _onChooseSchedule : null,
@@ -223,7 +224,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
-                child: const Text("Choose this"),
+                child: Text(_languageCode == 'vi' ?'Chọn cái này':"Choose this"),
               ),
             ],
           ),
@@ -314,7 +315,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            Text(_languageCode == 'vi' ? 'Ngày ${DateFormat('MM-dd-yyyy').format(DateTime.parse(day))}':
               "Day ${DateFormat('MM-dd-yyyy').format(DateTime.parse(day))}",
               style: const TextStyle(
                   fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline

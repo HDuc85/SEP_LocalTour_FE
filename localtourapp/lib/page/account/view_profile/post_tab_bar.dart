@@ -46,6 +46,7 @@ class _PostTabBarState extends State<PostTabBar> {
   bool isLoading = true;
   bool isLogin = false;
   bool isCurrentUser = false;
+  String _languageCode = '';
 
   @override
   void initState() {
@@ -55,6 +56,7 @@ class _PostTabBarState extends State<PostTabBar> {
   }
 
   Future<void> fetchDate() async {
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     var result = await _postService.getListPost(widget.userId);
     var userId = await SecureStorageHelper().readValue(AppConfig.userId);
 
@@ -68,6 +70,7 @@ class _PostTabBarState extends State<PostTabBar> {
       listPost = result;
       initListPost = result;
       isLoading = false;
+      _languageCode = languageCode!;
     });
   }
 
@@ -166,22 +169,22 @@ class _PostTabBarState extends State<PostTabBar> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Post'),
-        content: const Text('Are you sure you want to delete this post?'),
+        title: Text(_languageCode == 'vi' ?'Xóa bài':'Delete Post'),
+        content: Text(_languageCode == 'vi' ? 'Bạn có chắc chắn muốn xóa bài viết này không?':'Are you sure you want to delete this post?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(_languageCode == 'vi' ?'Thoát':'Cancel'),
           ),
           TextButton(
             onPressed: () {
               _deletePost(post.id); // Pass the post to the callback
               Navigator.of(context).pop(); // Close the dialog
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Post deleted successfully!')),
+                SnackBar(content: Text(_languageCode == 'vi' ?'Bài đã xóa thành công':'Post deleted successfully!')),
               );
             },
-            child: const Text('Delete'),
+            child: Text(_languageCode == 'vi' ?'Xóa':'Delete'),
           ),
         ],
       ),
@@ -236,13 +239,13 @@ class _PostTabBarState extends State<PostTabBar> {
                           child: _buildSinglePostItem(post),
                         );
                       } else {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20.0),
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20.0),
                           child: Center(
-                            child: Text(
+                            child: Text(_languageCode == 'vi' ?'Không tìm thấy bài nào':
                               "No posts found",
                               style:
-                                  TextStyle(fontSize: 18, color: Colors.grey),
+                                  const TextStyle(fontSize: 18, color: Colors.grey),
                             ),
                           ),
                         );
@@ -289,8 +292,8 @@ class _PostTabBarState extends State<PostTabBar> {
             controller: searchController,
             focusNode: searchFocusNode,
             decoration: InputDecoration(
-              labelText: "Search by title, schedule, place name, ...",
-              border: OutlineInputBorder(),
+              labelText: _languageCode == 'vi' ?'Tìm kiếm theo tiêu đề, lịch trình, tên địa điểm, ...':"Search by title, schedule, place name, ...",
+              border: const OutlineInputBorder(),
               suffixIcon: searchController.text.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear),
@@ -311,7 +314,7 @@ class _PostTabBarState extends State<PostTabBar> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildDateField(
+            _buildDateField(_languageCode == 'vi' ? 'Từ ngày':
               "From Date",
               true,
               _fromDate,
@@ -325,7 +328,7 @@ class _PostTabBarState extends State<PostTabBar> {
               },
             ),
             const SizedBox(width: 5),
-            _buildDateField(
+            _buildDateField(_languageCode == 'vi' ?'Đến ngày':
               "To Date",
               false,
               _toDate,
@@ -355,9 +358,9 @@ class _PostTabBarState extends State<PostTabBar> {
             ),
             padding: const EdgeInsets.symmetric(horizontal: 142, vertical: 10),
           ),
-          child: const Text(
+          child: Text(_languageCode == 'vi' ?'Tìm kếm':
             "Search",
-            style: TextStyle(
+            style: const TextStyle(
                 fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
@@ -437,9 +440,9 @@ class _PostTabBarState extends State<PostTabBar> {
             },
           ),
           icon: const Icon(Icons.add, color: Colors.white),
-          label: Text(
+          label: Text(_languageCode == 'vi' ?'Thêm bài':
             "Add Post",
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
@@ -449,7 +452,7 @@ class _PostTabBarState extends State<PostTabBar> {
           ),
         ),
       ),
-      SizedBox(
+      const SizedBox(
         width: 15,
       )
     ]);
@@ -570,7 +573,7 @@ class _PostTabBarState extends State<PostTabBar> {
                     )
                   ],
                 )
-              : SizedBox(),
+              : const SizedBox(),
           const SizedBox(height: 10),
           // Post Content with See More/See Less
           if (post.content != null)
@@ -589,7 +592,10 @@ class _PostTabBarState extends State<PostTabBar> {
                         expandedPosts[post.id] = !isExpandedLocal;
                       });
                     },
-                    child: Text(isExpandedLocal ? 'See less' : 'See more...'),
+                    child: Text(_languageCode == 'vi'
+                        ? (isExpandedLocal ? 'Ít hơn' : 'Nhiều hơn')
+                        : (isExpandedLocal ? 'See less' : 'See more...')
+                    ),
                   ),
               ],
             ),
@@ -611,7 +617,7 @@ class _PostTabBarState extends State<PostTabBar> {
                   Text('${post.totalLikes}'),
                 ],
               ),
-              Text(
+              Text(_languageCode == 'vi' ? '${post.totalComments} bình luận${post.totalComments != 1 ? 's' : ''}':
                   '${post.totalComments} comment${post.totalComments != 1 ? 's' : ''}'),
             ],
           ),
@@ -631,9 +637,9 @@ class _PostTabBarState extends State<PostTabBar> {
                     post.isLiked ? Icons.favorite : Icons.favorite_border,
                     color: Colors.red,
                   ),
-                  label: const Text(
+                  label: Text(_languageCode == 'vi' ? 'Thích':
                     'Loved',
-                    style: TextStyle(color: Colors.red),
+                    style: const TextStyle(color: Colors.red),
                   ),
                 ),
               ),
@@ -647,7 +653,7 @@ class _PostTabBarState extends State<PostTabBar> {
                     Icons.comment,
                     color: Color(0xFF008080),
                   ),
-                  label: Text(
+                  label: Text(_languageCode == 'vi' ? '${post.totalComments} Bình Luận${post.totalComments != 1 ? 's' : ''}':
                     '${post.totalComments} Comment${post.totalComments != 1 ? 's' : ''}',
                     style: const TextStyle(color: Colors.black),
                   ),
@@ -700,10 +706,10 @@ class _PostTabBarState extends State<PostTabBar> {
                   if (index == 5 && mediaForPost.length > 6)
                     Container(
                       color: Colors.black54,
-                      child: const Center(
-                        child: Text(
+                      child: Center(
+                        child: Text(_languageCode == 'vi' ?'xem thêm':
                           'See more',
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       ),
                     ),

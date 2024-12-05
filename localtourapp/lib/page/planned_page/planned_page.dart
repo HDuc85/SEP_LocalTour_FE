@@ -17,12 +17,12 @@ class PlannedPage extends StatefulWidget {
 }
 
 class _PlannedPageState extends State<PlannedPage> {
-  String _languageCode = '';
+  String _languageCode = 'vi';
 
   Future<void> fetchLanguageCode() async {
     var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     setState(() {
-      _languageCode = languageCode!; // Default to 'en' if no value is found
+      _languageCode = languageCode!;
     });
   }
 
@@ -35,17 +35,17 @@ class _PlannedPageState extends State<PlannedPage> {
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
             return [
               SliverAppBar(
-                title: const Text("Planned Page"),
+                title: const Text('Planned Page'),
                 floating: true,
                 pinned: true,
                 bottom: TabBar(
                   tabs: [
                     Tab(
-                      text: _languageCode == 'vi' ? 'Schedule':'Lịch trình',
+                      text: _languageCode == 'vi' ? 'Lịch trình':'Schedule',
                       icon: const Icon(Icons.schedule),
                     ),
                     Tab(
-                      text: _languageCode == 'vi' ? 'History':'Lịch sử',
+                      text: _languageCode == 'vi' ? 'Lịch sử':'History',
                       icon: const Icon(Icons.history),
                     ),
                   ],

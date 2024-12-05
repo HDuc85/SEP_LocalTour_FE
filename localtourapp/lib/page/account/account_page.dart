@@ -327,7 +327,7 @@ class _AccountPageState extends State<AccountPage> {
                       style: const TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 8),
-                    Row(
+                    Column(
                       children: [
                         GestureDetector(
                           onTap: () {
