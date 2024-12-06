@@ -514,7 +514,7 @@ class _AccountPageState extends State<AccountPage> {
   Future<void> _sendEmail() async {
     final Uri emailUri = Uri(
       scheme: 'mailto',
-      path: 'localtourvn123@gmail.com',
+      path: 'localtoursep@gmail.com',
       queryParameters: {
         'subject': 'Support Request', // Optional
         'body': 'Hello,', // Optional

@@ -30,7 +30,6 @@ class ActivityCardInfo {
 List<ActivityCardInfo> getActivityCards(
     int placeId,
     List<PlaceActivity> activities,
-    List<PlaceActivityTranslation> placeActivityTranslations,
     List<PlaceActivityMedia> placeActivityMedias,
     ) {
   List<ActivityCardInfo> activityCards = activities

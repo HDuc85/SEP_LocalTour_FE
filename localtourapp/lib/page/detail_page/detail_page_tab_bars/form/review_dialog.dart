@@ -37,7 +37,6 @@ class _ReviewDialogState extends State<ReviewDialog> {
   int _totalSize = 0; // Track total size in MB
   int initSize = 0;
   final int maxItems = 10;
-  final int maxTotalSize = 200; // 200MB limit
   String _languageCode = '';
 
   @override
@@ -79,19 +78,36 @@ class _ReviewDialogState extends State<ReviewDialog> {
       _languageCode = languageCode!;
     });
   }
-  
-  
+
+
   Future<void> _pickImages() async {
     final List<XFile> images = await _picker.pickMultiImage();
-    int newSize = _calculateTotalSize([..._selectedImages, ...images, ..._selectedVideos]);
-    if (_selectedImages.length + images.length <= maxItems &&
-        newSize <= maxTotalSize) {
+    List<XFile> validImages = [];
+    bool sizeExceeded = false;
+
+    for (var image in images) {
+      int imageSize = await _getFileSize(image);
+      if (imageSize <= 15) {
+        validImages.add(image);
+      } else {
+        sizeExceeded = true;
+      }
+    }
+
+    int newSize = _calculateTotalSize([..._selectedImages, ...validImages, ..._selectedVideos]);
+    if (_selectedImages.length + validImages.length <= maxItems) {
       setState(() {
-        _selectedImages.addAll(images);
+        _selectedImages.addAll(validImages);
         _totalSize = newSize;
       });
     } else {
       _showLimitExceededMessage();
+    }
+
+    if (sizeExceeded) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_languageCode == 'vi' ? 'Mỗi ảnh phải nhỏ hơn 15 MB.' : 'Each image must be less than 15 MB.')),
+      );
     }
   }
 
@@ -99,15 +115,20 @@ class _ReviewDialogState extends State<ReviewDialog> {
     final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
     if (video != null) {
       int videoSize = await _getFileSize(video);
-      int newSize = _totalSize + videoSize;
-      if (_selectedVideos.length + _selectedImages.length < maxItems &&
-          newSize <= maxTotalSize) {
-        setState(() {
-          _selectedVideos.add(video);
-          _totalSize = newSize;
-        });
+      if (videoSize <= 50) {
+        int newSize = _totalSize + videoSize;
+        if (_selectedVideos.length + _selectedImages.length < maxItems) {
+          setState(() {
+            _selectedVideos.add(video);
+            _totalSize = newSize;
+          });
+        } else {
+          _showLimitExceededMessage();
+        }
       } else {
-        _showLimitExceededMessage();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_languageCode == 'vi' ? 'Mỗi video phải nhỏ hơn 50 MB.' : 'Each video must be less than 50 MB.')),
+        );
       }
     }
   }
@@ -117,17 +138,17 @@ class _ReviewDialogState extends State<ReviewDialog> {
     return (bytes / (1024 * 1024)).ceil(); // Convert to MB
   }
 
+  void _showLimitExceededMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(_languageCode == 'vi' ? 'Vượt quá giới hạn: Tối đa $maxItems mục' : 'Limit exceeded: Max $maxItems items.')),
+    );
+  }
+
   int _calculateTotalSize(List<XFile> files) {
     return files.fold<int>(
         0,
             (total, file) =>
         total + (File(file.path).lengthSync() / (1024 * 1024)).ceil());
-  }
-
-  void _showLimitExceededMessage() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Limit exceeded: Max 10 items and 200MB total.')),
-    );
   }
 
   bool _hasChanges() {
@@ -148,6 +169,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Star rating
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -155,8 +177,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
                     return IconButton(
                       icon: Icon(
                         Icons.star,
-                        color:
-                        index < selectedRating ? Colors.orange : Colors.grey,
+                        color: index < selectedRating ? Colors.orange : Colors.grey,
                         size: 30,
                       ),
                       onPressed: () {
@@ -168,17 +189,21 @@ class _ReviewDialogState extends State<ReviewDialog> {
                   }),
                 ),
               ),
+              // Review content input
               TextField(
                 controller: contentController,
                 maxLength: 200,
                 maxLines: 10,
                 decoration: InputDecoration(
-                  hintText: _languageCode == 'vi' ? 'Viết đánh giá của bạn':'Write your review...',
+                  hintText: _languageCode == 'vi'
+                      ? 'Viết đánh giá của bạn'
+                      : 'Write your review...',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
+              // Media picker buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -191,6 +216,11 @@ class _ReviewDialogState extends State<ReviewDialog> {
                     onPressed: _pickVideos,
                   ),
                 ],
+              ),
+              // Media usage info
+              Text(
+                '${_selectedImages.length + _selectedVideos.length}/$maxItems items',
+                style: const TextStyle(fontSize: 14, color: Colors.black54),
               ),
               // Media display with delete option
               SingleChildScrollView(
@@ -215,7 +245,8 @@ class _ReviewDialogState extends State<ReviewDialog> {
                               onTap: () {
                                 setState(() {
                                   _selectedImages.remove(image);
-                                  _totalSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
+                                  _totalSize = _calculateTotalSize(
+                                      [..._selectedImages, ..._selectedVideos]);
                                 });
                               },
                               child: Container(
@@ -223,7 +254,8 @@ class _ReviewDialogState extends State<ReviewDialog> {
                                   color: Colors.black54,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.close, color: Colors.white, size: 20),
+                                child: const Icon(Icons.close,
+                                    color: Colors.white, size: 20),
                               ),
                             ),
                           ),
@@ -252,7 +284,8 @@ class _ReviewDialogState extends State<ReviewDialog> {
                               onTap: () {
                                 setState(() {
                                   _selectedVideos.remove(video);
-                                  _totalSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
+                                  _totalSize = _calculateTotalSize(
+                                      [..._selectedImages, ..._selectedVideos]);
                                 });
                               },
                               child: Container(
@@ -260,7 +293,8 @@ class _ReviewDialogState extends State<ReviewDialog> {
                                   color: Colors.black54,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.close, color: Colors.white, size: 20),
+                                child: const Icon(Icons.close,
+                                    color: Colors.white, size: 20),
                               ),
                             ),
                           ),
@@ -271,12 +305,16 @@ class _ReviewDialogState extends State<ReviewDialog> {
                 ),
               ),
               const SizedBox(height: 10),
+              // Submit button
               ElevatedButton(
                 onPressed: () {
                   if (selectedRating > 0) {
                     if (contentController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(_languageCode == 'vi' ? 'Hãy nhập nội dung':'Please enter review content.')),
+                        SnackBar(
+                            content: Text(_languageCode == 'vi'
+                                ? 'Hãy nhập nội dung'
+                                : 'Please enter review content.')),
                       );
                       return;
                     }
@@ -290,13 +328,19 @@ class _ReviewDialogState extends State<ReviewDialog> {
                       Navigator.of(context).pop(); // Close the dialog
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(_languageCode == 'vi' ? 'Bạn không thay đổi điều gì':'You have not changed anything')),
+                        SnackBar(
+                            content: Text(_languageCode == 'vi'
+                                ? 'Bạn không thay đổi điều gì'
+                                : 'You have not changed anything')),
                       );
                       Navigator.of(context).pop(); // Close the dialog if desired
                     }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(_languageCode == 'vi' ? 'Vui lòng chọn xếp hạng.':'Please select a rating.')),
+                      SnackBar(
+                          content: Text(_languageCode == 'vi'
+                              ? 'Vui lòng chọn xếp hạng.'
+                              : 'Please select a rating.')),
                     );
                   }
                 },
@@ -310,7 +354,8 @@ class _ReviewDialogState extends State<ReviewDialog> {
                   elevation: 2,
                   side: const BorderSide(color: Colors.black, width: 1),
                 ),
-                child: Text(_languageCode == 'vi' ? 'Gửi Đánh giá': 'Submit Review',
+                child: Text(
+                  _languageCode == 'vi' ? 'Gửi Đánh giá' : 'Submit Review',
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, color: Colors.white),
                 ),

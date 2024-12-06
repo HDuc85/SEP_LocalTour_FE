@@ -16,6 +16,8 @@ import 'package:localtourapp/page/account/view_profile/create_post.dart';
 import 'package:localtourapp/services/post_service.dart';
 import 'package:localtourapp/video_player/video_thumbnail.dart';
 
+import '../../detail_page/detail_page_tab_bars/form/reportform.dart';
+
 class PostTabBar extends StatefulWidget {
   final String userId;
   final Userprofile user;
@@ -56,7 +58,8 @@ class _PostTabBarState extends State<PostTabBar> {
   }
 
   Future<void> fetchDate() async {
-    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+    var languageCode =
+        await SecureStorageHelper().readValue(AppConfig.language);
     var result = await _postService.getListPost(widget.userId);
     var userId = await SecureStorageHelper().readValue(AppConfig.userId);
 
@@ -169,22 +172,27 @@ class _PostTabBarState extends State<PostTabBar> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(_languageCode == 'vi' ?'Xóa bài':'Delete Post'),
-        content: Text(_languageCode == 'vi' ? 'Bạn có chắc chắn muốn xóa bài viết này không?':'Are you sure you want to delete this post?'),
+        title: Text(_languageCode == 'vi' ? 'Xóa bài' : 'Delete Post'),
+        content: Text(_languageCode == 'vi'
+            ? 'Bạn có chắc chắn muốn xóa bài viết này không?'
+            : 'Are you sure you want to delete this post?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(_languageCode == 'vi' ?'Thoát':'Cancel'),
+            child: Text(_languageCode == 'vi' ? 'Thoát' : 'Cancel'),
           ),
           TextButton(
             onPressed: () {
               _deletePost(post.id); // Pass the post to the callback
               Navigator.of(context).pop(); // Close the dialog
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(_languageCode == 'vi' ?'Bài đã xóa thành công':'Post deleted successfully!')),
+                SnackBar(
+                    content: Text(_languageCode == 'vi'
+                        ? 'Bài đã xóa thành công'
+                        : 'Post deleted successfully!')),
               );
             },
-            child: Text(_languageCode == 'vi' ?'Xóa':'Delete'),
+            child: Text(_languageCode == 'vi' ? 'Xóa' : 'Delete'),
           ),
         ],
       ),
@@ -242,10 +250,12 @@ class _PostTabBarState extends State<PostTabBar> {
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 20.0),
                           child: Center(
-                            child: Text(_languageCode == 'vi' ?'Không tìm thấy bài nào':
-                              "No posts found",
-                              style:
-                                  const TextStyle(fontSize: 18, color: Colors.grey),
+                            child: Text(
+                              _languageCode == 'vi'
+                                  ? 'Không tìm thấy bài nào'
+                                  : "No posts found",
+                              style: const TextStyle(
+                                  fontSize: 18, color: Colors.grey),
                             ),
                           ),
                         );
@@ -272,7 +282,8 @@ class _PostTabBarState extends State<PostTabBar> {
                   duration: const Duration(milliseconds: 300),
                   child: _showBackToTopButton
                       ? BackToTopButton(
-                          onPressed: _scrollToTop, languageCode: 'vi',
+                          onPressed: _scrollToTop,
+                          languageCode: 'vi',
                         )
                       : const SizedBox.shrink(),
                 ),
@@ -292,7 +303,9 @@ class _PostTabBarState extends State<PostTabBar> {
             controller: searchController,
             focusNode: searchFocusNode,
             decoration: InputDecoration(
-              labelText: _languageCode == 'vi' ?'Tìm kiếm theo tiêu đề, lịch trình, tên địa điểm, ...':"Search by title, schedule, place name, ...",
+              labelText: _languageCode == 'vi'
+                  ? 'Tìm kiếm theo tiêu đề, lịch trình, tên địa điểm, ...'
+                  : "Search by title, schedule, place name, ...",
               border: const OutlineInputBorder(),
               suffixIcon: searchController.text.isNotEmpty
                   ? IconButton(
@@ -314,8 +327,8 @@ class _PostTabBarState extends State<PostTabBar> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildDateField(_languageCode == 'vi' ? 'Từ ngày':
-              "From Date",
+            _buildDateField(
+              _languageCode == 'vi' ? 'Từ ngày' : "From Date",
               true,
               _fromDate,
               (newDate) {
@@ -328,8 +341,8 @@ class _PostTabBarState extends State<PostTabBar> {
               },
             ),
             const SizedBox(width: 5),
-            _buildDateField(_languageCode == 'vi' ?'Đến ngày':
-              "To Date",
+            _buildDateField(
+              _languageCode == 'vi' ? 'Đến ngày' : "To Date",
               false,
               _toDate,
               (newDate) {
@@ -358,8 +371,8 @@ class _PostTabBarState extends State<PostTabBar> {
             ),
             padding: const EdgeInsets.symmetric(horizontal: 142, vertical: 10),
           ),
-          child: Text(_languageCode == 'vi' ?'Tìm kếm':
-            "Search",
+          child: Text(
+            _languageCode == 'vi' ? 'Tìm kếm' : "Search",
             style: const TextStyle(
                 fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
           ),
@@ -440,8 +453,8 @@ class _PostTabBarState extends State<PostTabBar> {
             },
           ),
           icon: const Icon(Icons.add, color: Colors.white),
-          label: Text(_languageCode == 'vi' ?'Thêm bài':
-            "Add Post",
+          label: Text(
+            _languageCode == 'vi' ? 'Thêm bài' : "Add Post",
             style: const TextStyle(color: Colors.white),
           ),
           style: ElevatedButton.styleFrom(
@@ -498,47 +511,75 @@ class _PostTabBarState extends State<PostTabBar> {
                   ),
                 ],
               ),
-              if (widget.isCurrentUser) ...[
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        post.isPublic ? Icons.public : Icons.lock,
-                        color: Colors.green,
-                      ),
-                      onPressed: () => _toggleVisibility(
-                          post.id, post.isPublic, post.title, post.content),
+                  if (widget.isCurrentUser) ...[
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            post.isPublic ? Icons.public : Icons.lock,
+                            color: Colors.green,
+                          ),
+                          onPressed: () => _toggleVisibility(
+                              post.id, post.isPublic, post.title, post.content),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.edit,
+                            color: Colors.blue,
+                          ),
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              builder: (context) => CreatePostOverlay(
+                                existingPost: post,
+                                callback: () {},
+                              ),
+                            ).then((value) {
+                              fetchDate();
+                            });
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete,
+                            color: Colors.red,
+                          ),
+                          onPressed: () => _confirmDeletePost(post),
+                        ),
+                      ],
                     ),
+                  ],
+                  if (!widget.isCurrentUser) ...[
                     IconButton(
                       icon: const Icon(
-                        Icons.edit,
-                        color: Colors.blue,
+                        Icons.report,
+                        color: Colors.red,
                       ),
                       onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (context) => CreatePostOverlay(
-                            existingPost: post,
-                            callback: () {},
-                          ),
-                        ).then(
-                          (value) {
-                            fetchDate();
+                        ReportForm.show(
+                          context,
+                          _languageCode != 'vi'
+                              ? 'Report this post if it violates community guidelines.'
+                              : 'Báo cáo bài viết này nếu vi phạm nguyên tắc cộng đồng.',
+                          post.authorId, // Pass the userId for reporting
+                          post.placeId, // Pass placeId if applicable
+                          _languageCode,
+                          onSubmit: (String message) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  _languageCode != 'vi'
+                                      ? 'Report submitted successfully.'
+                                      : 'Báo cáo đã được gửi thành công.',
+                                ),
+                              ),
+                            );
                           },
                         );
                       },
                     ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.delete,
-                        color: Colors.red,
-                      ),
-                      onPressed: () => _confirmDeletePost(post),
-                    ),
                   ],
-                ),
-              ],
             ],
           ),
           post.scheduleId != null
@@ -594,8 +635,7 @@ class _PostTabBarState extends State<PostTabBar> {
                     },
                     child: Text(_languageCode == 'vi'
                         ? (isExpandedLocal ? 'Ít hơn' : 'Nhiều hơn')
-                        : (isExpandedLocal ? 'See less' : 'See more...')
-                    ),
+                        : (isExpandedLocal ? 'See less' : 'See more...')),
                   ),
               ],
             ),
@@ -617,8 +657,9 @@ class _PostTabBarState extends State<PostTabBar> {
                   Text('${post.totalLikes}'),
                 ],
               ),
-              Text(_languageCode == 'vi' ? '${post.totalComments} bình luận${post.totalComments != 1 ? 's' : ''}':
-                  '${post.totalComments} comment${post.totalComments != 1 ? 's' : ''}'),
+              Text(_languageCode == 'vi'
+                  ? '${post.totalComments} bình luận${post.totalComments != 1 ? 's' : ''}'
+                  : '${post.totalComments} comment${post.totalComments != 1 ? 's' : ''}'),
             ],
           ),
           const Divider(),
@@ -637,8 +678,8 @@ class _PostTabBarState extends State<PostTabBar> {
                     post.isLiked ? Icons.favorite : Icons.favorite_border,
                     color: Colors.red,
                   ),
-                  label: Text(_languageCode == 'vi' ? 'Thích':
-                    'Loved',
+                  label: Text(
+                    _languageCode == 'vi' ? 'Thích' : 'Loved',
                     style: const TextStyle(color: Colors.red),
                   ),
                 ),
@@ -653,8 +694,10 @@ class _PostTabBarState extends State<PostTabBar> {
                     Icons.comment,
                     color: Color(0xFF008080),
                   ),
-                  label: Text(_languageCode == 'vi' ? '${post.totalComments} Bình Luận${post.totalComments != 1 ? 's' : ''}':
-                    '${post.totalComments} Comment${post.totalComments != 1 ? 's' : ''}',
+                  label: Text(
+                    _languageCode == 'vi'
+                        ? '${post.totalComments} Bình Luận${post.totalComments != 1 ? 's' : ''}'
+                        : '${post.totalComments} Comment${post.totalComments != 1 ? 's' : ''}',
                     style: const TextStyle(color: Colors.black),
                   ),
                 ),
@@ -707,8 +750,8 @@ class _PostTabBarState extends State<PostTabBar> {
                     Container(
                       color: Colors.black54,
                       child: Center(
-                        child: Text(_languageCode == 'vi' ?'xem thêm':
-                          'See more',
+                        child: Text(
+                          _languageCode == 'vi' ? 'xem thêm' : 'See more',
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),

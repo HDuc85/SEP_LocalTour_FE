@@ -209,39 +209,43 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
         title: Text(
           widget.language != 'vi'
               ? "Top Most Favorite Schedules"
-              : 'Top Lịch Trình Được Yêu Thích',
+              : "Top Lịch Trình Được Yêu Thích",
           maxLines: 2,
         ),
       ),
-      body: Stack(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Stack(
         children: [
           ListView.builder(
             controller: _scrollController,
-            itemCount: _listSchedule.length + 1, // Increased by 1
+            itemCount: _listSchedule.length + 1,
             itemBuilder: (context, index) {
               if (index == _listSchedule.length) {
-                // Extra SizedBox at the bottom
-                return const SizedBox(height: 100); // Adjust height as needed
+                // Add some padding at the end of the list
+                return const SizedBox(height: 100);
               }
 
               final schedule = _listSchedule[index];
-
               final isExpanded = _expandedIndex == index;
 
               return GestureDetector(
                 onTap: () {
                   setState(() {
-                    _expandedIndex = _expandedIndex == index ? null : index;
+                    _expandedIndex =
+                    _expandedIndex == index ? null : index;
                   });
                 },
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 8),
                   child: Column(
                     children: [
                       Card(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15),
-                          side: const BorderSide(color: Colors.black, width: 1),
+                          side: const BorderSide(
+                              color: Colors.black, width: 1),
                         ),
                         margin: const EdgeInsets.only(bottom: 10),
                         color: const Color(0xFFD6B588),
@@ -258,7 +262,8 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                 ),
                               ),
                               Text(
-                                  "${widget.language != 'vi' ? 'Created date:' : 'Tạo lúc'} ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}"),
+                                "${widget.language != 'vi' ? 'Created date:' : 'Tạo lúc'} ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}",
+                              ),
                               Row(
                                 children: [
                                   Flexible(
@@ -268,7 +273,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                           : 'Từ ngày',
                                       true,
                                       schedule.startDate,
-                                      (_) {},
+                                          (_) {},
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -279,84 +284,86 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                           : 'Tới ngày',
                                       false,
                                       schedule.endDate,
-                                      (_) {},
+                                          (_) {},
                                     ),
                                   ),
                                 ],
                               ),
-                              Row(
-                                children: [
-                                  Text(
-                                      "${widget.language != 'vi' ? 'Created by' : 'Tạo bởi'}: ${schedule.userName ?? 'Unknown'}"),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    icon: Icon(
-                                      schedule.isLiked
-                                          ? Icons.favorite
-                                          : Icons.favorite_border,
-                                      color: schedule.isLiked
-                                          ? Colors.red
-                                          : Colors.grey,
-                                    ),
-                                    onPressed: () {
-                                      _toggleFavorite(schedule.id);
-                                    },
-                                  ),
-                                  Text(
-                                    schedule.totalLikes.toString(),
-                                    style: const TextStyle(
-                                        color: Colors.black, fontSize: 12),
-                                  ),
-                                ],
-                              ),
+                              const SizedBox(height: 8),
                               if (schedule.userId == widget.userId)
-                                Text(widget.language != 'vi'
-                                    ? "This is your schedule"
-                                    : 'Lịch trình của bạn'),
-                              if (schedule.userId != widget.userId)
-                                TextButton(
-                                  onPressed: () {
-                                    // Show confirmation dialog for cloning
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return AlertDialog(
-                                          title: Text(widget.language != 'vi'
-                                              ? "Clone Schedule"
-                                              : 'Sao chép Lịch trình'),
-                                          content: Text(widget.language != 'vi'
-                                              ? "Do you want to clone this schedule to yours?"
-                                              : "Bạn có muốn sao chép lịch trình này không?"),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(context)
-                                                    .pop(); // Close the dialog
-                                              },
-                                              child: Text(
-                                                  widget.language != 'vi'
+                                Text(
+                                  widget.language != 'vi'
+                                      ? "This is your schedule"
+                                      : "Lịch trình của bạn",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                )
+                              else
+                                Row(
+                                  children: [
+                                    Text(
+                                      "${widget.language != 'vi' ? 'Created by' : 'Tạo bởi'}: ${schedule.userName ?? 'Unknown'}",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    TextButton(
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: Text(
+                                                widget.language != 'vi'
+                                                    ? "Clone Schedule"
+                                                    : "Sao chép Lịch trình",
+                                              ),
+                                              content: Text(
+                                                widget.language != 'vi'
+                                                    ? "Do you want to clone this schedule to yours?"
+                                                    : "Bạn có muốn sao chép lịch trình này không?",
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context)
+                                                        .pop();
+                                                  },
+                                                  child: Text(widget
+                                                      .language !=
+                                                      'vi'
                                                       ? "Cancel"
                                                       : "Hủy"),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                _cloneSchedule(schedule);
-                                                Navigator.of(context)
-                                                    .pop(); // Close the dialog after cloning
-                                              },
-                                              child: Text(
-                                                  widget.language != 'vi'
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    _cloneSchedule(
+                                                        schedule);
+                                                    Navigator.of(context)
+                                                        .pop();
+                                                  },
+                                                  child: Text(widget
+                                                      .language !=
+                                                      'vi'
                                                       ? "Clone"
                                                       : "Sao chép"),
-                                            ),
-                                          ],
+                                                ),
+                                              ],
+                                            );
+                                          },
                                         );
                                       },
-                                    );
-                                  },
-                                  child: Text(widget.language != 'vi'
-                                      ? "Clone this schedule to yours"
-                                      : "Sao chép lịch trình"),
+                                      child: Text(
+                                        widget.language != 'vi'
+                                            ? "Clone this schedule to yours"
+                                            : "Sao chép lịch trình",
+                                      ),
+                                    ),
+                                  ],
                                 ),
                             ],
                           ),
@@ -369,7 +376,8 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: Colors.black, width: 1),
+                            border:
+                            Border.all(color: Colors.black, width: 1),
                           ),
                           child: _buildDestinationGrid(
                               schedule.destinations, schedule),
@@ -381,16 +389,6 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
             },
           ),
           Positioned(
-            bottom: 20,
-            left: 50,
-            child: WeatherIconButton(
-              onPressed: _navigateToWeatherPage,
-              assetPath: 'assets/icons/weather.png',
-            ),
-          ),
-
-          // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
-          Positioned(
             bottom: 50,
             left: 110,
             child: AnimatedOpacity(
@@ -398,8 +396,9 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
               duration: const Duration(milliseconds: 300),
               child: _showBackToTopButton
                   ? BackToTopButton(
-                      onPressed: _scrollToTop, languageCode: 'vi',
-                    )
+                onPressed: _scrollToTop,
+                languageCode: widget.language,
+              )
                   : const SizedBox.shrink(),
             ),
           ),

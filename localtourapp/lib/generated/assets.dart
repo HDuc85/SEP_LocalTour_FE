@@ -177,12 +177,10 @@ class Assets {
   static const String placesPlaceactivity = 'lib/models/places/placeactivity.dart';
   static const String placesPlaceactivitymedia = 'lib/models/places/placeactivitymedia.dart';
   static const String placesPlaceactivitytranslation = 'lib/models/places/placeactivitytranslation.dart';
-  static const String placesPlacefeedback = 'lib/models/places/placefeedback.dart';
   static const String placesPlacefeedbackhelpful = 'lib/models/places/placefeedbackhelpful.dart';
   static const String placesPlacefeedbackmedia = 'lib/models/places/placefeedbackmedia.dart';
   static const String placesPlacemedia = 'lib/models/places/placemedia.dart';
   static const String placesPlacereport = 'lib/models/places/placereport.dart';
-  static const String placesPlacesearchhistory = 'lib/models/places/placesearchhistory.dart';
   static const String placesPlacetag = 'lib/models/places/placetag.dart';
   static const String placesPlacetranslation = 'lib/models/places/placetranslation.dart';
   static const String placesProvincencity = 'lib/models/places/provincencity.dart';

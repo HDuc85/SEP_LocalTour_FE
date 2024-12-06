@@ -92,21 +92,19 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
               .scheduleName;
         }
 
-        if (postmodel.media != null) {
-          for (var item in postmodel.media) {
-            var result =
-            await _mediaService.downloadAndConvertToXFile(item.url);
-            if (result != null) {
-              mediaList.add(PostMedia(
-                createdAt: DateTime.now(),
-                id: DateTime.now().millisecondsSinceEpoch,
-                type: item.type.toLowerCase(), // Ensure type consistency
-                url: result.path,
-              ));
-            }
+        for (var item in postmodel.media) {
+          var result =
+          await _mediaService.downloadAndConvertToXFile(item.url);
+          if (result != null) {
+            mediaList.add(PostMedia(
+              createdAt: DateTime.now(),
+              id: DateTime.now().millisecondsSinceEpoch,
+              type: item.type.toLowerCase(), // Ensure type consistency
+              url: result.path,
+            ));
           }
         }
-      }
+            }
 
       setState(() {
         myListSchedule = result;
@@ -165,28 +163,25 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
   }
 
   Future<void> _pickImages() async {
-    final List<XFile>? pickedFiles = await _picker.pickMultiImage();
-    if (pickedFiles != null && pickedFiles.isNotEmpty) {
-      int totalSize = _calculateTotalMediaSize();
+    final List<XFile> pickedFiles = await _picker.pickMultiImage();
+    if (pickedFiles.isNotEmpty) {
       List<PostMedia> newMediaList = [];
+      bool sizeExceeded = false;
+      bool itemLimitExceeded = false;
 
       for (XFile pickedFile in pickedFiles) {
         final file = File(pickedFile.path);
         final fileSize = await file.length();
 
-        // Check if adding this file exceeds the total limit
-        if (totalSize + fileSize > 200 * 1024 * 1024) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Total media size exceeds 200 MB.')),
-          );
-          break; // Stop adding more files
+        // Check file size
+        if ((fileSize / (1024 * 1024)) > 15) {
+          sizeExceeded = true;
+          continue; // Skip this file
         }
 
-        // Check if adding exceeds the max number of media items
+        // Check item limit
         if (mediaList.length + newMediaList.length >= 10) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Cannot add more than 10 media items.')),
-          );
+          itemLimitExceeded = true;
           break;
         }
 
@@ -197,29 +192,41 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
           createdAt: DateTime.now(),
           postId: widget.existingPost?.id ?? 0,
         ));
-        totalSize += fileSize;
       }
 
       setState(() {
         mediaList.addAll(newMediaList);
       });
+
+      if (sizeExceeded) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Each image must be less than 15 MB.')),
+        );
+      }
+
+      if (itemLimitExceeded) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cannot add more than 10 media items.')),
+        );
+      }
     }
   }
 
   Future<void> _pickVideo() async {
-    final XFile? pickedFile =
-    await _picker.pickVideo(source: ImageSource.gallery);
+    final XFile? pickedFile = await _picker.pickVideo(source: ImageSource.gallery);
     if (pickedFile != null) {
       final file = File(pickedFile.path);
       final fileSize = await file.length();
 
-      if (_calculateTotalMediaSize() + fileSize > 200 * 1024 * 1024) {
+      // Check file size
+      if ((fileSize / (1024 * 1024)) > 50) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Total media size exceeds 200 MB.')),
+          const SnackBar(content: Text('Each video must be less than 50 MB.')),
         );
         return;
       }
 
+      // Check item limit
       if (mediaList.length >= 10) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cannot add more than 10 media items.')),
@@ -237,17 +244,6 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
         ));
       });
     }
-  }
-
-  int _calculateTotalMediaSize() {
-    int total = 0;
-    for (var media in mediaList) {
-      final file = File(media.url);
-      if (file.existsSync()) {
-        total += file.lengthSync();
-      }
-    }
-    return total;
   }
 
   Future<void> _createOrUpdatePost() async {
@@ -546,7 +542,7 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
                                           color: Colors.grey[700],
                                         ),
                                       ),
-                                      Positioned(
+                                      const Positioned(
                                         bottom: 8,
                                         right: 8,
                                         child: Icon(
@@ -568,7 +564,7 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
                                       });
                                     },
                                     child: Container(
-                                      decoration: BoxDecoration(
+                                      decoration: const BoxDecoration(
                                         color: Colors.black54,
                                         shape: BoxShape.circle,
                                       ),
