@@ -6,7 +6,8 @@ import 'package:localtourapp/config/secure_storage_helper.dart';
 
 
 class SettingPage extends StatefulWidget {
-  const SettingPage({super.key});
+  final Function(String) onButtonPressed;
+  const SettingPage({super.key, required this.onButtonPressed});
 
   @override
   State<SettingPage> createState() => _SettingPageState();
@@ -30,6 +31,7 @@ class _SettingPageState extends State<SettingPage> {
   Future<void> changeSystemLanguage(String languageCode) async {
     if(languageCode != null){
       await SecureStorageHelper().saveValue(AppConfig.language, languageCode);
+      widget.onButtonPressed(languageCode);
       getSystemLanguage();
     }
   }

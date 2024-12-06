@@ -84,7 +84,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
         setState(() {
           _listSchedule = [];
           isLoading = false;
-          _languageCode = languageCode!;
         });
         return;
       }
@@ -97,6 +96,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     if (_myUserId == userid) {
       isCurrentUser = true;
     }
+    _languageCode = languageCode!;
     _userId = userid;
     setState(() {
       _listScheduleInit = listschedule;
@@ -380,7 +380,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             duration: const Duration(milliseconds: 300),
             child: _showBackToTopButton
                 ? BackToTopButton(
-              onPressed: _scrollToTop, languageCode: 'vi',
+              onPressed: _scrollToTop, languageCode: _languageCode,
             )
                 : const SizedBox.shrink(),
           ),

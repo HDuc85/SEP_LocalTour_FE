@@ -27,6 +27,13 @@ class _PlannedPageState extends State<PlannedPage> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    fetchLanguageCode();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2, // Schedule and History

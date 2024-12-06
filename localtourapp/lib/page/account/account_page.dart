@@ -73,6 +73,7 @@ class _AccountPageState extends State<AccountPage> {
 
   Future<void> readUserId() async {
     try {
+      var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
       String? userIdStorage = await storage.readValue(AppConfig.userId);
       String? isLoginStorage = await storage.readValue(AppConfig.isLogin);
       if (isLoginStorage != null) {
@@ -80,7 +81,9 @@ class _AccountPageState extends State<AccountPage> {
           isLogin = true;
         });
       }
-
+      setState(() {
+        _languageCode = languageCode!;
+      });
       if (userIdStorage != null && userIdStorage.isNotEmpty) {
         if (widget.userId == '') {
           readUserProfile(userIdStorage);
@@ -101,7 +104,6 @@ class _AccountPageState extends State<AccountPage> {
 
 
   Future<void> readUserProfile(String userId) async {
-    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     final response = await _userService.getUserProfile(userId);
     setState(() {
       userprofile = response;
@@ -109,7 +111,6 @@ class _AccountPageState extends State<AccountPage> {
     if ( userId == myUserId && myUserId.isNotEmpty) {
       setState(() {
         isCurrentUser = true;
-        _languageCode = languageCode!;
       });
     }
     // Fetch followers and followings
@@ -454,7 +455,11 @@ class _AccountPageState extends State<AccountPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const SettingPage(),
+              builder: (context) => SettingPage(onButtonPressed: (string) {
+                setState(() {
+                  _languageCode = string;
+                });
+              },),
             ),
           );
         },
@@ -641,7 +646,7 @@ class _AccountPageState extends State<AccountPage> {
           backgroundColor: isLogin ? Colors.red : Colors.blueAccent,
         ),
         child: Text(
-          isLogin ? (_languageCode == 'vi' ? 'Đăng xuất' : 'Đăng nhập'):(_languageCode == 'vi' ? 'Logout' : 'Login'),
+          isLogin ?  (_languageCode != 'vi' ? "Logout" :'Đăng xuất') : (_languageCode != 'vi' ? "Login" :'Đăng nhập'),
           style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),

@@ -84,7 +84,9 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
   List<Widget> _buildAllTagChips() {
 
 
-    return listTag.map((tag) {
+    return
+
+      listTag.map((tag) {
       final isSelected = listUserTag.any((element) => element.id == tag.id,);
 
       return
