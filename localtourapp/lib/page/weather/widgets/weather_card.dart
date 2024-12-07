@@ -1,46 +1,69 @@
-// lib/weather/widgets/weather_card.dart
-
 import 'package:flutter/material.dart';
+import '../../../config/appConfig.dart';
+import '../../../config/secure_storage_helper.dart';
 import '../models/weather_model.dart';
 
-class WeatherCard extends StatelessWidget {
+class WeatherCard extends StatefulWidget {
   final CurrentWeather currentWeather;
 
-  const WeatherCard({Key? key, required this.currentWeather}) : super(key: key);
+  const WeatherCard({
+    Key? key,
+    required this.currentWeather,
+  }) : super(key: key);
+
+  @override
+  _WeatherCardState createState() => _WeatherCardState();
+}
+
+class _WeatherCardState extends State<WeatherCard> {
+  String _languageCode = 'vi';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchLanguageCode();
+  }
+
+  Future<void> fetchLanguageCode() async {
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+    setState(() {
+      _languageCode = languageCode ?? 'vi';
+    });
+  }
 
   String getWeatherDescription(int code) {
     switch (code) {
       case 0:
-        return 'Clear Sky';
+        return _languageCode == 'vi' ? 'Trời quang' : 'Clear Sky';
       case 1:
       case 2:
       case 3:
-        return 'Mainly Clear';
+        return _languageCode == 'vi' ? 'Trời trong' : 'Mainly Clear';
       case 45:
       case 48:
-        return 'Fog';
+        return _languageCode == 'vi' ? 'Sương mù' : 'Fog';
       case 51:
       case 53:
       case 55:
-        return 'Drizzle';
+        return _languageCode == 'vi' ? 'Mưa phùn' : 'Drizzle';
       case 61:
       case 63:
       case 65:
-        return 'Rain';
+        return _languageCode == 'vi' ? 'Mưa' : 'Rain';
       case 71:
       case 73:
       case 75:
-        return 'Snow';
+        return _languageCode == 'vi' ? 'Tuyết' : 'Snow';
       case 80:
       case 81:
       case 82:
-        return 'Rain Showers';
+        return _languageCode == 'vi' ? 'Mưa rào' : 'Rain Showers';
       case 95:
       case 96:
       case 99:
-        return 'Thunderstorm';
+        return _languageCode == 'vi' ? 'Dông bão' : 'Thunderstorm';
       default:
-        return 'Unknown';
+        return _languageCode == 'vi' ? 'Không xác định' : 'Unknown';
     }
   }
 
@@ -80,12 +103,12 @@ class WeatherCard extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'Current Weather',
+                  _languageCode == 'vi' ? 'Thời tiết hiện tại' : 'Current Weather',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Spacer(),
                 Text(
-                  getWeatherIcon(currentWeather.weathercode),
+                  getWeatherIcon(widget.currentWeather.weathercode),
                   style: TextStyle(fontSize: 24),
                 ),
               ],
@@ -93,12 +116,12 @@ class WeatherCard extends StatelessWidget {
             SizedBox(height: 10),
             // Temperature
             Text(
-              '${currentWeather.temperature.toStringAsFixed(1)}°C',
+              '${widget.currentWeather.temperature.toStringAsFixed(1)}°C',
               style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
             ),
             // Weather Description
             Text(
-              getWeatherDescription(currentWeather.weathercode),
+              getWeatherDescription(widget.currentWeather.weathercode),
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 10),
@@ -111,27 +134,18 @@ class WeatherCard extends StatelessWidget {
                   children: [
                     Icon(Icons.wind_power),
                     SizedBox(height: 5),
-                    Text('${currentWeather.windspeed} m/s'),
-                    Text('Wind Speed'),
+                    Text('${widget.currentWeather.windspeed} m/s'),
+                    Text(_languageCode == 'vi' ? 'Tốc độ gió' : 'Wind Speed'),
                   ],
                 ),
                 // Day/Night Indicator
                 Column(
                   children: [
                     Icon(
-                      currentWeather.isDay ? Icons.wb_sunny : Icons.nights_stay,
+                      widget.currentWeather.isDay ? Icons.wb_sunny : Icons.nights_stay,
                     ),
                     SizedBox(height: 5),
-                    Text(currentWeather.isDay ? 'Day' : 'Night'),
-                  ],
-                ),
-                // Weather Code
-                Column(
-                  children: [
-                    Icon(Icons.cloud),
-                    SizedBox(height: 5),
-                    Text('${currentWeather.weathercode}'),
-                    Text('Code'),
+                    Text(widget.currentWeather.isDay ? (_languageCode == 'vi' ? 'Ban ngày' : 'Day') : (_languageCode == 'vi' ? 'Ban đêm' : 'Night')),
                   ],
                 ),
               ],
@@ -139,7 +153,13 @@ class WeatherCard extends StatelessWidget {
             SizedBox(height: 10),
             // Weather Advice
             Text(
-              'Advice: ${currentWeather.weathercode >= 61 && currentWeather.weathercode <= 65 ? "Take an umbrella!" : "Enjoy your day!"}',
+              _languageCode == 'vi'
+                  ? (widget.currentWeather.weathercode >= 61 && widget.currentWeather.weathercode <= 65
+                  ? "Mang theo ô!"
+                  : "Tận hưởng ngày mới!")
+                  : (widget.currentWeather.weathercode >= 61 && widget.currentWeather.weathercode <= 65
+                  ? "Take an umbrella!"
+                  : "Enjoy your day!"),
               style: TextStyle(fontSize: 16, color: Colors.blueGrey),
             ),
           ],

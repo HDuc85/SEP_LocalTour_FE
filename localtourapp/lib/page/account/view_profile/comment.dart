@@ -7,7 +7,6 @@ import 'package:localtourapp/models/posts/comment_model.dart';
 import 'package:localtourapp/models/posts/post_model.dart';
 import 'package:localtourapp/page/account/account_page.dart';
 import 'package:localtourapp/services/post_service.dart';
-import 'package:localtourapp/models/posts/postcomment.dart';
 
 class CommentsBottomSheet extends StatefulWidget {
   final PostModel post;
@@ -32,7 +31,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   // For tracking which comment is being replied to
   int? _replyingToCommentId;
   bool isLoading = true;
-  Map<int?, List<PostComment>> commentsMap = {};
+  // Map<int?, List<PostComment>> commentsMap = {};
 
   @override
   void initState() {

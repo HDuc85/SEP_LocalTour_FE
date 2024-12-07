@@ -114,7 +114,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
   Future<void> fetchLanguageCode() async {
     var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     setState(() {
-      _languageCode = languageCode!; // Default to 'en' if no value is found
+      _languageCode = languageCode!;
     });
   }
 

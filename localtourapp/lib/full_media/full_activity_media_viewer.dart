@@ -5,8 +5,6 @@ import 'package:localtourapp/models/media_model.dart';
 import 'package:video_player/video_player.dart';
 import 'package:intl/intl.dart';
 
-import '../models/places/placeactivitymedia.dart'; // For formatting the date
-
 class FullActivityMediaViewer extends StatefulWidget {
   final List<MediaModel> mediaActivityList;
   final int initialIndex;

@@ -1,7 +1,5 @@
 import 'dart:math';
 
-import 'package:localtourapp/models/posts/post.dart';
-
 class PostMedia {
   int id;
   int? postId; // Maps to id in Post
@@ -38,24 +36,3 @@ class PostMedia {
   }
 }
 
-List<PostMedia> generateDummyPostMedia(int count, List<Post> posts) {
-  final random = Random();
-  List<String> mediaTypes = ['photo', 'video'];
-
-  return List.generate(count, (index) {
-    String type = mediaTypes[random.nextInt(mediaTypes.length)];
-    String url = (type == 'video')
-        ? 'assets/videos/video_${random.nextInt(3) + 1}.mp4'
-        : 'https://picsum.photos/seed/${random.nextInt(1000)}/600/400';
-
-    return PostMedia(
-      id: index + 1,
-      postId: posts[random.nextInt(posts.length)].id,
-      type: type,
-      url: url,
-      createdAt: DateTime.now().subtract(Duration(days: random.nextInt(365))),
-    );
-  });
-}
-
-List<PostMedia> dummyPostMedia = generateDummyPostMedia(200, dummyPosts);

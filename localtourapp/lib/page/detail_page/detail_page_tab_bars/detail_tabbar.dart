@@ -15,7 +15,6 @@ import '../../my_map/features/routing_screen/routing_screen.dart';
 import '../../search_page/search_page.dart';
 import '../../weather/widgets/weather_widget.dart';
 import '../detail_card/activity_card.dart';
-import '../detail_card/activity_card_info.dart';
 import '../detail_card/event_card.dart';
 import '../all_product.dart';
 import '../place_description.dart';
@@ -50,7 +49,6 @@ class DetailTabbar extends StatefulWidget {
 class _DetailTabbarState extends State<DetailTabbar> {
   VietmapController? _mapController;
   bool isLoading = true;
-  List<ActivityCardInfo> activityCards = [];
   String _language = 'vi';
 
   @override

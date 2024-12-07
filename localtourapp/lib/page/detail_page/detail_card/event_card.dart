@@ -4,7 +4,6 @@ import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/event/event_model.dart';
 import '../../../base/scrollable_text_container.dart';
-import '../../../models/places/event.dart';
 
 class EventCardWidget extends StatelessWidget {
   final EventModel event;

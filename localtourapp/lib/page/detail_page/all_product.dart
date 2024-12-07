@@ -2,9 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:localtourapp/models/places/place_activity_model.dart';
 import 'detail_card/activity_card.dart';
-import 'detail_card/activity_card_info.dart';
 import 'detail_page_tab_bars/form/activityformdialog.dart';
-import '../../models/places/placeactivitymedia.dart';
 
 class AllProductPage extends StatelessWidget {
   final int placeId; // Added placeId field

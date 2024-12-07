@@ -93,7 +93,7 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
     }
     formattedDistance += ' km';
     return Container(
-      height: 70,
+      height: 90,
       color: Colors.white, // Set background color to white
       padding: const EdgeInsets.only(right: 10), // Optional padding
       child: Row(

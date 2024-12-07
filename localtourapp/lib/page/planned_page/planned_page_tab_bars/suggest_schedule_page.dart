@@ -2,11 +2,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
-import 'package:localtourapp/models/schedule/destination.dart';
 import 'package:localtourapp/models/schedule/destination_model.dart';
 import 'package:localtourapp/models/schedule/schedule.dart';
 
-import 'package:localtourapp/models/places/place.dart';
 import 'package:localtourapp/models/schedule/schedule_model.dart';
 import 'package:localtourapp/services/location_Service.dart';
 import 'package:localtourapp/services/schedule_service.dart';

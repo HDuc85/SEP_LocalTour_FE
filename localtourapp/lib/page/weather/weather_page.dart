@@ -1,12 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../config/appConfig.dart';
+import '../../config/secure_storage_helper.dart';
 import 'providers/weather_provider.dart';
 import 'widgets/weather_card.dart';
 import 'weather_detail_page.dart';
 import 'package:geolocator/geolocator.dart';
 
-class WeatherPage extends StatelessWidget {
+class WeatherPage extends StatefulWidget {
   const WeatherPage({Key? key}) : super(key: key);
+
+  @override
+  State<WeatherPage> createState() => _WeatherPageState();
+}
+
+class _WeatherPageState extends State<WeatherPage> {
+  String _languageCode = 'vi';
+
+  Future<void> fetchLanguageCode() async {
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+    setState(() {
+      _languageCode = languageCode!;    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +30,7 @@ class WeatherPage extends StatelessWidget {
       create: (_) => WeatherProvider(),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Weather'),
+          title: Text(_languageCode == 'vi' ? "Thời tiết":'Weather'),
         ),
         body: WeatherContent(),
       ),
@@ -30,11 +45,18 @@ class WeatherContent extends StatefulWidget {
 
 class _WeatherContentState extends State<WeatherContent> {
   Position? _position;
+  String _languageCode = 'vi';
 
   @override
   void initState() {
     super.initState();
     _fetchWeather();
+  }
+
+  Future<void> fetchLanguageCode() async {
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+    setState(() {
+      _languageCode = languageCode!;    });
   }
 
   Future<void> _fetchWeather() async {
@@ -44,7 +66,7 @@ class _WeatherContentState extends State<WeatherContent> {
       if (!serviceEnabled) {
         print('Location services are disabled.');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Location services are disabled.')),
+          SnackBar(content: Text(_languageCode == 'vi' ? "Dịch vụ định vị đã bị vô hiệu hóa.":'Location services are disabled.')),
         );
         return;
       }
@@ -55,7 +77,7 @@ class _WeatherContentState extends State<WeatherContent> {
         if (permission == LocationPermission.denied) {
           print('Location permissions are denied');
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Location permissions are denied')),
+            SnackBar(content: Text(_languageCode == 'vi' ? "Quyền vị trí bị từ chối":'Location permissions are denied')),
           );
           return;
         }
@@ -64,8 +86,8 @@ class _WeatherContentState extends State<WeatherContent> {
       if (permission == LocationPermission.deniedForever) {
         print('Location permissions are permanently denied, we cannot request permissions.');
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(
+          SnackBar(
+              content: Text(_languageCode == 'vi' ? "Quyền vị trí bị từ chối vĩnh viễn, chúng tôi không thể yêu cầu quyền.":
                   'Location permissions are permanently denied, we cannot request permissions.')),
         );
         return;
@@ -84,7 +106,7 @@ class _WeatherContentState extends State<WeatherContent> {
     } catch (e) {
       print('Error fetching position: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching position: $e')),
+        SnackBar(content: Text(_languageCode == 'vi' ? "Lỗi khi tìm vị trí:":'Error fetching position: $e')),
       );
     }
   }
@@ -102,7 +124,7 @@ class _WeatherContentState extends State<WeatherContent> {
         }
 
         if (weatherProvider.weatherResponse == null) {
-          return const Center(child: Text('No weather data available.'));
+          return Center(child: Text(_languageCode == 'vi' ? "Không có dữ liệu thời tiết.":'No weather data available.'));
         }
 
         final currentWeather = weatherProvider.weatherResponse!.current;
@@ -111,7 +133,7 @@ class _WeatherContentState extends State<WeatherContent> {
           child: Column(
             children: [
               WeatherCard(currentWeather: currentWeather),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
@@ -123,7 +145,7 @@ class _WeatherContentState extends State<WeatherContent> {
                     ),
                   );
                 },
-                child: Text('View Hourly Forecast'),
+                child: Text(_languageCode == 'vi' ? "Xem Dự báo hàng giờ":'View Hourly Forecast', style: const TextStyle(color: Colors.black),),
               ),
             ],
           ),

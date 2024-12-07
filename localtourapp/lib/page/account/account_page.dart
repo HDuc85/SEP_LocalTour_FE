@@ -304,14 +304,14 @@ class _AccountPageState extends State<AccountPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      userProfile.fullName,
+                      userProfile.userName ,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      '(${userProfile.userName})',
+                      '(${userProfile.fullName})',
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.grey,

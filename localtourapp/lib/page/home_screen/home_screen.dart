@@ -1,3 +1,4 @@
+import 'package:dots_indicator/dots_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/config/appConfig.dart';
@@ -18,6 +19,8 @@ import '../../base/back_to_top_button.dart';
 import '../../base/const.dart';
 import '../../base/custom_button.dart';
 import '../../base/weather_icon_button.dart';
+import '../../models/HomePage/banner.dart';
+import '../../services/banner_service.dart';
 import '../detail_page/detail_page.dart';
 import '../search_page/search_page.dart';
 import '../../base/place_card_info.dart';
@@ -44,7 +47,10 @@ class _HomeScreenState extends State<HomeScreen> {
   String _language = 'vi';
   List<PlaceCardModel> listPlaceNearest = [];
   List<EventModel> listEvent = [];
-
+  final PageController _pageController = PageController();
+  int _currentBannerIndex = 0;
+  List<BannerModel> _banners = []; // Store fetched banners
+  bool _isBannerLoading = true; // Banner loading state
   List<CardInfo> nearestLocation = [];
   List<CardInfo> featuredPlaces = [];
   Map<int, bool> tagToggleStates = {};
@@ -58,6 +64,23 @@ class _HomeScreenState extends State<HomeScreen> {
     _scrollController.addListener(_scrollListener);
     super.initState();
     _getCurrentPosition();
+    _fetchBanners();
+  }
+
+  Future<void> _fetchBanners() async {
+    try {
+      BannerService bannerService = BannerService();
+      List<BannerModel> banners = await bannerService.getListBanner();
+      setState(() {
+        _banners = banners;
+        _isBannerLoading = false;
+      });
+    } catch (e) {
+      print("Failed to fetch banners: $e");
+      setState(() {
+        _isBannerLoading = false;
+      });
+    }
   }
 
   @override
@@ -66,6 +89,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  // Update current banner index
+  void _onBannerPageChanged(int index) {
+    setState(() {
+      _currentBannerIndex = index;
+    });
   }
 
   // Listener to handle scroll events
@@ -199,6 +229,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 10),
                     _buildTagGrid(listTagTop),
                     const SizedBox(height: 40),
+                    _buildBannerList(), // Use the real banners here
+                    const SizedBox(height: 10),
                     _buildNearFeaturedSection('assets/icons/Nearest Places.png',
                         _language != 'vi'?'Nearest Location': 'Địa điểm gần nhất', listPlaceNearest, SortBy.distance),
                     const SizedBox(height: 40),
@@ -283,6 +315,60 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           );
+  }
+
+  Widget _buildBannerList() {
+    if (_isBannerLoading) {
+      return const SizedBox(
+        height: 50,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_banners.isEmpty) {
+      return const SizedBox.shrink(); // Completely hides the widget
+    }
+
+    return Stack(
+      children: [
+        SizedBox(
+          height: 100, // Fixed height for banners
+          width: MediaQuery.of(context).size.width,
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: _banners.length,
+            onPageChanged: _onBannerPageChanged,
+            itemBuilder: (context, index) {
+              return ClipRect(
+                child: Image.network(
+                  _banners[index].bannerUrls,
+                  fit: BoxFit.cover, // Ensure the banner fills the space
+                  height: 100, // Constrain height explicitly
+                  width: double.infinity, // Expand to full width
+                ),
+              );
+            },
+          ),
+        ),
+        Positioned(
+          bottom: 1,
+          left: MediaQuery.of(context).size.width / 2 - (_banners.length * 10 / 2),
+          child: DotsIndicator(
+            dotsCount: _banners.length,
+            position: _currentBannerIndex, // Convert int to double
+            decorator: DotsDecorator(
+              size: const Size.square(4.0), // Inactive dot size
+              activeSize: const Size(4.0, 4.0), // Active dot size
+              activeShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5.0),
+              ),
+              activeColor: Colors.black, // Active dot color
+              color: Colors.grey, // Inactive dot color
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   // 3/ _buildTagGrid function to list all tags

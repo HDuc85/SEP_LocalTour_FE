@@ -29,7 +29,6 @@ class Assets {
   static const String configAppConfig = 'lib/config/appConfig.dart';
   static const String constantsColors = 'lib/constants/colors.dart';
   static const String detailCardActivityCard = 'lib/page/detail_page/detail_card/activity_card.dart';
-  static const String detailCardActivityCardInfo = 'lib/page/detail_page/detail_card/activity_card_info.dart';
   static const String detailCardEventCard = 'lib/page/detail_page/detail_card/event_card.dart';
   static const String detailCardReviewCard = 'lib/page/detail_page/detail_card/review_card.dart';
   static const String detailCardReviewCardList = 'lib/page/detail_page/detail_card/review_card_list.dart';
@@ -111,7 +110,6 @@ class Assets {
   static const String localtourapp = '.env';
   static const String modelsDistrictncity = 'lib/models/districtncity.dart';
   static const String modelsNotification = 'lib/models/notification.dart';
-  static const String modelsPost = 'lib/data/models/post.dart';
   static const String modelsRoleclaims = 'lib/models/roleclaims.dart';
   static const String modelsRoles = 'lib/models/roles.dart';
   static const String modelsTraveledplace = 'lib/models/traveledplace.dart';
@@ -171,12 +169,7 @@ class Assets {
   static const String navigationSymbolUturn = 'assets/navigation_symbol/uturn.svg';
   static const String navigationSymbolUturnLeft = 'assets/navigation_symbol/uturn_left.svg';
   static const String navigationSymbolUturnRight = 'assets/navigation_symbol/uturn_right.svg';
-  static const String placesEvent = 'lib/models/places/event.dart';
   static const String placesMarkplace = 'lib/models/places/markplace.dart';
-  static const String placesPlace = 'lib/models/places/place.dart';
-  static const String placesPlaceactivity = 'lib/models/places/placeactivity.dart';
-  static const String placesPlaceactivitymedia = 'lib/models/places/placeactivitymedia.dart';
-  static const String placesPlaceactivitytranslation = 'lib/models/places/placeactivitytranslation.dart';
   static const String placesPlacefeedbackhelpful = 'lib/models/places/placefeedbackhelpful.dart';
   static const String placesPlacefeedbackmedia = 'lib/models/places/placefeedbackmedia.dart';
   static const String placesPlacemedia = 'lib/models/places/placemedia.dart';
@@ -191,14 +184,9 @@ class Assets {
   static const String plannedPageTabBarsFearutedSchedulePage = 'lib/page/planned_page/planned_page_tab_bars/fearuted_schedule_page.dart';
   static const String plannedPageTabBarsHistoryTabBar = 'lib/page/planned_page/planned_page_tab_bars/history_tab_bar.dart';
   static const String plannedPageTabBarsScheduleTabBar = 'lib/page/planned_page/planned_page_tab_bars/schedule_tab_bar.dart';
-  static const String postsPost = 'lib/models/posts/post.dart';
-  static const String postsPostcomment = 'lib/models/posts/postcomment.dart';
-  static const String postsPostcommentlike = 'lib/models/posts/postcommentlike.dart';
-  static const String postsPostlike = 'lib/models/posts/postlike.dart';
   static const String postsPostmedia = 'lib/models/posts/postmedia.dart';
   static const String providersWeatherProvider = 'lib/weather/providers/weather_provider.dart';
   static const String routesAppRouter = 'lib/routes/appRouter.dart';
-  static const String scheduleDestination = 'lib/models/schedule/destination.dart';
   static const String scheduleSchedule = 'lib/models/schedule/schedule.dart';
   static const String scheduleSchedulelike = 'lib/models/schedule/schedulelike.dart';
   static const String screensHomeScreen = 'lib/features/home/screens/homeScreen.dart';
@@ -225,7 +213,6 @@ class Assets {
   static const String viewProfileAuthProvider = 'lib/page/account/view_profile/auth_provider.dart';
   static const String viewProfileComment = 'lib/page/account/view_profile/comment.dart';
   static const String viewProfileCreatePost = 'lib/page/account/view_profile/create_post.dart';
-  static const String viewProfilePostProvider = 'lib/page/account/view_profile/post_provider.dart';
   static const String viewProfilePostTabBar = 'lib/page/account/view_profile/post_tab_bar.dart';
   static const String viewProfileReviewedTabBar = 'lib/page/account/view_profile/reviewed_tab_bar.dart';
   static const String viewProfileViewProfile = 'lib/page/account/view_profile/view_profile.dart';

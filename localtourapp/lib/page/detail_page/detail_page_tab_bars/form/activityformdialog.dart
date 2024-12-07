@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:localtourapp/models/media_model.dart';
 import '../../../../base/scrollable_text_container.dart';
 import '../../../../full_media/full_activity_media_viewer.dart';
-import '../../../../models/places/placeactivitymedia.dart';
 
 class ActivityFormDialog extends StatelessWidget {
   final int placeActivityId;
