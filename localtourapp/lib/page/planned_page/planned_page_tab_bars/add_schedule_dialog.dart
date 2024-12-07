@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:localtourapp/models/schedule/schedule_model.dart';
 
 import '../../../config/appConfig.dart';
 import '../../../config/secure_storage_helper.dart';
@@ -9,7 +10,7 @@ import '../../../config/secure_storage_helper.dart';
 
 typedef ScheduleCallback = void Function(String scheduleName, DateTime? startDate, DateTime? endDate);
 
-void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate) {
+void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate, List<ScheduleModel> listSchedule) {
   final TextEditingController scheduleNameController = TextEditingController();
   DateTime? startDate;
   DateTime? endDate;
@@ -175,23 +176,84 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate) {
                               setState(() {
                                 scheduleNameError = null;
                               });
-                              onCreate(
-                                scheduleNameController.text,
-                                startDate,
-                                endDate,
-                              );
-                              Navigator.of(context).pop();
-                              // Show success notification
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    languageCode == 'vi'
-                                        ? 'Lịch trình mới đã được tạo'
-                                        : 'New schedule has been created',
+
+                              if(listSchedule.any((element) => element.scheduleName.contains(scheduleNameController.text),)){
+                                    showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: Text(
+                                          languageCode != 'vi'
+                                              ? "Warning"
+                                              : "Cảnh báo",
+                                        ),
+                                        content: Text(
+                                          languageCode != 'vi'
+                                              ? "This Schedule Name already exits, do you want to continue?"
+                                              : "Tên lịch trình nãy đã tồn tại, bạn có muốn tiếp tục không?",
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context)
+                                                  .pop();
+                                            },
+                                            child: Text(languageCode !=
+                                                'vi'
+                                                ? "Cancel"
+                                                : "Hủy"),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              onCreate(
+                                                scheduleNameController.text,
+                                                startDate,
+                                                endDate,
+                                              );
+                                              Navigator.of(context).pop();
+                                              Navigator.of(context).pop();
+                                              // Show success notification
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    languageCode == 'vi'
+                                                        ? 'Lịch trình mới đã được tạo'
+                                                        : 'New schedule has been created',
+                                                  ),
+                                                  duration: const Duration(seconds: 2),
+                                                ),
+                                              );
+                                            },
+                                            child: Text(
+                                                languageCode !=
+                                                    'vi'
+                                                    ? "Add"
+                                                    : "Thêm"),
+                                          ),
+                                        ],
+                                      );
+                                    });
+                              }else{
+                                onCreate(
+                                  scheduleNameController.text,
+                                  startDate,
+                                  endDate,
+                                );
+                                Navigator.of(context).pop();
+                                // Show success notification
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      languageCode == 'vi'
+                                          ? 'Lịch trình mới đã được tạo'
+                                          : 'New schedule has been created',
+                                    ),
+                                    duration: const Duration(seconds: 2),
                                   ),
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
+                                );
+                              }
+
+
                             }
                           },
                           style: ElevatedButton.styleFrom(

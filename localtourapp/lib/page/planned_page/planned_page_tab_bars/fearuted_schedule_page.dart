@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/constants/getListApi.dart';
 import 'package:localtourapp/models/schedule/schedule_model.dart';
 import 'package:localtourapp/services/schedule_service.dart';
@@ -28,12 +30,22 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
   bool isLoading = true;
   bool _showBackToTopButton = false;
   int? _expandedIndex;
-
+  String userId = '';
   @override
   void initState() {
     _scrollController.addListener(_scrollListener);
     super.initState();
+
+    getUserId();
     _initializeSchedules();
+  }
+
+  Future<void> getUserId() async{
+    var user = await SecureStorageHelper().readValue(AppConfig.userId);
+
+    if(user != null){
+      userId = user;
+    }
   }
 
   Future<void> _initializeSchedules() async {
@@ -252,7 +264,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              if (schedule.userId == widget.userId)
+                              if (schedule.userId == userId)
                                 Text(
                                   widget.language != 'vi'
                                       ? "This is your schedule"
