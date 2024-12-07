@@ -1,10 +1,10 @@
 // lib/weather/widgets/weather_widget.dart
 
 import 'package:flutter/material.dart';
-import 'package:localtourapp/weather/weather_detail_page.dart';
 
 import '../models/weather_model.dart';
 import '../services/weather_service.dart';
+import '../weather_detail_page.dart';
 
 class WeatherWidget extends StatefulWidget {
   final double latitude;

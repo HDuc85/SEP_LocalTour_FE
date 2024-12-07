@@ -21,6 +21,7 @@ import 'package:localtourapp/page/my_map/features/routing_screen/routing_screen.
 import 'package:localtourapp/page/my_map/features/routing_screen/search_address.dart';
 import 'package:localtourapp/page/my_map/features/search_screen/search_screen.dart';
 import 'package:localtourapp/page/my_map/navigation_page.dart';
+import 'package:localtourapp/page/weather/weather_page.dart';
 import 'package:localtourapp/page/wheel/wheel_page.dart';
 import 'package:localtourapp/generated/l10n.dart';
 import 'package:localtourapp/page/account/account_page.dart';
@@ -30,7 +31,6 @@ import 'package:localtourapp/page/home_screen/home_screen.dart';
 import 'package:localtourapp/page/planned_page/planned_page.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/history_tab_bar.dart';
 import 'package:localtourapp/services/location_Service.dart';
-import 'package:localtourapp/weather/weather_page.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'firebase_options.dart';
