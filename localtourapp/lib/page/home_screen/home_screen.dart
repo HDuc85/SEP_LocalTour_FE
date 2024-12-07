@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -55,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<CardInfo> nearestLocation = [];
   List<CardInfo> featuredPlaces = [];
   Map<int, bool> tagToggleStates = {};
+  Timer? _autoScrollTimer;
 
   Map<int, List<PlaceCardModel>> listPlaceTags = {};
   Position? _currentPosition;
@@ -76,6 +78,13 @@ class _HomeScreenState extends State<HomeScreen> {
         _banners = banners;
         _isBannerLoading = false;
       });
+
+      if (_banners.isNotEmpty) {
+        // Start auto-scroll after the first frame is rendered
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _startAutoScroll();
+        });
+      }
     } catch (e) {
       if (kDebugMode) {
         print("Failed to fetch banners: $e");
@@ -86,15 +95,32 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _startAutoScroll() {
+    _autoScrollTimer?.cancel();
+
+    if (_banners.length > 1) {
+      _autoScrollTimer = Timer.periodic(const Duration(seconds: 2), (Timer timer) {
+        if (_banners.isNotEmpty && _pageController.hasClients) {
+          int nextPage = (_currentBannerIndex + 1) % _banners.length;
+          _pageController.animateToPage(
+            nextPage,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
+  }
+
   @override
   void dispose() {
-    // Remove listener and dispose the controller to prevent memory leaks
+    _autoScrollTimer?.cancel();
+    _pageController.dispose();
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     super.dispose();
   }
 
-  // Update current banner index
   void _onBannerPageChanged(int index) {
     setState(() {
       _currentBannerIndex = index;
@@ -340,32 +366,35 @@ class _HomeScreenState extends State<HomeScreen> {
           child: PageView.builder(
             controller: _pageController,
             itemCount: _banners.length,
-            onPageChanged: _onBannerPageChanged,
+            onPageChanged: (index) {
+              _onBannerPageChanged(index);
+              _startAutoScroll(); // Restart auto-scroll when user manually changes page
+            },
             itemBuilder: (context, index) {
               return ClipRect(
                 child: Image.network(
                   _banners[index].bannerUrls,
-                  fit: BoxFit.cover, // Ensure the banner fills the space
-                  height: 100, // Constrain height explicitly
-                  width: double.infinity, // Expand to full width
+                  fit: BoxFit.cover,
+                  height: 100,
+                  width: MediaQuery.of(context).size.width,
                 ),
               );
             },
           ),
         ),
         Positioned(
-          bottom: 1,
-          left: MediaQuery.of(context).size.width / 2 - (_banners.length * 10 / 2),
+          bottom: 10, // Adjusted for better visibility
+          left: MediaQuery.of(context).size.width / 2 - (_banners.length * 6.0),
           child: DotsIndicator(
             dotsCount: _banners.length,
-            position: _currentBannerIndex, // Convert int to double
+            position: _currentBannerIndex, // Ensure this is an int as per version 3.0.0
             decorator: DotsDecorator(
               size: const Size.square(4.0), // Inactive dot size
-              activeSize: const Size(4.0, 4.0), // Active dot size
+              activeSize: const Size(4.0, 6.0), // Active dot size
               activeShape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5.0),
+                borderRadius: BorderRadius.circular(3.0),
               ),
-              activeColor: Colors.black, // Active dot color
+              activeColor: const Color(0xFF008080), // Active dot color (teal)
               color: Colors.grey, // Inactive dot color
             ),
           ),

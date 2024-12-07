@@ -2,6 +2,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -20,7 +21,6 @@ import 'package:localtourapp/page/my_map/features/routing_screen/bloc/routing_bl
 import 'package:localtourapp/page/my_map/features/routing_screen/routing_screen.dart';
 import 'package:localtourapp/page/my_map/features/routing_screen/search_address.dart';
 import 'package:localtourapp/page/my_map/features/search_screen/search_screen.dart';
-import 'package:localtourapp/page/my_map/navigation_page.dart';
 import 'package:localtourapp/page/weather/weather_page.dart';
 import 'package:localtourapp/page/wheel/wheel_page.dart';
 import 'package:localtourapp/generated/l10n.dart';
@@ -48,7 +48,9 @@ void main() async {
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
-    print('Error loading .env file: $e');
+    if (kDebugMode) {
+      print('Error loading .env file: $e');
+    }
   }
 
   // Initialize Firebase
@@ -62,7 +64,9 @@ void main() async {
     final appDocumentDirectory = await getApplicationDocumentsDirectory();
     Hive.init(appDocumentDirectory.path);
   } catch (e) {
-    print('Error initializing Hive: $e');
+    if (kDebugMode) {
+      print('Error initializing Hive: $e');
+    }
   }
 
   // Initialize other services
@@ -78,7 +82,7 @@ void main() async {
         BlocProvider(create: (context) => MapBloc()),
         BlocProvider(create: (context) => RoutingBloc()),
       ],
-      child: MyApp(),
+      child: const MyApp(),
     ),
   );
 }
@@ -98,7 +102,7 @@ class _MyAppState extends State<MyApp> {
   late final List<Widget> screens;
   late final List<String?> titles;
   final ScrollController scrollController = ScrollController();
-  String CurrentUserId = '';
+  String currentUserId = '';
   bool _showWelcomePage = true;
   // Removed: bool _showLoginPage = false; // No longer needed
 
@@ -110,9 +114,9 @@ class _MyAppState extends State<MyApp> {
       const MapScreen(),
       const BookmarkPage(),
       PlannedPage(
-        userId: CurrentUserId,
+        userId: currentUserId,
       ),
-      AccountPage(
+      const AccountPage(
         userId: '',
       ),
     ];
@@ -148,11 +152,11 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> CurrentUserFetch() async {
+  Future<void> currentUserFetch() async {
     var userId = await SecureStorageHelper().readValue(AppConfig.userId);
     if (userId != null && userId != '') {
       setState(() {
-        CurrentUserId = userId;
+        currentUserId = userId;
         currentIndex = 0;
       });
     }
@@ -206,7 +210,7 @@ class _MyAppState extends State<MyApp> {
             builder: (context) => LoginPage(
               onLogin: () {
                 // Handle successful login
-                CurrentUserFetch();
+                currentUserFetch();
               },
               onRegister: () {
                 // Handle registration navigation
@@ -233,7 +237,7 @@ class _MyAppState extends State<MyApp> {
         if (settings.name == '/account') {
           return MaterialPageRoute(
             builder: (context) => AccountPage(
-              userId: CurrentUserId,
+              userId: currentUserId,
             ),
           );
         }
@@ -292,7 +296,7 @@ class _MyAppState extends State<MyApp> {
           case '/planned_page':
             return MaterialPageRoute(
               builder: (context) => PlannedPage(
-                userId: CurrentUserId,
+                userId: currentUserId,
               ),
             );
           case '/map':
