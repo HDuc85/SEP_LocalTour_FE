@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:localtourapp/services/location_Service.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+import '../config/appConfig.dart';
+import '../config/secure_storage_helper.dart';
 
 class NowLocation extends StatefulWidget {
   const NowLocation({super.key});
@@ -10,8 +14,10 @@ class NowLocation extends StatefulWidget {
 }
 
 class _NowLocationState extends State<NowLocation> {
+  final LocationService _locationService = LocationService();
   String _location = 'Fetching location...';
   Position? _currentPosition;
+  String _languageCode = 'vi';
 
   @override
   void initState() {
@@ -37,6 +43,13 @@ class _NowLocationState extends State<NowLocation> {
     } else {
       // Handle other status cases if needed
     }
+  }
+
+  Future<void> fetchLanguageCode() async {
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+    setState(() {
+      _languageCode = languageCode!;
+    });
   }
 
   Future<void> _getCurrentPosition() async {
@@ -79,7 +92,7 @@ class _NowLocationState extends State<NowLocation> {
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Location not available")),
+            SnackBar(content: Text(_languageCode == 'vi' ? "Vị trí không có sẵn": "Location not available")),
           );
         }
       },
@@ -90,9 +103,9 @@ class _NowLocationState extends State<NowLocation> {
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(_languageCode == 'vi' ? "Vị trí của bạn":
                 'Your location',
-                style: TextStyle(color: Colors.black, fontSize: 11),
+                style: const TextStyle(color: Colors.black, fontSize: 11),
               ),
               Row(
                 children: [

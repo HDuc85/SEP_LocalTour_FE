@@ -1,6 +1,8 @@
 import 'dart:math';
-import 'package:localtourvn/models/schedule/schedule.dart';
-import 'package:localtourvn/models/users/users.dart';
+
+import 'package:localtourapp/models/schedule/schedule.dart';
+
+import '../users/users.dart';
 
 class ScheduleLike {
   final int id;

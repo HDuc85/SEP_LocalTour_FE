@@ -1,31 +1,38 @@
+import 'dart:math';
+
 class PostMedia {
   int id;
-  int postId;
-  String type;
+  int? postId; // Maps to id in Post
+  String type; // e.g., 'image', 'video'
   String url;
-  DateTime createDate;
+  DateTime createdAt;
 
   PostMedia({
     required this.id,
-    required this.postId,
+    this.postId,
     required this.type,
     required this.url,
-    required this.createDate,
+    required this.createdAt,
   });
 
-  factory PostMedia.fromJson(Map<String, dynamic> json) => PostMedia(
-    id: json['Id'] as int,
-    postId: json['PostId'] as int,
-    type: json['Type'] as String,
-    url: json['Url'] as String,
-    createDate: DateTime.parse(json['CreateDate'] as String),
-  );
+  factory PostMedia.fromJson(Map<String, dynamic> json) {
+    return PostMedia(
+      id: json['id'],
+      postId: json['postId'],
+      type: json['type'],
+      url: json['url'],
+      createdAt: DateTime.parse(json['createdDate']),
+    );
+  }
 
-  Map<String, dynamic> toJson() => {
-    'Id': id,
-    'PostId': postId,
-    'Type': type,
-    'Url': url,
-    'CreateDate': createDate.toIso8601String(),
-  };
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'postId': postId,
+      'type': type,
+      'url': url,
+      'createdDate': createdAt.toIso8601String(),
+    };
+  }
 }
+

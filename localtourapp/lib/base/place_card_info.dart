@@ -1,8 +1,4 @@
 import 'dart:math';
-import '../models/places/place.dart';
-import '../models/places/placetag.dart';
-import '../models/places/placetranslation.dart';
-import 'place_score_manager.dart';
 
 class CardInfo {
   final int placeCardInfoId;
@@ -35,79 +31,10 @@ double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
   return 12742 * asin(sqrt(a));
 }
 
-CardInfo mapPlaceToCardInfo(Place place, double latitude, double longitude) {
-  double distance =
-      calculateDistance(latitude, longitude, place.latitude, place.longitude);
 
-  PlaceTranslation translation = translations.firstWhere(
-    (trans) => trans.placeId == place.placeId,
-    orElse: () => PlaceTranslation(
-      placeTranslationId: 0,
-      placeId: place.placeId,
-      languageCode: 'en',
-      placeName: 'Unknown Place',
-      address: '',
-    ),
-  );
 
-  double score = PlaceScoreManager.instance.getScore(place.placeId);
 
-  List<int> associatedTagIds = placeTags
-      .where((pt) => pt.placeId == place.placeId)
-      .map((pt) => pt.tagId)
-      .toList();
 
-  return CardInfo(
-    placeCardInfoId: place.placeId,
-    placeName: translation.placeName,
-    wardId: place.wardId,
-    photoDisplay: place.photoDisplay,
-    iconUrl: 'assets/icons/logo.png',
-    score: score,
-    distance: distance,
-    tagIds: associatedTagIds,
-  );
-}
-
-List<CardInfo> getNearestPlaces(
-    List<Place> places, double latitude, double longitude) {
-  List<CardInfo> nearest = places
-      .map((place) => mapPlaceToCardInfo(place, latitude, longitude))
-      .toList();
-
-  nearest.sort((a, b) => a.distance.compareTo(b.distance));
-
-  return nearest.take(5).toList();
-}
-
-List<CardInfo> getFeaturedPlaces(
-    List<Place> places, double latitude, double longitude) {
-  List<CardInfo> featured = places
-      .map((place) => mapPlaceToCardInfo(place, latitude, longitude))
-      .toList();
-
-  featured.sort((a, b) => b.score.compareTo(a.score));
-
-  return featured.take(5).toList();
-}
-
-List<CardInfo> getNearestPlacesForTag(
-    int tagId, List<Place> places, double latitude, double longitude) {
-  List<Place> placesForTag = places.where((place) {
-    return placeTags.any((placeTag) =>
-        placeTag.tagId == tagId && placeTag.placeId == place.placeId);
-  }).toList();
-  return getNearestPlaces(placesForTag, latitude, longitude);
-}
-
-List<CardInfo> getFeaturedPlacesForTag(
-    int tagId, List<Place> places, double latitude, double longitude) {
-  List<Place> placesForTag = places.where((place) {
-    return placeTags.any((placeTag) =>
-        placeTag.tagId == tagId && placeTag.placeId == place.placeId);
-  }).toList();
-  return getFeaturedPlaces(placesForTag, latitude, longitude);
-}
 
 // Class representing a Tag Section (nearest and featured places for a tag)
 class TagSection {
