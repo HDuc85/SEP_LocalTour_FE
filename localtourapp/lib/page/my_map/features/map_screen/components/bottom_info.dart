@@ -9,7 +9,6 @@ import 'package:localtourapp/models/event/event_model.dart';
 import 'package:localtourapp/models/places/place_detail_model.dart';
 import '../../../../../full_media/full_place_media_viewer.dart';
 import '../../../../../models/media_model.dart';
-import '../../../../detail_page/detail_page_tab_bars/form/schedule_form.dart';
 import '../../../components/map_action_button.dart';
 import '../../../constants/colors.dart';
 import '../../../constants/route.dart';
@@ -27,7 +26,6 @@ class BottomSheetInfo extends StatelessWidget {
   final String? language;
   final PlaceDetailModel? detailModel;
   final ValueChanged<bool> onDraggableChanged;
-  final String userId;
   const BottomSheetInfo({
     super.key,
     required this.onClose,
@@ -37,7 +35,6 @@ class BottomSheetInfo extends StatelessWidget {
     this.language,
     this.detailModel,
     required this.onDraggableChanged,
-    required this.userId,
   });
   final VoidCallback onClose;
 
@@ -201,35 +198,7 @@ class BottomSheetInfo extends StatelessWidget {
                       Text(language! == 'vi' ? 'Chỉ đường' : 'Directions')
                     ],
                   )),
-                  const SizedBox(width: 5),
-              ElevatedButton(
-                style:  ButtonStyle(
-                    backgroundColor: const WidgetStatePropertyAll(Colors.white),
-                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                        RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18.0),
-                            side: const BorderSide(color: vietmapColor)))),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return Dialog(
-                          child: ScheduleForm(
-                            userId: userId, // Pass the required userId
-                            placeId: detailModel!.id,
-                            language: language!,// Pass the required placeId
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  child: Row(
-                  children: [
-                  const Icon(Icons.add, color: Colors.green),
-                  const SizedBox(width: 1),
-                  Text(language! == 'vi' ? 'Thêm lịch trình' : 'Add to Schedule')
-                  ],
-                  )),
+              const SizedBox(width: 10),
             ],
           ),
           SizedBox(

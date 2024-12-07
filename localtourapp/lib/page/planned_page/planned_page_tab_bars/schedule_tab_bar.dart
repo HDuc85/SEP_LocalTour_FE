@@ -750,8 +750,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   fetchData();
                 }
               },
-              activeColor: Color(0xFF008080),
-              checkColor: Colors.white,
             ),
           );
 
@@ -1330,7 +1328,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             showAddScheduleDialog(
                 context, (scheduleName, startDate, endDate) {
               _addSchedule(scheduleName, startDate, endDate);
-            }, _listScheduleInit);
+            });
           },
           icon: const Icon(Icons.add, color: Colors.white),
           label: Text(_languageCode == 'vi' ?'Thêm lịch trình':
@@ -1348,7 +1346,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
         ElevatedButton.icon(
           onPressed: _showSuggestScheduleBottomSheet,
           icon: const Icon(Icons.add, color: Colors.white),
-          label: Text(_languageCode == 'vi' ?'Gợi ý':
+          label: Text(_languageCode == 'vi' ?'Đề nghị':
             "Suggestion",
             style: const TextStyle(fontSize: 14, color: Colors.white),
           ),

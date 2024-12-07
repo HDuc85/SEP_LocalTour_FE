@@ -80,8 +80,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
                   setState(() {
                     _selectedScheduleId = null;
                   });
-                },
-                _listSchedule);
+                });
               },
               icon: const Icon(Icons.add),
               label:  Text(widget.language != 'vi' ? "Add Schedule" : 'Thêm lịch trình'),

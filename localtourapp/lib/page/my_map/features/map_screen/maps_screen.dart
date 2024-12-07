@@ -63,7 +63,6 @@ class _MapScreenState extends State<MapScreen> {
   bool onSearch = false;
   String? language;
   final FocusNode _searchFocus = FocusNode();
-  String userId = '';
   @override
   void initState() {
     super.initState();
@@ -80,13 +79,6 @@ class _MapScreenState extends State<MapScreen> {
 
   Future<void> getLanguage() async {
     language = await SecureStorageHelper().readValue(AppConfig.language);
-    var user = await SecureStorageHelper().readValue(AppConfig.userId);
-    if(user != null){
-      setState(() {
-        userId = user;
-      });
-    }
-
   }
 
   Future<void> getCurrentPosition() async {
@@ -158,7 +150,6 @@ class _MapScreenState extends State<MapScreen> {
                       eventModel: selectEvent,
                       language: language,
                       detailModel: detailSelect,
-                      userId: userId,
                       onClose: () {
                         _panelController.hide();
                       },
