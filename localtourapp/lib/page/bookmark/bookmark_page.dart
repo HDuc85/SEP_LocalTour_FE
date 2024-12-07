@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/markPlace/markPlaceModel.dart';
-import 'package:localtourapp/services/location_Service.dart';
 import 'package:localtourapp/services/mark_place_service.dart';
-import 'package:provider/provider.dart';
-import 'package:collection/collection.dart'; // Import for firstWhereOrNull
+import 'package:collection/collection.dart';
 import '../../base/back_to_top_button.dart';
 import '../../base/weather_icon_button.dart';
 import '../detail_page/detail_page.dart';
@@ -184,7 +181,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                             Row(
                               children: [
                                  Text(_language != 'vi' ? 'Visited' : 'Đã đi',
-                                    style: TextStyle(fontSize: 12.0)),
+                                    style: const TextStyle(fontSize: 12.0)),
                                 Checkbox(
                                   value: place.isVisited,
                                   onChanged: (bool? value) {

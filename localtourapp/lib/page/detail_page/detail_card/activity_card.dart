@@ -149,7 +149,7 @@ class ActivityCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      SizedBox(height: 10,),
+                      const SizedBox(height: 10,),
                       Center(
                         child: Text(
                           '${(price * (1 - discount!)).toStringAsFixed(0)} $priceType',

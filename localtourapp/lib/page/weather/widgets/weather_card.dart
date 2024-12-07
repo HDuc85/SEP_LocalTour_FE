@@ -104,27 +104,27 @@ class _WeatherCardState extends State<WeatherCard> {
               children: [
                 Text(
                   _languageCode == 'vi' ? 'Thời tiết hiện tại' : 'Current Weather',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                Spacer(),
+                const Spacer(),
                 Text(
                   getWeatherIcon(widget.currentWeather.weathercode),
-                  style: TextStyle(fontSize: 24),
+                  style: const TextStyle(fontSize: 24),
                 ),
               ],
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             // Temperature
             Text(
               '${widget.currentWeather.temperature.toStringAsFixed(1)}°C',
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
             ),
             // Weather Description
             Text(
               getWeatherDescription(widget.currentWeather.weathercode),
-              style: TextStyle(fontSize: 16),
+              style: const TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             // Additional Weather Details
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -132,8 +132,8 @@ class _WeatherCardState extends State<WeatherCard> {
                 // Wind Speed
                 Column(
                   children: [
-                    Icon(Icons.wind_power),
-                    SizedBox(height: 5),
+                    const Icon(Icons.wind_power),
+                    const SizedBox(height: 5),
                     Text('${widget.currentWeather.windspeed} m/s'),
                     Text(_languageCode == 'vi' ? 'Tốc độ gió' : 'Wind Speed'),
                   ],
@@ -144,13 +144,13 @@ class _WeatherCardState extends State<WeatherCard> {
                     Icon(
                       widget.currentWeather.isDay ? Icons.wb_sunny : Icons.nights_stay,
                     ),
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     Text(widget.currentWeather.isDay ? (_languageCode == 'vi' ? 'Ban ngày' : 'Day') : (_languageCode == 'vi' ? 'Ban đêm' : 'Night')),
                   ],
                 ),
               ],
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             // Weather Advice
             Text(
               _languageCode == 'vi'
@@ -160,7 +160,7 @@ class _WeatherCardState extends State<WeatherCard> {
                   : (widget.currentWeather.weathercode >= 61 && widget.currentWeather.weathercode <= 65
                   ? "Take an umbrella!"
                   : "Enjoy your day!"),
-              style: TextStyle(fontSize: 16, color: Colors.blueGrey),
+              style: const TextStyle(fontSize: 16, color: Colors.blueGrey),
             ),
           ],
         ),

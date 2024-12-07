@@ -24,11 +24,11 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
   @override
   void initState() {
     super.initState();
-    Getdata();
+    getdata();
 
   }
 
-  Future<void> Getdata()async{
+  Future<void> getdata()async{
     var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     var fetchListTag = await _tagService.getAllTag(1,30);
     var fetchUserTag = await _tagService.getUserTag();
@@ -51,7 +51,7 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
       appBar: AppBar(
         title: Text(_languageCode == 'vi' ? "Sở thích của ${widget.userprofile.userName}": "Preferences's ${widget.userprofile.userName}"),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () async {
             List<int> listTagSelected = listUserTag.map((e) => e.id,).toList();
             var result = await _tagService.addTagsPreferencs(listTagSelected);
@@ -63,10 +63,10 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
         ),
       ),
       body:
-      isLoading?  Center(child: CircularProgressIndicator()) :Column(
+      isLoading?  const Center(child: CircularProgressIndicator()) :Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Text(_languageCode == 'vi' ? "Chọn sở thích của bạn":"Choose your preferences" , style: TextStyle(fontSize: 18)),
+          Text(_languageCode == 'vi' ? "Chọn sở thích của bạn":"Choose your preferences" , style: const TextStyle(fontSize: 18)),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Wrap(

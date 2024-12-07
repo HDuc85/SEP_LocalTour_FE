@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -34,7 +35,7 @@ class AuthService {
       return true;
     }
     if(response.statusCode == 401){
-      throw new Exception(jsonDecode(response.body));
+      throw Exception(jsonDecode(response.body));
     }
     return false;
   }
@@ -55,9 +56,11 @@ class AuthService {
        await _auth.signInWithCredential(credential);
       }
     } catch (e) {
-      print('Google Sign-In Error: $e');
+      if (kDebugMode) {
+        print('Google Sign-In Error: $e');
+      }
     }
-    return null;
+    return;
   }
 
   Future<VerifyFirebaseResponse> sendUserIdToBackend() async {
@@ -146,7 +149,7 @@ class AuthService {
     }
   }
 
-  Future<String> AddEmailGoogle() async {
+  Future<String> addEmailGoogle() async {
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn();
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
@@ -175,12 +178,14 @@ class AuthService {
 
       }
     } catch (e) {
-      print('Google Sign-In Error: $e');
+      if (kDebugMode) {
+        print('Google Sign-In Error: $e');
+      }
     }
     return '';
   }
 
-  Future<String> AddPhoneNumber() async {
+  Future<String> addPhoneNumber() async {
     try {
 
         User? user = FirebaseAuth.instance.currentUser;
@@ -197,7 +202,9 @@ class AuthService {
 
 
     } catch (e) {
-      print('Google Sign-In Error: $e');
+      if (kDebugMode) {
+        print('Google Sign-In Error: $e');
+      }
     }
     return '';
   }

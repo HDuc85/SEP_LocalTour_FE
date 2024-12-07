@@ -61,7 +61,7 @@ class _FilterCellState extends State<FilterCell> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            SizedBox(),
+            const SizedBox(),
             Text(
               widget.label,
               textAlign: TextAlign.center,
@@ -78,7 +78,7 @@ class _FilterCellState extends State<FilterCell> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            SizedBox()
+            const SizedBox()
           ],
         ),
       ),
@@ -98,7 +98,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
   Color sortOrderColor = Colors.green;
   bool filterWithMedia = false;
 
-  int MediaCount = 0;
+  int mediaCount = 0;
   final ScrollController _scrollController = ScrollController();
   bool _showBackToTopButton = false;
   bool isLoading = true;
@@ -122,9 +122,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
     var (fetchFeedback,total) = await _reviewService.getFeedback(widget.placeId);
     var myUserId = await SecureStorageHelper().readValue(AppConfig.userId);
 
-    if(myUserId == null){
-      myUserId ='';
-    }
+    myUserId ??= '';
 
     var count = 0;
     for(var item in fetchFeedback){
@@ -138,7 +136,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
       totalReview = total;
       currentUserId = myUserId!;
       isLoading = false;
-      MediaCount = count;
+      mediaCount = count;
     });
 
   }
@@ -298,7 +296,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
   Widget build(BuildContext context) {
 
     return isLoading
-        ? Center(child: CircularProgressIndicator())
+        ? const Center(child: CircularProgressIndicator())
         :Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -325,7 +323,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
               Flexible(
                 child: FilterCell(
                   label: _languageCode == 'vi' ? "Tất cả":"All",
-                  count: "(${totalReview})",
+                  count: "($totalReview)",
                   isSelected: !filterWithMedia && sortByStars == "All" && sortOrder == "Latest",
                   onTap: () {
                     setState(() {
@@ -339,7 +337,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
               Flexible(
                 child: FilterCell(
                   label: _languageCode == 'vi' ? "Với hình/video":"With photo/video",
-                  count: "($MediaCount)",
+                  count: "($mediaCount)",
                   isSelected: filterWithMedia,
                   onTap: () {
                     setState(() {

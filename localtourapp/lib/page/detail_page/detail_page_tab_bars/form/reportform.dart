@@ -84,7 +84,7 @@ class _ReportFormState extends State<ReportForm> {
 
 
       widget.onSubmit?.call(message);
-      _showSnackbar('$message');
+      _showSnackbar(message);
       Navigator.pop(context); // Close the form after reporting
     }
   }
@@ -96,7 +96,7 @@ class _ReportFormState extends State<ReportForm> {
       children: [
         Text(
          widget.language != 'vi' ? "Report" : 'Báo cáo',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 5),
         Text(
@@ -112,7 +112,7 @@ class _ReportFormState extends State<ReportForm> {
             maxLength: 500,
             maxLines: 4,
             decoration:  InputDecoration(
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
               hintText: widget.language != 'vi' ?"Describe the issue..." : "Mô tả vấn đề ...",
             ),
             validator: (value) {
@@ -137,7 +137,7 @@ class _ReportFormState extends State<ReportForm> {
           ),
           child:  Text(
             widget.language != 'vi' ?"Report" : 'Báo cáo',
-            style: TextStyle(
+            style: const TextStyle(
                 fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white
             ),
           ),

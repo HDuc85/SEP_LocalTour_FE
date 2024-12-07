@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
@@ -9,8 +10,6 @@ import 'package:localtourapp/page/my_map/domain/entities/vietmap_model.dart';
 import 'package:vietmap_flutter_gl/vietmap_flutter_gl.dart';
 import '../../../base/custom_button.dart';
 import '../../../base/weather_icon_button.dart';
-import '../../my_map/constants/route.dart';
-import '../../my_map/features/routing_screen/models/routing_params_model.dart';
 import '../../my_map/features/routing_screen/routing_screen.dart';
 import '../../search_page/search_page.dart';
 import '../../weather/widgets/weather_widget.dart';
@@ -81,10 +80,14 @@ class _DetailTabbarState extends State<DetailTabbar> {
     if (url != null && url.isNotEmpty) {
       final Uri uri = Uri.parse(url);
       if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-        print('Could not open the URL: $url');
+        if (kDebugMode) {
+          print('Could not open the URL: $url');
+        }
       }
     } else {
-      print('Invalid URL');
+      if (kDebugMode) {
+        print('Invalid URL');
+      }
     }
   }
 
@@ -289,7 +292,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
     final double longitude = widget.placeDetail.longitude;
     final String mapStyleUrl = AppConfig.vietMapStyleUrl;
 
-    return Container(
+    return SizedBox(
         width: MediaQuery.of(context).size.width,
         height: 200,
         child: Stack(
@@ -315,7 +318,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
         markers: [
           Marker(
             latLng: LatLng(latitude, longitude), // Tọa độ marker
-            child: Icon(Icons.location_on, color: Colors.red, size: 40),
+            child: const Icon(Icons.location_on, color: Colors.red, size: 40),
           ),
         ],
       ),
@@ -357,7 +360,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
       children: [
         const Icon(Icons.link, color: Colors.black38),
         const SizedBox(width: 8),
-        Container(
+        SizedBox(
           width: 250,
           child: GestureDetector(
             onTap: () {

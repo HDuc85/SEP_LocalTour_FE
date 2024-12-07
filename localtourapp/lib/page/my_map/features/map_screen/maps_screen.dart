@@ -22,7 +22,6 @@ import '../../../search_page/search_page.dart';
 import '../../constants/colors.dart';
 import '../../di/app_context.dart';
 import 'components/bottom_info.dart';
-import 'components/select_map_tiles_modal.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -271,7 +270,7 @@ class _MapScreenState extends State<MapScreen> {
                                           _markers.clear();
                                           FocusScope.of(context).unfocus();
                                           if(!isSearchMode){
-                                            _ScheduleSelect();
+                                            _scheduleSelect();
                                           }
                                         });
                                       },
@@ -338,7 +337,7 @@ class _MapScreenState extends State<MapScreen> {
                                                 setState(() {
                                                   _selectedSchedule = value;
                                                 });
-                                                _ScheduleSelect();
+                                                _scheduleSelect();
                                               },
                                             ),
                                     ),
@@ -591,7 +590,7 @@ class _MapScreenState extends State<MapScreen> {
       setState(() {
         placeTranslations = fetchedSearchList;
       });
-      final fetchedEventList = await _eventService.GetEventInPlace(
+      final fetchedEventList = await _eventService.getEventInPlace(
           null,
           _currentPosition.latitude,
           _currentPosition.longitude,
@@ -606,7 +605,7 @@ class _MapScreenState extends State<MapScreen> {
 
   Widget _scheduleRoute() {
     if (_selectedSchedule == null) {
-      return SizedBox();
+      return const SizedBox();
     }
 
     String idPart = _selectedSchedule!.split('_')[1];
@@ -617,7 +616,7 @@ class _MapScreenState extends State<MapScreen> {
     );
     int index = -1;
     return Container(
-      padding: EdgeInsets.only(top: 0),
+      padding: const EdgeInsets.only(top: 0),
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(11),
           gradient: LinearGradient(
@@ -643,7 +642,7 @@ class _MapScreenState extends State<MapScreen> {
                     IconButton(
                       onPressed: () {
                         _controller?.animateCamera(CameraUpdate.newLatLngZoom(
-                          LatLng(entry!.latitude, entry.longitude),
+                          LatLng(entry.latitude, entry.longitude),
                           16,
                         ));
                         _selectDestination(entry);
@@ -652,19 +651,19 @@ class _MapScreenState extends State<MapScreen> {
                           ? Icons.circle_rounded
                           : Icons.circle_outlined),
                     ),
-                    Container(
+                    SizedBox(
                       width: 45,
                       child: Text(
                         entry.placeName,
                         maxLines: 2,
-                        style: TextStyle(fontSize: 9),
+                        style: const TextStyle(fontSize: 9),
                       ),
                     )
                   ],
                 ),
                 if (index < selectSchedule.destinations.length - 1)
                   Container(
-                      padding: EdgeInsets.only(top: 10),
+                      padding: const EdgeInsets.only(top: 10),
                       child: const Icon(Icons.arrow_forward, size: 25)),
               ],
             );
@@ -685,15 +684,7 @@ class _MapScreenState extends State<MapScreen> {
         .then((value) => _panelController.animatePanelToPosition(1.0));
   }
 
-  _showSelectMapTilesModal() {
-    showModalBottomSheet(
-        isScrollControlled: true,
-        context: context,
-        backgroundColor: Colors.transparent,
-        builder: (_) => const SelectMapTilesModal());
-  }
-
-  void _ScheduleSelect() {
+  void _scheduleSelect() {
     if (_selectedSchedule!.isEmpty) {
       return;
     }
@@ -712,7 +703,7 @@ class _MapScreenState extends State<MapScreen> {
     double minLng = selectSchedule.destinations.first.longitude;
     double maxLng = selectSchedule.destinations.first.longitude;
 
-    for (var position in selectSchedule!.destinations) {
+    for (var position in selectSchedule.destinations) {
       if (position.latitude < minLat) minLat = position.latitude;
       if (position.latitude > maxLat) maxLat = position.latitude;
       if (position.longitude < minLng) minLng = position.longitude;
@@ -728,7 +719,7 @@ class _MapScreenState extends State<MapScreen> {
               onTap: () {
                 _controller?.animateCamera(
                   CameraUpdate.newLatLngZoom(
-                    LatLng(item!.latitude, item.longitude),
+                    LatLng(item.latitude, item.longitude),
                     16,
                   ),
                 );
@@ -783,7 +774,7 @@ class _MapScreenState extends State<MapScreen> {
   void _selectDestination(DestinationModel item) {
     double distance = calculateDistance(item.latitude, item.longitude,
         _currentPosition.latitude, _currentPosition.longitude);
-    var temp = new PlaceCardModel(
+    var temp = PlaceCardModel(
         placeId: item.placeId,
         placeName: item.placeName,
         latitude: item.latitude,

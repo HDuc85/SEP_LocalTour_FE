@@ -168,7 +168,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
 
 
   Future<void> addPhoneNumber() async{
-    String result = await _authService.AddPhoneNumber();
+    String result = await _authService.addPhoneNumber();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
           content:
@@ -472,7 +472,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       ) :
                       GestureDetector(
                         onTap: () async {
-                         String result = await _authService.AddEmailGoogle();
+                         String result = await _authService.addEmailGoogle();
                          ScaffoldMessenger.of(context).showSnackBar(
                            SnackBar(
                                content:

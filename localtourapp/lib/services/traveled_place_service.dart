@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import '../config/appConfig.dart';
 import '../config/secure_storage_helper.dart';
 import '../models/places/traveled_place_model.dart';
@@ -14,7 +16,6 @@ class TraveledPlaceService {
       final languageCode = await storage.readValue(AppConfig.language);
       final response = await apiService.makeRequest(
           'TraveledPlace/getAll?languageCode=$languageCode', 'GET');
-      print('API Response: ${response.body}');
       if (response.statusCode == 200) {
         final List<dynamic> responseData = json.decode(response.body);
         return responseData
@@ -25,7 +26,9 @@ class TraveledPlaceService {
             'Failed to fetch traveled places: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error in TraveledPlaceService.getAllTraveledPlace: $e');
+      if (kDebugMode) {
+        print('Error in TraveledPlaceService.getAllTraveledPlace: $e');
+      }
       return [];
     }
   }
@@ -39,12 +42,16 @@ class TraveledPlaceService {
       if (response.statusCode == 200) {
         return true;
       } else {
-        print(
+        if (kDebugMode) {
+          print(
             'Failed to add traveled place. Status code: ${response.statusCode}');
+        }
         return false;
       }
     } catch (e) {
-      print('Error in TraveledPlaceService.addTraveledPlace: $e');
+      if (kDebugMode) {
+        print('Error in TraveledPlaceService.addTraveledPlace: $e');
+      }
       return false;
     }
   }

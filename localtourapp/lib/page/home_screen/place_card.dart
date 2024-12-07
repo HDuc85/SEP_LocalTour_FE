@@ -1,6 +1,4 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../base/place_score_manager.dart';
 import '../../models/event/event_model.dart';
 
 class PlaceCard extends StatefulWidget {
@@ -62,7 +60,7 @@ class _PlaceCardState extends State<PlaceCard> {
       }),
     );
   }
-  Widget InHour() {
+  Widget inHour() {
     DateTime now = DateTime.now();
 
       Duration differenceStart = now.difference(widget.eventModel!.startDate);
@@ -80,7 +78,7 @@ class _PlaceCardState extends State<PlaceCard> {
           type = days == 1 ? 'Hour' : 'Hours';
         }
 
-        return Text('Available in ${days} ${type}', style: TextStyle(color: Colors.green, fontSize: 11),);
+        return Text('Available in $days $type', style: const TextStyle(color: Colors.green, fontSize: 11),);
       }
       if(differenceStart.inHours < 0){
 
@@ -95,13 +93,13 @@ class _PlaceCardState extends State<PlaceCard> {
           type = days == 1 ? 'Hour' : 'Hours';
         }
 
-        return Text('Coming in ${days} ${type} ', style: TextStyle(color: Colors.red ,fontSize: 11),);
+        return Text('Coming in $days $type ', style: const TextStyle(color: Colors.red ,fontSize: 11),);
       }
-    return SizedBox();
+    return const SizedBox();
   }
   @override
   Widget build(BuildContext context) {
-    String formattedDistance = '${widget.distance.toStringAsFixed(1)}';
+    String formattedDistance = widget.distance.toStringAsFixed(1);
     if (formattedDistance.endsWith('.0')) {
       formattedDistance = formattedDistance.substring(0, formattedDistance.length - 2);
     }
@@ -177,7 +175,7 @@ class _PlaceCardState extends State<PlaceCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
+                        SizedBox(
                           height: 40,
 
                           child: Row(
@@ -211,7 +209,7 @@ class _PlaceCardState extends State<PlaceCard> {
                             widget.isEvent == null ?
                              buildStarRating(
                                 widget.score / 2) :
-                            Container(
+                            SizedBox(
                               width: 90,
                               child: Text(
                                 widget.eventModel!.placeName,
@@ -232,7 +230,7 @@ class _PlaceCardState extends State<PlaceCard> {
                           '(${widget.countFeedback.toString()})', // Display totalReviewers as text
                           style:
                               const TextStyle(fontSize: 12), // Optional styling
-                        ) : InHour(),
+                        ) : inHour(),
                         const SizedBox(height: 4),
                         Row(
                           children: [

@@ -19,11 +19,6 @@ class _PlaceDescriptionState extends State<PlaceDescription> {
   void initState() {
     super.initState();
     descriptionText = widget.placeDescription;
-    //_fetchDescription(); // Fetch the description when the widget is built
-  }
-
-  void _fetchDescription() {
-    // Find the place translation using placeId
   }
 
   @override
@@ -32,7 +27,7 @@ class _PlaceDescriptionState extends State<PlaceDescription> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final int maxDescriptionLength =
+    const int maxDescriptionLength =
         170; // Limit for showing the "More description" link
     final bool isLongDescription =
         descriptionText!.length > maxDescriptionLength;
@@ -50,7 +45,7 @@ class _PlaceDescriptionState extends State<PlaceDescription> {
         children: [
            Text(
             widget.language != 'vi'? 'Description': 'Mô tả',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 8),
           Text(

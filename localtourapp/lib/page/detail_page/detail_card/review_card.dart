@@ -106,7 +106,7 @@ class _ReviewCardState extends State<ReviewCard> {
   Widget build(BuildContext context) {
 
 
-    return isLoading ? Center(child: CircularProgressIndicator()) :
+    return isLoading ? const Center(child: CircularProgressIndicator()) :
 
       Container(
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),

@@ -49,7 +49,7 @@ class _SearchBarIconState extends State<SearchBarIcon> {
       setState(() {
         placeTranslations = fetchedSearchList;
       });
-      final fetchedEventList = await _eventService.GetEventInPlace(null, _currentPosition!.latitude, _currentPosition!.longitude, SortOrder.asc,SortBy.distance,searchText);
+      final fetchedEventList = await _eventService.getEventInPlace(null, _currentPosition!.latitude, _currentPosition!.longitude, SortOrder.asc,SortBy.distance,searchText);
       setState(() {
         events = fetchedEventList;
       });

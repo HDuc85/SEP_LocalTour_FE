@@ -35,7 +35,7 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
   final MediaService _mediaService = MediaService();
   final ImagePicker _picker = ImagePicker();
   PlaceCardModel? selectedPlace;
-  String? selectedSchedule;
+  int? selectedScheduleId;
   final TextEditingController titleController = TextEditingController();
   final TextEditingController contentController = TextEditingController();
   List<PostMedia> mediaList = [];
@@ -85,11 +85,7 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
         }
 
         if (postmodel.scheduleId != null) {
-          selectedSchedule = result
-              .firstWhere(
-                (element) => element.id == postmodel.scheduleId!,
-          )
-              .scheduleName;
+          selectedScheduleId = postmodel.scheduleId;
         }
 
         for (var item in postmodel.media) {
@@ -268,14 +264,7 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
       }
     }
 
-    int? scheduleId;
-    if (selectedSchedule != null) {
-      scheduleId = myListSchedule
-          .firstWhere(
-            (element) => element.scheduleName == selectedSchedule!,
-      )
-          .id;
-    }
+    int? scheduleId = selectedScheduleId;
 
     String resultMessage;
 
@@ -375,23 +364,22 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
 
                   // Schedule dropdown
                   const Text('Choose Schedule:'),
-                  DropdownButtonFormField<String>(
+                  DropdownButtonFormField<int>(
                     isExpanded: true,
                     decoration: const InputDecoration(
-                      contentPadding:
-                      EdgeInsets.symmetric(horizontal: 10),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 10),
                       border: OutlineInputBorder(),
                     ),
-                    value: selectedSchedule,
+                    value: selectedScheduleId,
                     items: myListSchedule
-                        .map((schedule) => DropdownMenuItem(
-                      value: schedule.scheduleName,
+                        .map((schedule) => DropdownMenuItem<int>(
+                      value: schedule.id, // Use unique schedule ID
                       child: Text(schedule.scheduleName),
                     ))
                         .toList(),
                     onChanged: (value) {
                       setState(() {
-                        selectedSchedule = value;
+                        selectedScheduleId = value;
                       });
                     },
                   ),

@@ -56,10 +56,10 @@ class _SearchPageState extends State<SearchPage> {
   String  _isComing = '';
 
   int size = 10;
-  TextEditingController _controllerSearchInput = TextEditingController();
-  FocusNode _focusSearchInput = FocusNode();
+  final TextEditingController _controllerSearchInput = TextEditingController();
+  final FocusNode _focusSearchInput = FocusNode();
 
-  ScrollController _listPlaceScrollController = ScrollController();
+  final ScrollController _listPlaceScrollController = ScrollController();
   bool _isLoading = false;
   @override
   void initState() {
@@ -82,7 +82,7 @@ class _SearchPageState extends State<SearchPage> {
     if(position != null){
       _currentPosition = position;
     }else{
-      _currentPosition = new Position(longitude: long, latitude: lat, timestamp: DateTime.timestamp(), accuracy: 1, altitude: 1, altitudeAccuracy: 1, heading: 1, headingAccuracy: 1, speed: 1, speedAccuracy: 1);
+      _currentPosition = Position(longitude: long, latitude: lat, timestamp: DateTime.timestamp(), accuracy: 1, altitude: 1, altitudeAccuracy: 1, heading: 1, headingAccuracy: 1, speed: 1, speedAccuracy: 1);
     }
 
     if(widget.isEvent != null){
@@ -110,10 +110,10 @@ class _SearchPageState extends State<SearchPage> {
      List<EventModel> fetchedListEvents = [];
      if(widget.textSearch != "" && widget.textSearch != null ){
        searchText = widget.textSearch!;
-       fetchedListEvents = await _eventService.GetEventInPlace(null,lat, long,SortOrder.asc,SortBy.distance,searchText);
+       fetchedListEvents = await _eventService.getEventInPlace(null,lat, long,SortOrder.asc,SortBy.distance,searchText);
      }
      else{
-       fetchedListEvents = await _eventService.GetEventInPlace(null,lat, long,SortOrder.asc,SortBy.distance);
+       fetchedListEvents = await _eventService.getEventInPlace(null,lat, long,SortOrder.asc,SortBy.distance);
      }
      setState(() {
        listEvent = fetchedListEvents;
@@ -141,7 +141,7 @@ class _SearchPageState extends State<SearchPage> {
         listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
       }
     }else{
-      final fetchedListEvent = await _eventService.GetEventInPlace(null, _currentPosition!.latitude, _currentPosition!.longitude, SortOrder.asc,SortBy.distance,);
+      final fetchedListEvent = await _eventService.getEventInPlace(null, _currentPosition!.latitude, _currentPosition!.longitude, SortOrder.asc,SortBy.distance,);
       setState(() {
         listEvent = fetchedListEvent;
         listEventInit = fetchedListEvent;
@@ -170,7 +170,7 @@ class _SearchPageState extends State<SearchPage> {
         listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
       }
     }else{
-      final fetchedListEvent = await _eventService.GetEventInPlace(null, _currentPosition!.latitude, _currentPosition!.longitude, SortOrder.asc,SortBy.distance,searchText);
+      final fetchedListEvent = await _eventService.getEventInPlace(null, _currentPosition!.latitude, _currentPosition!.longitude, SortOrder.asc,SortBy.distance,searchText);
       setState(() {
         listEvent = fetchedListEvent;
         listEventInit = fetchedListEvent;
@@ -263,7 +263,6 @@ class _SearchPageState extends State<SearchPage> {
                listEvent.sort((a,b) => b.distance.compareTo(a.distance));
              }else{
                _isComing = '';
-               DateTime now = DateTime.now();
                if(isComing == 'isComing'){
                 var list = listEventInit;
 
@@ -409,7 +408,7 @@ class _SearchPageState extends State<SearchPage> {
                   },),
                   suffixIcon: searchText != ""
                       ? IconButton(
-                    icon: Icon(Icons.clear, color: Colors.black),
+                    icon: const Icon(Icons.clear, color: Colors.black),
                     onPressed: () {
                       setState(() {
                         _controllerSearchInput.clear();
@@ -421,7 +420,7 @@ class _SearchPageState extends State<SearchPage> {
                       :
                   (isPlace ?
                   IconButton(
-                    icon: Icon(Icons.place_rounded, color: Colors.blue, ),
+                    icon: const Icon(Icons.place_rounded, color: Colors.blue, ),
                     onPressed: () {
                     setState(() {
                       isPlace = false;
@@ -429,7 +428,7 @@ class _SearchPageState extends State<SearchPage> {
                     });
                   },)
                   :IconButton(
-                      icon: Icon(Icons.event_available_rounded, color: Colors.greenAccent),
+                      icon: const Icon(Icons.event_available_rounded, color: Colors.greenAccent),
                   onPressed: () {
                     setState(() {
                       isPlace = true;
@@ -557,7 +556,7 @@ class _SearchPageState extends State<SearchPage> {
                             ),
                             itemBuilder: (context, index) {
                               final cardInfo =  listPlaces[index % listPlaces.length];
-                              return (index == listPlaces.length)? SizedBox(height: 42,) :
+                              return (index == listPlaces.length)? const SizedBox(height: 42,) :
                                 GestureDetector(
                                 onTap: () {
                                   _navigateToDetail(cardInfo.placeId);
@@ -584,7 +583,7 @@ class _SearchPageState extends State<SearchPage> {
                         itemBuilder: (context, index) {
                           final eventInfo =  listEvent[index % listEvent.length];
                           return (index == listEvent.length)?
-                          SizedBox(height: 42,) : GestureDetector(
+                          const SizedBox(height: 42,) : GestureDetector(
                             onTap: () {
                               //_navigateToDetail(cardInfo.placeId);
                             },

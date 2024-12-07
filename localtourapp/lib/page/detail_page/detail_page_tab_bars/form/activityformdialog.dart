@@ -59,7 +59,7 @@ class ActivityFormDialog extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(12),
               ),
-              child: Container(
+              child: SizedBox(
                 width: double.infinity,
                 child: _buildMediaGrid(context, filteredMedia),
               ),

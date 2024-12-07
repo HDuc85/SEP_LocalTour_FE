@@ -74,13 +74,13 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
     }else{
       userId = '';
     }
-    if(listDate.length > 0){
+    if(listDate.isNotEmpty){
       setState(() {
         _listFeedbacks = listDate;
         userHasReviewed = userId!.contains(listDate.first.userId);
       });
     }
-    if(listDate.length == 0){
+    if(listDate.isEmpty){
       setState(() {
         _listFeedbacks = listDate;
         userHasReviewed =false;
@@ -165,9 +165,9 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
 
   @override
   Widget build(BuildContext context) {
-    bool check = (userHasReviewed && _listFeedbacks.length >0);
+    bool check = (userHasReviewed && _listFeedbacks.isNotEmpty);
     return isLoading
-        ? Center(child: CircularProgressIndicator())
+        ? const Center(child: CircularProgressIndicator())
         :Stack(
       children: [
         SingleChildScrollView(
@@ -200,7 +200,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                           ),
                         );
                       },
-                      child:  Text(_language != 'vi'?"See all":"Xem tất cả", style: TextStyle(color: Colors.blue),),
+                      child:  Text(_language != 'vi'?"See all":"Xem tất cả", style: const TextStyle(color: Colors.blue),),
                     ),
                   ],
                 ),
@@ -260,7 +260,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                         ),
                         child:  Text(
                           _language != 'vi'?'Review !!!':'Đánh giá!!!',
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                       ),
@@ -276,7 +276,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                   onDelete: () {
                     deleteUserReview(_userFeedback.id,widget.placeId);
                   },
-                  onReport:() {} ): SizedBox(),
+                  onReport:() {} ): const SizedBox(),
               ReviewCardList(
                 placeId: widget.placeId,
                 feedbacks: userHasReviewed?_listFeedbacks.sublist(1):_listFeedbacks,

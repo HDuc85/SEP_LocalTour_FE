@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:localtourapp/config/secure_storage_helper.dart';
 import '../config/appConfig.dart';
@@ -114,7 +114,9 @@ class ApiService {
         return (isSuccess, firstTime);
       }
     } catch (e) {
-      print("Error sending token to backend: $e");
+      if (kDebugMode) {
+        print("Error sending token to backend: $e");
+      }
       return (isSuccess, firstTime);
     }
   }

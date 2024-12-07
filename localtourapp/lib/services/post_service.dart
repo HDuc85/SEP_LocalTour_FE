@@ -69,15 +69,15 @@ Future<List<PostModel>> getListPost(
 
       request.headers.addAll(headers);
 
-      request..fields['Title'] = title;
-      request..fields['Content'] = content;
+      request.fields['Title'] = title;
+      request.fields['Content'] = content;
       if(placeId != null){
-        request..fields['PlaceId'] = placeId.toString();
+        request.fields['PlaceId'] = placeId.toString();
       }
       if(scheduleId != null){
-        request..fields['ScheduleId'] = scheduleId.toString();
+        request.fields['ScheduleId'] = scheduleId.toString();
       }
-      request..fields['Public'] = public != null?public.toString(): 'false';
+      request.fields['Public'] = public != null?public.toString(): 'false';
 
       // Add files to the request
       for (var file in mediaFiles) {
@@ -93,7 +93,6 @@ Future<List<PostModel>> getListPost(
 
       // Handle the response
       if (response.statusCode == 201) {
-        var responseBody = await response.stream.bytesToString();
         return 'Success';
       } else {
         var responseBody = await response.stream.bytesToString();
@@ -123,15 +122,15 @@ Future<List<PostModel>> getListPost(
 
       request.headers.addAll(headers);
 
-      request..fields['Title'] = title;
-      request..fields['Content'] = content;
+      request.fields['Title'] = title;
+      request.fields['Content'] = content;
       if(placeId != null){
-        request..fields['PlaceId'] = placeId.toString();
+        request.fields['PlaceId'] = placeId.toString();
       }
       if(scheduleId != null){
-        request..fields['ScheduleId'] = scheduleId.toString();
+        request.fields['ScheduleId'] = scheduleId.toString();
       }
-      request..fields['Public'] = public != null?public.toString(): 'false';
+      request.fields['Public'] = public != null?public.toString(): 'false';
 
       // Add files to the request
       for (var file in mediaFiles) {
@@ -147,7 +146,6 @@ Future<List<PostModel>> getListPost(
 
       // Handle the response
       if (response.statusCode == 200) {
-        var responseBody = await response.stream.bytesToString();
         return 'Success';
       } else {
         var responseBody = await response.stream.bytesToString();
@@ -176,16 +174,15 @@ Future<List<PostModel>> getListPost(
 
       request.headers.addAll(headers);
 
-      request..fields['Title'] = title;
-      request..fields['Content'] = Content;
-      request..fields['Public'] = public.toString();
+      request.fields['Title'] = title;
+      request.fields['Content'] = Content;
+      request.fields['Public'] = public.toString();
 
       // Send the request
       var response = await request.send();
 
       // Handle the response
       if (response.statusCode == 200) {
-        var responseBody = await response.stream.bytesToString();
         return 'Success';
       } else {
         var responseBody = await response.stream.bytesToString();
@@ -202,7 +199,7 @@ Future<List<PostModel>> getListPost(
     {
       "postId": postId,
       "parentId": parentId,
-      "content": "$Content"
+      "content": Content
     };
     
     final response = await _apiService.makeRequest("PostComment/createPostComment", "POST",body);

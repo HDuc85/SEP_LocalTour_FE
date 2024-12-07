@@ -75,9 +75,9 @@ class ReviewService {
 
       request.headers.addAll(headers);
 
-      request..fields['placeid'] = placeId.toString();
-      request..fields['Rating'] = rating.toString();
-      request..fields['Content'] = content;
+      request.fields['placeid'] = placeId.toString();
+      request.fields['Rating'] = rating.toString();
+      request.fields['Content'] = content;
 
     // Add files to the request
       for (var file in listMedia) {
@@ -93,7 +93,6 @@ class ReviewService {
 
       // Handle the response
       if (response.statusCode == 200) {
-        var responseBody = await response.stream.bytesToString();
         return 'Success';
       } else {
         var responseBody = await response.stream.bytesToString();
@@ -138,7 +137,6 @@ class ReviewService {
 
       // Handle the response
       if (response.statusCode == 200) {
-        var responseBody = await response.stream.bytesToString();
         return 'Success';
       } else {
         var responseBody = await response.stream.bytesToString();

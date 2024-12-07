@@ -705,7 +705,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   });
                   setState(()  async {
                     try{
-                      await _userService.sendUserDataRequest(  new  UpdateUserRequest(username: username));
+                      await _userService.sendUserDataRequest(UpdateUserRequest(username: username));
                       listTag = await _tagService.getAllTag();
                       var listUserTag = await _tagService.getUserTag();
                       if(listUserTag.length > 0){

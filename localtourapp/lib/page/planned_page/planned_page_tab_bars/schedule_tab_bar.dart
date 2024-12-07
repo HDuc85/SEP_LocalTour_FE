@@ -219,7 +219,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     }
   }
 
-  void _EditPlaceName(ScheduleModel schedule, String scheduleName) async {
+  void _editPlaceName(ScheduleModel schedule, String scheduleName) async {
     var result = await _scheduleService.UpdateSchedule(
         schedule.id,
         scheduleName != '' ? scheduleName : schedule.scheduleName,
@@ -288,8 +288,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   void _swapDestination(DestinationModel old, DestinationModel newD) async {
-    var result = await _scheduleService.UpdateDestination(old.id, old.scheduleId, newD.placeId, newD.startDate, newD.endDate, newD.detail, newD.isArrived);
-    var resuldt = await _scheduleService.UpdateDestination(newD.id, newD.scheduleId, old.placeId, old.startDate, old.endDate, old.detail, old.isArrived);
     fetchData();
   }
 
@@ -346,7 +344,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           child: DragTarget<DestinationModel>(
             builder: (context, candidateData, rejectedData) {
               return Container(
-                margin: EdgeInsets.only(bottom: 20),
+                margin: const EdgeInsets.only(bottom: 20),
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
@@ -355,23 +353,24 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                       : Colors.grey.shade400,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.delete,
                   color: Colors.white,
                   size: 40,
                 ),
               );
             },
-            onWillAccept: (data) {
+            onWillAcceptWithDetails: (DragTargetDetails<DestinationModel> details) {
               return true;
             },
-            onAccept: (data) {
+            onAcceptWithDetails: (DragTargetDetails<DestinationModel> details) async {
+              final draggedDestination = details.data;
               setState(() {
-                _showDeleteDestinationConfirmationDialog(data);
+                _showDeleteDestinationConfirmationDialog(draggedDestination);
               });
             },
           ),
-        ) : SizedBox()),
+        ) : const SizedBox()),
         Positioned(
           bottom: 12,
           left: 110,
@@ -517,7 +516,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                           focusNode: _nameFocusNode,
                           onFieldSubmitted: (newValue) {
                             _saveScheduleName();
-                            _EditPlaceName(schedule, newValue);
+                            _editPlaceName(schedule, newValue);
                           },
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),
@@ -550,7 +549,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                 setState(() {
                                   schedule.startDate = newDate;
                                 });
-                                _EditPlaceName(schedule, _nameController.text);
+                                _editPlaceName(schedule, _nameController.text);
                               },
                               clearable: true,
                               onClear: () {
@@ -570,7 +569,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                 setState(() {
                                   schedule.endDate = newDate;
                                 });
-                                _EditPlaceName(schedule, _nameController.text);
+                                _editPlaceName(schedule, _nameController.text);
                               },
                               clearable: true,
                               onClear: () {
@@ -766,7 +765,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   ),
                   backgroundColor: Colors.grey,
                 ),
-                Container(
+                SizedBox(
                   width: 65,
                   child: Text(
                     destination.placeName,
@@ -813,11 +812,13 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               builder: (BuildContext context, List<dynamic> accepted, List<dynamic> rejected) {
                 return imageWidget;
               },
-              onWillAccept: (data) {
-                // Optional: Add visual feedback here
+              onWillAcceptWithDetails: (DragTargetDetails<DestinationModel> details) {
+                // You can use details to get more information if needed
                 return true;
               },
-              onAccept: (draggedDestination) async {
+              onAcceptWithDetails: (DragTargetDetails<DestinationModel> details) async {
+                final draggedDestination = details.data;
+
                 setState(() {
                   // Swap positions of draggedDestination and destination
                   int oldIndex = destinations.indexOf(draggedDestination);
@@ -834,7 +835,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             ),
           );
 
-          itemWidget = draggable;
+              itemWidget = draggable;
         } else {
           Widget addButtonContent = GestureDetector(
             onTap: () async {
@@ -876,7 +877,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             itemWidget = Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: 30,),
+                const SizedBox(height: 30,),
                 addButtonContent,
               ],
             );
@@ -911,7 +912,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
 
       // Build the row widget
       Widget rowWidget = Container(
-        padding: !isEvenRow ? EdgeInsets.only(left: 0) : EdgeInsets.only(right: 0),
+        padding: !isEvenRow ? const EdgeInsets.only(left: 0) : const EdgeInsets.only(right: 0),
         child: Row(
           mainAxisAlignment: isEvenRow ? MainAxisAlignment.end : MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -1014,7 +1015,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   );
                 },
                 child: Text(
-                  destination.placeName ?? 'Unknown Place',
+                  destination.placeName,
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -1059,7 +1060,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               ),
               const SizedBox(height: 10),
               _buildDetailSection(
-                destination.detail ?? "No details available",
+                destination.detail,
                     (newDetail) async {
                   if (isCurrentUser) {
                     setState(() {
@@ -1290,7 +1291,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                       : labelText,
                   hintStyle: const TextStyle(fontSize: 12),
                   border: const OutlineInputBorder(),
-                  suffixIcon:(initialDate == null) ? Icon(Icons.calendar_today) : null,
+                  suffixIcon:(initialDate == null) ? const Icon(Icons.calendar_today) : null,
                 ),
               ),
             ),

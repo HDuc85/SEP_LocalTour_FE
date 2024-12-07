@@ -127,10 +127,8 @@ class _PostTabBarState extends State<PostTabBar> {
       int postId, bool ispublic, String tilte, String content) async {
     var result =
         await _postService.UpdatePostStatus(postId, !ispublic, tilte, content);
-    if (result != null) {
-      fetchDate();
+    fetchDate();
     }
-  }
 
   Future<void> _deletePost(int postId) async {
     var result = await _postService.DeletePost(postId);
@@ -416,7 +414,7 @@ class _PostTabBarState extends State<PostTabBar> {
                   hintStyle: const TextStyle(fontSize: 12),
                   border: const OutlineInputBorder(),
                   suffixIcon:
-                      (initialDate == null) ? Icon(Icons.calendar_today) : null,
+                      (initialDate == null) ? const Icon(Icons.calendar_today) : null,
                 ),
               ),
             ),
@@ -592,7 +590,7 @@ class _PostTabBarState extends State<PostTabBar> {
                     fontSize: 16,
                   ),
                 )
-              : SizedBox(),
+              : const SizedBox(),
           post.placeId != null
               ? Row(
                   children: [
@@ -617,28 +615,27 @@ class _PostTabBarState extends State<PostTabBar> {
               : const SizedBox(),
           const SizedBox(height: 10),
           // Post Content with See More/See Less
-          if (post.content != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  post.content.length > 1000 && !isExpandedLocal
-                      ? '${post.content.substring(0, 1000)}...'
-                      : post.content,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                post.content.length > 1000 && !isExpandedLocal
+                    ? '${post.content.substring(0, 1000)}...'
+                    : post.content,
+              ),
+              if (post.content.length > 1000)
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      expandedPosts[post.id] = !isExpandedLocal;
+                    });
+                  },
+                  child: Text(_languageCode == 'vi'
+                      ? (isExpandedLocal ? 'Ít hơn' : 'Nhiều hơn')
+                      : (isExpandedLocal ? 'See less' : 'See more...')),
                 ),
-                if (post.content.length > 1000)
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        expandedPosts[post.id] = !isExpandedLocal;
-                      });
-                    },
-                    child: Text(_languageCode == 'vi'
-                        ? (isExpandedLocal ? 'Ít hơn' : 'Nhiều hơn')
-                        : (isExpandedLocal ? 'See less' : 'See more...')),
-                  ),
-              ],
-            ),
+            ],
+          ),
 
           const SizedBox(height: 10),
 

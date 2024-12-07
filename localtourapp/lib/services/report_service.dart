@@ -1,9 +1,7 @@
-import 'dart:convert';
-
 import 'package:localtourapp/services/api_service.dart';
 
 class ReportService {
-  ApiService _apiService = ApiService();
+  final ApiService _apiService = ApiService();
 
   Future<String> reportPlace(int placeId, String message) async {
     var body = {

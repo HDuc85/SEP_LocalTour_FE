@@ -3,12 +3,26 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../config/appConfig.dart';
+import '../../../config/secure_storage_helper.dart';
+// Import other necessary packages and files, such as SecureStorageHelper and AppConfig
+
 typedef ScheduleCallback = void Function(String scheduleName, DateTime? startDate, DateTime? endDate);
 
 void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate) {
-  final TextEditingController _scheduleNameController = TextEditingController();
-  DateTime? _startDate;
-  DateTime? _endDate;
+  final TextEditingController scheduleNameController = TextEditingController();
+  DateTime? startDate;
+  DateTime? endDate;
+  String languageCode = 'vi'; // Default language code
+  String? scheduleNameError;
+
+  // Function to fetch language code
+  Future<void> fetchLanguageCode(StateSetter setState) async {
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+    setState(() {
+      languageCode = languageCode ?? 'vi'; // Fallback to 'vi' if null
+    });
+  }
 
   showDialog(
     context: context,
@@ -24,22 +38,37 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate) {
             onTap: () {},
             child: StatefulBuilder(
               builder: (context, setState) {
+                // Fetch the language code when the dialog is built
+                fetchLanguageCode(setState);
+
                 return SingleChildScrollView(
                   child: AlertDialog(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    title: const Center(child: Text("CREATE NEW SCHEDULE")),
+                    title: Center(
+                      child: Text(
+                        languageCode == 'vi' ? "TẠO LỊCH TRÌNH MỚI" : "CREATE NEW SCHEDULE",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
                     content: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text("Schedule's name:"),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            languageCode == 'vi' ? "Tên lịch trình:" : "Schedule's name:",
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         TextField(
-                          controller: _scheduleNameController,
-                          decoration: const InputDecoration(
-                            hintText: 'Enter schedule name',
-                            border: OutlineInputBorder(),
+                          controller: scheduleNameController,
+                          decoration: InputDecoration(
+                            hintText: languageCode == 'vi' ? 'Nhập tên lịch trình' : 'Enter schedule name',
+                            border: const OutlineInputBorder(),
+                            errorText: scheduleNameError,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -47,41 +76,43 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate) {
                           onTap: () async {
                             DateTime? picked = await showDatePicker(
                               context: context,
-                              initialDate: DateTime.now(),
+                              initialDate: startDate ?? DateTime.now(),
                               firstDate: DateTime(2000),
                               lastDate: DateTime(2100),
                             );
                             if (picked != null) {
                               setState(() {
-                                _startDate = picked;
+                                startDate = picked;
                               });
                             }
                           },
                           child: Stack(
-                            children: [AbsorbPointer(
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  prefixIcon: const Icon(Icons.calendar_today),
-                                  hintText: _startDate != null
-                                      ? DateFormat('yyyy-MM-dd').format(_startDate!)
-                                      : 'Start Date',
-                                  border: const OutlineInputBorder(),
+                            children: [
+                              AbsorbPointer(
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    prefixIcon: const Icon(Icons.calendar_today),
+                                    hintText: startDate != null
+                                        ? DateFormat('yyyy-MM-dd').format(startDate!)
+                                        : (languageCode == 'vi' ? 'Ngày bắt đầu' : 'Start Date'),
+                                    border: const OutlineInputBorder(),
+                                  ),
                                 ),
                               ),
-                            ),
-                              _startDate != null
-                              ?
-                              Positioned(
-                                top: 5,
-                                right: 0,
-                                child: IconButton(
-                                icon:  Icon(Icons.clear),
-                                onPressed: () {
-                                setState(() {
-                                _startDate = null;
-                                });}),
-                              ): SizedBox(),
-                            ]
+                              if (startDate != null)
+                                Positioned(
+                                  top: 5,
+                                  right: 0,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      setState(() {
+                                        startDate = null;
+                                      });
+                                    },
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -89,13 +120,13 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate) {
                           onTap: () async {
                             DateTime? picked = await showDatePicker(
                               context: context,
-                              initialDate: DateTime.now(),
+                              initialDate: endDate ?? DateTime.now(),
                               firstDate: DateTime(2000),
                               lastDate: DateTime(2100),
                             );
                             if (picked != null) {
                               setState(() {
-                                _endDate = picked;
+                                endDate = picked;
                               });
                             }
                           },
@@ -103,37 +134,28 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate) {
                             children: [
                               AbsorbPointer(
                                 child: TextFormField(
-                                    decoration: InputDecoration(
-                                      prefixIcon: const Icon(Icons.calendar_today),
-                                      hintText: _endDate != null
-                                          ? DateFormat('yyyy-MM-dd').format(_endDate!)
-                                          : 'End Date',
-                                      border: const OutlineInputBorder(),
-                                      suffixIcon: _endDate != null
-                                          ? IconButton(
-                                        icon: const Icon(Icons.clear),
-                                        onPressed: () {
-                                          setState(() {
-                                            _endDate = null;
-                                          });
-                                        },
-                                      )
-                                          : null,
-                                    ),
+                                  decoration: InputDecoration(
+                                    prefixIcon: const Icon(Icons.calendar_today),
+                                    hintText: endDate != null
+                                        ? DateFormat('yyyy-MM-dd').format(endDate!)
+                                        : (languageCode == 'vi' ? 'Ngày kết thúc' : 'End Date'),
+                                    border: const OutlineInputBorder(),
                                   ),
+                                ),
                               ),
-                              _endDate != null
-                                  ?
-                              Positioned(
-                                top: 5,
-                                right: 0,
-                                child: IconButton(
-                                    icon:  Icon(Icons.clear),
+                              if (endDate != null)
+                                Positioned(
+                                  top: 5,
+                                  right: 0,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.clear),
                                     onPressed: () {
                                       setState(() {
-                                        _endDate = null;
-                                      });}),
-                              ): SizedBox()
+                                        endDate = null;
+                                      });
+                                    },
+                                  ),
+                                ),
                             ],
                           ),
                         ),
@@ -143,25 +165,31 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate) {
                       Center(
                         child: ElevatedButton(
                           onPressed: () {
-                            if (_scheduleNameController.text.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Please input schedule name'),
-                                  duration: Duration(seconds: 2),
-                                ),
-                              );
+                            if (scheduleNameController.text.isEmpty) {
+                              setState(() {
+                                scheduleNameError = languageCode == 'vi'
+                                    ? 'Vui lòng nhập tên lịch trình'
+                                    : 'Please input schedule name';
+                              });
                             } else {
+                              setState(() {
+                                scheduleNameError = null;
+                              });
                               onCreate(
-                                _scheduleNameController.text,
-                                _startDate,
-                                _endDate,
+                                scheduleNameController.text,
+                                startDate,
+                                endDate,
                               );
                               Navigator.of(context).pop();
                               // Show success notification
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('New schedule has been created'),
-                                  duration: Duration(seconds: 2),
+                                SnackBar(
+                                  content: Text(
+                                    languageCode == 'vi'
+                                        ? 'Lịch trình mới đã được tạo'
+                                        : 'New schedule has been created',
+                                  ),
+                                  duration: const Duration(seconds: 2),
                                 ),
                               );
                             }
@@ -177,12 +205,13 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate) {
                               vertical: 10,
                             ),
                           ),
-                          child: const Text(
-                            "Create",
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
+                          child: Text(
+                            languageCode == 'vi' ? "Tạo" : "Create",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),

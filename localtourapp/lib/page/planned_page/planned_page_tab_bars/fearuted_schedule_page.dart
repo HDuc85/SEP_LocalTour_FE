@@ -1,14 +1,12 @@
 import 'dart:math';
-
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:localtourapp/constants/getListApi.dart';
 import 'package:localtourapp/models/schedule/schedule_model.dart';
 import 'package:localtourapp/services/schedule_service.dart';
 import '../../../base/back_to_top_button.dart';
-import '../../../base/weather_icon_button.dart';
 import 'dart:ui' as ui;
+import '../../../base/weather_icon_button.dart';
 import '../../../models/schedule/destination_model.dart';
 import '../../detail_page/detail_page.dart';
 import 'dashed_line.dart';
@@ -30,7 +28,6 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
   bool isLoading = true;
   bool _showBackToTopButton = false;
   int? _expandedIndex;
-  final Set<int> favoritedScheduleIds = {};
 
   @override
   void initState() {
@@ -105,7 +102,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
           content: Text(widget.language != 'vi'
               ? "Có gì đó không ổn khi sao chép!"
               :'Some thing wrong went clone !'),
-          duration: Duration(seconds: 3),
+          duration: const Duration(seconds: 3),
         ),
       );
     } else {
@@ -114,7 +111,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
           content: Text(widget.language != 'vi'
               ? "Lịch trình đã được sao chép"
               :'Schedule is cloned!'),
-          duration: Duration(seconds: 3),
+          duration: const Duration(seconds: 3),
         ),
       );
     }
@@ -144,61 +141,6 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildDestinationDetail(String detailText) {
-    return GestureDetector(
-      onTap: () => _showDetailDialog(detailText),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final textSpan = TextSpan(
-            text: widget.language != 'vi'
-                ? "Chi tiết:\n"
-                :"Detail:\n",
-            style: const TextStyle(fontWeight: FontWeight.bold),
-            children: [
-              TextSpan(
-                text: detailText,
-                style: const TextStyle(color: Colors.black),
-              ),
-            ],
-          );
-
-          final textPainter = TextPainter(
-            text: textSpan,
-            maxLines: 4,
-            textDirection: ui.TextDirection.ltr,
-          )..layout(maxWidth: constraints.maxWidth);
-
-          final isOverflowing = textPainter.didExceedMaxLines;
-
-          return RichText(
-            maxLines: 4,
-            overflow: TextOverflow.ellipsis,
-            text: TextSpan(
-              text: "Detail:\n",
-              style: const TextStyle(color: Colors.black),
-              children: [
-                TextSpan(
-                  text: detailText,
-                  style: const TextStyle(color: Colors.black),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () => _showDetailDialog(detailText),
-                ),
-                if (isOverflowing)
-                  const TextSpan(
-                    text: " ...",
-                    style: TextStyle(
-                      color: Colors.blue,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
-      ),
     );
   }
 
@@ -286,6 +228,26 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                                       schedule.endDate,
                                           (_) {},
                                     ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      schedule.isLiked
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
+                                      color: schedule.isLiked
+                                          ? Colors.red
+                                          : Colors.grey,
+                                    ),
+                                    onPressed: () => _toggleFavorite(schedule.id),
+                                  ),
+                                  Text(
+                                    schedule.totalLikes.toString(),
+                                    style: const TextStyle(
+                                        color: Colors.black, fontSize: 12),
                                   ),
                                 ],
                               ),
@@ -389,6 +351,14 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
             },
           ),
           Positioned(
+            bottom: 0,
+            left: 20,
+            child: WeatherIconButton(
+              onPressed: _navigateToWeatherPage,
+              assetPath: 'assets/icons/weather.png',
+            ),
+          ),
+          Positioned(
             bottom: 50,
             left: 110,
             child: AnimatedOpacity(
@@ -462,7 +432,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
                   );
                 },
                 child: Text(
-                  destination.placeName ?? 'Unknown Place',
+                  destination.placeName,
                   style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -503,7 +473,7 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
               ),
               const SizedBox(height: 10),
               _buildDetailSection(
-                destination.detail ?? "No details available",
+                destination.detail,
               ),
             ],
           ),

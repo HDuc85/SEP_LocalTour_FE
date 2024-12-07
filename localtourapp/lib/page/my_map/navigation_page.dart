@@ -1,14 +1,11 @@
 import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/services/location_Service.dart';
 import 'package:localtourapp/services/traveled_place_service.dart';
-import 'package:vietmap_flutter_navigation/models/options.dart';
-import 'package:vietmap_flutter_navigation/navigation_plugin.dart';
 import 'package:vietmap_flutter_navigation/vietmap_flutter_navigation.dart';
 
 class NavigationPage extends StatefulWidget{
@@ -60,7 +57,7 @@ class _NavigationState extends State<NavigationPage>{
      });
     } else {
       setState(() {
-        _currentPosition = new Position(longitude: long,
+        _currentPosition = Position(longitude: long,
             latitude: lat,
             timestamp: DateTime.timestamp(),
             accuracy: 1,
@@ -127,8 +124,8 @@ class _NavigationState extends State<NavigationPage>{
                 var result = await _placeService.addTraveledPlace(widget.placeId);
                 if(result){
                   showDialog(context: context, builder: (_) => AlertDialog(
-                    title: Text('Arrival'),
-                    content: Text('You have arrived'),
+                    title: const Text('Arrival'),
+                    content: const Text('You have arrived'),
                     actions: [
                       TextButton(onPressed: () {
                         Navigator.pop(context);
@@ -136,7 +133,7 @@ class _NavigationState extends State<NavigationPage>{
                           instructionImage = const SizedBox.shrink();
                           routeProgressEvent = null;
                         });
-                      }, child: Text('OK'))
+                      }, child: const Text('OK'))
 
                     ],
                   ));

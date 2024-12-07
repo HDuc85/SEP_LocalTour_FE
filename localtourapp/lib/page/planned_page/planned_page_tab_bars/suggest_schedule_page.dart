@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:localtourapp/models/schedule/destination_model.dart';
-import 'package:localtourapp/models/schedule/schedule.dart';
-
-import 'package:localtourapp/models/schedule/schedule_model.dart';
 import 'package:localtourapp/services/location_Service.dart';
 import 'package:localtourapp/services/schedule_service.dart';
 
@@ -26,8 +23,8 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
   final LocationService _locationService = LocationService();
   String _languageCode = '';
   String suggestedScheduleName = '';
-  late DateTime? StartTime ;
-  late DateTime? EndTime;
+  late DateTime? startTime ;
+  late DateTime? endTime;
   late List<DestinationModel> suggestedDestinations;
   late Position _currentPosition;
 
@@ -45,9 +42,9 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
   void initState() {
     super.initState();
     currentTime = DateTime.now();
-    StartTime = DateTime.now().add(Duration(days: 1));
-    StartTime = DateTime(StartTime!.year, StartTime!.month, StartTime!.day, 9,0,0);
-    EndTime = StartTime!.add(Duration(days: 2));
+    startTime = DateTime.now().add(const Duration(days: 1));
+    startTime = DateTime(startTime!.year, startTime!.month, startTime!.day, 9,0,0);
+    endTime = startTime!.add(const Duration(days: 2));
     suggestedDestinations =[];
     fetchInit();
 
@@ -61,10 +58,10 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
     if(position != null){
       _currentPosition = position;
     }else{
-      _currentPosition = new Position(longitude: long, latitude: lat, timestamp: DateTime.timestamp(), accuracy: 1, altitude: 1, altitudeAccuracy: 1, heading: 1, headingAccuracy: 1, speed: 1, speedAccuracy: 1);
+      _currentPosition = Position(longitude: long, latitude: lat, timestamp: DateTime.timestamp(), accuracy: 1, altitude: 1, altitudeAccuracy: 1, heading: 1, headingAccuracy: 1, speed: 1, speedAccuracy: 1);
     }
 
-    var suggestlistDestination = await _scheduleService.SuggestSchedule(long, lat, StartTime!, 3);
+    var suggestlistDestination = await _scheduleService.SuggestSchedule(long, lat, startTime!, 3);
 
     setState(() {
       suggestedDestinations = suggestlistDestination;
@@ -72,22 +69,9 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
     });
   }
 
-
-  Schedule _createEmptySchedule() {
-    return Schedule(
-      id: 0,
-      userId: widget.userId,
-      scheduleName: "No schedule available",
-      startDate: DateTime.now(),
-      endDate: DateTime.now(),
-      createdAt: DateTime.now(),
-      isPublic: false,
-    );
-  }
-
   void _onChooseSchedule() async {
     // Add the suggested schedule to the schedule list and destinations
-    if(suggestedDestinations.length == 0){
+    if(suggestedDestinations.isEmpty){
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(_languageCode == 'vi' ? 'Không có gì để lưu':'Nothing to save'),
@@ -95,7 +79,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
         ),
       );
     }
-   var result = await _scheduleService.SaveSuggestSchedule(StartTime!, EndTime!, suggestedDestinations);
+   var result = await _scheduleService.SaveSuggestSchedule(startTime!, endTime!, suggestedDestinations);
       // No suggested schedule available
       if(result){
       Navigator.pop(context);
@@ -111,21 +95,21 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
   }
   void _onDateSelected(DateTime? newDate, bool isFromDate) {
     if (isFromDate) {
-      StartTime = newDate != null ? newDate.add(Duration(hours: 9)) : newDate;
+      startTime = newDate != null ? newDate.add(const Duration(hours: 9)) : newDate;
     } else {
-      EndTime = newDate != null ? newDate.add(Duration(hours: 9)) : newDate;
+      endTime = newDate != null ? newDate.add(const Duration(hours: 9)) : newDate;
     }
     setState(() {
 
     });
   }
   void _onOtherSchedule() async {
-    StartTime ??= DateTime.now().add(const Duration(days: 1));
+    startTime ??= DateTime.now().add(const Duration(days: 1));
 
-    EndTime ??= StartTime!.add(const Duration(days: 3));
-    int different = EndTime!.difference(StartTime!).inDays +1;
+    endTime ??= startTime!.add(const Duration(days: 3));
+    int different = endTime!.difference(startTime!).inDays +1;
 
-    var suggestlistDestination = await _scheduleService.SuggestSchedule(_currentPosition.longitude, _currentPosition.latitude, StartTime!, different);
+    var suggestlistDestination = await _scheduleService.SuggestSchedule(_currentPosition.longitude, _currentPosition.latitude, startTime!, different);
 
     setState(() {
       suggestedDestinations = suggestlistDestination;
@@ -158,7 +142,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
                   Text(_languageCode == 'vi' ?'Ngày bắt đầu':"Start Date", style: const TextStyle(fontWeight: FontWeight.bold)),
                   _buildDateField(_languageCode == 'vi' ?'Ngày bắt đầu':"Start Date",
                     false,
-                    StartTime,
+                    startTime,
                         (newDate) {
                       _onDateSelected(newDate, true);
                     },
@@ -174,7 +158,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
                   Text(_languageCode == 'vi' ?'Ngày kết thúc':"End Date", style: const TextStyle(fontWeight: FontWeight.bold)),
                   _buildDateField(_languageCode == 'vi' ?'Ngày kết thúc':"End Date",
                     false,
-                    EndTime,
+                    endTime,
                         (newDate) {
                       _onDateSelected(newDate, false);
                     },
@@ -276,7 +260,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
                       : labelText,
                   hintStyle: const TextStyle(fontSize: 12),
                   border: const OutlineInputBorder(),
-                  suffixIcon:(initialDate == null) ? Icon(Icons.calendar_today) : null,
+                  suffixIcon:(initialDate == null) ? const Icon(Icons.calendar_today) : null,
                 ),
               ),
             ),

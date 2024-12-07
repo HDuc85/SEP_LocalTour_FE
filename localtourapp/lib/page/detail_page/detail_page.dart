@@ -68,7 +68,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
     var fetchPlaceDetail = await _placeService.GetPlaceDetail(widget.placeId);
     var fetchTagInPlace = await _tagService.getTagInPlace(widget.placeId);
     var userId = await SecureStorageHelper().readValue(AppConfig.userId);
-    var fetchedListEvents = await _eventService.GetEventInPlace(widget.placeId,1,1);
+    var fetchedListEvents = await _eventService.getEventInPlace(widget.placeId,1,1);
     var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     bool isMark = false;
     if(userId == null){
@@ -76,8 +76,8 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
     }
     if(userId != null && userId.isNotEmpty)
     {
-      var Listmark = await _markplaceService.getAllMarkPlace();
-      isMark = Listmark.any((element) => element.placeId == widget.placeId);
+      var listMark = await _markplaceService.getAllMarkPlace();
+      isMark = listMark.any((element) => element.placeId == widget.placeId);
       _userId = userId;
     }
     setState(() {
@@ -288,7 +288,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
                               height: 60, // Increase the height of each tab
                               color: Colors.blue[100],
                               child: Tab(
-                                icon: Icon(Icons.details),
+                                icon: const Icon(Icons.details),
                                 text: _languageCode != 'vi'?'Detail':'Chi tiết',
                               ),
                             ),
@@ -296,7 +296,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
                               height: 60, // Increase the height of each tab
                               color: Colors.green[100],
                               child: Tab(
-                                icon: Icon(Icons.reviews),
+                                icon: const Icon(Icons.reviews),
                                 text: _languageCode != 'vi'?'Review':'Đánh giá',
                               ),
                             ),

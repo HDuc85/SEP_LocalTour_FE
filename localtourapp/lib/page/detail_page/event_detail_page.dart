@@ -1,15 +1,8 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/models/event/event_model.dart';
-import 'package:localtourapp/page/my_map/features/map_screen/maps_screen.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:vietmap_flutter_gl/vietmap_flutter_gl.dart';
-import 'package:vietmap_flutter_navigation/models/options.dart';
-import 'package:vietmap_flutter_navigation/navigation_plugin.dart';
 
 import '../my_map/domain/entities/vietmap_model.dart';
 import '../my_map/features/routing_screen/routing_screen.dart';
@@ -132,8 +125,8 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
                     ),
                     const SizedBox(height: 16),
                     // Mô tả sự kiện
-                    Row(
-                      children: const [
+                    const Row(
+                      children: [
                         Icon(Icons.description, color: Colors.teal),
                         SizedBox(width: 8),
                         Text(
@@ -200,17 +193,17 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
               ),
             ),
             const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
                 'Địa điểm',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
+              child: SizedBox(
                 width: MediaQuery.of(context).size.width,
                 height: 200,
                 child: Stack(
@@ -236,7 +229,7 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
                         markers: [
                           Marker(
                             latLng: LatLng(widget.eventModel.latitude, widget.eventModel.longitude), // Tọa độ marker
-                            child: Icon(Icons.location_on, color: Colors.red, size: 40),
+                            child: const Icon(Icons.location_on, color: Colors.red, size: 40),
                           ),
                         ],
                       ),
@@ -245,7 +238,7 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
               ),
             ),
 
-            SizedBox(height: 50,)
+            const SizedBox(height: 50,)
           ],
         ),
       ),

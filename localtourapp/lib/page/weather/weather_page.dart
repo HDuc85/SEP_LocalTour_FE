@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/appConfig.dart';
@@ -32,13 +33,15 @@ class _WeatherPageState extends State<WeatherPage> {
         appBar: AppBar(
           title: Text(_languageCode == 'vi' ? "Thời tiết":'Weather'),
         ),
-        body: WeatherContent(),
+        body: const WeatherContent(),
       ),
     );
   }
 }
 
 class WeatherContent extends StatefulWidget {
+  const WeatherContent({super.key});
+
   @override
   _WeatherContentState createState() => _WeatherContentState();
 }
@@ -64,9 +67,11 @@ class _WeatherContentState extends State<WeatherContent> {
       // Check and request location permissions
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        print('Location services are disabled.');
+        if (kDebugMode) {
+          print('Location services are disabled.');
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_languageCode == 'vi' ? "Dịch vụ định vị đã bị vô hiệu hóa.":'Location services are disabled.')),
+          SnackBar(content: Text(_languageCode == 'vi' ? "Dịch vụ định vị đã bị vô hiệu hóa." : 'Location services are disabled.')),
         );
         return;
       }
@@ -75,26 +80,43 @@ class _WeatherContentState extends State<WeatherContent> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          print('Location permissions are denied');
+          if (kDebugMode) {
+            print('Location permissions are denied');
+          }
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(_languageCode == 'vi' ? "Quyền vị trí bị từ chối":'Location permissions are denied')),
+            SnackBar(content: Text(_languageCode == 'vi' ? "Quyền vị trí bị từ chối" : 'Location permissions are denied')),
           );
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        print('Location permissions are permanently denied, we cannot request permissions.');
+        if (kDebugMode) {
+          print('Location permissions are permanently denied, we cannot request permissions.');
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(_languageCode == 'vi' ? "Quyền vị trí bị từ chối vĩnh viễn, chúng tôi không thể yêu cầu quyền.":
-                  'Location permissions are permanently denied, we cannot request permissions.')),
+            content: Text(
+              _languageCode == 'vi'
+                  ? "Quyền vị trí bị từ chối vĩnh viễn, chúng tôi không thể yêu cầu quyền."
+                  : 'Location permissions are permanently denied, we cannot request permissions.',
+            ),
+          ),
         );
         return;
       }
 
+      // Define the location settings
+      LocationSettings locationSettings = const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 100, // Adjust as needed
+      );
+
+      // Fetch the current position using the updated method
       Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+        locationSettings: locationSettings,
+      );
+
       setState(() {
         _position = position;
       });
@@ -104,9 +126,15 @@ class _WeatherContentState extends State<WeatherContent> {
         longitude: position.longitude,
       );
     } catch (e) {
-      print('Error fetching position: $e');
+      if (kDebugMode) {
+        print('Error fetching position: $e');
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_languageCode == 'vi' ? "Lỗi khi tìm vị trí:":'Error fetching position: $e')),
+        SnackBar(
+          content: Text(
+            _languageCode == 'vi' ? "Lỗi khi tìm vị trí:" : 'Error fetching position: $e',
+          ),
+        ),
       );
     }
   }

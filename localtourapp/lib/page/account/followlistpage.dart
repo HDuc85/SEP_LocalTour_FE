@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
 import '../../models/users/followuser.dart';
-import '../../models/users/users.dart';
 import 'account_page.dart';
 
 class FollowListPage extends StatefulWidget {

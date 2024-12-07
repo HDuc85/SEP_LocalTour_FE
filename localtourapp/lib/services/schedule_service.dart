@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'dart:ui';
-
 import 'package:intl/intl.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
@@ -10,14 +8,14 @@ import 'package:localtourapp/models/schedule/schedule_model.dart';
 import 'package:localtourapp/services/api_service.dart';
 
 class ScheduleService {
-  ApiService _apiService = ApiService();
+  final ApiService _apiService = ApiService();
 
 
   Future<List<ScheduleModel>> GetScheduleCurrentUser() async {
     var myUserId = await SecureStorageHelper().readValue(AppConfig.userId);
 
     if(myUserId == null){
-      throw new Exception('User is not login');
+      throw Exception('User is not login');
     }
 
     final response = await _apiService.makeRequest("Schedule/getByUserId/$myUserId", "GET");
@@ -68,9 +66,9 @@ class ScheduleService {
 
   Future<bool> CreateSchedule(String scheduleName, DateTime? startDate, DateTime? endDate, [bool? isPublic]) async {
     var body = {
-      "scheduleName": "$scheduleName",
-      "startDate": startDate != null? startDate.toUtc().toIso8601String() : null,
-      "endDate": endDate != null? endDate.toUtc().toIso8601String() : null,
+      "scheduleName": scheduleName,
+      "startDate": startDate?.toUtc().toIso8601String(),
+      "endDate": endDate?.toUtc().toIso8601String(),
       "isPublic": isPublic ?? false
     };
     
@@ -87,9 +85,9 @@ class ScheduleService {
     var body =
       {
         "scheduleId": scheduleId,
-        "scheduleName": "$scheduleName",
-        "startDate": startDate != null ? startDate.toUtc().toIso8601String() : null,
-        "endDate": endDate != null ? endDate.toUtc().toIso8601String() : null,
+        "scheduleName": scheduleName,
+        "startDate": startDate?.toUtc().toIso8601String(),
+        "endDate": endDate?.toUtc().toIso8601String(),
         "isPublic": isPublic ?? false
     };
 
@@ -112,9 +110,9 @@ class ScheduleService {
     var body = {
       "scheduleId": scheduleId,
       "placeId": placeId,
-      "startDate": startDate != null? startDate.toUtc().toIso8601String() : null,
-      "endDate": endDate != null? endDate.toUtc().toIso8601String() : null,
-      "detail": detail != null? detail: '',
+      "startDate": startDate?.toUtc().toIso8601String(),
+      "endDate": endDate?.toUtc().toIso8601String(),
+      "detail": detail ?? '',
       "isArrived": false
     };
 
@@ -130,10 +128,10 @@ class ScheduleService {
     var body = {
       "scheduleId": scheduleId,
       "placeId": placeId,
-      "startDate": startDate != null? startDate.toUtc().toIso8601String() : null,
-      "endDate": endDate != null? endDate.toUtc().toIso8601String() : null,
+      "startDate": startDate?.toUtc().toIso8601String(),
+      "endDate": endDate?.toUtc().toIso8601String(),
       "detail": detail,
-      "isArrived": isArrive != null ? isArrive : false
+      "isArrived": isArrive ?? false
     };
 
     var response = await _apiService.makeRequest('Destination/updateDestination/$destinationId', "PUT",body);
@@ -219,7 +217,6 @@ class ScheduleService {
     var userId = await SecureStorageHelper().readValue(AppConfig.userId);
     
     var response = await _apiService.makeRequest('Schedule/saveSuggestedSchedule?userId=$userId', "POST", body);
-    final jsonResponse = json.decode(response.body);
 
     if(response.statusCode == 200){
       return true;

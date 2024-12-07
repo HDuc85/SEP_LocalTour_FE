@@ -1,4 +1,5 @@
 import 'package:dots_indicator/dots_indicator.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/config/appConfig.dart';
@@ -37,8 +38,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final LocationService _locationService = LocationService();
   final EventService _eventService = EventService();
   late String userId = '';
-  late PlaceService _placeService = PlaceService();
-  late TagService _tagService = TagService();
+  late final PlaceService _placeService = PlaceService();
+  late final TagService _tagService = TagService();
   final ScrollController _scrollController = ScrollController();
   bool _showBackToTopButton = false;
   final Map<int, GlobalKey> tagSectionKeys = {};
@@ -76,7 +77,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _isBannerLoading = false;
       });
     } catch (e) {
-      print("Failed to fetch banners: $e");
+      if (kDebugMode) {
+        print("Failed to fetch banners: $e");
+      }
       setState(() {
         _isBannerLoading = false;
       });
@@ -137,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (position != null) {
         _currentPosition = position;
       } else {
-        _currentPosition = new Position(
+        _currentPosition = Position(
             longitude: long,
             latitude: lat,
             timestamp: DateTime.timestamp(),
@@ -170,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
         listPlaceNearest = fetchedListPlaceNearest;
       });
 
-      var fetchedListEvent = await _eventService.GetEventInPlace(
+      var fetchedListEvent = await _eventService.getEventInPlace(
           null, lat, long, SortOrder.asc, SortBy.distance);
 
       DateTime now = DateTime.now();
@@ -257,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    offset: Offset(0, -100),
+                    offset: const Offset(0, -100),
                     itemBuilder: (context) => [
                       PopupMenuItem(
                         value: 1,
@@ -266,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             onPressed: _navigateToWeatherPage,
                             assetPath: 'assets/icons/weather.png',
                           ),
-                          _language != 'vi'? Text('Weather') :Text('Thời tiết')
+                          _language != 'vi'? const Text('Weather') :const Text('Thời tiết')
                         ]),
                       ),
                       PopupMenuItem(
@@ -276,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               onPressed: _navigateToWeatherPage,
                               assetPath: 'assets/icons/wheel.png',
                             ),
-                            _language != 'vi'? Text('Today choose') : Text('Lựa chọn hôm nay')
+                            _language != 'vi'? const Text('Today choose') : const Text('Lựa chọn hôm nay')
                           ])),
                     ],
                     onSelected: (value) {
@@ -287,12 +290,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       }
                     },
                     child: Container(
-                      padding: EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.all(8.0),
                       decoration: BoxDecoration(
                         color: Colors.green[300], // Màu nền khi chưa click
                         shape: BoxShape.circle, // Hình dạng tròn
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.more_vert,
                         color: Colors.black,
                       ),
@@ -403,7 +406,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => WheelPage(),
+              builder: (_) => const WheelPage(),
             ),
           );
         },
@@ -510,7 +513,9 @@ class _HomeScreenState extends State<HomeScreen> {
         alignment: 0.8,
       );
     } else {
-      print('No context found for tagId: $tagId');
+      if (kDebugMode) {
+        print('No context found for tagId: $tagId');
+      }
     }
   }
 
@@ -585,7 +590,7 @@ class _HomeScreenState extends State<HomeScreen> {
               MaterialPageRoute(
                 builder: (_) => SearchPage(
                   sortBy: sortBy,
-                  initialTags: [],
+                  initialTags: const [],
                 ),
               ),
             );
@@ -666,7 +671,7 @@ class _HomeScreenState extends State<HomeScreen> {
               MaterialPageRoute(
                 builder: (_) => SearchPage(
                   sortBy: sortBy,
-                  initialTags: [],
+                  initialTags: const [],
                   isEvent: true,
                 ),
               ),
@@ -714,55 +719,53 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 8),
           // Toggle buttons for Nearest and Featured
-          Container(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      tagToggleStates[tag.id] = false;
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: !isFeatured
-                        ? Constants.selectedState
-                        : Constants.defaultState,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 49),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    tagToggleStates[tag.id] = false;
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: !isFeatured
+                      ? Constants.selectedState
+                      : Constants.defaultState,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                  child:  Text(
-                    _language != 'vi'?'Nearest':'Gần nhất',
-                    style: TextStyle(fontSize: 15, color: Colors.white),
-                  ),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 10, horizontal: 49),
                 ),
-                const SizedBox(width: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      tagToggleStates[tag.id] = true;
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isFeatured
-                        ? Constants.selectedState
-                        : Constants.defaultState,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10, horizontal: 49),
-                  ),
-                  child:  Text(
-                    _language != 'vi'? 'Featured':'Nổi bật',
-                    style: TextStyle(fontSize: 15, color: Colors.white),
-                  ),
+                child:  Text(
+                  _language != 'vi'?'Nearest':'Gần nhất',
+                  style: const TextStyle(fontSize: 15, color: Colors.white),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 16),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    tagToggleStates[tag.id] = true;
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isFeatured
+                      ? Constants.selectedState
+                      : Constants.defaultState,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 10, horizontal: 49),
+                ),
+                child:  Text(
+                  _language != 'vi'? 'Featured':'Nổi bật',
+                  style: const TextStyle(fontSize: 15, color: Colors.white),
+                ),
+              ),
+            ],
           ),
           // Show Nearest or Featured cards based on the toggle state
           SizedBox(

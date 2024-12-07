@@ -9,7 +9,6 @@ import '../config/secure_storage_helper.dart';
 
 class TagService {
   final apiService = ApiService();
-  static final _storage = SecureStorageHelper();
 
   Future<List<TagModel>> getAllTag([int? page = 1, int? size = 30]) async {
     final response = await apiService.makeRequest('Tag/getAll?Page=${page??''}&Size=${size??''}', 'GET');

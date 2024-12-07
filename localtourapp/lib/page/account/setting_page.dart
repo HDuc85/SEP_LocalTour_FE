@@ -29,12 +29,10 @@ class _SettingPageState extends State<SettingPage> {
     }
   }
   Future<void> changeSystemLanguage(String languageCode) async {
-    if(languageCode != null){
-      await SecureStorageHelper().saveValue(AppConfig.language, languageCode);
-      widget.onButtonPressed(languageCode);
-      getSystemLanguage();
+    await SecureStorageHelper().saveValue(AppConfig.language, languageCode);
+    widget.onButtonPressed(languageCode);
+    getSystemLanguage();
     }
-  }
 
   @override
   void initState() {

@@ -156,14 +156,14 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     List<CommentModel> commentsList = [];
 
     if (parentId != null) {
-      if (list!.length > 0) {
+      if (list!.isNotEmpty) {
         commentsList = list;
       }
     } else if (parentId == null) {
       commentsList = _listComment;
     }
 
-    if (commentsList.length == 0) return [];
+    if (commentsList.isEmpty) return [];
 
     List<Widget> commentWidgets = [];
 
@@ -201,7 +201,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
               }
             },
             child: Text(languageCode == 'vi' ? 'Xóa' : 'Delete',
-                style: TextStyle(color: Colors.red)),
+                style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),

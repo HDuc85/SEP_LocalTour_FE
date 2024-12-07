@@ -8,7 +8,6 @@ import 'package:localtourapp/models/feedback/feedback_model.dart';
 import 'package:localtourapp/page/detail_page/detail_card/review_card.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:localtourapp/page/detail_page/detail_page_tab_bars/form/reportform.dart';
-import 'package:localtourapp/page/detail_page/detail_page_tab_bars/review_tabbar.dart';
 import 'package:localtourapp/services/review_service.dart';
 
 class ReviewedTabbar extends StatefulWidget {

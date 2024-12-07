@@ -18,7 +18,7 @@ class ScheduleForm extends StatefulWidget {
 class _ScheduleFormState extends State<ScheduleForm> {
   final ScheduleService _scheduleService = ScheduleService();
   List<ScheduleModel> _listSchedule = [];
-  String? _selectedSchedule;
+  int? _selectedScheduleId;
   DateTime? _fromDate;
   DateTime? _toDate;
 
@@ -78,7 +78,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
                   _addSchedule(scheduleName,startDate,endDate);
 
                   setState(() {
-                    _selectedSchedule = scheduleName;
+                    _selectedScheduleId = null;
                   });
                 });
               },
@@ -107,21 +107,22 @@ class _ScheduleFormState extends State<ScheduleForm> {
             const SizedBox(height: 5),
             SizedBox(
               height: 40,
-              child: DropdownButtonFormField<String>(
+              child: DropdownButtonFormField<int>(
+                isExpanded: true,
                 decoration: const InputDecoration(
                   contentPadding: EdgeInsets.symmetric(horizontal: 10),
                   border: OutlineInputBorder(),
                 ),
-                value: _selectedSchedule,
+                value: _selectedScheduleId,
                 items: _listSchedule
-                    .map((schedule) => DropdownMenuItem(
-                  value: schedule.scheduleName,
-                  child: Text(schedule.scheduleName),
+                    .map((schedule) => DropdownMenuItem<int>(
+                  value: schedule.id, // Use unique schedule ID
+                  child: Text(schedule.scheduleName, overflow: TextOverflow.ellipsis,),
                 ))
                     .toList(),
                 onChanged: (value) {
                   setState(() {
-                    _selectedSchedule = value;
+                    _selectedScheduleId = value;
                   });
                 },
               ),
@@ -167,7 +168,7 @@ class _ScheduleFormState extends State<ScheduleForm> {
             // Done Button
             ElevatedButton(
               onPressed: () async {
-                if (_selectedSchedule == null) {
+                if (_selectedScheduleId == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                      SnackBar(
                       content: Text(widget.language != 'vi' ? 'Please select a schedule.' : "Vui lòng chọn 1 lịch trình"),
@@ -197,14 +198,17 @@ class _ScheduleFormState extends State<ScheduleForm> {
                       );
                     }
                   }
-                  var schedule = _listSchedule.firstWhere((element) => element.scheduleName == _selectedSchedule,);
+                  var schedule = _listSchedule.firstWhere(
+                        (element) => element.id == _selectedScheduleId,
+                    orElse: () => ScheduleModel(id: 1, userId: '1', userName: 'userName', userProfileImage: 'userProfileImage', scheduleName: 'scheduleName', createdDate: DateTime.now(), status: 'status', isPublic: true, destinations: List.empty(), totalLikes: 0, isLiked: true),
+                  );
 
                   var result = await _scheduleService.CreateDestination(schedule.id, widget.placeId, _fromDate, _toDate, null);
                   if(result){
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                            '${widget.language != 'vi'?'Place has been added to Schedule':'Địa danh đã được thêm vào lịch trình'}: $_selectedSchedule'),
+                            '${widget.language != 'vi'?'Place has been added to Schedule':'Địa danh đã được thêm vào lịch trình'}:${schedule.scheduleName}'),
                       ),
                     );
                   }

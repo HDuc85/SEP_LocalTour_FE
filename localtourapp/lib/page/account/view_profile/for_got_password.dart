@@ -7,7 +7,7 @@ import '../../../main.dart';
 
 class ForgotPasswordDialog {
   static void show(BuildContext context,String type,VoidCallback? onCompleted, {FirebaseAuth? firebaseAuth}) {
-    final AuthService _authService = AuthService();
+    final AuthService authService = AuthService();
     final FirebaseAuth auth = FirebaseAuth.instance;
 
     final TextEditingController phoneController = TextEditingController();
@@ -160,7 +160,7 @@ class ForgotPasswordDialog {
                         if (confirmNewPasswordError)
                            Text(
                             confirmNewPasswordErrorText,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.red,
                               fontSize: 12,
                             ),
@@ -275,7 +275,7 @@ class ForgotPasswordDialog {
                             Navigator.of(context).pop();
                           }
 
-                          var result = await _authService.sendUserIdToBackend();
+                          var result = await authService.sendUserIdToBackend();
                           if(result.firstTime){
                             navigatorKey.currentState?.pushNamed('/register');
                           }
@@ -317,7 +317,7 @@ class ForgotPasswordDialog {
                         }
 
                         try {
-                            var result = await _authService.setPassword(newPassword, confirmNewPassword);
+                            var result = await authService.setPassword(newPassword, confirmNewPassword);
                             if(result){
                               Navigator.of(context).pop(); // Close the dialog
                               ScaffoldMessenger.of(context).showSnackBar(

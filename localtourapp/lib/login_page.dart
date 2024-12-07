@@ -1,11 +1,8 @@
 // login_page.dart
 
 import 'package:flutter/material.dart';
-import 'package:localtourapp/page/home_screen/home_screen.dart';
 import 'package:localtourapp/page/account/view_profile/for_got_password.dart';
 import 'package:localtourapp/services/auth_service.dart';
-
-import 'base/base_page.dart';
 import 'config/appConfig.dart';
 import 'config/secure_storage_helper.dart';
 import 'main.dart';

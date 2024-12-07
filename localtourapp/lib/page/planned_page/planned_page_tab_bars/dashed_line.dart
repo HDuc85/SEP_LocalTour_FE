@@ -58,8 +58,8 @@ class DashedLinePainter extends CustomPainter {
 
       // Draw the arrowhead
       if ((isHorizontal && endX + dashSpacing >= size.width) || (!isHorizontal && endY + dashSpacing >= size.height)) {
-        final arrowLength = 8.0;
-        final arrowAngle = 0.5; // radians for angle of arrowhead
+        const arrowLength = 8.0;
+        const arrowAngle = 0.5; // radians for angle of arrowhead
 
         if (isHorizontal) {
           final arrowStart = Offset(endX, startY);

@@ -14,7 +14,7 @@ class EventService {
   final apiService = ApiService();
   final LocationService _locationService = LocationService();
 
-  Future<List<EventModel>> GetEventInPlace(int? placeId, double latitude,double longitude, [SortOrder? sortOder,SortBy? sortBy ,String? searchTerm = '',int? Page = 1, int? size = 10,]) async{
+  Future<List<EventModel>> getEventInPlace(int? placeId, double latitude,double longitude, [SortOrder? sortOder,SortBy? sortBy ,String? searchTerm = '',int? Page = 1, int? size = 10,]) async{
     String sortByStr = sortBy != null ? sortByToString(sortBy) : '';
     String sortOrderStr = sortOder != null ? sortOrderToString(sortOder) : '';
     String? languageCode = await SecureStorageHelper().readValue(AppConfig.language);

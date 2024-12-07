@@ -100,9 +100,9 @@ class _WeatherDetailPageState extends State<WeatherDetailPage> {
           return ListTile(
             leading: Text(
               getWeatherIcon(widget.hourlyWeather.weathercode[index]),
-              style: TextStyle(fontSize: 24),
+              style: const TextStyle(fontSize: 24),
             ),
-            title: Text('${widget.hourlyWeather.time[index]}'),
+            title: Text(widget.hourlyWeather.time[index]),
             subtitle: Text(
               _languageCode == 'vi'
                   ? 'Nhiệt độ: ${widget.hourlyWeather.temperature2m[index].toStringAsFixed(1)}°C, Mưa: ${widget.hourlyWeather.rain[index].toStringAsFixed(1)} mm'

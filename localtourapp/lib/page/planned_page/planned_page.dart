@@ -63,7 +63,7 @@ class _PlannedPageState extends State<PlannedPage> {
                   indicatorPadding: const EdgeInsets.symmetric(horizontal: 16.0),
                   labelStyle: const TextStyle(fontWeight: FontWeight.bold), // Selected tab text style
                   unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal), // Unselected tab text style
-                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+                  overlayColor: WidgetStateProperty.all(Colors.transparent),
                   splashBorderRadius: BorderRadius.circular(8.0),
                 ),
               ),

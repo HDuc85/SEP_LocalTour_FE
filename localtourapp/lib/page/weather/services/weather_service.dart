@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/weather_model.dart';
 
@@ -25,12 +26,18 @@ class WeatherService {
         final Map<String, dynamic> jsonData = json.decode(response.body);
         return WeatherResponse.fromJson(jsonData);
       } else {
-        print('Failed to load weather data: ${response.statusCode}');
-        print('Response body: ${response.body}');
+        if (kDebugMode) {
+          print('Failed to load weather data: ${response.statusCode}');
+        }
+        if (kDebugMode) {
+          print('Response body: ${response.body}');
+        }
         return null;
       }
     } catch (e) {
-      print('Error fetching weather data: $e');
+      if (kDebugMode) {
+        print('Error fetching weather data: $e');
+      }
       return null;
     }
   }

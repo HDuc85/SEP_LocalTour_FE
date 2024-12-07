@@ -27,13 +27,12 @@ class ReviewDialog extends StatefulWidget {
 }
 
 class _ReviewDialogState extends State<ReviewDialog> {
-  MediaService _mediaService = MediaService();
-
+  final MediaService _mediaService = MediaService();
   int selectedRating = 0;
   final TextEditingController contentController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
-  List<XFile> _selectedImages = [];
-  List<XFile> _selectedVideos = [];
+  final List<XFile> _selectedImages = [];
+  final List<XFile> _selectedVideos = [];
   int _totalSize = 0; // Track total size in MB
   int initSize = 0;
   final int maxItems = 10;
