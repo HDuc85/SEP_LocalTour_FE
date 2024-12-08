@@ -13,6 +13,7 @@ class PlaceCardModel {
   TimeOfDay? timeClose;
   String address;
 
+
   PlaceCardModel({
     required this.placeId,
     required this.wardName,

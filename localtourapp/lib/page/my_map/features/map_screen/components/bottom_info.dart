@@ -43,6 +43,20 @@ class BottomSheetInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if ((isEvent! && eventModel == null) || (!isEvent! && detailModel == null)) {
+      return Container(
+        height: 310,
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
     return Container(
       height: 310,
       width: double.infinity,

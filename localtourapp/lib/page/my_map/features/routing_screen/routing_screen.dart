@@ -5,7 +5,6 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/page/my_map/extension/latlng_extension.dart';
-import 'package:localtourapp/services/place_service.dart';
 import 'package:sliding_up_panel2/sliding_up_panel2.dart';
 import 'package:talker/talker.dart';
 import 'package:vietmap_flutter_gl/vietmap_flutter_gl.dart';
@@ -81,12 +80,10 @@ class _RoutingScreenState extends State<RoutingScreen> {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       Future.delayed(const Duration(milliseconds: 200))
           .then((value) => _panelController.hide());
-      if (widget.vietmapModel != null) {
-        var args = widget.vietmapModel;
-        routingBloc.add(RoutingEventUpdateRouteParams(
-            destinationDescription:  args!.address ?? 'Vị trí đã chọn',
-            destinationPoint: LatLng(args.lat ?? 0, args.lng ?? 0)));
-      }
+      var args = widget.vietmapModel;
+      routingBloc.add(RoutingEventUpdateRouteParams(
+          destinationDescription:  args.address ?? 'Vị trí đã chọn',
+          destinationPoint: LatLng(args.lat ?? 0, args.lng ?? 0)));
 
       var position = await Geolocator.getCurrentPosition();
       if (!mounted) return;

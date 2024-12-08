@@ -13,11 +13,13 @@ import 'package:sliding_up_panel2/sliding_up_panel2.dart';
 import 'package:vietmap_flutter_gl/vietmap_flutter_gl.dart';
 import '../../../../constants/getListApi.dart';
 import '../../../../models/HomePage/placeCard.dart';
+import '../../../../models/Tag/tag_model.dart';
 import '../../../../models/event/event_model.dart';
 import '../../../../models/schedule/schedule_model.dart';
 import '../../../../services/event_service.dart';
 import '../../../../services/place_service.dart';
 import '../../../../services/schedule_service.dart';
+import '../../../../services/tag_service.dart';
 import '../../../search_page/search_page.dart';
 import '../../constants/colors.dart';
 import '../../di/app_context.dart';
@@ -31,10 +33,14 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
+  bool _isControllerDisposed = false;
   final LocationService _locationService = LocationService();
   final PlaceService _placeService = PlaceService();
   final EventService _eventService = EventService();
   final ScheduleService _scheduleService = ScheduleService();
+  List<TagModel> tags = [];
+  bool isTagLoading = false;
+  String? selectedTagId;
 
   List<PlaceCardModel> placeTranslations = [];
   List<EventModel> events = [];
@@ -76,17 +82,47 @@ class _MapScreenState extends State<MapScreen> {
     });
     getCurrentPosition();
     getLanguage();
+    fetchTags();
   }
 
   Future<void> getLanguage() async {
     language = await SecureStorageHelper().readValue(AppConfig.language);
     var user = await SecureStorageHelper().readValue(AppConfig.userId);
-    if(user != null){
+    if (user != null) {
       setState(() {
         userId = user;
       });
     }
+  }
 
+  Future<void> fetchTags() async {
+    setState(() {
+      isTagLoading = true;
+    });
+    try {
+      // Fetch top tags (adjust the size as needed)
+      List<TagModel> fetchedTags = await TagService().getUserTag();
+      setState(() {
+        tags = fetchedTags;
+      });
+    } catch (e) {
+      // Handle errors appropriately
+      if (kDebugMode) {
+        print('Error fetching tags: $e');
+      }
+      // Optionally, show a snackbar or dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            language != 'vi' ? "Failed to load tags." : "Không tải được thẻ.",
+          ),
+        ),
+      );
+    } finally {
+      setState(() {
+        isTagLoading = false;
+      });
+    }
   }
 
   Future<void> getCurrentPosition() async {
@@ -124,16 +160,129 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   void dispose() {
+    _isControllerDisposed = true;
     _searchController.dispose();
     _searchFocus.dispose();
-    _panelController.close();
     _debounce?.cancel();
+    _controller?.dispose();
+    _controller = null;
     super.dispose();
+  }
+
+  void onTagSelected(TagModel tag) async {
+    if (!mounted) return;
+    setState(() {
+      if (selectedTagId == tag.id.toString()) {
+        // Deselect the tag
+        selectedTagId = null;
+        _markers.clear();
+      } else {
+        selectedTagId = tag.id.toString();
+        _markers.clear();
+        isLoading = true;
+      }
+    });
+
+    if (selectedTagId != null) {
+      try {
+        List<PlaceCardModel> places = await _placeService.getListPlace(
+            _currentPosition.latitude,
+            _currentPosition.longitude,
+            SortBy.distance,
+            SortOrder.asc,
+            [tag.id],
+            '',
+            1,
+            10,
+            5);
+
+        if (!mounted) return; // Check again after async call
+        setState(() {
+          isLoading = false;
+          // Update markers only if _controller is not null
+          if (_controller != null) {
+            _markers = places
+                .map((place) => Marker(
+                      latLng: LatLng(place.latitude, place.longitude),
+                      child: GestureDetector(
+                        onTap: () {
+                          if (!mounted) return;
+                          _onMarkerTapped(place);
+                        },
+                        child: const Icon(Icons.location_on,
+                            color: Colors.red, size: 30),
+                      ),
+                    ))
+                .toList();
+          }
+        });
+
+        if (_controller != null && places.isNotEmpty) {
+          _fitMapToMarkers(_markers);
+        }
+
+        if (places.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                language != 'vi'
+                    ? "No places found for the selected tag within 5km."
+                    : "Không tìm thấy địa điểm nào cho thẻ đã chọn trong phạm vi 5km.",
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              language != 'vi'
+                  ? "Failed to load places for the selected tag."
+                  : "Không tải được địa điểm cho thẻ đã chọn.",
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  void _onMarkerTapped(PlaceCardModel place) {
+    setState(() {
+      selectPlace = place;
+      isEvent = false;
+    });
+    _showPanel();
+  }
+
+  void _fitMapToMarkers(List<Marker> markers) {
+    double minLat = markers.first.latLng.latitude;
+    double maxLat = markers.first.latLng.latitude;
+    double minLng = markers.first.latLng.longitude;
+    double maxLng = markers.first.latLng.longitude;
+
+    for (var marker in markers) {
+      if (marker.latLng.latitude < minLat) minLat = marker.latLng.latitude;
+      if (marker.latLng.latitude > maxLat) maxLat = marker.latLng.latitude;
+      if (marker.latLng.longitude < minLng) minLng = marker.latLng.longitude;
+      if (marker.latLng.longitude > maxLng) maxLng = marker.latLng.longitude;
+    }
+
+    LatLngBounds bounds = LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+
+    _controller?.animateCamera(CameraUpdate.newLatLngBounds(bounds));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
@@ -145,8 +294,9 @@ class _MapScreenState extends State<MapScreen> {
                   controller: _panelController,
                   maxHeight: 330,
                   minHeight: 0,
-                  parallaxEnabled:false,
+                  parallaxEnabled: false,
                   onPanelSlide: (position) {
+                    if (!mounted || _isControllerDisposed) return;
                     setState(() {
                       panelPosition = position;
                     });
@@ -199,162 +349,216 @@ class _MapScreenState extends State<MapScreen> {
                           zoom: 13,
                         ),
                         onMapCreated: (controller) {
-                          setState(() {
-                            _controller = controller;
-                          });
+                          if (!_isControllerDisposed) {
+                            setState(() {
+                              _controller = controller;
+                            });
+                          }
                         },
                         onMapClick: (point, coordinates) async {},
                       ),
-                      if (_controller != null)
+                      if (_controller != null && !_isControllerDisposed)
                         MarkerLayer(
-                          ignorePointer: false,
                           mapController: _controller!,
                           markers: _markers,
                         ),
                     ],
                   ),
                 ),
-                _controller == null
-                    ? const SizedBox.shrink()
-                    : UserLocationLayer(
-                        mapController: _controller!,
-                        locationIcon: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: const BoxDecoration(
-                              shape: BoxShape.circle, color: vietmapColor),
-                          child: const Icon(
-                            Icons.circle,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        bearingIcon: Container(
-                            width: 50,
-                            height: 50,
-                            alignment: Alignment.topCenter,
-                            decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.transparent),
-                            child: Image.asset(
-                              'assets/images/heading.png',
-                              width: 15,
-                              height: 15,
-                            )),
-                        ignorePointer: true,
-                      ),
+                (_controller != null && !_isControllerDisposed)
+                    ? UserLocationLayer(
+                  mapController: _controller!,
+                  locationIcon: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                        shape: BoxShape.circle, color: vietmapColor),
+                    child: const Icon(
+                      Icons.circle,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  bearingIcon: Container(
+                      width: 50,
+                      height: 50,
+                      alignment: Alignment.topCenter,
+                      decoration: const BoxDecoration(
+                          shape: BoxShape.circle, color: Colors.transparent),
+                      child: Image.asset(
+                        'assets/images/heading.png',
+                        width: 15,
+                        height: 15,
+                      )),
+                  ignorePointer: true,
+                )
+                    : const SizedBox.shrink(),
                 Align(
                     key: const Key('searchBarKey'),
                     alignment: Alignment.topCenter,
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         // Search Bar
                         Padding(
                           padding: EdgeInsets.only(
-                              top: MediaQuery.of(context).size.height * 0.07,
+                              top: MediaQuery.of(context).size.height * 0.04,
                               left: MediaQuery.of(context).size.width * 0.05),
-                          child: Row(
-                            children: [
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                height: 50,
-                                width: MediaQuery.of(context).size.width * 0.90,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  border: Border.all(
-                                      color: Colors.black, width: 0.5),
-                                  borderRadius: BorderRadius.circular(25),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            height: 50,
+                            width: MediaQuery.of(context).size.width * 0.90,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border:
+                                  Border.all(color: Colors.black, width: 0.5),
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  icon: isSearchMode
+                                      ? const Icon(
+                                          Icons.search,
+                                          color: Colors.black,
+                                        )
+                                      : const Icon(Icons.travel_explore),
+                                  onPressed: () {
+                                    setState(() {
+                                      isSearchMode = !isSearchMode;
+                                      _markers.clear();
+                                      FocusScope.of(context).unfocus();
+                                      if (!isSearchMode) {
+                                        _scheduleSelect();
+                                      }
+                                    });
+                                  },
                                 ),
-                                child: Row(
-                                  children: [
-                                    IconButton(
-                                      icon: isSearchMode
-                                          ? const Icon(
-                                              Icons.search,
-                                              color: Colors.black,
-                                            )
-                                          : const Icon(Icons.travel_explore),
-                                      onPressed: () {
-                                        setState(() {
-                                          isSearchMode = !isSearchMode;
-                                          _markers.clear();
-                                          FocusScope.of(context).unfocus();
-                                          if(!isSearchMode){
+                                Expanded(
+                                  child: isSearchMode
+                                      ? TextField(
+                                          controller: _searchController,
+                                          onChanged: _onSearchChanged,
+                                          focusNode: _searchFocus,
+                                          autofocus: false,
+                                          decoration: InputDecoration(
+                                              hintText: language != 'vi'
+                                                  ? "Where do you want to go?"
+                                                  : "Bạn muốn đi đâu?",
+                                              border: InputBorder.none,
+                                              suffixIcon: _searchController
+                                                      .text.isNotEmpty
+                                                  ? IconButton(
+                                                      icon: const Icon(
+                                                          Icons.clear),
+                                                      onPressed: () {
+                                                        _searchController
+                                                            .clear();
+                                                        setState(() {
+                                                          searchText = '';
+                                                          setState(() {
+                                                            FocusScope.of(
+                                                                    context)
+                                                                .unfocus();
+                                                          });
+                                                          onSearch = false;
+                                                        });
+                                                      },
+                                                    )
+                                                  : null),
+                                        )
+                                      : DropdownButton<String>(
+                                          value: _selectedSchedule,
+                                          hint: Text(language != 'vi'
+                                              ? "Select your schedule"
+                                              : "Chọn lịch trình của bạn"),
+                                          isDense: true,
+                                          isExpanded: false,
+                                          icon:
+                                              const Icon(Icons.arrow_drop_down),
+                                          underline: Container(),
+                                          items: _listSchedule
+                                              .map((schedule) =>
+                                                  DropdownMenuItem(
+                                                    value:
+                                                        '${schedule.scheduleName}_${schedule.id}',
+                                                    child: SizedBox(
+                                                      width: 250,
+                                                      child: Text(
+                                                        schedule.scheduleName,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                  ))
+                                              .toList(),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _selectedSchedule = value;
+                                            });
                                             _scheduleSelect();
-                                          }
-                                        });
-                                      },
-                                    ),
-                                    Expanded(
-                                      child: isSearchMode
-                                          ? TextField(
-                                              controller: _searchController,
-                                              onChanged: _onSearchChanged,
-                                              focusNode: _searchFocus,
-                                              autofocus: false,
-                                              decoration: InputDecoration(
-                                                  hintText:
-                                                  language != 'vi' ? "Where do you want to go?" : "Bạn muốn đi đâu?",
-                                                  border: InputBorder.none,
-                                                  suffixIcon: _searchController
-                                                          .text.isNotEmpty
-                                                      ? IconButton(
-                                                          icon: const Icon(
-                                                              Icons.clear),
-                                                          onPressed: () {
-                                                            _searchController
-                                                                .clear();
-                                                            setState(() {
-                                                              searchText = '';
-                                                              setState(() {
-                                                                FocusScope.of(
-                                                                        context)
-                                                                    .unfocus();
-                                                              });
-                                                              onSearch = false;
-                                                            });
-                                                          },
-                                                        )
-                                                      : null),
-                                            )
-                                          : DropdownButton<String>(
-                                              value: _selectedSchedule,
-                                              hint:  Text(
-                                                  language != 'vi' ? "Select your schedule" : "Chọn lịch trình của bạn"),
-                                              isDense: true,
-                                              isExpanded: false,
-                                              icon: const Icon(
-                                                  Icons.arrow_drop_down),
-                                              underline: Container(),
-                                              items: _listSchedule
-                                                  .map((schedule) =>
-                                                      DropdownMenuItem(
-                                                        value: '${schedule.scheduleName}_${schedule .id}',
-                                                        child: SizedBox(
-                                                          width: 250,
-                                                          child: Text(
-                                                            schedule
-                                                                .scheduleName,
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                          ),
-                                                        ),
-                                                      ))
-                                                  .toList(),
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  _selectedSchedule = value;
-                                                });
-                                                _scheduleSelect();
-                                              },
-                                            ),
-                                    ),
-                                  ],
+                                          },
+                                        ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
+                        ),
+                        Container(
+                          child: isTagLoading
+                              ? const CircularProgressIndicator()
+                              : tags.isEmpty
+                                  ? Text(
+                                      language != 'vi'
+                                          ? "No Tags Available"
+                                          : "Không có thẻ nào",
+                                      style: const TextStyle(
+                                          color: Colors.black, fontSize: 16),
+                                    )
+                                  : SizedBox(
+                                      height: 40,
+                                      child: ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: tags.length,
+                                        itemBuilder: (context, index) {
+                                          TagModel tag = tags[index];
+                                          bool isSelected = selectedTagId ==
+                                              tag.id.toString();
+                                          return Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 3.0),
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                onTagSelected(tag);
+                                              },
+                                              child: Chip(
+                                                backgroundColor: isSelected
+                                                    ? Colors.blueAccent
+                                                    : Colors.white,
+                                                label: Text(
+                                                  language != 'vi'
+                                                      ? tag.tagName
+                                                      : tag.tagVi,
+                                                  style: TextStyle(
+                                                    color: isSelected
+                                                        ? Colors.white
+                                                        : Colors.black,
+                                                  ),
+                                                ),
+                                                avatar:
+                                                    tag.tagPhotoUrl.isNotEmpty
+                                                        ? CircleAvatar(
+                                                            backgroundImage:
+                                                                NetworkImage(tag
+                                                                    .tagPhotoUrl),
+                                                          )
+                                                        : null,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
                         ),
                         // Dropdown List
                         if (searchText.isNotEmpty && onSearch)
@@ -365,7 +569,7 @@ class _MapScreenState extends State<MapScreen> {
                                 LayoutBuilder(builder: (context, constraints) {
                               return Container(
                                 constraints: const BoxConstraints(
-                                  maxHeight: 350,
+                                  maxHeight: 335,
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
@@ -565,11 +769,10 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-
                       ],
                     ),
                   ),
-                if(!isSearchMode)
+                if (!isSearchMode)
                   Align(
                       alignment: Alignment.topCenter,
                       child: Padding(
@@ -694,7 +897,10 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _scheduleSelect() {
-    if (_selectedSchedule!.isEmpty) {
+    if (_selectedSchedule == null || _selectedSchedule!.isEmpty || !mounted) {
+      return;
+    }
+    if (_controller == null) {
       return;
     }
 
@@ -734,37 +940,48 @@ class _MapScreenState extends State<MapScreen> {
                 );
                 _selectDestination(item);
               },
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(
-                    color: Colors.blue,
-                    width: 1,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const SizedBox(
+                        width: 30,
+                      ),
+                      SizedBox(
+                        height: 40,
+                        width: 100,
+                        child: Text(
+                          item.placeName,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
                   ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    item.placePhotoDisplay!,
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.cover,
+                  Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(
+                        color: Colors.blue,
+                        width: 1,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        item.placePhotoDisplay!,
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
-            SizedBox(
-              height: 100,
-              width: 100,
-              child: Text(
-                item.placeName,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 2,
-                style: const TextStyle(color: Colors.red),
-              ),
-            )
           ],
         ),
       ));
