@@ -43,6 +43,7 @@ class BottomSheetInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     if ((isEvent! && eventModel == null) || (!isEvent! && detailModel == null)) {
       return Container(
         height: 310,
@@ -57,6 +58,7 @@ class BottomSheetInfo extends StatelessWidget {
         child: const Center(child: CircularProgressIndicator()),
       );
     }
+
     return Container(
       height: 310,
       width: double.infinity,
@@ -114,7 +116,7 @@ class BottomSheetInfo extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Container(
+                        SizedBox(
                           width: 230,
                           child: !isEvent!
                               ? _TimeString()
@@ -167,7 +169,7 @@ class BottomSheetInfo extends StatelessWidget {
               )
             ],
           ),
-          SizedBox(
+          const SizedBox(
             height: 5,
           ),
           Row(
@@ -176,7 +178,7 @@ class BottomSheetInfo extends StatelessWidget {
               isEvent!
                   ? _EventStatusString()
                   : buildStarRating(detailModel!.rating),
-              SizedBox(
+              const SizedBox(
                 width: 20,
               ),
               Text(
@@ -246,7 +248,7 @@ class BottomSheetInfo extends StatelessWidget {
                   )),
             ],
           ),
-          SizedBox(
+          const SizedBox(
             height: 10,
           ),
           Stack(
@@ -392,13 +394,13 @@ class BottomSheetInfo extends StatelessWidget {
       return RichText(
         text: TextSpan(
           children: [
-            TextSpan(
+            const TextSpan(
               text: 'Đang mở cửa',
               style: TextStyle(color: Colors.green, fontSize: 13),
             ),
             TextSpan(
               text: ' - Đóng cửa lúc ${DateFormat('HH:mm').format(timeClose)}',
-              style: TextStyle(color: Colors.grey, fontSize: 13),
+              style: const TextStyle(color: Colors.grey, fontSize: 13),
             ),
           ],
         ),
@@ -407,13 +409,13 @@ class BottomSheetInfo extends StatelessWidget {
       return RichText(
         text: TextSpan(
           children: [
-            TextSpan(
+            const TextSpan(
               text: 'Đã đóng cửa',
               style: TextStyle(color: Colors.red, fontSize: 13),
             ),
             TextSpan(
               text: ' - Mở cửa lúc ${DateFormat('HH:mm').format(timeOpen)}',
-              style: TextStyle(color: Colors.grey, fontSize: 13),
+              style: const TextStyle(color: Colors.grey, fontSize: 13),
             ),
           ],
         ),
@@ -422,20 +424,20 @@ class BottomSheetInfo extends StatelessWidget {
       return RichText(
         text: TextSpan(
           children: [
-            TextSpan(
+            const TextSpan(
               text: 'Sắp mở cửa',
               style: TextStyle(color: Colors.orange, fontSize: 13),
             ),
             TextSpan(
               text: ' - Mở cửa lúc ${DateFormat('HH:mm').format(timeOpen)}',
-              style: TextStyle(color: Colors.grey, fontSize: 13),
+              style: const TextStyle(color: Colors.grey, fontSize: 13),
             ),
           ],
         ),
       );
     }
 
-    return SizedBox();
+    return const SizedBox();
   }
 
   Widget _EventStatusString() {

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/page/my_map/extension/latlng_extension.dart';
@@ -59,7 +60,6 @@ class _RoutingScreenState extends State<RoutingScreen> {
   bool _isRunning = false;
 
   Future<void> initialize() async {
-    if (!mounted) return;
 
     _navigationOption = _vietmapPlugin.getDefaultOptions();
     _navigationOption.simulateRoute = false;
@@ -80,11 +80,12 @@ class _RoutingScreenState extends State<RoutingScreen> {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       Future.delayed(const Duration(milliseconds: 200))
           .then((value) => _panelController.hide());
-      var args = widget.vietmapModel;
-      routingBloc.add(RoutingEventUpdateRouteParams(
-          destinationDescription:  args.address ?? 'Vị trí đã chọn',
-          destinationPoint: LatLng(args.lat ?? 0, args.lng ?? 0)));
-
+      if (widget.vietmapModel != null) {
+        var args = widget.vietmapModel;
+        routingBloc.add(RoutingEventUpdateRouteParams(
+            destinationDescription:  args!.address ?? 'Vị trí đã chọn',
+            destinationPoint: LatLng(args.lat ?? 0, args.lng ?? 0)));
+      }
       var position = await Geolocator.getCurrentPosition();
       if (!mounted) return;
       routingBloc.add(RoutingEventUpdateRouteParams(
@@ -344,12 +345,14 @@ class _RoutingScreenState extends State<RoutingScreen> {
                       child: Column(
                         children: [
                           FloatingActionButton(
+                            heroTag: 'route',
                             mini: true,
                             child: const Icon(Icons.alt_route),
                             onPressed: () {
                               _navigationController?.overview();
                             },),
                           FloatingActionButton(
+                            heroTag: 'center',
                             mini: true,
                             child: const Icon(Icons.gps_fixed),
                             onPressed: () {

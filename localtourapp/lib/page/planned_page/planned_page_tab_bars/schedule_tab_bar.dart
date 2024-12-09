@@ -40,7 +40,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   late List<ScheduleModel> _listScheduleInit;
   String _myUserId = '';
   bool isLoading = true;
-  late String _userId;
+  String _userId = '';
   final ScrollController _scrollController = ScrollController();
   bool _showBackToTopButton = false;
   final FocusNode _nameFocusNode = FocusNode();

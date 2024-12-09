@@ -40,7 +40,7 @@ class _MapScreenState extends State<MapScreen> {
   final ScheduleService _scheduleService = ScheduleService();
   List<TagModel> tags = [];
   bool isTagLoading = false;
-  String? selectedTagId;
+  int? selectedTagId;
 
   List<PlaceCardModel> placeTranslations = [];
   List<EventModel> events = [];
@@ -52,8 +52,7 @@ class _MapScreenState extends State<MapScreen> {
   List<Marker> _markers = [];
   double panelPosition = 0.0;
   final PanelController _panelController = PanelController();
-  MyLocationTrackingMode myLocationTrackingMode =
-      MyLocationTrackingMode.Tracking;
+  MyLocationTrackingMode myLocationTrackingMode = MyLocationTrackingMode.Tracking;
   MyLocationRenderMode myLocationRenderMode = MyLocationRenderMode.COMPASS;
   String tileMap = AppContext.getVietmapMapStyleUrl() ?? "";
   late Position _currentPosition;
@@ -106,11 +105,9 @@ class _MapScreenState extends State<MapScreen> {
         tags = fetchedTags;
       });
     } catch (e) {
-      // Handle errors appropriately
       if (kDebugMode) {
         print('Error fetching tags: $e');
       }
-      // Optionally, show a snackbar or dialog
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -164,27 +161,20 @@ class _MapScreenState extends State<MapScreen> {
     _searchController.dispose();
     _searchFocus.dispose();
     _debounce?.cancel();
-    _controller?.dispose();
-    _controller = null;
     super.dispose();
   }
 
   void onTagSelected(TagModel tag) async {
-    if (!mounted) return;
+    _markers.clear();
     setState(() {
-      if (selectedTagId == tag.id.toString()) {
-        // Deselect the tag
+      if (selectedTagId == tag.id) {
         selectedTagId = null;
-        _markers.clear();
       } else {
-        selectedTagId = tag.id.toString();
-        _markers.clear();
-        isLoading = true;
+        selectedTagId = tag.id;
       }
     });
 
     if (selectedTagId != null) {
-      try {
         List<PlaceCardModel> places = await _placeService.getListPlace(
             _currentPosition.latitude,
             _currentPosition.longitude,
@@ -193,60 +183,66 @@ class _MapScreenState extends State<MapScreen> {
             [tag.id],
             '',
             1,
-            10,
-            5);
-
-        if (!mounted) return; // Check again after async call
-        setState(() {
-          isLoading = false;
-          // Update markers only if _controller is not null
+            20,
+            10);
           if (_controller != null) {
             _markers = places
                 .map((place) => Marker(
                       latLng: LatLng(place.latitude, place.longitude),
                       child: GestureDetector(
                         onTap: () {
-                          if (!mounted) return;
                           _onMarkerTapped(place);
                         },
-                        child: const Icon(Icons.location_on,
-                            color: Colors.red, size: 30),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                const SizedBox(
+                                  width: 30,
+                                ),
+                                SizedBox(
+                                  height: 40,
+                                  width: 100,
+                                  child: Text(
+                                    place.placeName,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(
+                                  color: Colors.blue,
+                                  width: 1,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  place.photoDisplayUrl,
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ))
                 .toList();
           }
-        });
-
         if (_controller != null && places.isNotEmpty) {
           _fitMapToMarkers(_markers);
         }
-
-        if (places.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                language != 'vi'
-                    ? "No places found for the selected tag within 5km."
-                    : "Không tìm thấy địa điểm nào cho thẻ đã chọn trong phạm vi 5km.",
-              ),
-            ),
-          );
-        }
-      } catch (e) {
-        if (!mounted) return;
         setState(() {
-          isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              language != 'vi'
-                  ? "Failed to load places for the selected tag."
-                  : "Không tải được địa điểm cho thẻ đã chọn.",
-            ),
-          ),
-        );
-      }
     }
   }
 
@@ -257,13 +253,11 @@ class _MapScreenState extends State<MapScreen> {
     });
     _showPanel();
   }
-
   void _fitMapToMarkers(List<Marker> markers) {
-    double minLat = markers.first.latLng.latitude;
+    double minLat = _currentPosition.latitude;
     double maxLat = markers.first.latLng.latitude;
-    double minLng = markers.first.latLng.longitude;
+    double minLng = _currentPosition.longitude;
     double maxLng = markers.first.latLng.longitude;
-
     for (var marker in markers) {
       if (marker.latLng.latitude < minLat) minLat = marker.latLng.latitude;
       if (marker.latLng.latitude > maxLat) maxLat = marker.latLng.latitude;
@@ -271,12 +265,11 @@ class _MapScreenState extends State<MapScreen> {
       if (marker.latLng.longitude > maxLng) maxLng = marker.latLng.longitude;
     }
 
-    LatLngBounds bounds = LatLngBounds(
+    var bound = LatLngBounds(
       southwest: LatLng(minLat, minLng),
       northeast: LatLng(maxLat, maxLng),
     );
-
-    _controller?.animateCamera(CameraUpdate.newLatLngBounds(bounds));
+    _controller?.animateCamera(CameraUpdate.newLatLngBounds(bound));
   }
 
   @override
@@ -504,7 +497,9 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                           ),
                         ),
+                        if(isSearchMode)
                         Container(
+                          padding: const EdgeInsets.only(top: 5, left: 10,right: 10),
                           child: isTagLoading
                               ? const CircularProgressIndicator()
                               : tags.isEmpty
@@ -523,7 +518,7 @@ class _MapScreenState extends State<MapScreen> {
                                         itemBuilder: (context, index) {
                                           TagModel tag = tags[index];
                                           bool isSelected = selectedTagId ==
-                                              tag.id.toString();
+                                              tag.id;
                                           return Padding(
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 3.0),
