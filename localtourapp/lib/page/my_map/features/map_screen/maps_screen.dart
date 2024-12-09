@@ -38,6 +38,7 @@ class _MapScreenState extends State<MapScreen> {
   final PlaceService _placeService = PlaceService();
   final EventService _eventService = EventService();
   final ScheduleService _scheduleService = ScheduleService();
+  final TagService _tagService = TagService();
   List<TagModel> tags = [];
   bool isTagLoading = false;
   int? selectedTagId;
@@ -99,8 +100,7 @@ class _MapScreenState extends State<MapScreen> {
       isTagLoading = true;
     });
     try {
-      // Fetch top tags (adjust the size as needed)
-      List<TagModel> fetchedTags = await TagService().getUserTag();
+      List<TagModel> fetchedTags = await _tagService.getTopTagPlace();
       setState(() {
         tags = fetchedTags;
       });
@@ -184,7 +184,7 @@ class _MapScreenState extends State<MapScreen> {
             '',
             1,
             20,
-            10);
+            20);
           if (_controller != null) {
             _markers = places
                 .map((place) => Marker(
