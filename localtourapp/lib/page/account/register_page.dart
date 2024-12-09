@@ -10,7 +10,7 @@ import 'package:localtourapp/services/auth_service.dart';
 import 'package:localtourapp/services/tag_service.dart';
 import 'package:localtourapp/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'config/secure_storage_helper.dart';
+import '../../config/secure_storage_helper.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);

@@ -3,9 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:localtourapp/page/account/view_profile/for_got_password.dart';
 import 'package:localtourapp/services/auth_service.dart';
-import 'config/appConfig.dart';
-import 'config/secure_storage_helper.dart';
-import 'main.dart';
+import '../../config/appConfig.dart';
+import '../../config/secure_storage_helper.dart';
+import '../../main.dart';
 
 class LoginPage extends StatefulWidget {
   final VoidCallback onLogin;

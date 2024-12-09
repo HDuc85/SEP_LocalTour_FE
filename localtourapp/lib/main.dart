@@ -34,8 +34,8 @@ import 'package:localtourapp/services/location_Service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'firebase_options.dart';
-import 'login_page.dart';
-import 'register_page.dart';
+import 'page/account/login_page.dart';
+import 'page/account/register_page.dart';
 import 'welcome_page.dart';
 
 // Import your models and other dependencies as needed
