@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/page/my_map/extension/latlng_extension.dart';
@@ -17,7 +16,6 @@ import 'package:vietmap_flutter_navigation/navigation_plugin.dart';
 import 'package:vietmap_flutter_navigation/views/navigation_view.dart';
 import '../../../../services/traveled_place_service.dart';
 import '../../constants/colors.dart';
-import '../../di/app_context.dart';
 import '../../domain/entities/vietmap_model.dart';
 import '../map_screen/bloc/map_bloc.dart';
 import '../map_screen/bloc/map_state.dart';
@@ -65,9 +63,9 @@ class _RoutingScreenState extends State<RoutingScreen> {
     _navigationOption.simulateRoute = false;
     _navigationOption.isCustomizeUI = true;
     _navigationOption.apiKey = AppConfig.vietMapApiKey;
-    _navigationOption.mapStyle = AppConfig.vietMapStyleUrl;
+    _navigationOption.mapStyle = 'https://maps.vietmap.vn/api/maps/light/styles.json?apikey=${AppConfig.vietMapApiKey}';
     _navigationOption.padding = const EdgeInsets.all(100);
-    _navigationOption.language = 'EN';
+    _navigationOption.language = 'vi';
     _vietmapPlugin.setDefaultOptions(_navigationOption);
   }
 
@@ -80,13 +78,11 @@ class _RoutingScreenState extends State<RoutingScreen> {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       Future.delayed(const Duration(milliseconds: 200))
           .then((value) => _panelController.hide());
-      if (widget.vietmapModel != null) {
-        var args = widget.vietmapModel;
-        routingBloc.add(RoutingEventUpdateRouteParams(
-            destinationDescription:  args!.address ?? 'Vị trí đã chọn',
-            destinationPoint: LatLng(args.lat ?? 0, args.lng ?? 0)));
-      }
-      var position = await Geolocator.getCurrentPosition();
+      var args = widget.vietmapModel;
+      routingBloc.add(RoutingEventUpdateRouteParams(
+          destinationDescription:  args.address ?? 'Vị trí đã chọn',
+          destinationPoint: LatLng(args.lat ?? 0, args.lng ?? 0)));
+          var position = await Geolocator.getCurrentPosition();
       if (!mounted) return;
       routingBloc.add(RoutingEventUpdateRouteParams(
           originDescription: 'Vị trí của bạn',
@@ -139,20 +135,24 @@ class _RoutingScreenState extends State<RoutingScreen> {
       },
       child: BlocListener<MapBloc, MapState>(
         listener: (context, state) {
-          if (state is MapStateGetPlaceDetailSuccess) {
-            if (isFromOrigin) {
-              routingBloc.add(RoutingEventUpdateRouteParams(
-                  originDescription:
-                      state.response.getFullAddress() ?? 'Vị trí của bạn',
-                  originPoint: LatLng(
-                      state.response.lat ?? 0, state.response.lng ?? 0)));
-            } else {
-              routingBloc.add(RoutingEventUpdateRouteParams(
-                  destinationDescription:
-                      state.response.getFullAddress() ?? 'Vị trí đã chọn',
-                  destinationPoint: LatLng(
-                      state.response.lat ?? 0, state.response.lng ?? 0)));
+          try{
+            if (state is MapStateGetPlaceDetailSuccess) {
+              if (isFromOrigin) {
+                routingBloc.add(RoutingEventUpdateRouteParams(
+                    originDescription:
+                    state.response.getFullAddress() ?? 'Vị trí của bạn',
+                    originPoint: LatLng(
+                        state.response.lat ?? 0, state.response.lng ?? 0)));
+              } else {
+                routingBloc.add(RoutingEventUpdateRouteParams(
+                    destinationDescription:
+                    state.response.getFullAddress() ?? 'Vị trí đã chọn',
+                    destinationPoint: LatLng(
+                        state.response.lat ?? 0, state.response.lng ?? 0)));
+              }
             }
+          }catch(e){
+            print(e);
           }
         },
         child: WillPopScope(
@@ -264,7 +264,7 @@ class _RoutingScreenState extends State<RoutingScreen> {
                         });
                       },
                       onArrival: () async {
-                        var result = await _placeService.addTraveledPlace(widget.placeId);
+                         await _placeService.addTraveledPlace(widget.placeId);
                         showDialog(
                             barrierDismissible: false,
                             context: context,

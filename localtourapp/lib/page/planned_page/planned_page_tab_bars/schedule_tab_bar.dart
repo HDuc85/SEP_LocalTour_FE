@@ -85,22 +85,24 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           _listSchedule = [];
           isLoading = false;
         });
-        return;
+      }else{
+        _myUserId = userid;
       }
-      _myUserId = userid;
     } else {
       userid = widget.userId;
     }
-
-    var listschedule = await _scheduleService.getListSchedule(userid);
+    if(userid != null && userid != ''){
+      var listschedule = await _scheduleService.GetScheduleUserId(userid);
+      setState(() {
+        _listScheduleInit = listschedule;
+        _listSchedule = listschedule;
+      });
+    }
     if (_myUserId == userid) {
       isCurrentUser = true;
     }
     _languageCode = languageCode!;
-    _userId = userid;
     setState(() {
-      _listScheduleInit = listschedule;
-      _listSchedule = listschedule;
       isLoading = false;
     });
   }
@@ -129,7 +131,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   Future<void> fetchData() async {
-    var listschedule = await _scheduleService.getListSchedule(_userId);
+    var listschedule = await _scheduleService.GetScheduleUserId(_userId);
 
     // For each schedule, apply the saved order
     for (var schedule in listschedule) {

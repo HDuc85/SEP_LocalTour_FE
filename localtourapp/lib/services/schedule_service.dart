@@ -29,6 +29,21 @@ class ScheduleService {
      return [];
     }
   }
+  Future<List<ScheduleModel>> GetScheduleUserId(String userId) async {
+    final response = await _apiService.makeRequest("Schedule/getByUserId/$userId", "GET");
+
+    if(response.statusCode == 200){
+      final jsonResponse = json.decode(response.body);
+      if(jsonResponse['statusCode'] != null){
+        return [];
+      }
+      var result = mapJsonToScheduleModel(jsonResponse['data']);
+      return result;
+    }
+    else{
+      return [];
+    }
+  }
 
   Future<List<ScheduleModel>> getListSchedule(
       [String? userId,

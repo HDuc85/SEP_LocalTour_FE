@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.localtour.app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = '25.1.8937393'
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -25,17 +25,30 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 24
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 33
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
+    signingConfigs {
+        release {
+            storeFile file('D:/new/key.jks')
+            storePassword '12345678'
+            keyAlias 'keyAlias'
+            keyPassword '12345678'
+        }
+    }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.release // Dùng keystore của release cho chế độ debug
+        }
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig = signingConfigs.debug
         }
+
     }
 }
 
