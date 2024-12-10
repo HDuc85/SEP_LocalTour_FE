@@ -396,7 +396,7 @@ class _MapScreenState extends State<MapScreen> {
                         // Search Bar
                         Padding(
                           padding: EdgeInsets.only(
-                              top: MediaQuery.of(context).size.height * 0.034,
+                              top: MediaQuery.of(context).size.height * 0.041,
                               left: MediaQuery.of(context).size.width * 0.05),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
@@ -502,7 +502,7 @@ class _MapScreenState extends State<MapScreen> {
                         if (isSearchMode)
                           Container(
                             padding: const EdgeInsets.only(
-                                top: 5, left: 10, right: 10),
+                                left: 10, right: 10),
                             child: isTagLoading
                                 ? const CircularProgressIndicator()
                                 : tags.isEmpty
