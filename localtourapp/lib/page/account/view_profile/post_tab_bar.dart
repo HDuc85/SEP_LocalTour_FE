@@ -14,6 +14,7 @@ import 'package:localtourapp/full_media/full_screen_post_media_viewer.dart';
 import 'package:localtourapp/page/account/view_profile/comment.dart';
 import 'package:localtourapp/page/account/view_profile/create_post.dart';
 import 'package:localtourapp/services/post_service.dart';
+import 'package:localtourapp/services/report_service.dart';
 import 'package:localtourapp/video_player/video_thumbnail.dart';
 
 import '../../detail_page/detail_page_tab_bars/form/reportform.dart';
@@ -36,6 +37,7 @@ class PostTabBar extends StatefulWidget {
 class _PostTabBarState extends State<PostTabBar> {
   final ScrollController _scrollController = ScrollController();
   final PostService _postService = PostService();
+  final ReportService _reportService = ReportService();
   bool _showBackToTopButton = false;
   DateTime? _fromDate;
   DateTime? _toDate;
@@ -236,31 +238,30 @@ class _PostTabBarState extends State<PostTabBar> {
                       );
                     } else if (index == 3) {
                       return const SizedBox(height: 10);
-                    } else if (index <=
-                        3 + (listPost.isNotEmpty ? listPost.length : 1)) {
-                      if (listPost.isNotEmpty) {
+                    } else if (listPost.isNotEmpty && index != 2) {
+                      // Render posts when the list is not empty
+                      if (index <= 3 + listPost.length) {
                         final post = listPost[index - 4];
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 8.0),
                           child: _buildSinglePostItem(post),
                         );
-                      } else {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20.0),
-                          child: Center(
-                            child: Text(
-                              _languageCode == 'vi'
-                                  ? 'Không tìm thấy bài nào'
-                                  : "No posts found",
-                              style: const TextStyle(
-                                  fontSize: 18, color: Colors.grey),
-                            ),
-                          ),
-                        );
                       }
-                    } else {
-                      return const SizedBox(height: 50);
+                    } else if (index == 4) {
+                      // Show "No posts found" only once
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20.0),
+                        child: Center(
+                          child: Text(
+                            _languageCode == 'vi'
+                                ? 'Không tìm thấy bài nào'
+                                : "No posts found",
+                            style: const TextStyle(fontSize: 18, color: Colors.grey),
+                          ),
+                        ),
+                      );
                     }
+                    return const SizedBox(height: 50);
                   },
                 ),
               ),
@@ -563,17 +564,20 @@ class _PostTabBarState extends State<PostTabBar> {
                           post.authorId, // Pass the userId for reporting
                           post.placeId, // Pass placeId if applicable
                           _languageCode,
-                          onSubmit: (String message) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  _languageCode != 'vi'
-                                      ? 'Report submitted successfully.'
-                                      : 'Báo cáo đã được gửi thành công.',
-                                ),
+                          onSubmit: (String message) async {
+                            var result = await _reportService.reportUser(post.authorId, message);
+                            if(result == "Your report has been sent!"){
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                _languageCode != 'vi'
+                                    ? 'Report submitted successfully.'
+                                    : 'Báo cáo đã được gửi thành công.',
                               ),
-                            );
-                          },
+                            ),
+                          );
+                        }
+                      },
                         );
                       },
                     ),

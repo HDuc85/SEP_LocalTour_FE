@@ -22,7 +22,9 @@ class ReportService {
   Future<String> reportUser(String userId, String message) async {
     var body = {
       "userId": userId,
-      "message": message
+      "content": message,
+      "reportDate": "2023-12-10T20:00:36.552Z",
+      "status": "string"
     };
 
     final response = await _apiService.makeRequest("UserReport","POST",body);

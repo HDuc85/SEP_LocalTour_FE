@@ -111,7 +111,8 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
         },
         child: Chip(
           label: Text(
-            tag.tagName,
+              _languageCode == 'vi' ? tag.tagVi :
+              tag.tagName,
             style: TextStyle(color: isSelected ? Colors.white : Colors.green),
           ),
           shape: const StadiumBorder(

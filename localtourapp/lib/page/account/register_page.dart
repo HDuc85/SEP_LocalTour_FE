@@ -83,13 +83,12 @@ class _RegisterPageState extends State<RegisterPage> {
     var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     if(isLogin){
       if(isFirstLogin){
+        _languageCode = languageCode ?? 'en'; // Default to 'en'
+        pageIndex = _languageCode == 'vi'
+            ? ['Google', 'Mật khẩu', 'Biệt danh', 'Sở thích']
+            : ['Google', 'Password', 'NickName', 'Preferences'];
         setState(() {
-          _languageCode = languageCode ?? 'en'; // Default to 'en' if null
-          // Update pageIndex dynamically based on _languageCode
-          pageIndex = _languageCode == 'vi'
-              ? ['Google', 'Mật khẩu', 'Biệt danh', 'Sở thích']
-              : ['Google', 'Password', 'NickName', 'Preferences'];
-          currentStep = 2; // Start from step 2
+          currentStep = 2; // Start from step 2// if null
         });
       }else{
         Navigator.pushNamed(context, '/');
@@ -798,7 +797,8 @@ class _RegisterPageState extends State<RegisterPage> {
         },
         child: Chip(
           label: Text(
-            tag.tagName,
+              _languageCode == 'vi' ? tag.tagVi :
+              tag.tagName,
             style: TextStyle(color: isSelected ? Colors.white : Colors.green),
           ),
           shape: const StadiumBorder(

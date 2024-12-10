@@ -91,7 +91,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     } else {
       userid = widget.userId;
     }
+
     if(userid != null && userid != ''){
+      _userId = userid;
       var listschedule = await _scheduleService.GetScheduleUserId(userid);
       setState(() {
         _listScheduleInit = listschedule;

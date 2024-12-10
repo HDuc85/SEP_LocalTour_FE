@@ -202,9 +202,11 @@ class _LoginPageState extends State<LoginPage> {
                       var result = await _authService.sendUserIdToBackend();
                       if (result.firstTime) {
                         navigatorKey.currentState?.pushNamed('/register');
+                      }else{
+                        widget.onLogin();
+                        Navigator.pushNamed(context, '/');
                       }
-                      widget.onLogin();
-                      Navigator.pushNamed(context, '/');
+
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
