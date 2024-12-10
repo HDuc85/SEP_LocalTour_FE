@@ -95,7 +95,7 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
           setState(() {
             // Toggle the tag selection with enforcement of minimum 5 selections
             if (isSelected) {
-              if (listUserTag.length > 4) {
+              if (listUserTag.length > 5) {
                 listUserTag.removeWhere((element) => element.id == tag.id,);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(

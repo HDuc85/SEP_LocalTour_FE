@@ -396,7 +396,7 @@ class _MapScreenState extends State<MapScreen> {
                         // Search Bar
                         Padding(
                           padding: EdgeInsets.only(
-                              top: MediaQuery.of(context).size.height * 0.04,
+                              top: MediaQuery.of(context).size.height * 0.034,
                               left: MediaQuery.of(context).size.width * 0.05),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
