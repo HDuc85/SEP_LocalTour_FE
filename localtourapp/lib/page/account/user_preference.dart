@@ -63,19 +63,21 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
         ),
       ),
       body:
-      isLoading?  const Center(child: CircularProgressIndicator()) :Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Text(_languageCode == 'vi' ? "Chọn sở thích của bạn":"Choose your preferences" , style: const TextStyle(fontSize: 18)),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children:  _buildAllTagChips(),
+      isLoading?  const Center(child: CircularProgressIndicator()) :SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Text(_languageCode == 'vi' ? "Chọn sở thích của bạn":"Choose your preferences" , style: const TextStyle(fontSize: 18)),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children:  _buildAllTagChips(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
