@@ -624,6 +624,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                           ),
                           Row(
                             children: [
+                              if(isCurrentUser)
                               IconButton(
                                 icon: const Icon(Icons.delete,
                                     color: Color(0xFF4F4F4F)),
