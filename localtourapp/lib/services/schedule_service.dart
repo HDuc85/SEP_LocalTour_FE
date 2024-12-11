@@ -13,12 +13,13 @@ class ScheduleService {
 
   Future<List<ScheduleModel>> GetScheduleCurrentUser() async {
     var myUserId = await SecureStorageHelper().readValue(AppConfig.userId);
+    String? languageCode = await SecureStorageHelper().readValue(AppConfig.language);
 
     if(myUserId == null){
       throw Exception('User is not login');
     }
 
-    final response = await _apiService.makeRequest("Schedule/getByUserId/$myUserId", "GET");
+    final response = await _apiService.makeRequest("Schedule/getByUserId/$myUserId?languageCode=$languageCode", "GET");
 
     if(response.statusCode == 200){
       final jsonResponse = json.decode(response.body);
