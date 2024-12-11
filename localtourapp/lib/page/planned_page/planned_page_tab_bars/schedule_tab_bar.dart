@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
+import 'package:localtourapp/models/HomePage/placeCard.dart';
 import 'package:localtourapp/models/schedule/destination_model.dart';
 import 'package:localtourapp/models/schedule/schedule_model.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
@@ -136,13 +137,13 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     var listschedule = await _scheduleService.GetScheduleUserId(_userId);
 
     // For each schedule, apply the saved order
-    for (var schedule in listschedule) {
+    /*for (var schedule in listschedule) {
       List<int> savedOrder = await getSavedDestinationOrder(schedule.id);
       if (savedOrder.isNotEmpty) {
         applySavedOrder(schedule.destinations, savedOrder);
       }
     }
-
+*/
     setState(() {
       _listScheduleInit = listschedule;
       _listSchedule = listschedule;
@@ -292,7 +293,16 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   void _swapDestination(DestinationModel old, DestinationModel newD) async {
+    var result = await _scheduleService.UpdateDestination(old.id, old.scheduleId, newD.placeId, newD.startDate, newD.endDate, newD.detail, newD.isArrived);
+    var resuldt = await _scheduleService.UpdateDestination(newD.id, newD.scheduleId, old.placeId, old.startDate, old.endDate, old.detail, old.isArrived);
     fetchData();
+  }
+
+  void _ChoosePlace(PlaceCardModel place, int scheduleId) async {
+    var result = await _scheduleService.CreateDestination(scheduleId, place.placeId,null,null,null);
+    if(result){
+      fetchData();
+    }
   }
 
   @override
@@ -825,7 +835,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               },
               onAcceptWithDetails: (DragTargetDetails<DestinationModel> details) async {
                 final draggedDestination = details.data;
-
                 setState(() {
                   // Swap positions of draggedDestination and destination
                   int oldIndex = destinations.indexOf(draggedDestination);
@@ -849,12 +858,16 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const SearchPage(),
+                  builder: (context) => SearchPage(
+                    onPlaceSelected: (p0) {
+                      _ChoosePlace(p0,schedule.id);
+                    },
+                  ),
                 ),
               );
 
               if (result == true) {
-                fetchData(); // Refresh the schedule data
+                fetchData();
               }
             },
             child: const Icon(Icons.add_circle, size: 30),
