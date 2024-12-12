@@ -5,6 +5,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/page/my_map/extension/latlng_extension.dart';
+import 'package:localtourapp/services/location_Service.dart';
 import 'package:sliding_up_panel2/sliding_up_panel2.dart';
 import 'package:talker/talker.dart';
 import 'package:vietmap_flutter_gl/vietmap_flutter_gl.dart';
@@ -41,6 +42,7 @@ class RoutingScreen extends StatefulWidget {
 
 class _RoutingScreenState extends State<RoutingScreen> {
   final TraveledPlaceService _placeService = TraveledPlaceService();
+  final LocationService _locationService = LocationService();
   final talker = Talker();
   bool isFromOrigin = true;
   final PanelController _panelController = PanelController();
@@ -82,11 +84,13 @@ class _RoutingScreenState extends State<RoutingScreen> {
       routingBloc.add(RoutingEventUpdateRouteParams(
           destinationDescription:  args.address ?? 'Vị trí đã chọn',
           destinationPoint: LatLng(args.lat ?? 0, args.lng ?? 0)));
-          var position = await Geolocator.getCurrentPosition();
+      Position? position = await _locationService.getCurrentPosition();
+      double long = position != null ? position.longitude : 106.8096761;
+      double lat = position != null ? position.latitude : 10.8411123;
       if (!mounted) return;
       routingBloc.add(RoutingEventUpdateRouteParams(
           originDescription: 'Vị trí của bạn',
-          originPoint: LatLng(position.latitude, position.longitude)));
+          originPoint: LatLng(lat, long)));
     });
   }
 

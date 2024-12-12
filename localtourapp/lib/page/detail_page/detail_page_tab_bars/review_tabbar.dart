@@ -137,12 +137,22 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
     }
 
     if(result != 'Success'){
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result),
-            duration: const Duration(seconds: 3),
-            backgroundColor: Colors.red,
-          ));
+
+      if(result.toLowerCase().contains(('You have not reached this point yet, please set up a schedule and go there to be evaluated').toLowerCase())){
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_language != 'vi'?'You have not reached this point yet, please set up a schedule and go there to be evaluated': "Bạn chưa đi đến điểm này hãy thiết lập lịch  trình và đi đến đó để được đánh giá"),
+              duration: const Duration(seconds: 3),
+              backgroundColor: Colors.red,
+            ));
+      }else{
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result),
+              duration: const Duration(seconds: 3),
+              backgroundColor: Colors.red,
+            ));
+      }
     }
     else{
       ScaffoldMessenger.of(context).showSnackBar(

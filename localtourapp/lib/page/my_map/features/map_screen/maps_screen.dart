@@ -258,9 +258,9 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _fitMapToMarkers(List<Marker> markers) {
-    double minLat = _currentPosition.latitude;
+    double minLat = markers.first.latLng.latitude;
     double maxLat = markers.first.latLng.latitude;
-    double minLng = _currentPosition.longitude;
+    double minLng = markers.first.latLng.longitude;
     double maxLng = markers.first.latLng.longitude;
     for (var marker in markers) {
       if (marker.latLng.latitude < minLat) minLat = marker.latLng.latitude;

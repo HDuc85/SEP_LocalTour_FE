@@ -53,6 +53,11 @@ class ApiService {
          await storage.deleteValue(AppConfig.isLogin);
       }
     }
+    if(response.statusCode == 403){
+      await storage.deleteValue(AppConfig.isLogin);
+      await storage.deleteValue(AppConfig.userId);
+    }
+
     return response;
   }
 
