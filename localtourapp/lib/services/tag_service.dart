@@ -69,7 +69,6 @@ class TagService {
 
 
   Future<bool> addTagsPreferencs(List<int> tagIds) async{
-
     final Map<String, dynamic> body = {
       "tagIds": tagIds
     };

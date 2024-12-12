@@ -15,7 +15,6 @@ import 'package:localtourapp/base/back_to_top_button.dart';
 import 'package:localtourapp/base/weather_icon_button.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dashed_line.dart';
 
@@ -71,7 +70,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     super.didChangeDependencies();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (ModalRoute.of(context)?.isCurrent == true) {
-        fetchData(); // Refresh your data here
+      //  fetchData(); // Refresh your data here
       }
     });
   }
@@ -110,40 +109,10 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     });
   }
 
-  // Save the order
-  Future<void> saveDestinationOrder(int scheduleId, List<DestinationModel> destinations) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> destinationOrder = destinations.map((d) => d.id.toString()).toList();
-    await prefs.setStringList('destination_order_$scheduleId', destinationOrder);
-  }
-
-// Get the saved order
-  Future<List<int>> getSavedDestinationOrder(int scheduleId) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String>? orderList = prefs.getStringList('destination_order_$scheduleId');
-    return orderList?.map(int.parse).toList() ?? [];
-  }
-
-// Apply the saved order
-  void applySavedOrder(List<DestinationModel> destinations, List<int> savedOrder) {
-    destinations.sort((a, b) {
-      int indexA = savedOrder.indexOf(a.id);
-      int indexB = savedOrder.indexOf(b.id);
-      return indexA.compareTo(indexB);
-    });
-  }
 
   Future<void> fetchData() async {
     var listschedule = await _scheduleService.GetScheduleUserId(_userId);
 
-    // For each schedule, apply the saved order
-    /*for (var schedule in listschedule) {
-      List<int> savedOrder = await getSavedDestinationOrder(schedule.id);
-      if (savedOrder.isNotEmpty) {
-        applySavedOrder(schedule.destinations, savedOrder);
-      }
-    }
-*/
     setState(() {
       _listScheduleInit = listschedule;
       _listSchedule = listschedule;
@@ -202,7 +171,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   void _toggleEditing(int scheduleId) {
-    _editingScheduleIds.add(scheduleId);
+    setState(() {
+      _editingScheduleIds.add(scheduleId);
+    });
   }
 
   void _toggleFavorite(int scheduleId) async {
@@ -225,13 +196,26 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   void _editPlaceName(ScheduleModel schedule, String scheduleName) async {
+    // var result = await _scheduleService.UpdateSchedule(
+    //     schedule.id,
+    //     scheduleName != '' ? scheduleName : schedule.scheduleName,
+    //     schedule.startDate,
+    //     schedule.endDate,
+    //     schedule.isPublic);
+    // if (result) {
+    //   fetchData();
+    // }
+  }
+
+  void updatedSchedule(ScheduleModel newSchedule,String scheduleName) async {
     var result = await _scheduleService.UpdateSchedule(
-        schedule.id,
-        scheduleName != '' ? scheduleName : schedule.scheduleName,
-        schedule.startDate,
-        schedule.endDate,
-        schedule.isPublic);
+        newSchedule.id,
+        scheduleName != '' ? scheduleName : newSchedule.scheduleName,
+        newSchedule.startDate,
+        newSchedule.endDate,
+        newSchedule.isPublic);
     if (result) {
+      _editingScheduleIds.clear();
       fetchData();
     }
   }
@@ -563,7 +547,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                 setState(() {
                                   schedule.startDate = newDate;
                                 });
-                                _editPlaceName(schedule, _nameController.text);
+
                               },
                               clearable: true,
                               onClear: () {
@@ -583,7 +567,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                 setState(() {
                                   schedule.endDate = newDate;
                                 });
-                                _editPlaceName(schedule, _nameController.text);
+
                               },
                               clearable: true,
                               onClear: () {
@@ -645,6 +629,25 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                               ),
                             ],
                           ),
+                          const Spacer(),
+                         if(isEditingName) ElevatedButton.icon(
+                            onPressed: () {
+                              updatedSchedule(schedule, _nameController.text);
+                            },
+                            icon: const Icon(Icons.add, color: Colors.white),
+                            label: Text(_languageCode == 'vi' ?'Sửa':
+                            "Update",
+                              style: const TextStyle(fontSize: 13, color: Colors.white),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: const BorderSide(color: Colors.black, width: 1), // Black border
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10,)
                         ],
                       ),
                     ],
@@ -845,8 +848,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   }
                 });
 
-                // Save the new order locally
-                await saveDestinationOrder(schedule.id, destinations);
               },
             ),
           );
@@ -1001,7 +1002,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     );
   }
 
-
   Widget _buildDestinationDetailSheet(
       DestinationModel destination,
       Function(DateTime?) updateStartDate,
@@ -1105,7 +1105,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       ),
     );
   }
-
 
   Widget _buildDetailSection(
       String detailText, Function(String) onSave, bool isCurrentUser) {
@@ -1285,7 +1284,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               context: context,
               initialTime: TimeOfDay.fromDateTime(selectedDate),
             );
-
             if (time != null) {
               selectedDate = DateTime(
                   date.year, date.month, date.day, time.hour, time.minute);
@@ -1293,7 +1291,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               selectedDate = DateTime(
                   date.year, date.month, date.day, 0, 0); // Default time
             }
-
             onDateChanged(selectedDate);
           }
         }

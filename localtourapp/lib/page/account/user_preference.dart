@@ -55,7 +55,6 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
           onPressed: () async {
             List<int> listTagSelected = listUserTag.map((e) => e.id,).toList();
             var result = await _tagService.addTagsPreferencs(listTagSelected);
-
             if(result){
               Navigator.pop(context);
             }
