@@ -507,7 +507,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       GestureDetector(
-                        onTap: () => _toggleEditing(schedule.id),
+                        onTap: () {_toggleEditing(schedule.id);
+                        _nameController.text = schedule.scheduleName;
+                        },
                         child: isEditingName
                             ? TextFormField(
                           controller: _nameController,
@@ -634,7 +636,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                             onPressed: () {
                               updatedSchedule(schedule, _nameController.text);
                             },
-                            icon: const Icon(Icons.add, color: Colors.white),
                             label: Text(_languageCode == 'vi' ?'Sửa':
                             "Update",
                               style: const TextStyle(fontSize: 13, color: Colors.white),

@@ -1,4 +1,5 @@
 class TraveledPlaceModel {
+  final int placeId;
   final String placeName;
   final String placePhotoDisplay;
   final String wardName;
@@ -7,6 +8,7 @@ class TraveledPlaceModel {
   final int traveledTimes;
 
   TraveledPlaceModel({
+    required this.placeId,
     required this.placeName,
     required this.placePhotoDisplay,
     required this.wardName,
@@ -26,6 +28,7 @@ class TraveledPlaceModel {
           ? DateTime.parse(json['place']['lastVisitDate']).toUtc()
           : DateTime.fromMillisecondsSinceEpoch(0).toUtc(),
       traveledTimes: json['traveledTimes'] ?? 0,
+      placeId: (json['place']['placeId']).toInt(),
     );
   }
 }

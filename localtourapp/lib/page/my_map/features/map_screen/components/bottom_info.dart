@@ -9,6 +9,7 @@ import 'package:localtourapp/models/event/event_model.dart';
 import 'package:localtourapp/models/places/place_detail_model.dart';
 import '../../../../../full_media/full_place_media_viewer.dart';
 import '../../../../../models/media_model.dart';
+import '../../../../detail_page/detail_page.dart';
 import '../../../../detail_page/detail_page_tab_bars/form/schedule_form.dart';
 import '../../../components/map_action_button.dart';
 import '../../../constants/colors.dart';
@@ -152,19 +153,31 @@ class BottomSheetInfo extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(
-                width: 100,
-                height: 120,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(11),
-                  image: DecorationImage(
-                    image: NetworkImage(isEvent!
-                        ? eventModel!.eventPhoto!
-                        : detailModel!.photoDisplay),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              )
+              GestureDetector(
+                  onTap: () {
+                    // Navigate to DetailPage and pass the filtered data
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DetailPage(
+                          placeId: detailModel!.id,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    width: 100,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(11),
+                      image: DecorationImage(
+                        image: NetworkImage(isEvent!
+                            ? eventModel!.eventPhoto!
+                            : detailModel!.photoDisplay),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ))
             ],
           ),
           const SizedBox(
@@ -217,7 +230,10 @@ class BottomSheetInfo extends StatelessWidget {
                     print('Navigation Error: $e');
                     // Show an error message to the user
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(language != 'vi' ? "Unable to navigate." : "Không thể chỉ đường.")),
+                      SnackBar(
+                          content: Text(language != 'vi'
+                              ? "Unable to navigate."
+                              : "Không thể chỉ đường.")),
                     );
                   }
                 },

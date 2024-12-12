@@ -8,6 +8,7 @@ import '../../../base/back_to_top_button.dart';
 import '../../../base/weather_icon_button.dart';
 import '../../../config/appConfig.dart';
 import '../../../config/secure_storage_helper.dart';
+import '../../detail_page/detail_page.dart';
 
 class HistoryTabbar extends StatefulWidget {
   const HistoryTabbar({super.key});
@@ -62,7 +63,8 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
   }
 
   Future<void> _fetchTraveledPlaceData() async {
-    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+    var languageCode =
+        await SecureStorageHelper().readValue(AppConfig.language);
     try {
       final fetchedData = await _traveledPlaceService.getAllTraveledPlace();
       setState(() {
@@ -101,19 +103,32 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
                       children: [
                         Row(
                           children: [
-                            ClipRRect(
-                              child: Image.network(
-                                place.placePhotoDisplay,
-                                width: 75,
-                                height: 75,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
+                            GestureDetector(
+                              onTap: () {
+                                // Navigate to DetailPage and pass the filtered data
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => DetailPage(
+                                      placeId: place.placeId,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: ClipRRect(
+                                child: Image.network(
+                                  place.placePhotoDisplay,
                                   width: 75,
                                   height: 75,
-                                  color: Colors.grey,
-                                  child: const Icon(Icons.image,
-                                      color: Colors.white),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                    width: 75,
+                                    height: 75,
+                                    color: Colors.grey,
+                                    child: const Icon(Icons.image,
+                                        color: Colors.white),
+                                  ),
                                 ),
                               ),
                             ),
@@ -122,14 +137,27 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    place.placeName,
-                                    style: const TextStyle(
-                                      fontSize: 16.0,
-                                      fontWeight: FontWeight.bold,
+                                  GestureDetector(
+                                    onTap: () {
+                                      // Navigate to DetailPage and pass the filtered data
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => DetailPage(
+                                            placeId: place.placeId,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      place.placeName,
+                                      style: const TextStyle(
+                                        fontSize: 16.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   Text(
                                     place.wardName,
@@ -195,7 +223,8 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
             duration: const Duration(milliseconds: 300),
             child: _showBackToTopButton
                 ? BackToTopButton(
-                    onPressed: _scrollToTop, languageCode: 'vi',
+                    onPressed: _scrollToTop,
+                    languageCode: 'vi',
                   )
                 : const SizedBox.shrink(),
           ),

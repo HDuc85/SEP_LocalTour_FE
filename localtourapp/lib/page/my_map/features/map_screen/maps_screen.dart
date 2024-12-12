@@ -190,54 +190,54 @@ class _MapScreenState extends State<MapScreen> {
       if (_controller != null) {
         _markers = places
             .map((place) => Marker(
-          latLng: LatLng(place.latitude, place.longitude),
-          child: GestureDetector(
-            onTap: () {
-              _onMarkerTapped(place);
-            },
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    const SizedBox(
-                      width: 30,
+                  latLng: LatLng(place.latitude, place.longitude),
+                  child: GestureDetector(
+                    onTap: () {
+                      _onMarkerTapped(place);
+                    },
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            const SizedBox(
+                              width: 30,
+                            ),
+                            SizedBox(
+                              height: 40,
+                              width: 100,
+                              child: Text(
+                                place.placeName,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(
+                              color: Colors.blue,
+                              width: 1,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              place.photoDisplayUrl,
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(
-                      height: 40,
-                      width: 100,
-                      child: Text(
-                        place.placeName,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(
-                      color: Colors.blue,
-                      width: 1,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      place.photoDisplayUrl,
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ))
+                ))
             .toList();
       }
       if (_controller != null && places.isNotEmpty) {
@@ -283,519 +283,511 @@ class _MapScreenState extends State<MapScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
-        children: [
-          SlidingUpPanel(
-            isDraggable: _isPanelDraggable,
-            backdropEnabled: true,
-            backdropTapClosesPanel: true,
-            controller: _panelController,
-            maxHeight: 330,
-            minHeight: 0,
-            parallaxEnabled: false,
-            onPanelSlide: (position) {
-              if (!mounted || _isControllerDisposed) return;
-              setState(() {
-                panelPosition = position;
-              });
-            },
-            panelBuilder: () {
-              return BottomSheetInfo(
-                placeCardModel: selectPlace,
-                isEvent: isEvent,
-                eventModel: selectEvent,
-                language: language,
-                detailModel: detailSelect,
-                userId: userId,
-                onClose: () {
-                  _panelController.hide();
-                },
-                onDraggableChanged: (value) {
-                  _isPanelDraggable = value;
-                },
-              );
-            },
-            body: Stack(
               children: [
-                VietmapGL(
-                  gestureRecognizers: <Factory<
-                      OneSequenceGestureRecognizer>>{
-                    Factory<ScaleGestureRecognizer>(
-                            () => ScaleGestureRecognizer()),
-                    Factory<PanGestureRecognizer>(
-                            () => PanGestureRecognizer()),
-                    Factory<TapGestureRecognizer>(
-                            () => TapGestureRecognizer()),
-                    Factory<VerticalDragGestureRecognizer>(
-                            () => VerticalDragGestureRecognizer()),
+                SlidingUpPanel(
+                  isDraggable: _isPanelDraggable,
+                  backdropEnabled: true,
+                  backdropTapClosesPanel: true,
+                  controller: _panelController,
+                  maxHeight: 330,
+                  minHeight: 0,
+                  parallaxEnabled: false,
+                  onPanelSlide: (position) {
+                    if (!mounted || _isControllerDisposed) return;
+                    setState(() {
+                      panelPosition = position;
+                    });
                   },
-                  zoomGesturesEnabled: true,
-                  scrollGesturesEnabled: true,
-                  rotateGesturesEnabled: true,
-                  myLocationEnabled: true,
-                  myLocationTrackingMode:
-                  MyLocationTrackingMode.TrackingCompass,
-                  myLocationRenderMode: myLocationRenderMode,
-                  trackCameraPosition: true,
-                  compassViewMargins:
-                  Point(10, MediaQuery.sizeOf(context).height * 0.27),
-                  minMaxZoomPreference: const MinMaxZoomPreference(0, 18),
-                  styleString: tileMap,
-                  initialCameraPosition: CameraPosition(
-                    target: LatLng(_currentPosition.latitude,
-                        _currentPosition.longitude),
-                    zoom: 13,
-                  ),
-                  onMapCreated: (controller) {
-                    if (!_isControllerDisposed) {
-                      setState(() {
-                        _controller = controller;
-                      });
-                    }
+                  panelBuilder: () {
+                    return BottomSheetInfo(
+                      placeCardModel: selectPlace,
+                      isEvent: isEvent,
+                      eventModel: selectEvent,
+                      language: language,
+                      detailModel: detailSelect,
+                      userId: userId,
+                      onClose: () {
+                        _panelController.hide();
+                      },
+                      onDraggableChanged: (value) {
+                        _isPanelDraggable = value;
+                      },
+                    );
                   },
-                  onMapClick: (point, coordinates) async {},
-                ),
-                if (_controller != null && !_isControllerDisposed)
-                  MarkerLayer(
-                    mapController: _controller!,
-                    markers: _markers,
-                  ),
-              ],
-            ),
-          ),
-          (_controller != null && !_isControllerDisposed)
-              ? UserLocationLayer(
-            mapController: _controller!,
-            locationIcon: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(
-                  shape: BoxShape.circle, color: vietmapColor),
-              child: const Icon(
-                Icons.circle,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-            bearingIcon: Container(
-                width: 50,
-                height: 50,
-                alignment: Alignment.topCenter,
-                decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.transparent),
-                child: Image.asset(
-                  'assets/images/heading.png',
-                  width: 15,
-                  height: 15,
-                )),
-            ignorePointer: true,
-          )
-              : const SizedBox.shrink(),
-          Align(
-              key: const Key('searchBarKey'),
-              alignment: Alignment.topCenter,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Search Bar
-                  Padding(
-                    padding: EdgeInsets.only(
-                        top:
-                        MediaQuery.of(context).size.height * 0.041,
-                        left:
-                        MediaQuery.of(context).size.width * 0.05),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      height: 50,
-                      width: MediaQuery.of(context).size.width * 0.90,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border:
-                        Border.all(color: Colors.black, width: 0.5),
-                        borderRadius: BorderRadius.circular(25),
+                  body: Stack(
+                    children: [
+                      VietmapGL(
+                        gestureRecognizers: <Factory<
+                            OneSequenceGestureRecognizer>>{
+                          Factory<ScaleGestureRecognizer>(
+                              () => ScaleGestureRecognizer()),
+                          Factory<PanGestureRecognizer>(
+                              () => PanGestureRecognizer()),
+                          Factory<TapGestureRecognizer>(
+                              () => TapGestureRecognizer()),
+                          Factory<VerticalDragGestureRecognizer>(
+                              () => VerticalDragGestureRecognizer()),
+                        },
+                        zoomGesturesEnabled: true,
+                        scrollGesturesEnabled: true,
+                        rotateGesturesEnabled: true,
+                        myLocationEnabled: true,
+                        myLocationTrackingMode:
+                            MyLocationTrackingMode.TrackingCompass,
+                        myLocationRenderMode: myLocationRenderMode,
+                        trackCameraPosition: true,
+                        compassViewMargins:
+                            Point(10, MediaQuery.sizeOf(context).height * 0.27),
+                        minMaxZoomPreference: const MinMaxZoomPreference(0, 18),
+                        styleString: tileMap,
+                        initialCameraPosition: CameraPosition(
+                          target: LatLng(_currentPosition.latitude,
+                              _currentPosition.longitude),
+                          zoom: 13,
+                        ),
+                        onMapCreated: (controller) {
+                          if (!_isControllerDisposed) {
+                            setState(() {
+                              _controller = controller;
+                            });
+                          }
+                        },
+                        onMapClick: (point, coordinates) async {},
                       ),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            icon: isSearchMode
-                                ? const Icon(
-                              Icons.search,
-                              color: Colors.black,
-                            )
-                                : const Icon(Icons.travel_explore),
-                            onPressed: () {
-                              setState(() {
-                                isSearchMode = !isSearchMode;
-                                _markers.clear();
-                                FocusScope.of(context).unfocus();
-                                if (!isSearchMode) {
-                                  _scheduleSelect();
-                                }
-                              });
-                            },
+                      if (_controller != null && !_isControllerDisposed)
+                        MarkerLayer(
+                          mapController: _controller!,
+                          markers: _markers,
+                        ),
+                    ],
+                  ),
+                ),
+                (_controller != null && !_isControllerDisposed)
+                    ? UserLocationLayer(
+                        mapController: _controller!,
+                        locationIcon: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                              shape: BoxShape.circle, color: vietmapColor),
+                          child: const Icon(
+                            Icons.circle,
+                            color: Colors.white,
+                            size: 20,
                           ),
-                          Expanded(
-                            child: isSearchMode
-                                ? TextField(
-                              controller: _searchController,
-                              onChanged: _onSearchChanged,
-                              focusNode: _searchFocus,
-                              autofocus: false,
-                              decoration: InputDecoration(
-                                  hintText: language != 'vi'
-                                      ? "Where do you want to go?"
-                                      : "Bạn muốn đi đâu?",
-                                  border: InputBorder.none,
-                                  suffixIcon: _searchController
-                                      .text.isNotEmpty
-                                      ? IconButton(
-                                    icon: const Icon(
-                                        Icons.clear),
-                                    onPressed: () {
-                                      _searchController
-                                          .clear();
-                                      setState(() {
-                                        searchText = '';
-                                        setState(() {
-                                          FocusScope.of(
-                                              context)
-                                              .unfocus();
-                                        });
-                                        onSearch = false;
-                                        // Unselect any selected tag when clearing search
-                                        selectedTagId = null;
-                                      });
-                                    },
-                                  )
-                                      : null),
-                            )
-                                : DropdownButton<String>(
-                              value: _selectedSchedule,
-                              hint: Text(language != 'vi'
-                                  ? "Select your schedule"
-                                  : "Chọn lịch trình của bạn"),
-                              isDense: true,
-                              isExpanded: false,
-                              icon:
-                              const Icon(Icons.arrow_drop_down),
-                              underline: Container(),
-                              items: _listSchedule
-                                  .map((schedule) =>
-                                  DropdownMenuItem(
-                                    value:
-                                    '${schedule.scheduleName}_${schedule.id}',
-                                    child: SizedBox(
-                                      width: 250,
-                                      child: Text(
-                                        schedule.scheduleName,
-                                        maxLines: 1,
-                                        overflow: TextOverflow
-                                            .ellipsis,
-                                      ),
-                                    ),
-                                  ))
-                                  .toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedSchedule = value;
-                                });
-                                _scheduleSelect();
-                              },
+                        ),
+                        bearingIcon: Container(
+                            width: 50,
+                            height: 50,
+                            alignment: Alignment.topCenter,
+                            decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.transparent),
+                            child: Image.asset(
+                              'assets/images/heading.png',
+                              width: 15,
+                              height: 15,
+                            )),
+                        ignorePointer: true,
+                      )
+                    : const SizedBox.shrink(),
+                Align(
+                    key: const Key('searchBarKey'),
+                    alignment: Alignment.topCenter,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Search Bar
+                        Padding(
+                          padding: EdgeInsets.only(
+                              top: MediaQuery.of(context).size.height * 0.041,
+                              left: MediaQuery.of(context).size.width * 0.05),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            height: 50,
+                            width: MediaQuery.of(context).size.width * 0.90,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border:
+                                  Border.all(color: Colors.black, width: 0.5),
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  icon: isSearchMode
+                                      ? const Icon(
+                                          Icons.search,
+                                          color: Colors.black,
+                                        )
+                                      : const Icon(Icons.travel_explore),
+                                  onPressed: () {
+                                    setState(() {
+                                      isSearchMode = !isSearchMode;
+                                      _markers.clear();
+                                      FocusScope.of(context).unfocus();
+                                      if (!isSearchMode) {
+                                        _scheduleSelect();
+                                      }
+                                    });
+                                  },
+                                ),
+                                Expanded(
+                                  child: isSearchMode
+                                      ? TextField(
+                                          controller: _searchController,
+                                          onChanged: _onSearchChanged,
+                                          focusNode: _searchFocus,
+                                          autofocus: false,
+                                          decoration: InputDecoration(
+                                              hintText: language != 'vi'
+                                                  ? "Where do you want to go?"
+                                                  : "Bạn muốn đi đâu?",
+                                              border: InputBorder.none,
+                                              suffixIcon: _searchController
+                                                      .text.isNotEmpty
+                                                  ? IconButton(
+                                                      icon: const Icon(
+                                                          Icons.clear),
+                                                      onPressed: () {
+                                                        _searchController
+                                                            .clear();
+                                                        setState(() {
+                                                          searchText = '';
+                                                          setState(() {
+                                                            FocusScope.of(
+                                                                    context)
+                                                                .unfocus();
+                                                          });
+                                                          onSearch = false;
+                                                          // Unselect any selected tag when clearing search
+                                                          selectedTagId = null;
+                                                        });
+                                                      },
+                                                    )
+                                                  : null),
+                                        )
+                                      : DropdownButton<String>(
+                                          value: _selectedSchedule,
+                                          hint: Text(language != 'vi'
+                                              ? "Select your schedule"
+                                              : "Chọn lịch trình của bạn"),
+                                          isDense: true,
+                                          isExpanded: false,
+                                          icon:
+                                              const Icon(Icons.arrow_drop_down),
+                                          underline: Container(),
+                                          items: _listSchedule
+                                              .map((schedule) =>
+                                                  DropdownMenuItem(
+                                                    value:
+                                                        '${schedule.scheduleName}_${schedule.id}',
+                                                    child: SizedBox(
+                                                      width: 250,
+                                                      child: Text(
+                                                        schedule.scheduleName,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                  ))
+                                              .toList(),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _selectedSchedule = value;
+                                            });
+                                            _scheduleSelect();
+                                          },
+                                        ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (isSearchMode)
-                    Container(
-                      padding: const EdgeInsets.only(
-                          left: 10, right: 10),
-                      child: isTagLoading
-                          ? const CircularProgressIndicator()
-                          : tags.isEmpty
-                          ? Text(
-                        language != 'vi'
-                            ? "No Tags Available"
-                            : "Không có thẻ nào",
-                        style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 16),
-                      )
-                          : SizedBox(
-                        height: 40,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: tags.length,
-                          itemBuilder: (context, index) {
-                            TagModel tag = tags[index];
-                            bool isSelected =
-                                selectedTagId == tag.id;
-                            return Padding(
-                              padding:
-                              const EdgeInsets.symmetric(
-                                  horizontal: 3.0),
-                              child: GestureDetector(
-                                onTap: () {
-                                  onTagSelected(tag);
-                                },
-                                child: Chip(
-                                  backgroundColor: isSelected
-                                      ? Colors.blueAccent
-                                      : Colors.white,
-                                  label: Text(
-                                    language != 'vi'
-                                        ? tag.tagName
-                                        : tag.tagVi,
-                                    style: TextStyle(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Colors.black,
-                                    ),
-                                  ),
-                                  avatar:
-                                  tag.tagPhotoUrl.isNotEmpty
-                                      ? CircleAvatar(
-                                    backgroundImage:
-                                    NetworkImage(
-                                        tag
-                                            .tagPhotoUrl),
-                                  )
-                                      : null,
+                        ),
+                        if (isSearchMode)
+                          Container(
+                            padding: const EdgeInsets.only(left: 10, right: 10),
+                            child: isTagLoading
+                                ? const CircularProgressIndicator()
+                                : tags.isEmpty
+                                    ? Text(
+                                        language != 'vi'
+                                            ? "No Tags Available"
+                                            : "Không có thẻ nào",
+                                        style: const TextStyle(
+                                            color: Colors.black, fontSize: 16),
+                                      )
+                                    : SizedBox(
+                                        height: 40,
+                                        child: ListView.builder(
+                                          scrollDirection: Axis.horizontal,
+                                          itemCount: tags.length,
+                                          itemBuilder: (context, index) {
+                                            TagModel tag = tags[index];
+                                            bool isSelected =
+                                                selectedTagId == tag.id;
+                                            return Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 3.0),
+                                              child: GestureDetector(
+                                                onTap: () {
+                                                  onTagSelected(tag);
+                                                },
+                                                child: Chip(
+                                                  backgroundColor: isSelected
+                                                      ? Colors.blueAccent
+                                                      : Colors.white,
+                                                  label: Text(
+                                                    language != 'vi'
+                                                        ? tag.tagName
+                                                        : tag.tagVi,
+                                                    style: TextStyle(
+                                                      color: isSelected
+                                                          ? Colors.white
+                                                          : Colors.black,
+                                                    ),
+                                                  ),
+                                                  avatar:
+                                                      tag.tagPhotoUrl.isNotEmpty
+                                                          ? CircleAvatar(
+                                                              backgroundImage:
+                                                                  NetworkImage(tag
+                                                                      .tagPhotoUrl),
+                                                            )
+                                                          : null,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                          ),
+                        // Dropdown List
+                        if (searchText.isNotEmpty && onSearch)
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child:
+                                LayoutBuilder(builder: (context, constraints) {
+                              return Container(
+                                constraints: const BoxConstraints(
+                                  maxHeight: 335,
                                 ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(15),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 5,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: ListView.builder(
+                                  padding: EdgeInsets.zero,
+                                  itemCount: placeTranslations.length +
+                                      events.length +
+                                      1,
+                                  itemBuilder: (context, index) {
+                                    bool isPlace = true;
+                                    if (index >= placeTranslations.length) {
+                                      isPlace = false;
+                                    }
+                                    bool lastItem = index ==
+                                        placeTranslations.length +
+                                            events.length;
+                                    final placeItem = !lastItem
+                                        ? (isPlace
+                                            ? placeTranslations[index]
+                                            : null)
+                                        : null;
+                                    final eventItem = !lastItem
+                                        ? (!isPlace
+                                            ? events[index -
+                                                placeTranslations.length]
+                                            : null)
+                                        : null;
+                                    return ListTile(
+                                      leading: lastItem
+                                          ? const Icon(Icons.search)
+                                          : (isPlace
+                                              ? const Icon(Icons.location_on)
+                                              : const Icon(Icons
+                                                  .event_available_rounded)),
+                                      title: lastItem
+                                          ? Text(
+                                              "Search for $searchText") // Display the "Search for..." action
+                                          : (isPlace
+                                              ? Text(placeItem!.placeName)
+                                              : Text(eventItem!
+                                                  .eventName)), // Display place name for PlaceTranslation
+                                      subtitle: lastItem
+                                          ? null
+                                          : (isPlace
+                                              ? Text(placeItem!.address)
+                                              : Text(eventItem!
+                                                  .placeName)), // Display address if item is PlaceTranslation
+                                      onTap: () {
+                                        if (lastItem) {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => SearchPage(
+                                                  sortBy: SortBy.distance,
+                                                  initialTags: const [], //
+                                                  textSearch: searchText,
+                                                ),
+                                              ));
+                                        } else {
+                                          if (isPlace) {
+                                            _markers.clear();
+                                            setState(() {
+                                              _markers.add(StaticMarker(
+                                                  latLng: LatLng(
+                                                      placeItem!.latitude,
+                                                      placeItem
+                                                          .longitude), // Tọa độ marker
+                                                  child: Column(
+                                                    children: [
+                                                      const Icon(
+                                                          Icons.location_on,
+                                                          color: Colors.red,
+                                                          size: 40),
+                                                      SizedBox(
+                                                        height: 50,
+                                                        width: 100,
+                                                        child: Text(
+                                                          placeItem.placeName,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          maxLines: 2,
+                                                          style:
+                                                              const TextStyle(
+                                                                  color: Colors
+                                                                      .red),
+                                                        ),
+                                                      )
+                                                    ],
+                                                  ),
+                                                  bearing: 0));
+                                              selectPlace = placeItem;
+                                              isEvent = false;
+                                              // **Added Line:** Unselect any selected tag
+                                              selectedTagId = null;
+                                            });
+                                            _controller?.animateCamera(
+                                              CameraUpdate.newLatLngZoom(
+                                                LatLng(placeItem!.latitude,
+                                                    placeItem.longitude),
+                                                16,
+                                              ),
+                                            );
+                                            FocusScope.of(context).unfocus();
+                                            onSearch = false;
+                                            _showPanel();
+                                          } else {
+                                            setState(() {
+                                              _markers.clear();
+                                              _markers.add(StaticMarker(
+                                                bearing: 0,
+                                                latLng: LatLng(
+                                                    eventItem!.latitude,
+                                                    eventItem.longitude),
+                                                child: Row(
+                                                  children: [
+                                                    const Icon(
+                                                        Icons.location_on,
+                                                        color: Colors.red,
+                                                        size: 40),
+                                                    SizedBox(
+                                                      height: 100,
+                                                      width: 100,
+                                                      child: Text(
+                                                        eventItem.eventName,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        maxLines: 2,
+                                                        style: const TextStyle(
+                                                            color: Colors.red),
+                                                      ),
+                                                    )
+                                                  ],
+                                                ),
+                                              ));
+                                              selectEvent = eventItem;
+                                              isEvent = true;
+                                              // **Added Line:** Unselect any selected tag
+                                              selectedTagId = null;
+                                            });
+
+                                            _controller?.animateCamera(
+                                              CameraUpdate.newCameraPosition(
+                                                CameraPosition(
+                                                  target: LatLng(
+                                                      eventItem!.latitude,
+                                                      eventItem.longitude),
+                                                  zoom: 15,
+                                                  tilt: 45,
+                                                ),
+                                              ),
+                                            );
+                                            FocusScope.of(context).unfocus();
+                                            onSearch = false;
+                                            _showPanel();
+                                          }
+                                        }
+                                      },
+                                    );
+                                  },
+                                ),
+                              );
+                            }),
+                          ),
+                      ],
+                    )),
+                if (panelPosition == 0.0)
+                  Positioned(
+                    bottom: 20,
+                    right: 10,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FloatingActionButton(
+                          heroTag: "myLocation",
+                          backgroundColor: Colors.white,
+                          onPressed: () async {
+                            await getCurrentPosition();
+                            _controller?.animateCamera(
+                              CameraUpdate.newLatLngZoom(
+                                LatLng(_currentPosition.latitude,
+                                    _currentPosition.longitude),
+                                15,
                               ),
                             );
                           },
+                          child: Icon(
+                            myLocationTrackingMode ==
+                                    MyLocationTrackingMode.TrackingCompass
+                                ? Icons.compass_calibration_sharp
+                                : Icons.gps_fixed,
+                            color: Colors.grey[800],
+                          ),
                         ),
-                      ),
-                    ),
-                  // Dropdown List
-                  if (searchText.isNotEmpty && onSearch)
-                    Padding(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 16.0),
-                      child:
-                      LayoutBuilder(builder: (context, constraints) {
-                        return Container(
-                          constraints: const BoxConstraints(
-                            maxHeight: 335,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 5,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: ListView.builder(
-                            padding: EdgeInsets.zero,
-                            itemCount: placeTranslations.length +
-                                events.length +
-                                1,
-                            itemBuilder: (context, index) {
-                              bool isPlace = true;
-                              if (index >= placeTranslations.length) {
-                                isPlace = false;
-                              }
-                              bool lastItem = index ==
-                                  placeTranslations.length +
-                                      events.length;
-                              final placeItem = !lastItem
-                                  ? (isPlace
-                                  ? placeTranslations[index]
-                                  : null)
-                                  : null;
-                              final eventItem = !lastItem
-                                  ? (!isPlace
-                                  ? events[index -
-                                  placeTranslations.length]
-                                  : null)
-                                  : null;
-                              return ListTile(
-                                leading: lastItem
-                                    ? const Icon(Icons.search)
-                                    : (isPlace
-                                    ? const Icon(Icons.location_on)
-                                    : const Icon(Icons
-                                    .event_available_rounded)),
-                                title: lastItem
-                                    ? Text(
-                                    "Search for $searchText") // Display the "Search for..." action
-                                    : (isPlace
-                                    ? Text(placeItem!.placeName)
-                                    : Text(eventItem!
-                                    .eventName)), // Display place name for PlaceTranslation
-                                subtitle: lastItem
-                                    ? null
-                                    : (isPlace
-                                    ? Text(placeItem!.address)
-                                    : Text(eventItem!
-                                    .placeName)), // Display address if item is PlaceTranslation
-                                onTap: () {
-                                  if (lastItem) {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => SearchPage(
-                                            sortBy: SortBy.distance,
-                                            initialTags: const [], //
-                                            textSearch: searchText,
-                                          ),
-                                        ));
-                                  } else {
-                                    if (isPlace) {
-                                      _markers.clear();
-                                      setState(() {
-                                        _markers.add(StaticMarker(
-                                            latLng: LatLng(
-                                                placeItem!.latitude,
-                                                placeItem
-                                                    .longitude), // Tọa độ marker
-                                            child: Column(
-                                              children: [
-                                                const Icon(
-                                                    Icons.location_on,
-                                                    color: Colors.red,
-                                                    size: 40),
-                                                SizedBox(
-                                                  height: 50,
-                                                  width: 100,
-                                                  child: Text(
-                                                    placeItem.placeName,
-                                                    overflow: TextOverflow
-                                                        .ellipsis,
-                                                    maxLines: 2,
-                                                    style:
-                                                    const TextStyle(
-                                                        color: Colors
-                                                            .red),
-                                                  ),
-                                                )
-                                              ],
-                                            ),
-                                            bearing: 0));
-                                        selectPlace = placeItem;
-                                        isEvent = false;
-                                        // **Added Line:** Unselect any selected tag
-                                        selectedTagId = null;
-                                      });
-                                      _controller?.animateCamera(
-                                        CameraUpdate.newLatLngZoom(
-                                          LatLng(placeItem!.latitude,
-                                              placeItem.longitude),
-                                          16,
-                                        ),
-                                      );
-                                      FocusScope.of(context)
-                                          .unfocus();
-                                      onSearch = false;
-                                      _showPanel();
-                                    } else {
-                                      setState(() {
-                                        _markers.clear();
-                                        _markers.add(StaticMarker(
-                                          bearing: 0,
-                                          latLng: LatLng(
-                                              eventItem!.latitude,
-                                              eventItem.longitude),
-                                          child: Row(
-                                            children: [
-                                              const Icon(
-                                                  Icons.location_on,
-                                                  color: Colors.red,
-                                                  size: 40),
-                                              SizedBox(
-                                                height: 100,
-                                                width: 100,
-                                                child: Text(
-                                                  eventItem.eventName,
-                                                  overflow: TextOverflow
-                                                      .ellipsis,
-                                                  maxLines: 2,
-                                                  style: const TextStyle(
-                                                      color:
-                                                      Colors.red),
-                                                ),
-                                              )
-                                            ],
-                                          ),
-                                        ));
-                                        selectEvent = eventItem;
-                                        isEvent = true;
-                                        // **Added Line:** Unselect any selected tag
-                                        selectedTagId = null;
-                                      });
-
-                                      _controller?.animateCamera(
-                                        CameraUpdate.newCameraPosition(
-                                          CameraPosition(
-                                            target: LatLng(
-                                                eventItem!.latitude,
-                                                eventItem.longitude),
-                                            zoom: 15,
-                                            tilt: 45,
-                                          ),
-                                        ),
-                                      );
-                                      FocusScope.of(context)
-                                          .unfocus();
-                                      onSearch = false;
-                                      _showPanel();
-                                    }
-                                  }
-                                },
-                              );
-                            },
-                          ),
-                        );
-                      }),
-                    ),
-                ],
-              )),
-          if (panelPosition == 0.0)
-            Positioned(
-              bottom: 20,
-              right: 10,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FloatingActionButton(
-                    heroTag: "myLocation",
-                    backgroundColor: Colors.white,
-                    onPressed: () async {
-                      await getCurrentPosition();
-                      _controller?.animateCamera(
-                        CameraUpdate.newLatLngZoom(
-                          LatLng(_currentPosition.latitude,
-                              _currentPosition.longitude),
-                          15,
-                        ),
-                      );
-                    },
-                    child: Icon(
-                      myLocationTrackingMode ==
-                          MyLocationTrackingMode.TrackingCompass
-                          ? Icons.compass_calibration_sharp
-                          : Icons.gps_fixed,
-                      color: Colors.grey[800],
+                        const SizedBox(height: 10),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 10),
-                ],
-              ),
+                if (!isSearchMode)
+                  Align(
+                      alignment: Alignment.topCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 110),
+                        child: _scheduleRoute(),
+                      ))
+              ],
             ),
-          if (!isSearchMode)
-            Align(
-                alignment: Alignment.topCenter,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 110),
-                  child: _scheduleRoute(),
-                ))
-        ],
-      ),
     );
   }
 
@@ -839,7 +831,7 @@ class _MapScreenState extends State<MapScreen> {
     int scheduleId = int.parse(idPart);
 
     var selectSchedule = _listSchedule.firstWhere(
-          (element) => element.id == scheduleId,
+      (element) => element.id == scheduleId,
     );
     int index = -1;
     return Container(
@@ -912,9 +904,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _scheduleSelect() {
-    if (_selectedSchedule == null ||
-        _selectedSchedule!.isEmpty ||
-        !mounted) {
+    if (_selectedSchedule == null || _selectedSchedule!.isEmpty || !mounted) {
       return;
     }
     if (_controller == null) {
@@ -927,7 +917,7 @@ class _MapScreenState extends State<MapScreen> {
     int scheduleId = int.parse(idPart);
 
     var selectSchedule = _listSchedule.firstWhere(
-          (element) => element.id == scheduleId,
+      (element) => element.id == scheduleId,
     );
 
     double minLat = selectSchedule.destinations.first.latitude;
@@ -1035,8 +1025,7 @@ class _MapScreenState extends State<MapScreen> {
     _showPanel();
   }
 
-  double calculateDistance(
-      double lat1, double lon1, double lat2, double lon2) {
+  double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     const R = 6371;
     double phi1 = lat1 * pi / 180;
     double phi2 = lat2 * pi / 180;
