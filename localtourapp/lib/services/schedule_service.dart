@@ -23,6 +23,9 @@ class ScheduleService {
 
     if(response.statusCode == 200){
       final jsonResponse = json.decode(response.body);
+      if((jsonResponse['statusCode']).toInt() == 404){
+        return [];
+      }
       var result = mapJsonToScheduleModel(jsonResponse['data']);
       return result;
     }
@@ -37,6 +40,9 @@ class ScheduleService {
 
     if(response.statusCode == 200){
       final jsonResponse = json.decode(response.body);
+      if((jsonResponse['statusCode']).toInt() == 404){
+        return [];
+      }
       var result = mapJsonToScheduleModel(jsonResponse['data']);
       return result;
     }
@@ -80,6 +86,14 @@ class ScheduleService {
   }
 
   Future<bool> CreateSchedule(String scheduleName, DateTime? startDate, DateTime? endDate, [bool? isPublic]) async {
+    if(startDate != null){
+      startDate = startDate.add(Duration(hours: 7));
+    }
+
+    if(endDate != null){
+      endDate = endDate.add(Duration(hours: 7));
+    }
+
     var body = {
       "scheduleName": scheduleName,
       "startDate": startDate?.toUtc().toIso8601String(),
@@ -97,6 +111,13 @@ class ScheduleService {
   }
 
   Future<bool> UpdateSchedule(int scheduleId, String scheduleName, DateTime? startDate, DateTime? endDate, bool? isPublic) async {
+    if(startDate != null){
+      startDate = startDate.add(Duration(hours: 7));
+    }
+
+    if(endDate != null){
+      endDate = endDate.add(Duration(hours: 7));
+    }
     var body =
       {
         "scheduleId": scheduleId,

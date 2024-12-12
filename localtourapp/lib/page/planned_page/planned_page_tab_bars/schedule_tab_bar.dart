@@ -76,37 +76,39 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   Future<void> fetchInit() async {
-    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
-    String? userid = '';
-    if (widget.userId == '') {
-      userid = await SecureStorageHelper().readValue(AppConfig.userId);
-      if (userid == null) {
-        setState(() {
-          _listSchedule = [];
-          isLoading = false;
-        });
-      }else{
-        _myUserId = userid;
-      }
-    } else {
-      userid = widget.userId;
-    }
 
-    if(userid != null && userid != ''){
-      _userId = userid;
-      var listschedule = await _scheduleService.GetScheduleUserId(userid);
-      setState(() {
-        _listScheduleInit = listschedule;
-        _listSchedule = listschedule;
-      });
-    }
-    if (_myUserId == userid) {
-      isCurrentUser = true;
-    }
-    _languageCode = languageCode!;
-    setState(() {
-      isLoading = false;
-    });
+     var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+     String? userid = '';
+     if (widget.userId == '') {
+       userid = await SecureStorageHelper().readValue(AppConfig.userId);
+       if (userid == null) {
+         setState(() {
+           _listSchedule = [];
+           isLoading = false;
+         });
+       }else{
+         _myUserId = userid;
+       }
+     } else {
+       userid = widget.userId;
+     }
+
+     if(userid != null && userid != ''){
+       _userId = userid;
+       var listschedule = await _scheduleService.GetScheduleUserId(userid);
+       setState(() {
+         _listScheduleInit = listschedule;
+         _listSchedule = listschedule;
+       });
+     }
+     if (_myUserId == userid) {
+       isCurrentUser = true;
+     }
+     _languageCode = languageCode!;
+     setState(() {
+       isLoading = false;
+     });
+
   }
 
 
