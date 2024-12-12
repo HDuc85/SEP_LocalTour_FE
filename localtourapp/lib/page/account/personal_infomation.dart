@@ -458,7 +458,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
+                          /*if (value == null || value.trim().isEmpty) {
                             return _languageCode == 'vi' ?'Email là bắt buộc':'Email is required';
                           }
                           // Simple email validation
@@ -467,7 +467,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                               .hasMatch(value.trim())) {
                             return _languageCode == 'vi' ?'Nhập email hợp lệ ':'Enter a valid email';
                           }
-                          return null;
+                          return null;*/
                         },
                       ) :
                       GestureDetector(
@@ -714,10 +714,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                           hintText: _languageCode == 'vi'?'Nhập địa chỉ của bạn':'Enter your address',
                         ),
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
+                         /* if (value == null || value.trim().isEmpty) {
                             return _languageCode == 'vi'?'Địa chỉ là bắt buộc':'Address is required';
                           }
-                          return null;
+                          return null;*/
                         },
                       ),
                       const SizedBox(height: 16),

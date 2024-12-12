@@ -196,15 +196,17 @@ class _AccountPageState extends State<AccountPage> {
                     if (isCurrentUser) ...[
                       _buildPersonInfoSection(),
                       const SizedBox(height: 12),
+                    ],
                       _buildSettingSection(),
                       const SizedBox(height: 12),
                       _buildContactSection(),
                       const SizedBox(height: 12),
                       _buildFAQSection(),
                       const SizedBox(height: 12),
+                      if (isCurrentUser) ...[
                       _buildUserPreference(),
                       const SizedBox(height: 12), // Adjust spacing if needed
-                    ],
+                         ],
                     if (isCurrentUser || !isLogin) _buildLogoutButton(), // Add the Logout button here
                       const SizedBox(height: 36),
                   ],
@@ -481,7 +483,7 @@ class _AccountPageState extends State<AccountPage> {
             child: ListTile(
               leading: const Icon(Icons.settings),
               title: Text(_languageCode == 'vi' ?'Cài đặt':'Settings'),
-              subtitle: Text(_languageCode == 'vi' ?'Xem, tìm và tùy chỉnh cài đặt tài khoản':'View, find, and customize account settings'),
+              subtitle: Text(_languageCode == 'vi' ?'tùy chỉnh ngôn ngữ':'language settings'),
             )));
   }
 
@@ -524,11 +526,10 @@ class _AccountPageState extends State<AccountPage> {
       print(emailUri.toString());
     }
     try {
-      // Check if the device can handle the mailto scheme
-      if (await canLaunchUrl(emailUri)) {
+      var x  = await canLaunchUrl(emailUri);
+      if (x) {
         await launchUrl(emailUri);
       } else {
-        // If the device cannot handle the mailto scheme, show an error
         _showErrorDialog('Could not launch the mail client.');
       }
     } catch (e) {
