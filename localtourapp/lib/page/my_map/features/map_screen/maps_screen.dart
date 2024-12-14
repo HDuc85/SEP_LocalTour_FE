@@ -32,7 +32,7 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixin{
   bool _isControllerDisposed = false;
   final LocationService _locationService = LocationService();
   final PlaceService _placeService = PlaceService();
@@ -71,6 +71,8 @@ class _MapScreenState extends State<MapScreen> {
   String? language;
   final FocusNode _searchFocus = FocusNode();
   String userId = '';
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -278,6 +280,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: isLoading

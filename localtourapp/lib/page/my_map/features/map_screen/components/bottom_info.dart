@@ -309,7 +309,7 @@ class BottomSheetInfo extends StatelessWidget {
                       ),
                     )
                   : const Center(child: Text('No media available')),
-              // Positioned WeatherIconButton
+              // Positioned IconButton
             ],
           ),
           const SizedBox(height: 1),

@@ -9,6 +9,7 @@ import 'package:localtourapp/services/place_service.dart';
 import 'package:localtourapp/services/review_service.dart';
 import 'package:localtourapp/services/user_service.dart';
 import '../../../base/weather_icon_button.dart';
+import '../../../services/report_service.dart';
 import '../detail_card/review_card_list.dart';
 import '../detail_card/review_card.dart';
 import '../all_reviews_page.dart';
@@ -29,6 +30,7 @@ class ReviewTabbar extends StatefulWidget {
 }
 
 class _ReviewTabbarState extends State<ReviewTabbar> {
+  final ReportService _reportService = ReportService();
   final ReviewService _reviewService = ReviewService();
   final PlaceService _placeService = PlaceService();
   final UserService _userService = UserService();
@@ -148,7 +150,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
       }else{
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result),
+              content: Text(_language != 'vi'?'Something wrong':'Có gì đó không ổn'),
               duration: const Duration(seconds: 3),
               backgroundColor: Colors.red,
             ));
@@ -159,9 +161,6 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
            SnackBar(content: Text(_language != 'vi'? 'Your review has been added/ updated.':'Đánh giá của bạn đã được thêm/ sửa.')));
       fetchListReview();
     }
-
-
-
   }
   void deleteUserReview(int feedbackId, int placeId) async {
     var result = await _reviewService.DeleteFeedback(placeId, feedbackId);
@@ -310,8 +309,7 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                     userId,
                     -1,
                     _language,
-                    onSubmit: (reportMessage) {
-
+                    onSubmit: (String message) async {
                     },
                   );
                 },

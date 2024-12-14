@@ -565,18 +565,6 @@ class _PostTabBarState extends State<PostTabBar> {
                           post.placeId, // Pass placeId if applicable
                           _languageCode,
                           onSubmit: (String message) async {
-                            var result = await _reportService.reportUser(post.authorId, message);
-                            if(result == "Your report has been sent!"){
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                _languageCode != 'vi'
-                                    ? 'Report submitted successfully.'
-                                    : 'Báo cáo đã được gửi thành công.',
-                              ),
-                            ),
-                          );
-                        }
                       },
                         );
                       },

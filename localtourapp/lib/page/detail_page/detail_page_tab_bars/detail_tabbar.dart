@@ -30,16 +30,16 @@ class DetailTabbar extends StatefulWidget {
   final VoidCallback onAddPressed;
   final VoidCallback onReportPressed;
   final List<EventModel> listEvents;
-  const DetailTabbar({
-    Key? key,
-    required this.userId,
-    required this.placeDetail,
-    required this.tags,
-    required this.onAddPressed,
-    required this.onReportPressed,
-    required this.languageCode,
-    required this.listEvents
-  }) : super(key: key);
+  const DetailTabbar(
+      {Key? key,
+      required this.userId,
+      required this.placeDetail,
+      required this.tags,
+      required this.onAddPressed,
+      required this.onReportPressed,
+      required this.languageCode,
+      required this.listEvents})
+      : super(key: key);
 
   @override
   State<DetailTabbar> createState() => _DetailTabbarState();
@@ -63,7 +63,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
     });
   }
 
-
   @override
   void dispose() {
     super.dispose();
@@ -72,9 +71,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
   void _navigateToWeatherPage() {
     Navigator.pushNamed(context, '/weather');
   }
-
-  
-
 
   Future<void> _launchURL(String? url) async {
     if (url != null && url.isNotEmpty) {
@@ -91,11 +87,8 @@ class _DetailTabbarState extends State<DetailTabbar> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-
     return Stack(
       children: [
         ListView(
@@ -132,9 +125,11 @@ class _DetailTabbarState extends State<DetailTabbar> {
                           builder: (BuildContext context) {
                             return Dialog(
                               child: ScheduleForm(
-                                userId: widget.userId, // Pass the required userId
+                                userId:
+                                    widget.userId, // Pass the required userId
                                 placeId: widget.placeDetail.id,
-                                language: _language,// Pass the required placeId
+                                language:
+                                    _language, // Pass the required placeId
                               ),
                             );
                           },
@@ -158,13 +153,13 @@ class _DetailTabbarState extends State<DetailTabbar> {
                         onPressed: () {
                           ReportForm.show(
                             context,
-                            _language !='vi'? 'Have a problem with this place? Report it to us!' : 'Bạn có vấn đề với địa danh này? Hãy báo cáo với chúng tôi!',
+                            _language != 'vi'
+                                ? 'Have a problem with this place? Report it to us!'
+                                : 'Bạn có vấn đề với địa danh này? Hãy báo cáo với chúng tôi!',
                             null,
                             widget.placeDetail.id,
                             _language,
-                            onSubmit: (reportMessage) {
-
-                            },
+                            onSubmit: (String message) async {},
                           );
                         },
                         icon: const Icon(Icons.flag, size: 10),
@@ -189,6 +184,8 @@ class _DetailTabbarState extends State<DetailTabbar> {
                   _buildContactRow(),
                   const SizedBox(height: 10),
                   _buildPlaceUrl(),
+                  const SizedBox(height: 10),
+                  _buildBRCUrl(),
                   const SizedBox(height: 10),
                   WeatherWidget(
                     latitude: widget.placeDetail.latitude,
@@ -230,7 +227,8 @@ class _DetailTabbarState extends State<DetailTabbar> {
     String statusText;
     Color iconColor = Colors.grey;
 
-    if (widget.placeDetail.timeOpen != null && widget.placeDetail.timeClose != null) {
+    if (widget.placeDetail.timeOpen != null &&
+        widget.placeDetail.timeClose != null) {
       final openTime = widget.placeDetail.timeOpen;
       final closeTime = widget.placeDetail.timeClose;
 
@@ -242,14 +240,16 @@ class _DetailTabbarState extends State<DetailTabbar> {
       final oneHourBeforeClose = closeInMinutes - 60;
 
       if (nowInMinutes >= openInMinutes && nowInMinutes < closeInMinutes) {
-        statusText = "${_language != 'vi' ? 'Open • Closes at' : 'Đang mở cửa • Đóng cửa lúc'} ${_formatTimeOfDay(closeTime)}";
+        statusText =
+            "${_language != 'vi' ? 'Open • Closes at' : 'Đang mở cửa • Đóng cửa lúc'} ${_formatTimeOfDay(closeTime)}";
         if (nowInMinutes >= oneHourBeforeClose) {
           iconColor = Colors.orange;
         } else {
           iconColor = Colors.green;
         }
       } else {
-        statusText = "${_language != 'vi' ? 'Closed • Opens at' : 'Đã đóng cửa • Mở cửa lúc'} ${_formatTimeOfDay(openTime)}";
+        statusText =
+            "${_language != 'vi' ? 'Closed • Opens at' : 'Đã đóng cửa • Mở cửa lúc'} ${_formatTimeOfDay(openTime)}";
         if (nowInMinutes >= oneHourBeforeOpen && nowInMinutes < openInMinutes) {
           iconColor = Colors.lightBlue;
         } else {
@@ -257,7 +257,9 @@ class _DetailTabbarState extends State<DetailTabbar> {
         }
       }
     } else {
-      statusText = _language != 'vi'?  "Operating hours not available": 'Thời gian không xác định';
+      statusText = _language != 'vi'
+          ? "Operating hours not available"
+          : 'Thời gian không xác định';
       iconColor = Colors.grey;
     }
 
@@ -293,37 +295,37 @@ class _DetailTabbarState extends State<DetailTabbar> {
     final String mapStyleUrl = AppConfig.vietMapStyleUrl;
 
     return SizedBox(
-        width: MediaQuery.of(context).size.width,
-        height: 200,
-        child: Stack(
-          children: [
-    VietmapGL(
-      styleString:
-      mapStyleUrl,
-      initialCameraPosition:
-      CameraPosition(target: LatLng(latitude, longitude), zoom: 14),
-      trackCameraPosition: true,
-      onMapCreated: (VietmapController controller) {
-        setState(() {
-          _mapController = controller;
-        });
-      },
-      onMapClick: (point, coordinates) {
-        _openMaps();
-      },
-    ),
-    if (_mapController != null)
-      MarkerLayer(
-        mapController: _mapController!,
-        markers: [
-          Marker(
-            latLng: LatLng(latitude, longitude), // Tọa độ marker
-            child: const Icon(Icons.location_on, color: Colors.red, size: 40),
+      width: MediaQuery.of(context).size.width,
+      height: 200,
+      child: Stack(
+        children: [
+          VietmapGL(
+            styleString: mapStyleUrl,
+            initialCameraPosition:
+                CameraPosition(target: LatLng(latitude, longitude), zoom: 14),
+            trackCameraPosition: true,
+            onMapCreated: (VietmapController controller) {
+              setState(() {
+                _mapController = controller;
+              });
+            },
+            onMapClick: (point, coordinates) {
+              _openMaps();
+            },
           ),
+          if (_mapController != null)
+            MarkerLayer(
+              mapController: _mapController!,
+              markers: [
+                Marker(
+                  latLng: LatLng(latitude, longitude), // Tọa độ marker
+                  child: const Icon(Icons.location_on,
+                      color: Colors.red, size: 40),
+                ),
+              ],
+            ),
         ],
       ),
-          ],
-        ),
     );
   }
 
@@ -343,7 +345,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
       ),
     );
   }
-
 
   Widget _buildContactRow() {
     return Row(
@@ -381,6 +382,24 @@ class _DetailTabbarState extends State<DetailTabbar> {
     );
   }
 
+  Widget _buildBRCUrl() {
+    final bool hasBRC = widget.placeDetail.brc.isNotEmpty;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        const Icon(
+          Icons.business
+        ),
+        const SizedBox(width: 5,),
+        Icon(
+          hasBRC ? Icons.check_circle : Icons.cancel,
+          color: hasBRC ? Colors.green : Colors.red,
+        ),
+      ],
+    );
+  }
+
   List<Widget> _buildTagChips(List<TagModel> tags) {
     List<Widget> tagChips = [];
 
@@ -400,7 +419,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
           },
           child: Chip(
             label: Text(
-              _language != 'vi'? tags[i].tagName : tags[i].tagVi,
+              _language != 'vi' ? tags[i].tagName : tags[i].tagVi,
               style: const TextStyle(
                 color: Colors.green,
               ),
@@ -421,7 +440,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
             _showAllTagsDialog(context);
           },
           child: Chip(
-            label: Text(_language != 'vi'?'See more tags':'Xem thêm'),
+            label: Text(_language != 'vi' ? 'More tags' : 'Xem thêm'),
             shape: const StadiumBorder(
               side: BorderSide(color: Colors.green),
             ),
@@ -507,11 +526,11 @@ class _DetailTabbarState extends State<DetailTabbar> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: widget.placeDetail.placeActivities.length,
             itemBuilder: (context, index) {
-              final activityCardInfo = widget.placeDetail.placeActivities[index];
+              final activityCardInfo =
+                  widget.placeDetail.placeActivities[index];
               return ActivityCard(
                 activityName: activityCardInfo.activityName,
-                photoDisplay: activityCardInfo.photoDisplay
-                   ,
+                photoDisplay: activityCardInfo.photoDisplay,
                 price: activityCardInfo.price,
                 priceType: activityCardInfo.priceType,
                 discount: activityCardInfo.discount,
@@ -539,7 +558,7 @@ class _DetailTabbarState extends State<DetailTabbar> {
         ),
         const SizedBox(height: 30),
         CustomSeeAllButton(
-          text: _language != 'vi' ? "SEE ALL": "Xem tất cả",
+          text: _language != 'vi' ? "SEE ALL" : "Xem tất cả",
           onPressed: () {
             Navigator.push(
               context,
@@ -565,7 +584,10 @@ class _DetailTabbarState extends State<DetailTabbar> {
 
   Widget _buildEventSection() {
     if (widget.listEvents.isEmpty) {
-      return Center(child: Text(_language != 'vi' ? 'No events available for this place.' : 'Không có sự kiện trong địa điểm này.'));
+      return Center(
+          child: Text(_language != 'vi'
+              ? 'No events available for this place.'
+              : 'Không có sự kiện trong địa điểm này.'));
     }
     return Column(
       children: [
@@ -574,13 +596,19 @@ class _DetailTabbarState extends State<DetailTabbar> {
           children: [
             const Icon(Icons.event, color: Colors.black),
             const SizedBox(width: 8),
-            Text(_language != 'vi'? "EVENT": 'Sự kiện',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            Text(_language != 'vi' ? "EVENT" : 'Sự kiện',
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           ],
         ),
         const SizedBox(height: 10),
         Column(
-          children: widget.listEvents.map((event) => EventCardWidget(event: event, languageCode: widget.languageCode,)).toList(),
+          children: widget.listEvents
+              .map((event) => EventCardWidget(
+                    event: event,
+                    languageCode: widget.languageCode,
+                  ))
+              .toList(),
         ),
       ],
     );

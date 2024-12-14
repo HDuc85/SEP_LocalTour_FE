@@ -1,11 +1,29 @@
+import 'package:hive/hive.dart';
+
+@HiveType(typeId: 1)
 class NotificationModel {
+  @HiveField(0)
   int id;
+
+  @HiveField(1)
   String userId;
+
+  @HiveField(2)
   String notificationType;
+
+  @HiveField(3)
   String title;
+
+  @HiveField(4)
   String message;
+
+  @HiveField(5)
   DateTime timeSend;
+
+  @HiveField(6)
   DateTime dateCreated;
+
+  @HiveField(7)
   bool isRead;
 
   NotificationModel({
@@ -42,3 +60,6 @@ class NotificationModel {
     'IsRead': isRead,
   };
 }
+
+
+

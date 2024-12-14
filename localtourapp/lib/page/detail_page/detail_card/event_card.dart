@@ -2,18 +2,19 @@
 import 'package:flutter/material.dart';
 import 'package:localtourapp/models/event/event_model.dart';
 import '../../../base/scrollable_text_container.dart';
+import '../../../full_media/full_event_photo_viewer.dart';
 
 class EventCardWidget extends StatelessWidget {
   final EventModel event;
   final String languageCode;
 
-  const EventCardWidget({Key? key, required this.event, required this.languageCode}) : super(key: key);
-
+  const EventCardWidget(
+      {Key? key, required this.event, required this.languageCode})
+      : super(key: key);
 
   String _formatDate(DateTime date) {
     return "${date.day}/${date.month}/${date.year}";
   }
-
 
   Widget _buildEventStatus() {
     Color statusColor;
@@ -32,19 +33,19 @@ class EventCardWidget extends StatelessWidget {
     switch (check) {
       case 1:
         statusColor = const Color(0xFFFFDB58);
-        statusText = languageCode == 'vi'? 'Sắp diễn ra' : 'About to Open';
+        statusText = languageCode == 'vi' ? 'Sắp diễn ra' : 'About to Open';
         break;
       case 2:
         statusColor = Colors.green;
-        statusText = languageCode == 'vi'?'Đang diễn ra':'Is Opening';
+        statusText = languageCode == 'vi' ? 'Đang diễn ra' : 'Is Opening';
         break;
       case 3:
         statusColor = Colors.red;
-        statusText = languageCode == 'vi'?'Đã kết thúc':'Has Closed';
+        statusText = languageCode == 'vi' ? 'Đã kết thúc' : 'Has Closed';
         break;
       default:
         statusColor = Colors.grey;
-        statusText = languageCode == 'vi'?'Không rõ':'Unknown';
+        statusText = languageCode == 'vi' ? 'Không rõ' : 'Unknown';
     }
 
     return Text(
@@ -76,6 +77,26 @@ class EventCardWidget extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  GestureDetector(
+                    onTap: () {
+                      if (event.eventPhoto!.isNotEmpty) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => FullEventPhotoViewer(
+                              eventPhotoUrl: event.eventPhoto!,
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    child: Image.network(
+                      event.eventPhoto!,
+                      width: double.infinity,
+                      height: 100,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                   Text(
                     event.eventName,
                     style: const TextStyle(

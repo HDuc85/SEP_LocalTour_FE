@@ -6,6 +6,7 @@ import 'package:localtourapp/services/auth_service.dart';
 import '../../config/appConfig.dart';
 import '../../config/secure_storage_helper.dart';
 import '../../main.dart';
+import '../../services/notification_service.dart';
 
 class LoginPage extends StatefulWidget {
   final VoidCallback onLogin;
@@ -20,6 +21,8 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final AuthService _authService = AuthService();
+  final NotificationService _notificationService = NotificationService();
+  final SecureStorageHelper _storage = SecureStorageHelper();
   // Controllers for input fields
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -79,6 +82,17 @@ class _LoginPageState extends State<LoginPage> {
     if (isValid) {
       try {
         await _authService.signInWithPassword(phoneNumber, password);
+        bool tokenAdded = await _notificationService.addDeviceToken();
+        if (!tokenAdded) {
+          // Handle token addition failure, e.g., show a message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_languageCode == 'vi'
+                  ? 'Không thể đăng ký thiết bị của bạn để nhận thông báo.'
+                  : 'Failed to register your device for notifications.'),
+            ),
+          );
+        }
         widget.onLogin();
         Navigator.pushNamed(context, '/');
       } catch (e) {
@@ -98,6 +112,12 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _notificationService.requestPermission();
   }
 
   @override

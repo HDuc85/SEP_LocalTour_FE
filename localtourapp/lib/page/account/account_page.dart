@@ -13,6 +13,7 @@ import '../../base/weather_icon_button.dart';
 import '../../models/users/followuser.dart';
 import '../../models/users/update_user_request.dart';
 import '../../models/users/users.dart';
+import '../../services/notification_service.dart';
 import 'faq.dart';
 import 'followlistpage.dart';
 import 'personal_infomation.dart';
@@ -38,6 +39,7 @@ class _AccountPageState extends State<AccountPage> {
   bool isLoadingProfile = false;
   bool isFollowLoading = false;
   final AuthService _authService = AuthService();
+  final NotificationService _notificationService = NotificationService();
   late final UserService _userService = UserService();
   final storage = SecureStorageHelper();
   List<FollowUserModel> followers = [];
@@ -73,93 +75,150 @@ class _AccountPageState extends State<AccountPage> {
 
   Future<void> readUserId() async {
     try {
-      var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
-      String? userIdStorage = await storage.readValue(AppConfig.userId);
-      String? isLoginStorage = await storage.readValue(AppConfig.isLogin);
-      if (isLoginStorage != null) {
-        setState(() {
-          isLogin = true;
-        });
-      }
-      setState(() {
-        _languageCode = languageCode!;
-      });
-      if (userIdStorage != null && userIdStorage.isNotEmpty) {
-        if (widget.userId == '') {
-          readUserProfile(userIdStorage);
-        } else {
-          readUserProfile(widget.userId);
-        }
+      final languageCode = await storage.readValue(AppConfig.language);
+      final userIdStorage = await storage.readValue(AppConfig.userId);
+      final isLoginStorage = await storage.readValue(AppConfig.isLogin);
 
-        setState(() {
-          myUserId = userIdStorage;
-        });
+      if (!mounted) return;
+
+      setState(() {
+        isLogin = isLoginStorage != null;
+        _languageCode = languageCode ?? 'en';
+        myUserId = userIdStorage ?? '';
+      });
+
+      if (userIdStorage != null && userIdStorage.isNotEmpty) {
+        readUserProfile(widget.userId.isEmpty ? userIdStorage : widget.userId);
       }
     } catch (e) {
-      if (kDebugMode) {
-        print("Error in readUserId: $e");
-      }
+      debugPrint("Error in readUserId: $e");
     }
   }
 
-
   Future<void> readUserProfile(String userId) async {
-    final response = await _userService.getUserProfile(userId);
-    setState(() {
-      userprofile = response;
-    });
-    if ( userId == myUserId && myUserId.isNotEmpty) {
+    try {
+      final response = await _userService.getUserProfile(userId);
+
+      if (!mounted) return;
+
       setState(() {
-        isCurrentUser = true;
+        userprofile = response;
+        isCurrentUser = userId == myUserId;
       });
+
+      fetchFollowersAndFollowings(userId);
+    } catch (e) {
+      debugPrint("Error fetching user profile: $e");
     }
-    // Fetch followers and followings
-    fetchFollowersAndFollowings(userId);
   }
 
   Future<void> fetchFollowersAndFollowings(String userId) async {
     try {
       final followersResponse = await _userService.getFollowers(userId);
+      final followingsResponse = await _userService.getFollowings(userId);
+
+      if (!mounted) return;
+
       setState(() {
         followers = followersResponse;
-      });
-    } catch (e) {
-      debugPrint("Error fetching followers: $e");
-    }
-
-    try {
-      final followingsResponse = await _userService.getFollowings(userId);
-      setState(() {
         followings = followingsResponse;
       });
     } catch (e) {
-      debugPrint("Error fetching followings: $e");
+      debugPrint("Error fetching followers or followings: $e");
     }
   }
 
   Future<void> _selectAvatar() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      File file = File(pickedFile.path);
+      final file = File(pickedFile.path);
       try {
-        var result = await _userService.sendUserDataRequest(UpdateUserRequest(profilePicture: file));
-        String? userIdStorage = await storage.readValue(AppConfig.userId);
+        await _userService.sendUserDataRequest(UpdateUserRequest(profilePicture: file));
+
+        if (!mounted) return;
+
+        final userIdStorage = await storage.readValue(AppConfig.userId);
         final response = await _userService.getUserProfile(userIdStorage!);
+
+        if (!mounted) return;
+
         setState(() {
           userprofile = response;
         });
-
       } catch (e) {
         debugPrint("Error updating avatar: $e");
       }
     }
   }
 
+  Future<void> followBtn(bool isFollowing) async {
+    if (isFollowLoading) return;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+    setState(() => isFollowLoading = true);
+
+    try {
+      final result = await _userService.FollowOrUnFollowUser(widget.userId, isFollowing);
+
+      if (!mounted) return;
+
+      if (result) {
+        setState(() {
+          userprofile.isFollowed = !isFollowing;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error following/unfollowing: $e");
+    } finally {
+      if (mounted) {
+        setState(() => isFollowLoading = false);
+      }
+    }
+  }
+
+  Future<void> _logout() async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    try {
+      // Delete the device token
+      final tokenDeleted = await _notificationService.deleteDeviceToken();
+      if (!tokenDeleted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              _languageCode == 'vi'
+                  ? 'Không thể xóa thiết bị khỏi danh sách thông báo.'
+                  : 'Failed to deregister your device from notifications.',
+            ),
+          ),
+        );
+      }
+
+      // Sign out the user
+      await _authService.signOut();
+
+      if (!mounted) return;
+
+      // Update the state
+      setState(() {
+        isLogin = false;
+      });
+
+      // Navigate to the login page
+      navigator.pushNamedAndRemoveUntil('/login', (route) => false);
+
+      // Show a logout success message
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            _languageCode == 'vi' ? 'Đăng xuất thành công' : 'Logged out successfully',
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint("Error during logout: $e");
+    }
   }
 
   @override
@@ -168,19 +227,18 @@ class _AccountPageState extends State<AccountPage> {
     super.dispose();
   }
 
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
+
   void _navigateToWeatherPage() {
     Navigator.pushNamed(context, '/weather');
   }
 
   @override
   Widget build(BuildContext context) {
-
-    // Listen to scroll events
-    _scrollController.addListener(() {
-      // Implement your logic here, e.g., show "Back to Top" button
-    });
-    // Determine if the current user is following the displayed user
-
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -225,21 +283,6 @@ class _AccountPageState extends State<AccountPage> {
     );
 
 
-  }
-
-  Future<void> followBtn(bool isFollowing) async {
-    if (isFollowLoading) return;
-    setState(() => isFollowLoading = true);
-
-    bool result = await _userService.FollowOrUnFollowUser(widget.userId, isFollowing);
-
-    if (result) {
-      setState(() {
-        userprofile.isFollowed = !isFollowing;
-      });
-    }
-
-    setState(() => isFollowLoading = false);
   }
 
   // Add this method inside _AccountPageState
@@ -653,26 +696,4 @@ class _AccountPageState extends State<AccountPage> {
       ),
     );
   }
-
-  // Function to handle logout
-  void _logout() {
-    _authService.signOut();
-
-    // Update the login status
-    setState(() {
-      isLogin = false;
-    });
-
-    // Navigate to the login screen using pushNamed
-    Navigator.pushNamed(context, '/login');
-
-    // Show the notification for logout
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(_languageCode == 'vi' ? 'Đăng xuất thành công':'Logged out successfully'),
-        duration: const Duration(milliseconds: 500), // Optional: Control how long the message appears
-      ),
-    );
-  }
-
 }

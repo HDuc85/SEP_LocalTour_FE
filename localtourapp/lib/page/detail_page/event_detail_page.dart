@@ -6,19 +6,18 @@ import 'package:vietmap_flutter_gl/vietmap_flutter_gl.dart';
 
 import '../my_map/domain/entities/vietmap_model.dart';
 import '../my_map/features/routing_screen/routing_screen.dart';
+import 'detail_page.dart';
 
 class EventDetailPage extends StatefulWidget {
   final EventModel eventModel;
-  const EventDetailPage({
-    Key? key,
-    required this.eventModel
-}) : super(key: key);
+  const EventDetailPage({Key? key, required this.eventModel}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _EventDetailPage();
 }
 
-class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMixin{
+class _EventDetailPage extends State<EventDetailPage>
+    with TickerProviderStateMixin {
   bool _isDescriptionExpanded = false;
   VietmapController? _vietmapController;
   String _getEventStatus() {
@@ -43,7 +42,9 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.eventModel.eventName,),
+        title: Text(
+          widget.eventModel.eventName,
+        ),
         backgroundColor: Colors.teal,
         elevation: 0,
       ),
@@ -54,19 +55,19 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
             // Ảnh sự kiện
             widget.eventModel.eventPhoto != null
                 ? Image.network(
-              widget.eventModel.eventPhoto!,
-              width: double.infinity,
-              height: 200,
-              fit: BoxFit.cover,
-            )
+                    widget.eventModel.eventPhoto!,
+                    width: double.infinity,
+                    height: 200,
+                    fit: BoxFit.cover,
+                  )
                 : Container(
-              width: double.infinity,
-              height: 200,
-              color: Colors.grey[300],
-              child: const Center(
-                child: Icon(Icons.image, size: 50, color: Colors.grey),
-              ),
-            ),
+                    width: double.infinity,
+                    height: 200,
+                    color: Colors.grey[300],
+                    child: const Center(
+                      child: Icon(Icons.image, size: 50, color: Colors.grey),
+                    ),
+                  ),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -108,7 +109,8 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
                       children: [
                         const Text(
                           'Trạng thái: ',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                         Chip(
                           label: Text(
@@ -118,8 +120,8 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
                           backgroundColor: eventStatus == 'Đang diễn ra'
                               ? Colors.green
                               : eventStatus == 'Chưa bắt đầu'
-                              ? Colors.orange
-                              : Colors.red,
+                                  ? Colors.orange
+                                  : Colors.red,
                         ),
                       ],
                     ),
@@ -131,7 +133,8 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
                         SizedBox(width: 8),
                         Text(
                           'Mô tả',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -145,7 +148,8 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
                             _isDescriptionExpanded = !_isDescriptionExpanded;
                           });
                         },
-                        child: _buildExpandableDescription(widget.eventModel.description),
+                        child: _buildExpandableDescription(
+                            widget.eventModel.description),
                       ),
                     ),
 
@@ -158,38 +162,51 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Display placeName
-                  Text(
-                    widget.eventModel.placeName,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  // Display placePhoto
-                  widget.eventModel.placePhoto != null
-                      ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      widget.eventModel.placePhoto!,
-                      height: 200,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DetailPage(
+                        placeId: widget.eventModel.placeId,
+                      ),
                     ),
-                  )
-                      : Container(
-                    height: 200,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(12),
+                  );
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.eventModel.placeName,
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    child: const Center(
-                      child: Icon(Icons.image, size: 50, color: Colors.grey),
-                    ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    // Display placePhoto
+                    widget.eventModel.placePhoto != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              widget.eventModel.placePhoto!,
+                              height: 200,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Container(
+                            height: 200,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.image,
+                                  size: 50, color: Colors.grey),
+                            ),
+                          ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -209,10 +226,11 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
                 child: Stack(
                   children: [
                     VietmapGL(
-                      styleString:
-                      AppConfig.vietMapStyleUrl,
-                      initialCameraPosition:
-                      CameraPosition(target: LatLng(widget.eventModel.latitude, widget.eventModel.longitude), zoom: 14),
+                      styleString: AppConfig.vietMapStyleUrl,
+                      initialCameraPosition: CameraPosition(
+                          target: LatLng(widget.eventModel.latitude,
+                              widget.eventModel.longitude),
+                          zoom: 14),
                       trackCameraPosition: true,
                       onMapCreated: (VietmapController controller) {
                         setState(() {
@@ -228,8 +246,10 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
                         mapController: _vietmapController!,
                         markers: [
                           Marker(
-                            latLng: LatLng(widget.eventModel.latitude, widget.eventModel.longitude), // Tọa độ marker
-                            child: const Icon(Icons.location_on, color: Colors.red, size: 40),
+                            latLng: LatLng(widget.eventModel.latitude,
+                                widget.eventModel.longitude), // Tọa độ marker
+                            child: const Icon(Icons.location_on,
+                                color: Colors.red, size: 40),
                           ),
                         ],
                       ),
@@ -238,7 +258,9 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
               ),
             ),
 
-            const SizedBox(height: 50,)
+            const SizedBox(
+              height: 50,
+            )
           ],
         ),
       ),
@@ -283,6 +305,4 @@ class _EventDetailPage extends State<EventDetailPage> with TickerProviderStateMi
       );
     }
   }
-
 }
-

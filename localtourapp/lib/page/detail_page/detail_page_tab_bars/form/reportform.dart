@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:localtourapp/services/report_service.dart';
 
+import '../../../../config/appConfig.dart';
+import '../../../../config/secure_storage_helper.dart';
+
 class ReportForm extends StatefulWidget {
   final String message;
   final String? userId;
@@ -49,10 +52,24 @@ class ReportForm extends StatefulWidget {
 }
 
 class _ReportFormState extends State<ReportForm> {
+  late String _language = 'vi';
   final TextEditingController _controller = TextEditingController();
   final ReportService _reportService = ReportService();
   // Key for the form to manage validation
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    getLanguage();
+  }
+
+  Future<void> getLanguage() async {
+    var language = await SecureStorageHelper().readValue(AppConfig.language);
+    setState(() {
+      _language = language!;
+    });
+  }
 
   @override
   void dispose() {
@@ -79,9 +96,29 @@ class _ReportFormState extends State<ReportForm> {
          message = await _reportService.reportUser(widget.userId!, reportMessage);
       }
       if(widget.placeId != null && widget.placeId! > 0){
+        if(message != 'Your report has been sent!'){
+          if(message.toLowerCase().contains(('You have not reached this point yet, please set up a schedule and go there to be evaluated').toLowerCase())){
+            ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(_language != 'vi'?'You have not reached this point yet, please set up a schedule and go there to be evaluated': "Bạn chưa đi đến điểm này hãy thiết lập lịch  trình và đi đến đó để được đánh giá"),
+                  duration: const Duration(seconds: 3),
+                  backgroundColor: Colors.red,
+                ));
+          }else{
+            ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(_language != 'vi'?'Something wrong':'Có gì đó không ổn'),
+                  duration: const Duration(seconds: 3),
+                  backgroundColor: Colors.red,
+                ));
+          }
+        }
+        else{
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(_language != 'vi'? 'Your report has been sent.':'Báo cáo của bạn đã được gửi.')));
+        }
          message = await _reportService.reportPlace(widget.placeId!, reportMessage);
       }
-
 
       widget.onSubmit?.call(message);
       _showSnackbar(message);

@@ -2,6 +2,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,6 +13,7 @@ import 'package:localtourapp/base/base_page.dart';
 import 'package:localtourapp/base/const.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
+import 'package:localtourapp/page/home_screen/notification_page.dart';
 import 'package:localtourapp/page/my_map/constants/route.dart';
 import 'package:localtourapp/page/my_map/domain/entities/vietmap_model.dart';
 import 'package:localtourapp/page/my_map/features/map_screen/bloc/map_bloc.dart';
@@ -22,7 +24,7 @@ import 'package:localtourapp/page/my_map/features/routing_screen/routing_screen.
 import 'package:localtourapp/page/my_map/features/routing_screen/search_address.dart';
 import 'package:localtourapp/page/my_map/features/search_screen/search_screen.dart';
 import 'package:localtourapp/page/weather/weather_page.dart';
-import 'package:localtourapp/page/wheel/wheel_page.dart';
+import 'package:localtourapp/page/home_screen/wheel_page.dart';
 import 'package:localtourapp/generated/l10n.dart';
 import 'package:localtourapp/page/account/account_page.dart';
 import 'package:localtourapp/page/bookmark/bookmark_page.dart';
@@ -30,8 +32,10 @@ import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:localtourapp/page/home_screen/home_screen.dart';
 import 'package:localtourapp/page/planned_page/planned_page.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/history_tab_bar.dart';
+import 'package:localtourapp/services/firebase_api.dart';
 import 'package:localtourapp/services/location_Service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:localtourapp/services/notification_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'firebase_options.dart';
 import 'page/account/login_page.dart';
@@ -57,6 +61,7 @@ void main() async {
   final app = await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await FireBaseAPI().initNotification();
   auth.FirebaseAuth.instanceFor(app: app);
 
   // Initialize Hive
@@ -75,7 +80,10 @@ void main() async {
 
   LocationService locationService = LocationService();
   await locationService.getCurrentPosition();
-
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  NotificationService notificationService = NotificationService();
+  await notificationService.requestPermission();
+  notificationService.listenTokenRefresh();
   runApp(
     MultiBlocProvider(
       providers: [
@@ -87,6 +95,12 @@ void main() async {
   );
 }
 
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Handle background notifications
+  if (kDebugMode) {
+    print("Handling a background message: ${message.messageId}");
+  }
+}
 
 class MyApp extends StatefulWidget {
   const MyApp({
@@ -97,7 +111,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   int currentIndex = 0;
   late final List<Widget> screens;
   late final List<String?> titles;
@@ -109,6 +123,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     screens = [
       const HomeScreen(),
       const MapScreen(),
@@ -130,10 +145,28 @@ class _MyAppState extends State<MyApp> {
     ];
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.paused) {
+      // Lưu trạng thái khi ứng dụng bị tạm dừng
+      SecureStorageHelper().saveValue('currentIndex', currentIndex.toString());
+    } else if (state == AppLifecycleState.resumed) {
+      // Phục hồi trạng thái khi ứng dụng quay lại
+      SecureStorageHelper().readValue('currentIndex').then((value) {
+        if (value != null) {
+          setState(() {
+            currentIndex = int.parse(value);
+          });
+        }
+      });
+    }
+  }
 
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     scrollController.dispose(); // Dispose the ScrollController
     super.dispose();
   }

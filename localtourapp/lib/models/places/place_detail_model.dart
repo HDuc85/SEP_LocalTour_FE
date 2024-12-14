@@ -19,6 +19,7 @@ class PlaceDetailModel {
   final double rating;
   final List<PlaceActivityModel> placeActivities;
   final List<MediaModel> placeMedias;
+  final String brc;
 
   PlaceDetailModel({
     required this.id,
@@ -35,6 +36,7 @@ class PlaceDetailModel {
     required this.address,
     required this.contact,
     required this.rating,
+    required this.brc,
   });
 
 
@@ -59,7 +61,8 @@ class PlaceDetailModel {
       placeActivities: (json['placeActivities'] as List)
           .map((e) => PlaceActivityModel.fromJson(e))
           .toList(),
-      rating: json['rating'].toDouble()
+      rating: json['rating'].toDouble(),
+      brc: json['brc']??'',
     );
   }
 

@@ -28,51 +28,90 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
 
   }
 
-  Future<void> getdata()async{
+  Future<void> getdata() async {
     var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
-    var fetchListTag = await _tagService.getAllTag(1,30);
-    var fetchUserTag = await _tagService.getUserTag();
-    
-    setState(() {
-      listUserTag = fetchUserTag;
-      listTag = fetchListTag;
-      isLoading = false;
-      _languageCode = languageCode!;
-    });
-    var x = await _tagService.UpdateTagsPreferencs(fetchUserTag.map((e) => e.id,).toList());
+    try {
+      var fetchListTag = await _tagService.getAllTag(1, 30);
+      var fetchUserTag = await _tagService.getUserTag();
 
+      setState(() {
+        listUserTag = fetchUserTag;
+        listTag = fetchListTag;
+        isLoading = false;
+        _languageCode = languageCode ?? 'en'; // Fallback to 'en' if null
+      });
+    } catch (error) {
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_languageCode == 'vi' ? 'Không thể tải dữ liệu' : 'Failed to load data')),
+      );
+    }
   }
-
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(_languageCode == 'vi' ? "Sở thích của ${widget.userprofile.userName}": "Preferences's ${widget.userprofile.userName}"),
+        title: Text(
+          _languageCode == 'vi'
+              ? "Sở thích của ${widget.userprofile.userName}"
+              : "Preferences's ${widget.userprofile.userName}",
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () async {
-            List<int> listTagSelected = listUserTag.map((e) => e.id,).toList();
+            List<int> listTagSelected = listUserTag.map((e) => e.id).toList();
             var result = await _tagService.addTagsPreferencs(listTagSelected);
-            if(result){
-              Navigator.pop(context);
+            if (result) {
+              // Show snackbar and delay navigation
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    _languageCode == 'vi'
+                        ? 'Sở thích của bạn đã được cập nhật. Cảm ơn bạn.'
+                        : 'Your preferences have been updated. Thank you.',
+                  ),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+              Future.delayed(const Duration(milliseconds: 500), () {
+                Navigator.pop(context);
+              });
+            } else {
+              // Notify user about failure
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    _languageCode == 'vi'
+                        ? 'Cập nhật sở thích không thành công.'
+                        : 'Failed to update preferences.',
+                  ),
+                ),
+              );
             }
           },
         ),
       ),
-      body:
-      isLoading?  const Center(child: CircularProgressIndicator()) :SingleChildScrollView(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Text(_languageCode == 'vi' ? "Chọn sở thích của bạn":"Choose your preferences" , style: const TextStyle(fontSize: 18)),
+            Text(
+              _languageCode == 'vi'
+                  ? "Chọn sở thích của bạn"
+                  : "Choose your preferences",
+              style: const TextStyle(fontSize: 18),
+            ),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children:  _buildAllTagChips(),
+                children: _buildAllTagChips(),
               ),
             ),
           ],
@@ -80,6 +119,7 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
       ),
     );
   }
+
 
   // Builds a chip for each tag in the listTag
   List<Widget> _buildAllTagChips() {
