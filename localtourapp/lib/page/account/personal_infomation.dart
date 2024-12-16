@@ -449,7 +449,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      _userprofile.email != "" ?
+                      (_userprofile.email != "" && _userprofile.email != null) ?
                       TextFormField(
                         controller: _emailController,
                         decoration: InputDecoration(
