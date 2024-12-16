@@ -13,7 +13,6 @@ class ReportService {
     if (response.statusCode == 200) {
       return "Your report has been sent!";
     } else if(response.statusCode == 400) {
-
       return response.body;
     }
     return '';

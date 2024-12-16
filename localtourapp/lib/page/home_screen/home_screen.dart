@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:dots_indicator/dots_indicator.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
@@ -10,9 +12,10 @@ import 'package:localtourapp/models/HomePage/placeCard.dart';
 import 'package:localtourapp/models/Tag/tag_model.dart';
 import 'package:localtourapp/models/event/event_model.dart';
 import 'package:localtourapp/page/detail_page/event_detail_page.dart';
+import 'package:localtourapp/page/home_screen/notification_page.dart';
 import 'package:localtourapp/page/home_screen/place_card.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/fearuted_schedule_page.dart';
-import 'package:localtourapp/page/wheel/wheel_page.dart';
+import 'package:localtourapp/page/home_screen/wheel_page.dart';
 import 'package:localtourapp/services/event_service.dart';
 import 'package:localtourapp/services/location_Service.dart';
 import 'package:localtourapp/services/place_service.dart';
@@ -147,6 +150,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _navigateToWheelPage() {
     Navigator.pushNamed(context, '/wheel');
+  }
+
+  void _navigateToNotificationPage() {
+    Navigator.pushNamed(context, '/notification');
   }
 
   // Function to scroll back to the top
@@ -302,10 +309,18 @@ class _HomeScreenState extends State<HomeScreen> {
                           value: 2,
                           child: Row(children: [
                             WeatherIconButton(
-                              onPressed: _navigateToWeatherPage,
+                              onPressed: _navigateToWheelPage,
                               assetPath: 'assets/icons/wheel.png',
                             ),
                             _language != 'vi'? const Text('Today choose') : const Text('Lựa chọn hôm nay')
+                          ])),
+                      PopupMenuItem(
+                          child: Row(children: [
+                            WeatherIconButton(
+                              onPressed: _navigateToNotificationPage,
+                              assetPath: 'assets/icons/notification.png',
+                            ),
+                            _language != 'vi'? const Text('Notification') : const Text('Thông báo')
                           ])),
                     ],
                     onSelected: (value) {
@@ -313,6 +328,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         _navigateToWeatherPage();
                       } else if (value == 2) {
                         _navigateToWheelPage();
+                      } else if (value == 3) {
+                        _navigateToNotificationPage();
                       }
                     },
                     child: Container(

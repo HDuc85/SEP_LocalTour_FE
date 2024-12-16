@@ -1,8 +1,8 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
+    id 'com.google.gms.google-services' apply true
 }
 
 android {
@@ -13,6 +13,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+
+        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
@@ -40,7 +42,7 @@ android {
 
     buildTypes {
         debug {
-            signingConfig signingConfigs.release 
+//            signingConfig signingConfigs.release
         }
         release {
             minifyEnabled true
@@ -50,6 +52,15 @@ android {
         }
 
     }
+}
+
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:32.2.2') // Use Firebase BOM
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation 'androidx.annotation:annotation:1.7.0'
+
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
 }
 
 flutter {

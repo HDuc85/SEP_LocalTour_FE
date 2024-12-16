@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:geolocator/geolocator.dart';
@@ -15,6 +16,7 @@ import 'package:vietmap_flutter_navigation/models/options.dart';
 import 'package:vietmap_flutter_navigation/models/route_progress_event.dart';
 import 'package:vietmap_flutter_navigation/navigation_plugin.dart';
 import 'package:vietmap_flutter_navigation/views/navigation_view.dart';
+import '../../../../config/secure_storage_helper.dart';
 import '../../../../services/traveled_place_service.dart';
 import '../../constants/colors.dart';
 import '../../domain/entities/vietmap_model.dart';
@@ -28,6 +30,7 @@ import 'components/vietmap_bottom_view.dart';
 import 'models/routing_params_model.dart';
 
 class RoutingScreen extends StatefulWidget {
+
   final VietmapModel vietmapModel;
   final int placeId;
   const RoutingScreen({
@@ -41,6 +44,7 @@ class RoutingScreen extends StatefulWidget {
 }
 
 class _RoutingScreenState extends State<RoutingScreen> {
+  String _languageCode = 'vi';
   final TraveledPlaceService _placeService = TraveledPlaceService();
   final LocationService _locationService = LocationService();
   final talker = Talker();
@@ -82,15 +86,22 @@ class _RoutingScreenState extends State<RoutingScreen> {
           .then((value) => _panelController.hide());
       var args = widget.vietmapModel;
       routingBloc.add(RoutingEventUpdateRouteParams(
-          destinationDescription:  args.address ?? 'Vị trí đã chọn',
+          destinationDescription:  _languageCode == 'vi' ?(args.address ?? 'Vị trí đã chọn'):(args.address ?? 'Selected location'),
           destinationPoint: LatLng(args.lat ?? 0, args.lng ?? 0)));
       Position? position = await _locationService.getCurrentPosition();
       double long = position != null ? position.longitude : 106.8096761;
       double lat = position != null ? position.latitude : 10.8411123;
       if (!mounted) return;
       routingBloc.add(RoutingEventUpdateRouteParams(
-          originDescription: 'Vị trí của bạn',
+          originDescription: _languageCode == 'vi' ? "Vị trí của bạn":'Your location',
           originPoint: LatLng(lat, long)));
+    });
+  }
+
+  Future<void> fetchLanguageCode() async {
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+    setState(() {
+      _languageCode = languageCode!;
     });
   }
 
@@ -122,7 +133,9 @@ class _RoutingScreenState extends State<RoutingScreen> {
       // Start navigation
      // await _navigationController?.startNavigation();
     } catch (e) {
-      print('Error building route: $e');
+      if (kDebugMode) {
+        print('Error building route: $e');
+      }
       // Handle any errors (e.g., show a message to the user)
     }
   }
@@ -143,20 +156,22 @@ class _RoutingScreenState extends State<RoutingScreen> {
             if (state is MapStateGetPlaceDetailSuccess) {
               if (isFromOrigin) {
                 routingBloc.add(RoutingEventUpdateRouteParams(
-                    originDescription:
-                    state.response.getFullAddress() ?? 'Vị trí của bạn',
+                    originDescription: _languageCode == 'vi' ?
+                    (state.response.getFullAddress() ?? 'Vị trí của bạn'):(state.response.getFullAddress() ?? 'Your location'),
                     originPoint: LatLng(
                         state.response.lat ?? 0, state.response.lng ?? 0)));
               } else {
                 routingBloc.add(RoutingEventUpdateRouteParams(
-                    destinationDescription:
-                    state.response.getFullAddress() ?? 'Vị trí đã chọn',
+                    destinationDescription: _languageCode == 'vi' ?
+                    (state.response.getFullAddress() ?? 'Vị trí đã chọn'):(state.response.getFullAddress() ?? 'Selected location'),
                     destinationPoint: LatLng(
                         state.response.lat ?? 0, state.response.lng ?? 0)));
               }
             }
           }catch(e){
-            print(e);
+            if (kDebugMode) {
+              print(e);
+            }
           }
         },
         child: WillPopScope(
@@ -165,22 +180,22 @@ class _RoutingScreenState extends State<RoutingScreen> {
               showDialog(
                   context: context,
                   builder: (_) => AlertDialog(
-                        title: const Text('Thông báo'),
+                        title: Text(_languageCode == 'vi' ? 'Thông báo': 'Notification'),
                         content:
-                            const Text('Bạn có muốn dừng hướng dẫn đi đường?'),
+                        Text(_languageCode == 'vi' ? 'Bạn có muốn dừng hướng dẫn đi đường?': 'Do you want to stop the directions?'),
                         actions: [
                           TextButton(
                               onPressed: () {
                                 Navigator.pop(context);
                               },
-                              child: const Text('Không')),
+                              child: Text(_languageCode == 'vi' ?'Không':'No')),
                           TextButton(
                               onPressed: () {
                                 _navigationController?.finishNavigation();
                                 _onStopNavigation();
                                 Navigator.pop(context);
                               },
-                              child: const Text('Có'))
+                              child: Text(_languageCode == 'vi' ?'Có':'Yes'))
                         ],
                       ));
               return Future.value(false);
@@ -267,28 +282,42 @@ class _RoutingScreenState extends State<RoutingScreen> {
                           this.routeProgressEvent = routeProgressEvent;
                         });
                       },
-                      onArrival: () async {
-                         await _placeService.addTraveledPlace(widget.placeId);
-                        showDialog(
-                            barrierDismissible: false,
-                            context: context,
-                            builder: (_) => AlertDialog(
-                                  title: const Text('Thông báo'),
-                                  content: const Text(
-                                    'Bạn đã đến nơi',
-                                    style: TextStyle(),
-                                    textAlign: TextAlign.center,
+                        onArrival: () async {
+                          // Capture the current navigator and context-dependent functionality
+                          final navigator = Navigator.of(context);
+
+                          try {
+                            await _placeService.addTraveledPlace(widget.placeId);
+
+                            // Check if the widget is still mounted
+                            if (!mounted) return;
+
+                            // Show the dialog
+                            showDialog(
+                              barrierDismissible: false,
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: Text(_languageCode == 'vi' ? 'Thông báo' : 'Notification'),
+                                content: Text(
+                                  _languageCode == 'vi' ? 'Bạn đã đến nơi' : 'You have arrived',
+                                  style: const TextStyle(),
+                                  textAlign: TextAlign.center,
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      navigator.pop(); // Close the dialog
+                                      navigator.pop(); // Go back to the previous screen
+                                    },
+                                    child: const Text('OK'),
                                   ),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                          Navigator.pop(context);
-                                        },
-                                        child: const Text('OK'))
-                                  ],
-                                ));
-                      },
+                                ],
+                              ),
+                            );
+                          } catch (e) {
+                            debugPrint("Error in onArrival: $e");
+                          }
+                        }
                     ),
                     _isRunning
                         ? Positioned(
@@ -393,16 +422,16 @@ class _RoutingScreenState extends State<RoutingScreen> {
                 borderRadius: BorderRadius.circular(50),
                 color: Colors.white,
                 border: Border.all(color: Colors.black45, width: 1)),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.keyboard_double_arrow_up_sharp,
                   size: 35,
                   color: vietmapColor,
                 ),
-                Text(
-                  'Về giữa',
-                  style: TextStyle(fontSize: 18, color: vietmapColor),
+                Text(_languageCode == 'vi' ?
+                  'Về giữa':'Go to middle',
+                  style: const TextStyle(fontSize: 18, color: vietmapColor),
                 )
               ],
             )));

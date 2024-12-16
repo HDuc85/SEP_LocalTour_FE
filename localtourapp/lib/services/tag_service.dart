@@ -11,16 +11,16 @@ class TagService {
   final apiService = ApiService();
 
   Future<List<TagModel>> getAllTag([int? page = 1, int? size = 30]) async {
-    final response = await apiService.makeRequest('Tag/getAll?Page=${page??''}&Size=${size??''}', 'GET');
+    final response = await apiService.makeRequest('Tag/getAll?Page=${page ?? ''}&Size=${size ?? ''}', 'GET');
 
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(response.body);
       if (jsonResponse['items'] == null || jsonResponse['items'].isEmpty) {
-        throw Exception("Không có dữ liệu nào được tìm thấy.");
+        return []; // Return empty list instead of throwing an exception
       }
       return mapJsonToTags(jsonResponse['items']);
     } else {
-      throw Exception("Không thể tải dữ liệu. Mã lỗi: ${response.statusCode}");
+      throw Exception("Unable to load data. Error code: ${response.statusCode}");
     }
   }
 
@@ -54,19 +54,18 @@ class TagService {
     return result;
   }
 
-  Future<List<TagModel>> getUserTag() async{
+  Future<List<TagModel>> getUserTag() async {
     final response = await apiService.makeRequest('UserPreferenceTags', 'GET');
-    List<TagModel> result = [];
+
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(response.body);
+      if (jsonResponse == null || jsonResponse.isEmpty) {
+        return []; // Return empty list if no data is available
+      }
       return mapJsonToTags(jsonResponse);
     }
-
-    return result;
-
+    return [];
   }
-
-
 
   Future<bool> addTagsPreferencs(List<int> tagIds) async{
     final Map<String, dynamic> body = {

@@ -17,11 +17,10 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate, List
   String languageCode = 'vi'; // Default language code
   String? scheduleNameError;
 
-  // Function to fetch language code
   Future<void> fetchLanguageCode(StateSetter setState) async {
-    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+    var langCode = await SecureStorageHelper().readValue(AppConfig.language);
     setState(() {
-      languageCode = languageCode ?? 'vi'; // Fallback to 'vi' if null
+      languageCode = langCode ?? 'vi'; // Fallback to 'vi' if null
     });
   }
 
@@ -39,7 +38,6 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate, List
             onTap: () {},
             child: StatefulBuilder(
               builder: (context, setState) {
-                // Fetch the language code when the dialog is built
                 fetchLanguageCode(setState);
 
                 return SingleChildScrollView(
@@ -79,11 +77,14 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate, List
                               context: context,
                               initialDate: startDate ?? DateTime.now(),
                               firstDate: DateTime(2000),
-                              lastDate: DateTime(2100),
+                              lastDate: DateTime.now(), // Allow <= current date
                             );
                             if (picked != null) {
                               setState(() {
                                 startDate = picked;
+                                if (endDate != null && startDate!.isAfter(endDate!)) {
+                                  endDate = null; // Reset endDate if it's invalid
+                                }
                               });
                             }
                           },
@@ -122,7 +123,7 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate, List
                             DateTime? picked = await showDatePicker(
                               context: context,
                               initialDate: endDate ?? DateTime.now(),
-                              firstDate: DateTime(2000),
+                              firstDate: startDate ?? DateTime.now().add(Duration(days: 1)),
                               lastDate: DateTime(2100),
                             );
                             if (picked != null) {
@@ -134,7 +135,7 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate, List
                           child: Stack(
                             children: [
                               AbsorbPointer(
-                                child: TextFormField(
+                                child: TextField(
                                   decoration: InputDecoration(
                                     prefixIcon: const Icon(Icons.calendar_today),
                                     hintText: endDate != null
@@ -172,75 +173,76 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate, List
                                     ? 'Vui lòng nhập tên lịch trình'
                                     : 'Please input schedule name';
                               });
+                            } else if (endDate != null && startDate != null && endDate!.isBefore(startDate!)) {
+                              // Check if endDate is before startDate
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    languageCode == 'vi'
+                                        ? 'Ngày kết thúc phải sau ngày bắt đầu'
+                                        : 'End date must be after start date',
+                                  ),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
                             } else {
                               setState(() {
                                 scheduleNameError = null;
                               });
 
-                              if(listSchedule.any((element) => element.scheduleName.contains(scheduleNameController.text),)){
-                                    showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        title: Text(
-                                          languageCode != 'vi'
-                                              ? "Warning"
-                                              : "Cảnh báo",
+                              if (listSchedule.any((element) => element.scheduleName.contains(scheduleNameController.text))) {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: Text(
+                                        languageCode != 'vi' ? "Warning" : "Cảnh báo",
+                                      ),
+                                      content: Text(
+                                        languageCode != 'vi'
+                                            ? "This Schedule Name already exists, do you want to continue?"
+                                            : "Tên lịch trình này đã tồn tại, bạn có muốn tiếp tục không?",
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Text(languageCode != 'vi' ? "Cancel" : "Hủy"),
                                         ),
-                                        content: Text(
-                                          languageCode != 'vi'
-                                              ? "This Schedule Name already exits, do you want to continue?"
-                                              : "Tên lịch trình nãy đã tồn tại, bạn có muốn tiếp tục không?",
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.of(context)
-                                                  .pop();
-                                            },
-                                            child: Text(languageCode !=
-                                                'vi'
-                                                ? "Cancel"
-                                                : "Hủy"),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              onCreate(
-                                                scheduleNameController.text,
-                                                startDate,
-                                                endDate,
-                                              );
-                                              Navigator.of(context).pop();
-                                              Navigator.of(context).pop();
-                                              // Show success notification
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    languageCode == 'vi'
-                                                        ? 'Lịch trình mới đã được tạo'
-                                                        : 'New schedule has been created',
-                                                  ),
-                                                  duration: const Duration(seconds: 2),
+                                        TextButton(
+                                          onPressed: () {
+                                            onCreate(
+                                              scheduleNameController.text,
+                                              startDate,
+                                              endDate,
+                                            );
+                                            Navigator.of(context).pop(); // Close confirmation dialog
+                                            Navigator.of(context).pop(); // Close add schedule dialog
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  languageCode == 'vi'
+                                                      ? 'Lịch trình mới đã được tạo'
+                                                      : 'New schedule has been created',
                                                 ),
-                                              );
-                                            },
-                                            child: Text(
-                                                languageCode !=
-                                                    'vi'
-                                                    ? "Add"
-                                                    : "Thêm"),
-                                          ),
-                                        ],
-                                      );
-                                    });
-                              }else{
+                                                duration: const Duration(seconds: 2),
+                                              ),
+                                            );
+                                          },
+                                          child: Text(languageCode != 'vi' ? "Add" : "Thêm"),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              } else {
                                 onCreate(
                                   scheduleNameController.text,
                                   startDate,
                                   endDate,
                                 );
                                 Navigator.of(context).pop();
-                                // Show success notification
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
@@ -252,8 +254,6 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate, List
                                   ),
                                 );
                               }
-
-
                             }
                           },
                           style: ElevatedButton.styleFrom(

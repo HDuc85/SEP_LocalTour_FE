@@ -15,19 +15,24 @@ class FullScreenPlaceMediaViewer extends StatelessWidget {
       body: Stack(
         children: [
           // PageView for swiping through all media
-          PageView.builder(
-            itemCount: mediaList.length,
-            controller: PageController(initialPage: initialIndex),
-            itemBuilder: (context, index) {
-              return Center(
-                child: Image.network(
-                  mediaList[index].url,
-                  fit: BoxFit.contain, // Preserve the aspect ratio of the image
-                  width: double.infinity, // Set width to maximum available
-                  height: double.infinity, // Set height to maximum available
-                ),
-              );
-            },
+          InteractiveViewer(
+            panEnabled: true, // Allow panning
+            minScale: 0.5, // Minimum zoom-out scale
+            maxScale: 4.0, // Maximum zoom-in scale
+            child: PageView.builder(
+              itemCount: mediaList.length,
+              controller: PageController(initialPage: initialIndex),
+              itemBuilder: (context, index) {
+                return Center(
+                  child: Image.network(
+                    mediaList[index].url,
+                    fit: BoxFit.contain, // Preserve the aspect ratio of the image
+                    width: double.infinity, // Set width to maximum available
+                    height: double.infinity, // Set height to maximum available
+                  ),
+                );
+              },
+            ),
           ),
           // Positioned back button at the upper left corner
           Positioned(

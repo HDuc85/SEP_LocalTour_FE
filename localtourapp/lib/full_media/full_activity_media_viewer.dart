@@ -1,9 +1,8 @@
-
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:localtourapp/models/media_model.dart';
 import 'package:video_player/video_player.dart';
-import 'package:intl/intl.dart';
 
 class FullActivityMediaViewer extends StatefulWidget {
   final List<MediaModel> mediaActivityList;
@@ -16,7 +15,8 @@ class FullActivityMediaViewer extends StatefulWidget {
   });
 
   @override
-  _FullActivityMediaViewerState createState() => _FullActivityMediaViewerState();
+  _FullActivityMediaViewerState createState() =>
+      _FullActivityMediaViewerState();
 }
 
 class _FullActivityMediaViewerState extends State<FullActivityMediaViewer> {
@@ -33,13 +33,16 @@ class _FullActivityMediaViewerState extends State<FullActivityMediaViewer> {
     } else {
       _currentIndex = widget.initialIndex;
     }
-    _pageController = PageController(initialPage: _currentIndex >= 0 ? _currentIndex : 0);
+    _pageController =
+        PageController(initialPage: _currentIndex >= 0 ? _currentIndex : 0);
     _initializeVideoController();
   }
 
   // Initialize the video controller if the current media is a video
   void _initializeVideoController() async {
-    if (_currentIndex < 0 || widget.mediaActivityList.isEmpty) return; // Prevent accessing empty list
+    if (_currentIndex < 0 || widget.mediaActivityList.isEmpty) {
+      return; // Prevent accessing empty list
+    }
 
     final currentMedia = widget.mediaActivityList[_currentIndex];
     await _videoController?.dispose();
@@ -47,11 +50,10 @@ class _FullActivityMediaViewerState extends State<FullActivityMediaViewer> {
     if (currentMedia.type.toLowerCase() == 'video') {
       if (currentMedia.url.startsWith('http')) {
         // Network video
-        print('Initializing network video: ${currentMedia.url}');
-        _videoController = VideoPlayerController.networkUrl(Uri.parse(currentMedia.url));
+        _videoController =
+            VideoPlayerController.networkUrl(Uri.parse(currentMedia.url));
       } else {
         // Asset video
-        print('Initializing asset video: ${currentMedia.url}');
         _videoController = VideoPlayerController.asset(currentMedia.url);
       }
       try {
@@ -60,7 +62,9 @@ class _FullActivityMediaViewerState extends State<FullActivityMediaViewer> {
         _videoController!.play();
       } catch (e) {
         // Handle video initialization error
-        print('Error initializing video: $e');
+        if (kDebugMode) {
+          print('Error initializing video: $e');
+        }
         _videoController = null;
         // Optionally, show a user-friendly message
         ScaffoldMessenger.of(context).showSnackBar(
@@ -77,11 +81,6 @@ class _FullActivityMediaViewerState extends State<FullActivityMediaViewer> {
     _videoController?.dispose();
     _pageController.dispose();
     super.dispose();
-  }
-
-  // Function to format DateTime
-  String _formatDate(DateTime date) {
-    return DateFormat.yMMMMd().add_jm().format(date);
   }
 
   @override
@@ -102,60 +101,81 @@ class _FullActivityMediaViewerState extends State<FullActivityMediaViewer> {
       backgroundColor: Colors.black, // Clean background
       body: Stack(
         children: [
-          PageView.builder(
-            controller: _pageController,
-            itemCount: widget.mediaActivityList.length,
-            onPageChanged: (index) {
-              setState(() {
-                _currentIndex = index;
-                _initializeVideoController();
-              });
-            },
-            itemBuilder: (context, index) {
-              final media = widget.mediaActivityList[index];
-              if (media.type.toLowerCase() == 'photo') {
-                return Center(
-                  child: media.url.startsWith('http')
-                      ? Image.network(
-                    media.url,
-                    fit: BoxFit.contain,
-                    width: double.infinity,
-                    height: double.infinity,
-                  )
-                      : Image.file(
-                    File(media.url),
-                    fit: BoxFit.contain,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
-                );
-              } else if (media.type.toLowerCase() == 'video') {
-                return Center(
-                  child: _videoController != null && _videoController!.value.isInitialized
-                      ? GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _videoController!.value.isPlaying
-                            ? _videoController!.pause()
-                            : _videoController!.play();
-                      });
-                    },
-                    child: AspectRatio(
-                      aspectRatio: _videoController!.value.aspectRatio,
-                      child: VideoPlayer(_videoController!),
+          InteractiveViewer(
+            panEnabled: true, // Allow panning
+            minScale: 0.5, // Minimum zoom-out scale
+            maxScale: 4.0, // Maximum zoom-in scale
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: widget.mediaActivityList.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentIndex = index;
+                  _initializeVideoController();
+                });
+              },
+              itemBuilder: (context, index) {
+                final media = widget.mediaActivityList[index];
+                if (kDebugMode) {
+                  print("Media Type: ${media.type}, Media URL: ${media.url}");
+                }
+                if (media.type.toLowerCase() == 'photo') {
+                  return Center(
+                    child: media.url.startsWith('http')
+                        ? Image.network(
+                            media.url,
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Center(
+                                child: Icon(Icons.broken_image,
+                                    color: Colors.red, size: 50),
+                              );
+                            },
+                          )
+                        : Image.file(
+                            File(media.url),
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Center(
+                                child: Icon(Icons.broken_image,
+                                    color: Colors.red, size: 50),
+                              );
+                            },
+                          ),
+                  );
+                } else if (media.type.toLowerCase() == 'video') {
+                  return Center(
+                    child: _videoController != null &&
+                            _videoController!.value.isInitialized
+                        ? GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _videoController!.value.isPlaying
+                                    ? _videoController!.pause()
+                                    : _videoController!.play();
+                              });
+                            },
+                            child: AspectRatio(
+                              aspectRatio: _videoController!.value.aspectRatio,
+                              child: VideoPlayer(_videoController!),
+                            ),
+                          )
+                        : const CircularProgressIndicator(),
+                  );
+                } else {
+                  return const Center(
+                    child: Text(
+                      "Unsupported media type",
+                      style: TextStyle(color: Colors.white),
                     ),
-                  )
-                      : const CircularProgressIndicator(),
-                );
-              } else {
-                return const Center(
-                  child: Text(
-                    "Unsupported media type",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                );
-              }
-            },
+                  );
+                }
+              },
+            ),
           ),
           // Back Button
           Positioned(
@@ -184,7 +204,6 @@ class _FullActivityMediaViewerState extends State<FullActivityMediaViewer> {
               ),
             ),
           ),
-
         ],
       ),
     );

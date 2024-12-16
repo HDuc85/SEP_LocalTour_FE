@@ -113,14 +113,14 @@ class _FeaturedSchedulePageState extends State<FeaturedSchedulePage> {
         SnackBar(
           content: Text(widget.language != 'vi'
               ? "Có gì đó không ổn khi sao chép!"
-              :'Some thing wrong went clone !'),
+              :'Some thing wrong when clone !'),
           duration: const Duration(seconds: 3),
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(widget.language != 'vi'
+          content: Text(widget.language == 'vi'
               ? "Lịch trình đã được sao chép"
               :'Schedule is cloned!'),
           duration: const Duration(seconds: 3),
