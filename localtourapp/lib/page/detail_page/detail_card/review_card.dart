@@ -228,7 +228,7 @@ class _ReviewCardState extends State<ReviewCard> {
               if (widget.onUpdate != null)
                 IconButton(
                   icon: const Icon(Icons.update, color: Colors.blue),
-                  onPressed:  () {
+                  onPressed: () {
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {
@@ -236,20 +236,13 @@ class _ReviewCardState extends State<ReviewCard> {
                           initialRating: feedBackCard.rating,
                           initialContent: feedBackCard.content,
                           initialMedia: feedBackCard.placeFeedbackMedia,
-                          onSubmit: (int rating, String content,
-                              List<File> images, List<File> videos) {
-                            if (true) {
-                              addOrUpdateUserReview(rating, content, images, videos,feedBackCard.id);
-
-
-
-                            }
+                          onSubmit: (int rating, String content, List<File> images, List<File> videos) {
+                            addOrUpdateUserReview(rating, content, images, videos, feedBackCard.id);
                           },
                         );
                       },
                     );
                   },
-
                 ),
               if (widget.onDelete != null)
                 IconButton(
@@ -347,16 +340,21 @@ class _ReviewCardState extends State<ReviewCard> {
     // If the media URL is empty or not valid, return a placeholder
     if (media.url.isEmpty) {
       return Image.asset(
-        'assets/images/placeholder.png',
+        'assets/images/image_placeholder.png',
         width: 50,
         height: 50,
         fit: BoxFit.cover,
       );
     }
 
-    // If media is a photo
-    if (media.type == 'Image') {
+    // Determine if the media is an image or video by checking the file extension
+    final fileExtension = media.url.split('.').last.toLowerCase();
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
+
+    // If it's an image
+    if (imageExtensions.contains(fileExtension)) {
       if (media.url.startsWith('http')) {
+        // Load network image
         return Image.network(
           media.url,
           width: 50,
@@ -364,7 +362,7 @@ class _ReviewCardState extends State<ReviewCard> {
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             return Image.asset(
-              'assets/images/placeholder.png',
+              'assets/images/image_placeholder.png',
               width: 50,
               height: 50,
               fit: BoxFit.cover,
@@ -372,7 +370,7 @@ class _ReviewCardState extends State<ReviewCard> {
           },
         );
       } else {
-        // Attempt to load from file if the URL is a local path
+        // Load local image file
         final file = File(media.url);
         if (file.existsSync()) {
           return Image.file(
@@ -382,9 +380,8 @@ class _ReviewCardState extends State<ReviewCard> {
             fit: BoxFit.cover,
           );
         } else {
-          // File does not exist, show placeholder
           return Image.asset(
-            'assets/images/placeholder.png',
+            'assets/images/image_placeholder.png',
             width: 50,
             height: 50,
             fit: BoxFit.cover,
@@ -392,7 +389,7 @@ class _ReviewCardState extends State<ReviewCard> {
         }
       }
     } else {
-      // If media is a video, display video thumbnail
+      // Assume it's a video
       return VideoThumbnail(videoPath: media.url);
     }
   }

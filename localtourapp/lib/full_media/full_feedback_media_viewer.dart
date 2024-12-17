@@ -48,7 +48,11 @@ class _FullFeedbackMediaViewerState extends State<FullFeedbackMediaViewer> {
     final currentMedia = widget.feedbackMediaList[_currentIndex];
     _videoController?.dispose();
 
-    if (currentMedia.type.toLowerCase() == 'video') {
+    // Determine media type dynamically
+    final fileExtension = currentMedia.url.split('.').last.toLowerCase();
+    const videoExtensions = ['mp4', 'avi', 'mov', 'mkv'];
+
+    if (videoExtensions.contains(fileExtension)) {
       if (currentMedia.url.startsWith('assets')) {
         final localFile = await _copyAssetToLocal(currentMedia.url);
         _videoController = VideoPlayerController.file(localFile);
@@ -61,6 +65,10 @@ class _FullFeedbackMediaViewerState extends State<FullFeedbackMediaViewer> {
       await _videoController!.initialize();
       setState(() {}); // Refresh to show the video
       _videoController!.play();
+    } else {
+      setState(() {
+        _videoController = null; // Clear the video controller for non-videos
+      });
     }
   }
 
@@ -90,52 +98,60 @@ class _FullFeedbackMediaViewerState extends State<FullFeedbackMediaViewer> {
                   _initializeVideoController();
                 });
               },
-              itemBuilder: (context, index) {
-                final media = widget.feedbackMediaList[index];
-                if (media.type.toLowerCase() == 'image') {
-                  return Center(
-                    child: media.url.startsWith('http')
-                        ? Image.network(
-                      media.url,
-                      fit: BoxFit.contain,
-                      width: double.infinity,
-                      height: double.infinity,
-                    )
-                        : Image.file(
-                      File(media.url),
-                      fit: BoxFit.contain,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
-                  );
-                } else if (media.type.toLowerCase() == 'video') {
-                  return Center(
-                    child: _videoController != null &&
-                        _videoController!.value.isInitialized
-                        ? GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _videoController!.value.isPlaying
-                              ? _videoController!.pause()
-                              : _videoController!.play();
-                        });
-                      },
-                      child: AspectRatio(
-                        aspectRatio: _videoController!.value.aspectRatio,
-                        child: VideoPlayer(_videoController!),
+                itemBuilder: (context, index) {
+                  final media = widget.feedbackMediaList[index];
+
+                  // Determine media type dynamically
+                  final fileExtension = media.url.split('.').last.toLowerCase();
+                  const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
+                  const videoExtensions = ['mp4', 'avi', 'mov', 'mkv'];
+
+                  if (imageExtensions.contains(fileExtension)) {
+                    // Display image
+                    return Center(
+                      child: media.url.startsWith('http')
+                          ? Image.network(
+                        media.url,
+                        fit: BoxFit.contain,
+                        width: double.infinity,
+                        height: double.infinity,
+                      )
+                          : Image.file(
+                        File(media.url),
+                        fit: BoxFit.contain,
+                        width: double.infinity,
+                        height: double.infinity,
                       ),
-                    )
-                        : const CircularProgressIndicator(),
-                  );
-                } else {
-                  return const Center(
-                    child: Text(
-                      'Unsupported media type',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  );
+                    );
+                  } else if (videoExtensions.contains(fileExtension)) {
+                    // Display video
+                    return Center(
+                      child: _videoController != null && _videoController!.value.isInitialized
+                          ? GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _videoController!.value.isPlaying
+                                ? _videoController!.pause()
+                                : _videoController!.play();
+                          });
+                        },
+                        child: AspectRatio(
+                          aspectRatio: _videoController!.value.aspectRatio,
+                          child: VideoPlayer(_videoController!),
+                        ),
+                      )
+                          : const CircularProgressIndicator(),
+                    );
+                  } else {
+                    // Unsupported media type
+                    return const Center(
+                      child: Text(
+                        'Unsupported media type',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }
                 }
-              },
             ),
           ),
           Positioned(

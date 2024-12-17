@@ -32,6 +32,16 @@ class MarkplaceService {
     }
   }
 
+  Future<bool> updateMarkPlace(int placeId, bool isVisited) async {
+    final response = await apiService.makeRequest(
+        'MarkPlace?placeId=$placeId&isVisited=$isVisited', 'PUT');
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   Future<bool> deleteMarkPlace(int placeId) async {
     final response = await apiService.makeRequest(
         'MarkPlace?placeId=$placeId', 'DELETE');

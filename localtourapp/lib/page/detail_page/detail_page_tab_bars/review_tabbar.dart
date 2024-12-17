@@ -30,7 +30,6 @@ class ReviewTabbar extends StatefulWidget {
 }
 
 class _ReviewTabbarState extends State<ReviewTabbar> {
-  final ReportService _reportService = ReportService();
   final ReviewService _reviewService = ReviewService();
   final PlaceService _placeService = PlaceService();
   final UserService _userService = UserService();
@@ -120,48 +119,42 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
   /// Method to delete a user's review from ReviewProvider.
 
   /// Method to add or update a user's review using the ReviewProvider.
-  void addOrUpdateUserReview(int rating, String content, List<File> images, List<File> videos,[int? feedbackId]) async {
-    if (content.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(content: Text(_language != 'vi' ? 'Review content cannot be empty.':'Nội dung đánh giá không được để trống.')),
-      );
-      return;
-    }
+  void addOrUpdateUserReview(int rating, String content, List<File> images, List<File> videos, [int? feedbackId]) async {
     List<File> combinedList = [];
     combinedList.addAll(images);
     combinedList.addAll(videos);
 
     String result = '';
-    if(!userHasReviewed){
-       result = await _reviewService.CreateFeedback(widget.placeId, rating, content, combinedList);
-    }else{
-      result = await _reviewService.UpdateFeedback(widget.placeId, rating,feedbackId!, content, combinedList);
+
+    bool isUpdate = userHasReviewed; // Determine if it's an update
+    if (!isUpdate) {
+      result = await _reviewService.CreateFeedback(widget.placeId, rating, content, combinedList);
+    } else {
+      result = await _reviewService.UpdateFeedback(widget.placeId, rating, feedbackId!, content, combinedList);
     }
 
-    if(result != 'Success'){
-
-      if(result.toLowerCase().contains(('You have not reached this point yet, please set up a schedule and go there to be evaluated').toLowerCase())){
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(_language != 'vi'?'You have not reached this point yet, please set up a schedule and go there to be evaluated': "Bạn chưa đi đến điểm này hãy thiết lập lịch  trình và đi đến đó để được đánh giá"),
-              duration: const Duration(seconds: 3),
-              backgroundColor: Colors.red,
-            ));
-      }else{
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(_language != 'vi'?'Something wrong':'Có gì đó không ổn'),
-              duration: const Duration(seconds: 3),
-              backgroundColor: Colors.red,
-            ));
-      }
-    }
-    else{
+    if (result != 'Success') {
       ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text(_language != 'vi'? 'Your review has been added/ updated.':'Đánh giá của bạn đã được thêm/ sửa.')));
-      fetchListReview();
+        SnackBar(
+          content: Text(_language != 'vi'
+              ? 'Something went wrong'
+              : 'Có gì đó không ổn'),
+          duration: const Duration(seconds: 3),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_language != 'vi'
+              ? (isUpdate ? 'Your review has been updated.' : 'Your review has been added.')
+              : (isUpdate ? 'Đánh giá của bạn đã được cập nhật.' : 'Đánh giá của bạn đã được thêm.')),
+        ),
+      );
+      fetchListReview(); // Refresh the review list
     }
   }
+
   void deleteUserReview(int feedbackId, int placeId) async {
     var result = await _reviewService.DeleteFeedback(placeId, feedbackId);
     if(result){
@@ -170,7 +163,6 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {

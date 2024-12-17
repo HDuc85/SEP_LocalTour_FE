@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../config/appConfig.dart';
 import '../../config/secure_storage_helper.dart';

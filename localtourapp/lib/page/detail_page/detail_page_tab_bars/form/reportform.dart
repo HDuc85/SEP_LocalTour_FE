@@ -96,11 +96,12 @@ class _ReportFormState extends State<ReportForm> {
          message = await _reportService.reportUser(widget.userId!, reportMessage);
       }
       if(widget.placeId != null && widget.placeId! > 0){
-        if(message != 'Your report has been sent!'){
-          if(message.toLowerCase().contains(('You have not reached this point yet, please set up a schedule and go there to be evaluated').toLowerCase())){
+        message = await _reportService.reportPlace(widget.placeId!, reportMessage);
+        if(message != 'Success'){
+          if(message.toLowerCase().contains(('You have not reached this point yet, please set up a schedule and go there to report').toLowerCase())){
             ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(_language != 'vi'?'You have not reached this point yet, please set up a schedule and go there to be evaluated': "Bạn chưa đi đến điểm này hãy thiết lập lịch  trình và đi đến đó để được đánh giá"),
+                  content: Text(_language != 'vi'?'You have not reached this point yet, please set up a schedule and go there to report': "Bạn chưa đi đến điểm này hãy thiết lập lịch  trình và đi đến đó để được đánh giá"),
                   duration: const Duration(seconds: 3),
                   backgroundColor: Colors.red,
                 ));
@@ -117,11 +118,9 @@ class _ReportFormState extends State<ReportForm> {
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(_language != 'vi'? 'Your report has been sent.':'Báo cáo của bạn đã được gửi.')));
         }
-         message = await _reportService.reportPlace(widget.placeId!, reportMessage);
       }
 
       widget.onSubmit?.call(message);
-      _showSnackbar(message);
       Navigator.pop(context); // Close the form after reporting
     }
   }

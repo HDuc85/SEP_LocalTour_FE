@@ -117,25 +117,61 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
   }
 
   Future<void> _toggleBookmark(int placeId) async {
-   if(_userId != '' && _userId.isNotEmpty){
-     if(isMarked){
-       bool success = await _markplaceService.deleteMarkPlace(placeId);
-       if(success){
-         setState(() {
-           isMarked = false;
-         });
-       }
+    if (_userId != '' && _userId.isNotEmpty) {
+      if (isMarked) {
+        // Delete Bookmark
+        bool success = await _markplaceService.deleteMarkPlace(placeId);
+        if (success) {
+          setState(() {
+            isMarked = false;
+          });
+          // Show Snackbar for Deletion
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                _languageCode != 'vi' ? 'Bookmark removed' : 'Đã xóa dấu trang',
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        } else {
+          _showErrorSnackbar();
+        }
+      } else {
+        // Add Bookmark
+        bool success = await _markplaceService.markPlace(placeId);
+        if (success) {
+          setState(() {
+            isMarked = true;
+          });
+          // Show Snackbar for Addition
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                _languageCode != 'vi' ? 'Bookmark added' : 'Đã thêm dấu trang',
+              ),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        } else {
+          _showErrorSnackbar();
+        }
+      }
+    }
+  }
 
-     }else{
-       bool success = await _markplaceService.markPlace(placeId);
-       if (success){
-         setState(() {
-           isMarked = true;
-         });
-       }
-     }
-   }
-
+  void _showErrorSnackbar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _languageCode != 'vi'
+              ? 'Failed to update bookmark.'
+              : 'Cập nhật dấu trang thất bại.',
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -344,8 +380,6 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
 
     );
   }
-
-// ... (rest of your methods like _buildTimeStatus, _buildAddressRow, etc.)
 }
 
 // _SliverAppBarDelegate remains the same

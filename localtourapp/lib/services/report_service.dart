@@ -11,7 +11,7 @@ class ReportService {
 
     final response = await _apiService.makeRequest("PlaceReport","POST",body);
     if (response.statusCode == 200) {
-      return "Your report has been sent!";
+      return "Success";
     } else if(response.statusCode == 400) {
       return response.body;
     }
@@ -22,8 +22,6 @@ class ReportService {
     var body = {
       "userId": userId,
       "content": message,
-      "reportDate": "2023-12-10T20:00:36.552Z",
-      "status": "string"
     };
 
     final response = await _apiService.makeRequest("UserReport","POST",body);

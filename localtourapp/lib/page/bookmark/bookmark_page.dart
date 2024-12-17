@@ -165,12 +165,20 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                 Icons.bookmark,
                                 color: Colors.red,
                               ),
-                              onPressed: () {
-                                // xóa bookmark Fuction
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(_language != 'vi' ?'Đã xóa dấu trang':'Bookmark removed')),
-                                );
+                              onPressed: () async {
+                                bool success = await _markplaceService.deleteMarkPlace(place.placeId);
+                                if (success) {
+                                  setState(() {
+                                    markPlaces.removeWhere((markedPlace) => markedPlace.placeId == place.placeId);
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(_language != 'vi' ? 'Bookmark removed' : 'Đã xóa dấu trang')),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(_language != 'vi' ? 'Failed to remove bookmark' : 'Xóa dấu trang thất bại')),
+                                  );
+                                }
                               },
                             ),
                             Text(
@@ -184,8 +192,24 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                     style: const TextStyle(fontSize: 12.0)),
                                 Checkbox(
                                   value: place.isVisited,
-                                  onChanged: (bool? value) {
-                                    // Update isVisited Function
+                                  onChanged: (bool? value) async {
+                                    bool success = await _markplaceService.updateMarkPlace(place.placeId, value ?? false);
+                                    if (success) {
+                                      setState(() {
+                                        place.isVisited = value ?? false; // Update local state
+                                      });
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            _language != 'vi'
+                                                ? 'Failed to update the status.'
+                                                : 'Cập nhật trạng thái thất bại.',
+                                          ),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
                                   },
                                 ),
                               ],

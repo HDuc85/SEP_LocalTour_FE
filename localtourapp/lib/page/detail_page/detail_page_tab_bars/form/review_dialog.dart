@@ -9,11 +9,11 @@ import '../../../../services/media_service.dart';
 
 class ReviewDialog extends StatefulWidget {
   final Function(
-      int rating, String content, List<File> images, List<File> videos)
-  onSubmit;
+      int rating, String content, List<File> images, List<File> videos) onSubmit;
   final int initialRating;
   final String initialContent;
   final List<MediaModel>? initialMedia;
+
   const ReviewDialog({
     Key? key,
     required this.onSubmit,
@@ -37,15 +37,25 @@ class _ReviewDialogState extends State<ReviewDialog> {
   int initSize = 0;
   final int maxItems = 10;
   String _languageCode = '';
+  bool isMediaLoading = true; // Add this flag
 
   @override
   void initState() {
     super.initState();
     selectedRating = widget.initialRating;
     contentController.text = widget.initialContent;
-    _convertListMedia();
+    _initDialog();
+  }
 
+  Future<void> _initDialog() async {
+    await _convertListMedia();
+    // Calculate initial total size after loading
     _totalSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
+
+    // Now that media is loaded, update state
+    setState(() {
+      isMediaLoading = false;
+    });
   }
 
   @override
@@ -56,31 +66,39 @@ class _ReviewDialogState extends State<ReviewDialog> {
 
   Future<void> _convertListMedia() async {
     var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
-    if(widget.initialMedia != null){
-      for(var item in widget.initialMedia!){
-        if(item.type == 'Video'){
+    List<XFile> loadedImages = [];
+    List<XFile> loadedVideos = [];
+
+    if (widget.initialMedia != null) {
+      for (var item in widget.initialMedia!) {
+        if (item.type.toLowerCase() == 'video') {
           XFile? xFile = await _mediaService.downloadAndConvertToXFile(item.url);
           if (xFile != null) {
-            _selectedVideos.add(xFile);
+            loadedVideos.add(xFile);
           }
-        }
-        if(item.type == 'Image'){
+        } else if (item.type.toLowerCase() == 'image' || item.type.toLowerCase() == 'photo') {
           XFile? xFile = await _mediaService.downloadAndConvertToXFile(item.url);
           if (xFile != null) {
-            _selectedImages.add(xFile);
+            loadedImages.add(xFile);
           }
+        } else {
+          print("Unknown media type: ${item.type}");
         }
       }
     }
+
     setState(() {
+      _selectedImages.addAll(loadedImages);
+      _selectedVideos.addAll(loadedVideos);
       initSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
-      _languageCode = languageCode!;
+      _languageCode = languageCode ?? 'en';
     });
   }
 
-
   Future<void> _pickImages() async {
-    final List<XFile> images = await _picker.pickMultiImage();
+    final List<XFile>? images = await _picker.pickMultiImage();
+    if (images == null) return;
+
     List<XFile> validImages = [];
     bool sizeExceeded = false;
 
@@ -155,11 +173,24 @@ class _ReviewDialogState extends State<ReviewDialog> {
     bool ratingChanged = widget.initialRating != selectedRating;
     bool mediaChanged = initSize != _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
 
-    return contentChanged || ratingChanged  || mediaChanged;
+    return contentChanged || ratingChanged || mediaChanged;
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isMediaLoading) {
+      // Show a loading indicator until media is loaded
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 100,
+          child: const Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    // Now that media is loaded, build the full dialog
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       content: SingleChildScrollView(
@@ -226,7 +257,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    // Images with delete option
+                    // Images
                     ..._selectedImages.map((image) => Padding(
                       padding: const EdgeInsets.all(4.0),
                       child: Stack(
@@ -244,8 +275,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
                               onTap: () {
                                 setState(() {
                                   _selectedImages.remove(image);
-                                  _totalSize = _calculateTotalSize(
-                                      [..._selectedImages, ..._selectedVideos]);
+                                  _totalSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
                                 });
                               },
                               child: Container(
@@ -253,15 +283,14 @@ class _ReviewDialogState extends State<ReviewDialog> {
                                   color: Colors.black54,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.close,
-                                    color: Colors.white, size: 20),
+                                child: const Icon(Icons.close, color: Colors.white, size: 20),
                               ),
                             ),
                           ),
                         ],
                       ),
                     )),
-                    // Videos with delete option
+                    // Videos
                     ..._selectedVideos.map((video) => Padding(
                       padding: const EdgeInsets.all(4.0),
                       child: Stack(
@@ -283,8 +312,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
                               onTap: () {
                                 setState(() {
                                   _selectedVideos.remove(video);
-                                  _totalSize = _calculateTotalSize(
-                                      [..._selectedImages, ..._selectedVideos]);
+                                  _totalSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
                                 });
                               },
                               child: Container(
@@ -292,8 +320,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
                                   color: Colors.black54,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.close,
-                                    color: Colors.white, size: 20),
+                                child: const Icon(Icons.close, color: Colors.white, size: 20),
                               ),
                             ),
                           ),
