@@ -61,7 +61,6 @@ void main() async {
   final app = await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await FireBaseAPI().initNotification();
   auth.FirebaseAuth.instanceFor(app: app);
 
   // Initialize Hive
@@ -93,6 +92,12 @@ void main() async {
       child: const MyApp(),
     ),
   );
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    final context = navigatorKey.currentState?.context;
+    if (context != null) {
+      await FireBaseAPI().initNotification(context);
+    }
+  });
 }
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -326,6 +331,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             return MaterialPageRoute(builder: (context) => const WheelPage());
           case '/bookmark':
             return MaterialPageRoute(builder: (context) => const BookmarkPage());
+          case '/notification':
+            return MaterialPageRoute(builder: (context) => const NotificationPage());
           case '/planned_page':
             return MaterialPageRoute(
               builder: (context) => PlannedPage(

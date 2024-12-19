@@ -1,4 +1,5 @@
 class EventModel {
+  final int eventId;
   final int placeId;
   final String placeName;
   final double latitude;
@@ -13,6 +14,7 @@ class EventModel {
   final String eventStatus;
 
   EventModel({
+    required this.eventId,
     required this.placeId,
     required this.placeName,
     required this.latitude,
@@ -29,6 +31,7 @@ class EventModel {
 
   factory EventModel.fromJson(Map<String, dynamic> json) {
     return EventModel(
+      eventId: json['eventId'] as int,
       placeId: json['placeId'] as int,
       placeName: json['placeName'] ?? "Unknown Place",
       latitude: json['latitude'] as double,

@@ -53,10 +53,6 @@ class _NotificationPageState extends State<NotificationPage> {
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 10),
-            Text(
-              jsonEncode(message?.data),
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
-            ),
           ],
         ),
       ),

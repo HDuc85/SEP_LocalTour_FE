@@ -31,7 +31,17 @@ class EventService {
     }
     else{
       throw Exception("Lỗi khi lấy dữ liệu. Mã lỗi: ${response.statusCode}");
+    }
+  }
 
+  Future<EventModel> getEventById(int? placeId, int? eventId) async {
+    final response = await apiService.makeRequest("Event/geteventbyid?placeid=$placeId&eventid=$eventId", "GET");
+    if(response.statusCode == 200){
+      final jsonResponse = json.decode(response.body);
+      return EventModel.fromJson(jsonResponse);
+    }
+    else{
+      throw Exception("Lỗi khi lấy dữ liệu. Mã lỗi: ${response.statusCode}");
     }
   }
 }

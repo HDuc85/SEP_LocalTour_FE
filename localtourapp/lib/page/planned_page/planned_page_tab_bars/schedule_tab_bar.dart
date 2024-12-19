@@ -1252,8 +1252,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                         destination.id,
                         destination.scheduleId,
                         destination.placeId,
-                        destination.startDate,
-                        destination.endDate,
+                        null,
+                        null,
                         newDetail,
                         destination.isArrived,
                       );

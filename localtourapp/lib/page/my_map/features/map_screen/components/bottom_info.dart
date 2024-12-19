@@ -7,6 +7,7 @@ import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/HomePage/placeCard.dart';
 import 'package:localtourapp/models/event/event_model.dart';
 import 'package:localtourapp/models/places/place_detail_model.dart';
+import 'package:localtourapp/models/schedule/destination_model.dart';
 import '../../../../../full_media/full_place_media_viewer.dart';
 import '../../../../../models/media_model.dart';
 import '../../../../detail_page/detail_page.dart';
@@ -22,6 +23,7 @@ import '../bloc/map_bloc.dart';
 import '../bloc/map_state.dart';
 
 class BottomSheetInfo extends StatelessWidget {
+  final int? scheduleChoosenId;
   final bool? isEvent;
   final EventModel? eventModel;
   final PlaceCardModel? placeCardModel;
@@ -29,8 +31,10 @@ class BottomSheetInfo extends StatelessWidget {
   final PlaceDetailModel? detailModel;
   final ValueChanged<bool> onDraggableChanged;
   final String userId;
+  final DestinationModel? destinationModel;
   const BottomSheetInfo({
     super.key,
+    this.scheduleChoosenId,
     required this.onClose,
     this.eventModel,
     this.placeCardModel,
@@ -39,6 +43,8 @@ class BottomSheetInfo extends StatelessWidget {
     this.detailModel,
     required this.onDraggableChanged,
     required this.userId,
+    this.destinationModel,
+
   });
   final VoidCallback onClose;
 
@@ -222,6 +228,8 @@ class BottomSheetInfo extends StatelessWidget {
                             lng: detailModel!.longitude,
                           ),
                           placeId: detailModel!.id,
+                          scheduleChoosenId: scheduleChoosenId,
+                          destinationModel: destinationModel,
                         ),
                       ),
                     );

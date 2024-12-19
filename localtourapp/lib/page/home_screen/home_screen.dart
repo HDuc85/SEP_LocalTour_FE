@@ -314,23 +314,25 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             _language != 'vi'? const Text('Today choose') : const Text('Lựa chọn hôm nay')
                           ])),
-                      PopupMenuItem(
-                          child: Row(children: [
-                            WeatherIconButton(
-                              onPressed: _navigateToNotificationPage,
-                              assetPath: 'assets/icons/notification.png',
-                            ),
-                            _language != 'vi'? const Text('Notification') : const Text('Thông báo')
-                          ])),
+                      // PopupMenuItem(
+                      //     value: 3,
+                      //     child: Row(children: [
+                      //       WeatherIconButton(
+                      //         onPressed: _navigateToNotificationPage,
+                      //         assetPath: 'assets/icons/notification.png',
+                      //       ),
+                      //       _language != 'vi'? const Text('Notification') : const Text('Thông báo')
+                      //     ])),
                     ],
                     onSelected: (value) {
                       if (value == 1) {
                         _navigateToWeatherPage();
                       } else if (value == 2) {
                         _navigateToWheelPage();
-                      } else if (value == 3) {
-                        _navigateToNotificationPage();
                       }
+                      // else if (value == 3) {
+                      //   _navigateToNotificationPage();
+                      // }
                     },
                     child: Container(
                       padding: const EdgeInsets.all(8.0),

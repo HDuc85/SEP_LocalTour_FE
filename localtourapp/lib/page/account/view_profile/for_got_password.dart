@@ -32,7 +32,7 @@ class ForgotPasswordDialog {
     // Helper function to validate the new password
     bool validateNewPassword(String password) {
       final passwordRegExp =
-      RegExp(r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$');
+      RegExp(r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,16}$');
       return passwordRegExp.hasMatch(password);
     }
 

@@ -42,7 +42,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
   List<TagModel> tags = [];
   bool isTagLoading = false;
   int? selectedTagId;
-
+  DestinationModel destinationModel = DestinationModel(id: -1, scheduleId: -1, placeId: -1, detail: '', isArrived: false, placeName: '', longitude: 106, latitude: 10);
   List<PlaceCardModel> placeTranslations = [];
   List<EventModel> events = [];
   List<ScheduleModel> _listSchedule = [];
@@ -280,6 +280,11 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
 
   @override
   Widget build(BuildContext context) {
+    int? scheduleId;
+    if(_selectedSchedule != null){
+      String idPart = _selectedSchedule!.split('_')[1];
+      scheduleId = int.parse(idPart);
+    }
     super.build(context);
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -303,6 +308,8 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                   },
                   panelBuilder: () {
                     return BottomSheetInfo(
+                      destinationModel: destinationModel,
+                      scheduleChoosenId: scheduleId,
                       placeCardModel: selectPlace,
                       isEvent: isEvent,
                       eventModel: selectEvent,
@@ -1010,6 +1017,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
   void _selectDestination(DestinationModel item) {
     double distance = calculateDistance(item.latitude, item.longitude,
         _currentPosition.latitude, _currentPosition.longitude);
+    destinationModel = item;
     var temp = PlaceCardModel(
         placeId: item.placeId,
         placeName: item.placeName,

@@ -80,22 +80,22 @@ class _NowLocationState extends State<NowLocation> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        if (_currentPosition != null) {
-          Navigator.pushNamed(
-            context,
-            '/map', // Assuming '/map' is your route name for MapPage
-            arguments: {
-              'latitude': _currentPosition!.latitude,
-              'longitude': _currentPosition!.longitude,
-            },
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(_languageCode == 'vi' ? "Vị trí không có sẵn": "Location not available")),
-          );
-        }
-      },
+      // onTap: () {
+      //   if (_currentPosition != null) {
+      //     Navigator.pushNamed(
+      //       context,
+      //       '/map', // Assuming '/map' is your route name for MapPage
+      //       arguments: {
+      //         'latitude': _currentPosition!.latitude,
+      //         'longitude': _currentPosition!.longitude,
+      //       },
+      //     );
+      //   } else {
+      //     ScaffoldMessenger.of(context).showSnackBar(
+      //       SnackBar(content: Text(_languageCode == 'vi' ? "Vị trí không có sẵn": "Location not available")),
+      //     );
+      //   }
+      // },
       child: Container(
         margin: const EdgeInsets.only(top: 30),
         padding: const EdgeInsets.all(10),

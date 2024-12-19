@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/config/appConfig.dart';
+import 'package:localtourapp/models/schedule/destination_model.dart';
 import 'package:localtourapp/page/my_map/extension/latlng_extension.dart';
 import 'package:localtourapp/services/location_Service.dart';
 import 'package:sliding_up_panel2/sliding_up_panel2.dart';
@@ -17,6 +18,7 @@ import 'package:vietmap_flutter_navigation/models/route_progress_event.dart';
 import 'package:vietmap_flutter_navigation/navigation_plugin.dart';
 import 'package:vietmap_flutter_navigation/views/navigation_view.dart';
 import '../../../../config/secure_storage_helper.dart';
+import '../../../../services/schedule_service.dart';
 import '../../../../services/traveled_place_service.dart';
 import '../../constants/colors.dart';
 import '../../domain/entities/vietmap_model.dart';
@@ -32,9 +34,13 @@ import 'models/routing_params_model.dart';
 class RoutingScreen extends StatefulWidget {
 
   final VietmapModel vietmapModel;
+  final int? scheduleChoosenId;
   final int placeId;
+  final DestinationModel? destinationModel;
   const RoutingScreen({
     Key? key,
+    this.destinationModel,
+    this.scheduleChoosenId,
     required this.placeId,
     required this.vietmapModel
   }) : super(key: key);
@@ -143,6 +149,7 @@ class _RoutingScreenState extends State<RoutingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final ScheduleService _scheduleService = ScheduleService();
     return BlocListener<RoutingBloc, RoutingState>(
       bloc: routingBloc,
       listener: (context, state) {
@@ -285,7 +292,38 @@ class _RoutingScreenState extends State<RoutingScreen> {
                         onArrival: () async {
                           // Capture the current navigator and context-dependent functionality
                           final navigator = Navigator.of(context);
-
+                          showDialog(
+                            barrierDismissible: false,
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              title: Text(_languageCode == 'vi' ? 'Thông báo' : 'Notification'),
+                              content: Text(
+                                _languageCode == 'vi' ? 'Bạn đã đến nơi' : 'You have arrived',
+                                style: const TextStyle(),
+                                textAlign: TextAlign.center,
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    navigator.pop(); // Close the dialog
+                                    navigator.pop(); // Go back to the previous screen
+                                  },
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if(widget.scheduleChoosenId != null){
+                            await _scheduleService.UpdateDestination(
+                                widget.destinationModel!.id,
+                                widget.scheduleChoosenId!,
+                                widget.placeId,
+                                widget.destinationModel?.startDate,
+                                widget.destinationModel?.endDate,
+                                widget.destinationModel?.detail,
+                                true
+                            );
+                          }
                           try {
                             await _placeService.addTraveledPlace(widget.placeId);
 
