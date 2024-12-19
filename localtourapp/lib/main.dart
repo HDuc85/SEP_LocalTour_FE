@@ -144,9 +144,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     titles = [
       null,
       null,
-      'Bookmark Page',
       null,
-      "Account Page",
+      null,
+      null,
     ];
   }
 

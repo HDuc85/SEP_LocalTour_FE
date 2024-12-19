@@ -240,6 +240,7 @@ class _AccountPageState extends State<AccountPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: Text(_languageCode == 'vi' ? 'Trang cá nhân':'Account Page'),),
       body: SafeArea(
         child: Stack(
           children: [
