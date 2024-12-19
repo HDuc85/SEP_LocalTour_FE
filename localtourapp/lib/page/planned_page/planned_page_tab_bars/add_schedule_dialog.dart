@@ -76,8 +76,8 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate, List
                             DateTime? picked = await showDatePicker(
                               context: context,
                               initialDate: startDate ?? DateTime.now(),
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime.now(), // Allow <= current date
+                              firstDate: DateTime.now(), // Start date can be today or later
+                              lastDate: endDate ?? DateTime(2100), // Ensure it doesn't exceed the end date if set
                             );
                             if (picked != null) {
                               setState(() {
@@ -122,8 +122,8 @@ void showAddScheduleDialog(BuildContext context, ScheduleCallback onCreate, List
                           onTap: () async {
                             DateTime? picked = await showDatePicker(
                               context: context,
-                              initialDate: endDate ?? DateTime.now(),
-                              firstDate: startDate ?? DateTime.now().add(Duration(days: 1)),
+                              initialDate: endDate ?? (startDate ?? DateTime.now()).add(const Duration(days: 1)),
+                              firstDate: startDate ?? DateTime.now().add(const Duration(days: 1)),
                               lastDate: DateTime(2100),
                             );
                             if (picked != null) {

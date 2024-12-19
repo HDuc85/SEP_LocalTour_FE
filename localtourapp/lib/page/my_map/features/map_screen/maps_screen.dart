@@ -153,7 +153,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
     }
     String? userId = await SecureStorageHelper().readValue(AppConfig.userId);
 
-    var listSchedule = await _scheduleService.getListSchedule(userId);
+    var listSchedule = await _scheduleService.GetScheduleUserId(userId!);
     setState(() {
       _listSchedule = listSchedule;
     });

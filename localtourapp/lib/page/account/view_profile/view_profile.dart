@@ -21,6 +21,7 @@ class ViewProfilePage extends StatefulWidget {
 }
 
 class _ViewProfilePageState extends State<ViewProfilePage> {
+  String _languageCode = 'vi';
   bool isCurrentUserId = false;
 
   @override
@@ -31,9 +32,11 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
 
   Future<void> fetch() async {
     String? myUserId = await SecureStorageHelper().readValue(AppConfig.userId);
+    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
     if (myUserId != null && myUserId == widget.userId) {
       setState(() {
         isCurrentUserId = true;
+        _languageCode = languageCode!;
       });
     }
   }
@@ -47,7 +50,7 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
             return [
               SliverAppBar(
-                title: Text('${widget.user.fullName} Profile', maxLines: 2),
+                title: Text(_languageCode == 'vi' ? '${widget.user.fullName} Hồ Sơ ' : '${widget.user.fullName} Profile', maxLines: 2),
                 pinned: true,
                 floating: true,
                 snap: false,
@@ -55,18 +58,18 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
                 bottom: TabBar(
                   indicatorColor: Colors.black,
                   tabs: [
-                    const Tab(
-                      icon: Icon(Icons.post_add, color: Colors.blue),
-                      text: "Posts",
+                    Tab(
+                      icon: const Icon(Icons.post_add, color: Colors.blue),
+                      text: _languageCode == 'vi' ? 'Bài viết' : "Posts",
                     ),
-                    const Tab(
-                      icon: Icon(Icons.rate_review, color: Colors.green),
-                      text: "Reviews",
+                    Tab(
+                      icon: const Icon(Icons.rate_review, color: Colors.green),
+                      text: _languageCode == 'vi' ? 'Tất cả đánh giá' :"Reviews",
                     ),
                     if (!isCurrentUserId)
-                      const Tab(
-                        icon: Icon(Icons.schedule, color: Colors.red),
-                        text: "Schedules",
+                      Tab(
+                        icon: const Icon(Icons.schedule, color: Colors.red),
+                        text: _languageCode == 'vi' ? 'Lịch trình' :"Schedules",
                       ),
                   ],
                 ),

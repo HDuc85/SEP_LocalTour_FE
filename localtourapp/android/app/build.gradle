@@ -33,7 +33,13 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file('D:/new/key.jks')
+            storeFile file('D:/Documents/Study/Capstone_project/key.jks')
+            storePassword '12345678'
+            keyAlias 'keyAlias'
+            keyPassword '12345678'
+        }
+        debug {
+            storeFile file('D:/Documents/Study/Capstone_project/key.jks')
             storePassword '12345678'
             keyAlias 'keyAlias'
             keyPassword '12345678'

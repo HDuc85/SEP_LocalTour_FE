@@ -14,9 +14,9 @@ import 'package:localtourapp/full_media/full_screen_post_media_viewer.dart';
 import 'package:localtourapp/page/account/view_profile/comment.dart';
 import 'package:localtourapp/page/account/view_profile/create_post.dart';
 import 'package:localtourapp/services/post_service.dart';
-import 'package:localtourapp/services/report_service.dart';
 import 'package:localtourapp/video_player/video_thumbnail.dart';
 
+import '../../../constants/getListApi.dart';
 import '../../detail_page/detail_page_tab_bars/form/reportform.dart';
 
 class PostTabBar extends StatefulWidget {
@@ -37,20 +37,19 @@ class PostTabBar extends StatefulWidget {
 class _PostTabBarState extends State<PostTabBar> {
   final ScrollController _scrollController = ScrollController();
   final PostService _postService = PostService();
-  final ReportService _reportService = ReportService();
   bool _showBackToTopButton = false;
   DateTime? _fromDate;
   DateTime? _toDate;
   final TextEditingController searchController = TextEditingController();
   final FocusNode searchFocusNode = FocusNode();
   Map<int, bool> postVisibility = {};
-  Map<int, bool> expandedPosts = {}; // Tracks expansion state per post
+  Map<int, bool> expandedPosts = {};
   late List<PostModel> listPost;
   late List<PostModel> initListPost;
   bool isLoading = true;
   bool isLogin = false;
   bool isCurrentUser = false;
-  String _languageCode = '';
+  String _languageCode = 'vi';
 
   @override
   void initState() {
@@ -62,7 +61,7 @@ class _PostTabBarState extends State<PostTabBar> {
   Future<void> fetchDate() async {
     var languageCode =
         await SecureStorageHelper().readValue(AppConfig.language);
-    var result = await _postService.getListPost(widget.userId);
+    var result = await _postService.getListPost(widget.userId, SortBy.created_by);
     var userId = await SecureStorageHelper().readValue(AppConfig.userId);
 
     if (userId != null) {
@@ -632,7 +631,7 @@ class _PostTabBarState extends State<PostTabBar> {
           const SizedBox(height: 10),
 
           // Media List
-          if (post.media.isNotEmpty) _buildMediaList(post.media),
+          if (post.media.isNotEmpty) _buildMediaRow(post.media),
 
           const SizedBox(height: 10),
 
@@ -647,8 +646,8 @@ class _PostTabBarState extends State<PostTabBar> {
                 ],
               ),
               Text(_languageCode == 'vi'
-                  ? '${post.totalComments} bình luận${post.totalComments != 1 ? 's' : ''}'
-                  : '${post.totalComments} comment${post.totalComments != 1 ? 's' : ''}'),
+                  ? '${post.totalComments} bình luận'
+                  : '${post.totalComments} comments'),
             ],
           ),
           const Divider(),
@@ -685,8 +684,8 @@ class _PostTabBarState extends State<PostTabBar> {
                   ),
                   label: Text(
                     _languageCode == 'vi'
-                        ? '${post.totalComments} Bình Luận${post.totalComments != 1 ? 's' : ''}'
-                        : '${post.totalComments} Comment${post.totalComments != 1 ? 's' : ''}',
+                        ? '${post.totalComments} Bình Luận'
+                        : '${post.totalComments} Comment',
                     style: const TextStyle(color: Colors.black),
                   ),
                 ),
@@ -698,62 +697,92 @@ class _PostTabBarState extends State<PostTabBar> {
     );
   }
 
-  Widget _buildMediaList(List<MediaModel> mediaForPost) {
-    return Column(
-      children: [
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            mainAxisSpacing: 4,
-            crossAxisSpacing: 4,
-          ),
-          itemCount: mediaForPost.length > 6 ? 6 : mediaForPost.length,
-          itemBuilder: (context, index) {
-            return GestureDetector(
+  Widget _buildMediaRow(List<MediaModel> mediaList) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: mediaList.map((media) {
+          return Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: GestureDetector(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => FullScreenPostMediaViewer(
-                      postMediaList: mediaForPost,
-                      initialIndex: index,
-                    ),
-                  ),
-                );
-              },
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  mediaForPost[index].type == 'Image'
-                      ? Image(
-                          image: mediaForPost[index].url.startsWith('http')
-                              ? NetworkImage(mediaForPost[index].url)
-                              : FileImage(File(mediaForPost[index].url))
-                                  as ImageProvider,
-                          fit: BoxFit.cover,
-                        )
-                      : VideoThumbnail(videoPath: mediaForPost[index].url),
-                  if (index == 5 && mediaForPost.length > 6)
-                    Container(
-                      color: Colors.black54,
-                      child: Center(
-                        child: Text(
-                          _languageCode == 'vi' ? 'xem thêm' : 'See more',
-                          style: const TextStyle(color: Colors.white),
-                        ),
+                if (media.url.isNotEmpty) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FullScreenPostMediaViewer(
+                        postMediaList: mediaList,
+                        initialIndex: mediaList.indexOf(media),
                       ),
                     ),
-                ],
-              ),
-            );
-          },
-        ),
-      ],
+                  );
+                }
+              },
+              child: _buildMediaThumbnail(media),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 
+  Widget _buildMediaThumbnail(MediaModel media) {
+    // If the media URL is empty or not valid, return a placeholder
+    if (media.url.isEmpty) {
+      return Image.asset(
+        'assets/images/image_placeholder.png',
+        width: 50,
+        height: 50,
+        fit: BoxFit.cover,
+      );
+    }
+
+    // Determine if the media is an image or video by checking the file extension
+    final fileExtension = media.url.split('.').last.toLowerCase();
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
+
+    // If it's an image
+    if (imageExtensions.contains(fileExtension)) {
+      if (media.url.startsWith('http')) {
+        // Load network image
+        return Image.network(
+          media.url,
+          width: 50,
+          height: 50,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Image.asset(
+              'assets/images/image_placeholder.png',
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+            );
+          },
+        );
+      } else {
+        // Load local image file
+        final file = File(media.url);
+        if (file.existsSync()) {
+          return Image.file(
+            file,
+            width: 50,
+            height: 50,
+            fit: BoxFit.cover,
+          );
+        } else {
+          return Image.asset(
+            'assets/images/image_placeholder.png',
+            width: 50,
+            height: 50,
+            fit: BoxFit.cover,
+          );
+        }
+      }
+    } else {
+      // Assume it's a video
+      return VideoThumbnail(videoPath: media.url);
+    }
+  }
   void _navigateToWeatherPage() {
     Navigator.pushNamed(context, '/weather');
   }
