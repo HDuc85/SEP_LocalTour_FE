@@ -88,7 +88,7 @@ class _SearchPageState extends State<SearchPage> {
     if(widget.isEvent != null){
       isPlace = false;
     }
-    final fetchedTags = await _tagService.getTopTagPlace();
+    final fetchedTags = await _tagService.getAllTag();
 
    if(isPlace){
      List<PlaceCardModel> fetchedListPlaces =[];
