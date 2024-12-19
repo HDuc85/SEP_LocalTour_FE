@@ -50,7 +50,7 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
             return [
               SliverAppBar(
-                title: Text(_languageCode == 'vi' ? '${widget.user.fullName} Hồ Sơ ' : '${widget.user.fullName} Profile', maxLines: 2),
+                title: Text(_languageCode == 'vi' ? 'Hồ Sơ của${widget.user.fullName} ' : '${widget.user.fullName} Profile', maxLines: 2),
                 pinned: true,
                 floating: true,
                 snap: false,
