@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:localtourapp/config/secure_storage_helper.dart';
 import '../config/appConfig.dart';
@@ -44,18 +45,30 @@ class ApiService {
         response = await http.get(uri, headers: headers);
     }
 
+
     if (response.statusCode == 401) {
       String? refreshToken = await storage.readValue(AppConfig.refreshToken);
       bool refreshed = await _refreshAccessToken(refreshToken);
+
+      final data = jsonDecode(response.body);
+      if(data == "User is banned"){
+        await storage.deleteValue(AppConfig.isLogin);
+        await storage.deleteValue(AppConfig.userId);
+        await storage.deleteValue(AppConfig.accessToken);
+        await storage.deleteValue(AppConfig.refreshToken);
+        throw Exception("User is banned");
+      }
       if (refreshed) {
         return makeRequest(endpoint, method, body);
       } else {
-         await storage.deleteValue(AppConfig.isLogin);
+        await storage.deleteValue(AppConfig.isLogin);
+        await storage.deleteValue(AppConfig.userId);
       }
     }
     if(response.statusCode == 403){
       await storage.deleteValue(AppConfig.isLogin);
       await storage.deleteValue(AppConfig.userId);
+
     }
 
     return response;
@@ -79,6 +92,8 @@ class ApiService {
       await storeTokens(data);
       return true;
     }
+
+
     await storage.saveBoolValue(AppConfig.isLogin, false);
     await storage.deleteValue(AppConfig.userId);
     return false;
