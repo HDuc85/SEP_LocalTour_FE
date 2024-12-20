@@ -11,6 +11,8 @@ import 'package:localtourapp/services/event_service.dart';
 import 'package:localtourapp/services/location_Service.dart';
 import 'package:localtourapp/services/place_service.dart';
 import '../../base/const.dart';
+import '../../config/appConfig.dart';
+import '../../config/secure_storage_helper.dart';
 import '../../constants/getListApi.dart';
 import '../../models/Tag/tag_model.dart';
 import '../../services/tag_service.dart';
@@ -37,7 +39,7 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-
+  String _languageCode = 'vi';
   final PlaceService _placeService = PlaceService();
   final TagService _tagService = TagService();
   final EventService _eventService = EventService();
@@ -72,6 +74,14 @@ class _SearchPageState extends State<SearchPage> {
     _fetchCurrentLocation();
 
     _listPlaceScrollController.addListener(_onScroll);
+  }
+
+  Future<void> fetchInit() async {
+    var languageCode =
+    await SecureStorageHelper().readValue(AppConfig.language);
+    setState(() {
+      _languageCode = languageCode!;
+    });
   }
 
   Future<void> _fetchCurrentLocation() async {
@@ -319,7 +329,7 @@ class _SearchPageState extends State<SearchPage> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 22),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
       ),
       child: Text(
         text,
@@ -456,16 +466,16 @@ class _SearchPageState extends State<SearchPage> {
             margin: const EdgeInsets.only(left: 10, right: 10, bottom: 5),
             child: Row(
               children: [
-                _buildFilterButton(
+                _buildFilterButton(_languageCode == 'vi' ? "Gần nhất":
                     "Nearest", const Color(0xFF99C896), SortBy.distance),
                 const SizedBox(width: 5),
                 isPlace ?
-                _buildFilterButton(
+                _buildFilterButton(_languageCode == 'vi' ? "Nổi bật":
                     "Featured", const Color(0xFFAAFF00), SortBy.rating)
-                :_buildFilterButton(
+                :_buildFilterButton(_languageCode == 'vi' ? "Sắp ra mắt":
                     "Coming soon", const Color(0xFFFFB200), SortBy.created_by, 'isComing'),
                 const SizedBox(width: 5),
-                if(!isPlace) _buildFilterButton(
+                if(!isPlace) _buildFilterButton(_languageCode == 'vi' ? "Đang diễn ra":
                     "On Going", const Color(0xFF99C896), SortBy.created_by, 'onGoing'),
                 if(isPlace) const SizedBox(width: 5) ,
                 if(isPlace)
@@ -614,7 +624,7 @@ class _SearchPageState extends State<SearchPage> {
                       children: [
                         const Icon(Icons.search_off,
                             size: 80, color: Colors.grey),
-                        Text(
+                        Text(_languageCode == 'vi' ? "Không có địa điểm nào phù hợp với danh mục bạn đã chọn.":
                           "No places match your selected categories.",
                           style:
                               TextStyle(fontSize: 18, color: Colors.grey[700]),

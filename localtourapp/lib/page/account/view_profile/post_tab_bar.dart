@@ -203,7 +203,7 @@ class _PostTabBarState extends State<PostTabBar> {
       context: context,
       isScrollControlled: true,
       builder: (context) => CommentsBottomSheet(
-        post: post,
+        post: post, onCommentAdded: () { },
       ),
     );
   }
@@ -684,8 +684,8 @@ class _PostTabBarState extends State<PostTabBar> {
                   ),
                   label: Text(
                     _languageCode == 'vi'
-                        ? '${post.totalComments} Bình Luận'
-                        : '${post.totalComments} Comment',
+                        ? 'Bình Luận'
+                        : 'Comment',
                     style: const TextStyle(color: Colors.black),
                   ),
                 ),

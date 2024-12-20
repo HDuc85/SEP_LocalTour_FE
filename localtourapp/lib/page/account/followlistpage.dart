@@ -61,15 +61,22 @@ class _FollowListPageState extends State<FollowListPage> {
             ? NetworkImage(followUser.userProfileUrl!)
             : const AssetImage('assets/images/default_profile_picture.png') as ImageProvider;
 
+        // Định nghĩa userIdToNavigate chung
+        final userIdToNavigate = isFollowerTab || (followUser.userFollow.isEmpty)
+            ? followUser.userId
+            : followUser.userFollow;
+
         return ListTile(
           leading: GestureDetector(
             onTap: () {
+              if (userIdToNavigate.isEmpty) {
+                print("Error: userIdToNavigate is empty");
+                return;
+              }
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AccountPage(
-                    userId: isFollowerTab ? followUser.userId : followUser.userFollow,
-                  ),
+                  builder: (context) => AccountPage(userId: userIdToNavigate),
                 ),
               );
             },
@@ -82,15 +89,10 @@ class _FollowListPageState extends State<FollowListPage> {
           ),
           title: GestureDetector(
             onTap: () {
-              final userIdToNavigate = isFollowerTab || followUser.userFollow.isEmpty
-                  ? followUser.userId
-                  : followUser.userFollow;
-
               if (userIdToNavigate.isEmpty) {
                 print("Error: userIdToNavigate is empty");
                 return;
               }
-
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -107,6 +109,5 @@ class _FollowListPageState extends State<FollowListPage> {
       },
     );
   }
-
 }
 

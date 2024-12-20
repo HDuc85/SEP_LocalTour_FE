@@ -10,10 +10,12 @@ import 'package:localtourapp/services/post_service.dart';
 
 class CommentsBottomSheet extends StatefulWidget {
   final PostModel post;
+  final VoidCallback onCommentAdded;
 
   const CommentsBottomSheet({
     Key? key,
     required this.post,
+    required this.onCommentAdded,
   }) : super(key: key);
 
   @override
@@ -96,6 +98,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
         await _postService.CreateComment(widget.post.id, parentId, commentText);
     if (result) {
       fetchData();
+      widget.onCommentAdded();
     }
 
     _commentController.clear();
@@ -124,23 +127,6 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
     setState(() {
       _replyingToCommentId = null;
     });
-  }
-
-  String formatTimeAgo(DateTime pastTime) {
-    final now = DateTime.now();
-    final difference = now.difference(pastTime);
-
-    if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} ${languageCode == 'vi' ? 'phút trước' : (difference.inMinutes > 1 ? 'minutes' : 'minute')}';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours} ${languageCode == 'vi' ? 'tiếng trước' : (difference.inHours > 1 ? 'hours' : 'hour')}';
-    } else if (difference.inDays < 30) {
-      return '${difference.inDays} ${languageCode == 'vi' ? 'ngày trước' : (difference.inDays > 1 ? 'days' : 'day')}';
-    } else if (difference.inDays < 365) {
-      return '${(difference.inDays / 30).round()} ${languageCode == 'vi' ? 'tháng trước' : ((difference.inDays / 30).round() > 1 ? 'months' : 'month')}';
-    } else {
-      return '${(difference.inDays / 365).round()} ${languageCode == 'vi' ? 'năm trước' : ((difference.inDays / 30).round() > 1 ? 'years' : 'year')}';
-    }
   }
 
   Future<void> _likeComment(int commentId) async {
@@ -285,13 +271,6 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                       ),
                     ),
                     // Time difference
-                    Text(
-                      formatTimeAgo(comment.createdDate),
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                      ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 5),

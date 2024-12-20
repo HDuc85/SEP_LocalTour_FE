@@ -104,7 +104,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
       isTagLoading = true;
     });
     try {
-      List<TagModel> fetchedTags = await _tagService.getTopTagPlace();
+      List<TagModel> fetchedTags = await _tagService.getUserTag();
       setState(() {
         tags = fetchedTags;
       });

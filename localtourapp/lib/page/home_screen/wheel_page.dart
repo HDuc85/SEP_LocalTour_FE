@@ -73,9 +73,9 @@ class _WheelPageState extends State<WheelPage> {
           speed: 1,
           speedAccuracy: 1);
     }
-    final fetchedListPlace = await _placeService.getListPlace(
-        lat, long, SortBy.distance, SortOrder.asc, [], '', 1, 20);
-    // final fetchedListPlace = await _placeService.getListPlace(lat, long, SortBy.distance,SortOrder.asc,[1019],'',1,20);
+    // final fetchedListPlace = await _placeService.getListPlace(
+    //     lat, long, SortBy.distance, SortOrder.asc, [], '', 1, 20);
+    final fetchedListPlace = await _placeService.getListPlace(lat, long, SortBy.distance,SortOrder.asc,[1019],'',1,20);
 
     setState(() {
       _listPlaceCard = fetchedListPlace;

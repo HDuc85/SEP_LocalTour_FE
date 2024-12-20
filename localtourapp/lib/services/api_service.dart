@@ -49,15 +49,6 @@ class ApiService {
     if (response.statusCode == 401) {
       String? refreshToken = await storage.readValue(AppConfig.refreshToken);
       bool refreshed = await _refreshAccessToken(refreshToken);
-
-      final data = jsonDecode(response.body);
-      if(data == "User is banned"){
-        await storage.deleteValue(AppConfig.isLogin);
-        await storage.deleteValue(AppConfig.userId);
-        await storage.deleteValue(AppConfig.accessToken);
-        await storage.deleteValue(AppConfig.refreshToken);
-        throw Exception("User is banned");
-      }
       if (refreshed) {
         return makeRequest(endpoint, method, body);
       } else {

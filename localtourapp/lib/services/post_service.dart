@@ -47,7 +47,6 @@ Future<List<PostModel>> getListPost(
     }
     else{
       throw Exception("Lỗi khi lấy dữ liệu. Mã lỗi: ${response.statusCode}");
-
     }
   }
 

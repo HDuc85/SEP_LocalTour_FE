@@ -115,21 +115,21 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
           selectedScheduleId = postmodel.scheduleId;
         }
 
-        for (var item in postmodel.media) {
-          var result = await _mediaService.downloadAndConvertToXFile(item.url);
-          if (result == null) {
-            if (kDebugMode) {
-              print("Skipping media due to failed download: ${item.url}");
-            }
-            continue;
-          }
-          mediaList.add(PostMedia(
-            createdAt: DateTime.now(),
-            id: DateTime.now().millisecondsSinceEpoch,
-            type: item.type.toLowerCase(), // Ensure type consistency
-            url: result.path,
-          ));
-                }
+        // for (var item in postmodel.media) {
+        //   var result = await _mediaService.downloadAndConvertToXFile(item.url);
+        //   if (result == null) {
+        //     if (kDebugMode) {
+        //       print("Skipping media due to failed download: ${item.url}");
+        //     }
+        //     continue;
+        //   }
+        //   mediaList.add(PostMedia(
+        //     createdAt: DateTime.now(),
+        //     id: DateTime.now().millisecondsSinceEpoch,
+        //     type: item.type.toLowerCase(), // Ensure type consistency
+        //     url: result.path,
+        //   ));
+        //         }
       }
 
       setState(() {

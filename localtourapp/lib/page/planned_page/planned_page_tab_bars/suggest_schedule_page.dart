@@ -83,7 +83,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
    var result = await _scheduleService.SaveSuggestSchedule(startTime!, endTime!, suggestedDestinations);
       // No suggested schedule available
       if(result){
-        widget.voidCallback;
+        widget.voidCallback();
       Navigator.pop(context);
       return;
     }
