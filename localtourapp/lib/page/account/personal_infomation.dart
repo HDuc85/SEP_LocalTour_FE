@@ -704,8 +704,8 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
-                                      vertical: 13,
-                                      horizontal: 90), // Adjust spacing
+                                      vertical: 16,
+                                      horizontal: 57), // Adjust spacing
         
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),

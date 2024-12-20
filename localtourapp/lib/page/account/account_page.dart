@@ -21,7 +21,6 @@ import 'setting_page.dart';
 import 'user_preference.dart';
 import 'view_profile/view_profile.dart';
 
-
 class AccountPage extends StatefulWidget {
   final String userId;
 
@@ -134,7 +133,8 @@ class _AccountPageState extends State<AccountPage> {
     if (pickedFile != null) {
       final file = File(pickedFile.path);
       try {
-        await _userService.sendUserDataRequest(UpdateUserRequest(profilePicture: file));
+        await _userService
+            .sendUserDataRequest(UpdateUserRequest(profilePicture: file));
 
         if (!mounted) return;
 
@@ -158,7 +158,8 @@ class _AccountPageState extends State<AccountPage> {
     setState(() => isFollowLoading = true);
 
     try {
-      final result = await _userService.FollowOrUnFollowUser(widget.userId, isFollowing);
+      final result =
+          await _userService.FollowOrUnFollowUser(widget.userId, isFollowing);
 
       if (!mounted) return;
 
@@ -212,7 +213,9 @@ class _AccountPageState extends State<AccountPage> {
       scaffoldMessenger.showSnackBar(
         SnackBar(
           content: Text(
-            _languageCode == 'vi' ? 'Đăng xuất thành công' : 'Logged out successfully',
+            _languageCode == 'vi'
+                ? 'Đăng xuất thành công'
+                : 'Logged out successfully',
           ),
         ),
       );
@@ -227,7 +230,6 @@ class _AccountPageState extends State<AccountPage> {
     super.dispose();
   }
 
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -240,50 +242,53 @@ class _AccountPageState extends State<AccountPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_languageCode == 'vi' ? 'Trang cá nhân':'Account Page'),),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(_languageCode == 'vi' ? 'Trang cá nhân' : 'Account Page'),
+      ),
       body: SafeArea(
         child: Stack(
           children: [
-                ListView(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(8.0),
-                  children: [
-                    const SizedBox(height: 16),
-                    if(isLogin) _buildProfileSection(userprofile),
-                    const SizedBox(height: 16),
-                    if (!isCurrentUser && isLogin) _buildFollowButton(userprofile.isFollowed),
-                    if (isCurrentUser) ...[
-                      _buildPersonInfoSection(),
-                      const SizedBox(height: 12),
-                    ],
-                      _buildSettingSection(),
-                      const SizedBox(height: 12),
-                      _buildContactSection(),
-                      const SizedBox(height: 12),
-                      _buildFAQSection(),
-                      const SizedBox(height: 12),
-                      if (isCurrentUser) ...[
-                      _buildUserPreference(),
-                      const SizedBox(height: 12), // Adjust spacing if needed
-                         ],
-                    if (isCurrentUser || !isLogin) _buildLogoutButton(), // Add the Logout button here
-                      const SizedBox(height: 36),
-                  ],
-                ),
-                Positioned(
-                  bottom: 0,
-                  left: 20,
-                  child: WeatherIconButton(
-                    onPressed: _navigateToWeatherPage,
-                    assetPath: 'assets/icons/weather.png',
-                  ),
-                ),
+            ListView(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(8.0),
+              children: [
+                const SizedBox(height: 16),
+                if (isLogin) _buildProfileSection(userprofile),
+                const SizedBox(height: 16),
+                if (!isCurrentUser && isLogin)
+                  _buildFollowButton(userprofile.isFollowed),
+                if (isCurrentUser) ...[
+                  _buildPersonInfoSection(),
+                  const SizedBox(height: 12),
+                ],
+                _buildSettingSection(),
+                const SizedBox(height: 12),
+                _buildContactSection(),
+                const SizedBox(height: 12),
+                _buildFAQSection(),
+                const SizedBox(height: 12),
+                if (isCurrentUser) ...[
+                  _buildUserPreference(),
+                  const SizedBox(height: 12), // Adjust spacing if needed
+                ],
+                if (isCurrentUser || !isLogin)
+                  _buildLogoutButton(), // Add the Logout button here
+                const SizedBox(height: 36),
               ],
             ),
+            Positioned(
+              bottom: 0,
+              left: 20,
+              child: WeatherIconButton(
+                onPressed: _navigateToWeatherPage,
+                assetPath: 'assets/icons/weather.png',
+              ),
+            ),
+          ],
+        ),
       ),
     );
-
-
   }
 
   // Add this method inside _AccountPageState
@@ -330,18 +335,21 @@ class _AccountPageState extends State<AccountPage> {
             crossAxisAlignment: CrossAxisAlignment.center, // Changed to start
             children: [
               // Profile picture on the left
-                  GestureDetector(
-                    onTap: isCurrentUser? _selectAvatar : (){}, // Gọi khi nhấn vào avatar
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundImage: userProfile.userProfileImage != ''
-                          ? NetworkImage(userProfile.userProfileImage)
-                          : null,
-                      child: userProfile.userProfileImage == ''
-                          ? const Icon(Icons.account_circle, size: 80, color: Colors.grey)
-                          : null,
-                    ),
-                  ),
+              GestureDetector(
+                onTap: isCurrentUser
+                    ? _selectAvatar
+                    : () {}, // Gọi khi nhấn vào avatar
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundImage: userProfile.userProfileImage != ''
+                      ? NetworkImage(userProfile.userProfileImage)
+                      : null,
+                  child: userProfile.userProfileImage == ''
+                      ? const Icon(Icons.account_circle,
+                          size: 80, color: Colors.grey)
+                      : null,
+                ),
+              ),
               const SizedBox(width: 25),
 
               // User details on the right
@@ -350,7 +358,7 @@ class _AccountPageState extends State<AccountPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      userProfile.userName ,
+                      userProfile.userName,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -364,20 +372,27 @@ class _AccountPageState extends State<AccountPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(_languageCode == 'vi' ?
-                      '${userProfile.totalSchedules} lịch trình đã tạo':'${userProfile.totalSchedules} schedules created',
+                    Text(
+                      _languageCode == 'vi'
+                          ? '${userProfile.totalSchedules} lịch trình đã tạo'
+                          : '${userProfile.totalSchedules} schedules created',
                       style: const TextStyle(fontSize: 14),
                     ),
-                    Text(_languageCode == 'vi' ?
-                    '${userProfile.totalPosteds} bài đã tạo':'${userProfile.totalPosteds} posts created',
+                    Text(
+                      _languageCode == 'vi'
+                          ? '${userProfile.totalPosteds} bài đã tạo'
+                          : '${userProfile.totalPosteds} posts created',
                       style: const TextStyle(fontSize: 14),
                     ),
-                    Text(_languageCode == 'vi' ?
-                      '${userProfile.totalReviews} đánh giá':'${userProfile.totalReviews} reviews',
+                    Text(
+                      _languageCode == 'vi'
+                          ? '${userProfile.totalReviews} đánh giá'
+                          : '${userProfile.totalReviews} reviews',
                       style: const TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 8),
                     Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         GestureDetector(
                           onTap: () {
@@ -391,12 +406,13 @@ class _AccountPageState extends State<AccountPage> {
                               ),
                             );
                           },
-                          child: Text(_languageCode == 'vi' ?
-                            '${userProfile.totalFollowers} người theo dõi':'${userProfile.totalFollowers} followers',
+                          child: Text(
+                            _languageCode == 'vi'
+                                ? '${userProfile.totalFollowers} người theo dõi'
+                                : '${userProfile.totalFollowers} followers',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
-                        const SizedBox(width: 12),
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -409,13 +425,15 @@ class _AccountPageState extends State<AccountPage> {
                               ),
                             );
                           },
-                          child: Text(_languageCode == 'vi' ?
-                          '${userProfile.totalFollowed} đang theo dõi':'${userProfile.totalFollowed} followings',
+                          child: Text(
+                            _languageCode == 'vi'
+                                ? '${userProfile.totalFollowed} đang theo dõi'
+                                : '${userProfile.totalFollowed} followings',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
                       ],
-                    ),
+                    )
                   ],
                 ),
               ),
@@ -431,7 +449,7 @@ class _AccountPageState extends State<AccountPage> {
                   MaterialPageRoute(
                     builder: (context) => ViewProfilePage(
                       user: userprofile,
-                      userId: widget.userId == ''? myUserId : widget.userId,
+                      userId: widget.userId == '' ? myUserId : widget.userId,
                     ),
                   ),
                 );
@@ -443,8 +461,8 @@ class _AccountPageState extends State<AccountPage> {
                   borderRadius: BorderRadius.circular(15),
                 ),
               ),
-              child: Text(_languageCode == 'vi' ?
-                "Xem Hồ sơ":"View Profile",
+              child: Text(
+                _languageCode == 'vi' ? "Xem Hồ sơ" : "View Profile",
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -465,9 +483,13 @@ class _AccountPageState extends State<AccountPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>  PersonalInformationPage(userprofile: userprofile, userId: myUserId,fetchData: () {
-                readUserProfile(myUserId);
-              },),
+              builder: (context) => PersonalInformationPage(
+                userprofile: userprofile,
+                userId: myUserId,
+                fetchData: () {
+                  readUserProfile(myUserId);
+                },
+              ),
             ),
           );
         },
@@ -488,8 +510,12 @@ class _AccountPageState extends State<AccountPage> {
             ),
             child: ListTile(
               leading: const Icon(Icons.person),
-              title: Text(_languageCode == 'vi' ?'Thông tin cá nhân':'Personal information'),
-              subtitle: Text(_languageCode == 'vi' ?'Sửa hoặc thêm thông tin của bạn':'Edit or add your personal information'),
+              title: Text(_languageCode == 'vi'
+                  ? 'Thông tin cá nhân'
+                  : 'Personal information'),
+              subtitle: Text(_languageCode == 'vi'
+                  ? 'Sửa hoặc thêm thông tin của bạn'
+                  : 'Edit or add your personal information'),
             )));
   }
 
@@ -501,11 +527,13 @@ class _AccountPageState extends State<AccountPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => SettingPage(onButtonPressed: (string) {
-                setState(() {
-                  _languageCode = string;
-                });
-              },),
+              builder: (context) => SettingPage(
+                onButtonPressed: (string) {
+                  setState(() {
+                    _languageCode = string;
+                  });
+                },
+              ),
             ),
           );
         },
@@ -526,8 +554,10 @@ class _AccountPageState extends State<AccountPage> {
             ),
             child: ListTile(
               leading: const Icon(Icons.settings),
-              title: Text(_languageCode == 'vi' ?'Cài đặt':'Settings'),
-              subtitle: Text(_languageCode == 'vi' ?'tùy chỉnh ngôn ngữ':'language settings'),
+              title: Text(_languageCode == 'vi' ? 'Cài đặt' : 'Settings'),
+              subtitle: Text(_languageCode == 'vi'
+                  ? 'tùy chỉnh ngôn ngữ'
+                  : 'language settings'),
             )));
   }
 
@@ -550,8 +580,10 @@ class _AccountPageState extends State<AccountPage> {
         ),
         child: ListTile(
           leading: const Icon(Icons.contact_mail),
-          title: Text(_languageCode == 'vi' ?'Liên hệ':'Contact Us'),
-          subtitle: Text(_languageCode == 'vi' ?'Yêu cầu hỗ trợ hoặc phản hồi':'Reach out with support requests or feedback'),
+          title: Text(_languageCode == 'vi' ? 'Liên hệ' : 'Contact Us'),
+          subtitle: Text(_languageCode == 'vi'
+              ? 'Yêu cầu hỗ trợ hoặc phản hồi'
+              : 'Reach out with support requests or feedback'),
           onTap: _sendEmail,
         ));
   }
@@ -570,7 +602,7 @@ class _AccountPageState extends State<AccountPage> {
       print(emailUri.toString());
     }
     try {
-      var x  = await canLaunchUrl(emailUri);
+      var x = await canLaunchUrl(emailUri);
       if (x) {
         await launchUrl(emailUri);
       } else {
@@ -588,7 +620,7 @@ class _AccountPageState extends State<AccountPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(_languageCode == 'vi' ?'Lỗi':'Error'),
+          title: Text(_languageCode == 'vi' ? 'Lỗi' : 'Error'),
           content: Text(message),
           actions: [
             TextButton(
@@ -631,7 +663,9 @@ class _AccountPageState extends State<AccountPage> {
             child: ListTile(
               leading: const Icon(Icons.question_answer),
               title: const Text('FAQ'),
-              subtitle: Text(_languageCode == 'vi' ?'Tìm câu trả lời cho những câu hỏi thường gặp':'Find answers to frequently asked questions'),
+              subtitle: Text(_languageCode == 'vi'
+                  ? 'Tìm câu trả lời cho những câu hỏi thường gặp'
+                  : 'Find answers to frequently asked questions'),
             )));
   }
 
@@ -643,7 +677,9 @@ class _AccountPageState extends State<AccountPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>  UserPreferencePage(userprofile: userprofile,),
+              builder: (context) => UserPreferencePage(
+                userprofile: userprofile,
+              ),
             ),
           );
         },
@@ -664,16 +700,20 @@ class _AccountPageState extends State<AccountPage> {
             ),
             child: ListTile(
               leading: const Icon(Icons.question_answer),
-              title: Text(_languageCode == 'vi' ? 'Sở thích của bạn':'Your Preference'),
-              subtitle: Text(_languageCode == 'vi' ? 'Thêm hoặc cập nhật sở thích của bạn':'Add or update your preferences here'),
+              title: Text(_languageCode == 'vi'
+                  ? 'Sở thích của bạn'
+                  : 'Your Preference'),
+              subtitle: Text(_languageCode == 'vi'
+                  ? 'Thêm hoặc cập nhật sở thích của bạn'
+                  : 'Add or update your preferences here'),
             )));
   }
 
   // Build Logout Button
   Widget _buildLogoutButton() {
-    return
-      Container(
-      margin:  EdgeInsets.only(top: !isLogin?300:8,bottom: 8,left: 8,right: 8),
+    return Container(
+      margin: EdgeInsets.only(
+          top: !isLogin ? 300 : 8, bottom: 8, left: 8, right: 8),
       child: ElevatedButton(
         onPressed: () {
           if (!isLogin) {
@@ -691,8 +731,11 @@ class _AccountPageState extends State<AccountPage> {
           backgroundColor: isLogin ? Colors.red : Colors.blueAccent,
         ),
         child: Text(
-          isLogin ?  (_languageCode != 'vi' ? "Logout" :'Đăng xuất') : (_languageCode != 'vi' ? "Login" :'Đăng nhập'),
-          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+          isLogin
+              ? (_languageCode != 'vi' ? "Logout" : 'Đăng xuất')
+              : (_languageCode != 'vi' ? "Login" : 'Đăng nhập'),
+          style: const TextStyle(
+              color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
     );

@@ -42,6 +42,7 @@ class _PlannedPageState extends State<PlannedPage> {
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
             return [
               SliverAppBar(
+                automaticallyImplyLeading: false,
                 title: Text(_languageCode == 'vi' ? 'Kế Hoạch':'Planned Page'),
                 floating: true,
                 pinned: true,

@@ -115,10 +115,10 @@ class _WeatherWidgetState extends State<WeatherWidget> {
           isloading ? const SizedBox() :
           Card(
           elevation: 4,
-          margin: const EdgeInsets.all(16.0),
+          margin: const EdgeInsets.all(8.0),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
                 // Weather Title and Icon
@@ -135,7 +135,6 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
                 // Temperature
                 Text(
                   '${weatherResponse.current.temperature.toStringAsFixed(1)}°C',
@@ -146,7 +145,6 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                   getWeatherDescription(weatherResponse.current.weathercode),
                   style: const TextStyle(fontSize: 16),
                 ),
-                const SizedBox(height: 10),
                 // Additional Weather Details
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -154,8 +152,7 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                     // Wind Speed
                     Column(
                       children: [
-                        const Icon(Icons.wind_power),
-                        const SizedBox(height: 5),
+                        const Icon(Icons.wind_power, color: Colors.blue,),
                         Text('${weatherResponse.current.windspeed} m/s'),
                         Text(_languageCode == 'vi' ? "Tốc độ gió":'Wind Speed'),
                       ],
@@ -165,22 +162,20 @@ class _WeatherWidgetState extends State<WeatherWidget> {
                       children: [
                         Icon(
                           weatherResponse.current.isDay ? Icons.wb_sunny : Icons.nights_stay,
+                          color: weatherResponse.current.isDay ? Colors.orange : Colors.blueGrey,
                         ),
-                        const SizedBox(height: 5),
                         Text(_languageCode == 'vi' ?
-                        (weatherResponse.current.isDay ? 'Ngày' : 'Đêm'): (weatherResponse.current.isDay ? 'Day' : 'Night')),
+                        (weatherResponse.current.isDay ? 'Ban Ngày' : 'Ban Đêm'): (weatherResponse.current.isDay ? 'Day' : 'Night')),
                       ],
                     ),
                     // Weather Code
                   ],
                 ),
-                const SizedBox(height: 10),
                 // Weather Advice
                 Text(_languageCode == 'vi' ?('Lời khuyên: ${weatherResponse.current.weathercode >= 61 && weatherResponse.current.weathercode <= 65 ? "Nhớ đem theo dù!" : "Chúc bạn một ngày vui vẻ!"}'):
                 ('Advice: ${weatherResponse.current.weathercode >= 61 && weatherResponse.current.weathercode <= 65 ? "Take an umbrella!" : "Enjoy your day!"}'),
                   style: const TextStyle(fontSize: 16, color: Colors.blueGrey),
                 ),
-                const SizedBox(height: 10),
                 // Navigate to Detailed Forecast
                 ElevatedButton(
                   onPressed: () {

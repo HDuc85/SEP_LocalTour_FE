@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:localtourapp/services/location_Service.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../config/appConfig.dart';
@@ -14,7 +14,6 @@ class NowLocation extends StatefulWidget {
 }
 
 class _NowLocationState extends State<NowLocation> {
-  final LocationService _locationService = LocationService();
   String _location = 'Fetching location...';
   Position? _currentPosition;
   String _languageCode = 'vi';
@@ -55,18 +54,36 @@ class _NowLocationState extends State<NowLocation> {
   Future<void> _getCurrentPosition() async {
     try {
       LocationSettings locationSettings = const LocationSettings(
-        accuracy: LocationAccuracy.high, // Set the desired accuracy
+        accuracy: LocationAccuracy.high,
         distanceFilter: 100,
         timeLimit: Duration(seconds: 10),
       );
 
+      // Get current position
       Position position = await Geolocator.getCurrentPosition(
         locationSettings: locationSettings,
       );
 
+      // Perform reverse geocoding
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      // Get the first Placemark
+      Placemark place = placemarks.first;
+
+      // Build the location string
+      String subAdministrativeArea = place.subAdministrativeArea ?? '';
+      String administrativeArea = place.administrativeArea ?? '';
+      String thoroughfare = place.thoroughfare ?? '';
+
+      String detailedAddress = '$thoroughfare, $subAdministrativeArea, $administrativeArea';
+
       setState(() {
         _currentPosition = position;
-        _location = '${position.latitude}, ${position.longitude}';
+        _location =
+        '${position.latitude}, ${position.longitude} ($detailedAddress)';
       });
     } catch (e) {
       setState(() {
@@ -74,8 +91,6 @@ class _NowLocationState extends State<NowLocation> {
       });
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {

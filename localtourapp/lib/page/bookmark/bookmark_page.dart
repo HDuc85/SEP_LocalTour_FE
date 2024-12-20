@@ -88,7 +88,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: Text(_language == 'vi'? 'Trang đánh dấu':'Bookmark Page'),),
+      appBar: AppBar(automaticallyImplyLeading: false, title: Text(_language == 'vi'? 'Trang đánh dấu':'Bookmark Page'),),
       body: Stack(
         children: [
           ListView.separated(

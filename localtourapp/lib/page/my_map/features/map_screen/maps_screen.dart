@@ -188,7 +188,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
           '',
           1,
           20,
-          10);
+          5);
       if (_controller != null) {
         _markers = places
             .map((place) => Marker(

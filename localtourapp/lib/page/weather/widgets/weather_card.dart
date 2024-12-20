@@ -93,10 +93,10 @@ class _WeatherCardState extends State<WeatherCard> {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      margin: const EdgeInsets.all(16.0),
+      margin: const EdgeInsets.all(8.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
             // Weather Title and Icon
@@ -113,7 +113,6 @@ class _WeatherCardState extends State<WeatherCard> {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
             // Temperature
             Text(
               '${widget.currentWeather.temperature.toStringAsFixed(1)}°C',
@@ -124,7 +123,6 @@ class _WeatherCardState extends State<WeatherCard> {
               getWeatherDescription(widget.currentWeather.weathercode),
               style: const TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 10),
             // Additional Weather Details
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -132,8 +130,7 @@ class _WeatherCardState extends State<WeatherCard> {
                 // Wind Speed
                 Column(
                   children: [
-                    const Icon(Icons.wind_power),
-                    const SizedBox(height: 5),
+                    const Icon(Icons.wind_power, color: Colors.blue,),
                     Text('${widget.currentWeather.windspeed} m/s'),
                     Text(_languageCode == 'vi' ? 'Tốc độ gió' : 'Wind Speed'),
                   ],
@@ -143,14 +140,13 @@ class _WeatherCardState extends State<WeatherCard> {
                   children: [
                     Icon(
                       widget.currentWeather.isDay ? Icons.wb_sunny : Icons.nights_stay,
+                      color: widget.currentWeather.isDay ? Colors.orange : Colors.blueGrey,
                     ),
-                    const SizedBox(height: 5),
                     Text(widget.currentWeather.isDay ? (_languageCode == 'vi' ? 'Ban ngày' : 'Day') : (_languageCode == 'vi' ? 'Ban đêm' : 'Night')),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 10),
             // Weather Advice
             Text(
               _languageCode == 'vi'
