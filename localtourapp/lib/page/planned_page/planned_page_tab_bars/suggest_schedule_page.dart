@@ -11,8 +11,9 @@ import '../../../config/secure_storage_helper.dart';
 
 class SuggestSchedulePage extends StatefulWidget {
   final String userId;
+  final VoidCallback voidCallback;
 
-  const SuggestSchedulePage({Key? key, required this.userId}) : super(key: key);
+  const SuggestSchedulePage({Key? key, required this.userId, required this.voidCallback}) : super(key: key);
 
   @override
   State<SuggestSchedulePage> createState() => _SuggestSchedulePageState();
@@ -82,6 +83,7 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
    var result = await _scheduleService.SaveSuggestSchedule(startTime!, endTime!, suggestedDestinations);
       // No suggested schedule available
       if(result){
+        widget.voidCallback;
       Navigator.pop(context);
       return;
     }

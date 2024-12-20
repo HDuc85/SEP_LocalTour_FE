@@ -316,6 +316,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   void _swapDestination(DestinationModel old, DestinationModel newD) async {
+    var result = await _scheduleService.UpdateDestination(old.id, old.scheduleId, newD.placeId, newD.startDate, newD.endDate, newD.detail, newD.isArrived);
+    var resuldt = await _scheduleService.UpdateDestination(newD.id, newD.scheduleId, old.placeId, old.startDate, old.endDate, old.detail, old.isArrived);
     fetchData();
   }
 
@@ -1491,7 +1493,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
         DateTime? selectedDate = initialDate;
 
         DateTime firstDate = isStartDate
-            ? DateTime.now().add(const Duration(minutes: 1))
+            ? (DateTime.now()) .add(const Duration(minutes: 1))
             : (initialDate != null
             ? initialDate.add(const Duration(minutes: 1))
             : DateTime.now().add(const Duration(minutes: 1)));
@@ -1624,8 +1626,9 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       context: context,
       isScrollControlled: true,
       builder: (context) {
-        return SuggestSchedulePage(userId: widget.userId);
+        return SuggestSchedulePage(userId: widget.userId, voidCallback: () { fetchData(); },);
       },
+
     );
   }
 }

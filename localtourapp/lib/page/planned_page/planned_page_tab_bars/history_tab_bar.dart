@@ -176,8 +176,8 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
                                       const SizedBox(width: 8),
                                       Text(
                                         _languageCode == 'vi'
-                                            ? "Lần cuối: ${place.firstVisitDate.toShortDateString()}"
-                                            : "First Visit: ${place.firstVisitDate.toShortDateString()}",
+                                            ? "Lần cuối: ${place.lastVisitDate.toShortDateString()}"
+                                            : "First Visit: ${place.lastVisitDate.toShortDateString()}",
                                         style: const TextStyle(fontSize: 12.0),
                                       ),
                                     ],

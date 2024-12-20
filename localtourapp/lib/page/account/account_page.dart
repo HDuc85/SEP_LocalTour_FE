@@ -713,7 +713,7 @@ class _AccountPageState extends State<AccountPage> {
   Widget _buildLogoutButton() {
     return Container(
       margin: EdgeInsets.only(
-          top: !isLogin ? 300 : 8, bottom: 8, left: 8, right: 8),
+          top: !isLogin ? 8 : 8, bottom: 8, left: 8, right: 8),
       child: ElevatedButton(
         onPressed: () {
           if (!isLogin) {
