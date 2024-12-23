@@ -23,7 +23,7 @@ class CustomSeeAllButton extends StatelessWidget {
           minimumSize: const Size(double.infinity, 48),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
-            side: const BorderSide(color: Colors.black, width: 3),
+            side: const BorderSide(color: Colors.black, width: 2),
           ),
         ),
         child: Text(

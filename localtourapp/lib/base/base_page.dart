@@ -26,28 +26,98 @@ class _BasePageState extends State<BasePage> {
     return Scaffold(
       appBar: widget.title != null
           ? AppBar(
-        title: Text(widget.title!,maxLines: 2,style: const TextStyle(fontSize: 16),),
+        title: Text(
+          widget.title!,
+          maxLines: 2,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.blueAccent,
+        elevation: 4,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(16.0),
+          ),
+        ),
       )
           : null,
       body: widget.body,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: widget.currentIndex,
-        onTap: widget.onTabTapped,
-        selectedItemColor: Colors.red,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.map_sharp), label: 'Map'),
-          BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Bookmark'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month_outlined),
-            label: 'Planned',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16.0),
+            topRight: Radius.circular(16.0),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle_rounded),
-            label: 'Account',
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16.0),
+            topRight: Radius.circular(16.0),
           ),
-        ],
+          child: BottomNavigationBar(
+            currentIndex: widget.currentIndex,
+            onTap: widget.onTabTapped,
+            selectedItemColor: Colors.redAccent,
+            unselectedItemColor: Colors.grey,
+            backgroundColor: Colors.white,
+            showSelectedLabels: true,
+            showUnselectedLabels: false,
+            type: BottomNavigationBarType.fixed,
+            items: [
+              BottomNavigationBarItem(
+                icon: AnimatedContainer(
+                  duration: const Duration(milliseconds: 100),
+                  height: widget.currentIndex == 0 ? 24 : 16,
+                  width: widget.currentIndex == 0 ? 24 : 16,
+                  child: Image.asset('assets/icons/Home.png'),
+                ),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: AnimatedContainer(
+                  duration: const Duration(milliseconds: 100),
+                  height: widget.currentIndex == 1 ? 24 : 16,
+                  width: widget.currentIndex == 1 ? 24 : 16,
+                  child: Image.asset('assets/icons/Map.png'),
+                ),
+                label: 'Map',
+              ),
+              BottomNavigationBarItem(
+                icon: AnimatedContainer(
+                  duration: const Duration(milliseconds: 100),
+                  height: widget.currentIndex == 2 ? 24 : 16,
+                  width: widget.currentIndex == 2 ? 24 : 16,
+                  child: Image.asset('assets/icons/Bookmark.png'),
+                ),
+                label: 'Bookmark',
+              ),
+              BottomNavigationBarItem(
+                icon: AnimatedContainer(
+                  duration: const Duration(milliseconds: 100),
+                  height: widget.currentIndex == 3 ? 24 : 16,
+                  width: widget.currentIndex == 3 ? 24 : 16,
+                  child: Image.asset('assets/icons/Schedule.png'),
+                ),
+                label: 'Planned',
+              ),
+              BottomNavigationBarItem(
+                icon: AnimatedContainer(
+                  duration: const Duration(milliseconds: 100),
+                  height: widget.currentIndex == 4 ? 24 : 16,
+                  width: widget.currentIndex == 4 ? 24 : 16,
+                  child: Image.asset('assets/icons/Profile.png'),
+                ),
+                label: 'Account',
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

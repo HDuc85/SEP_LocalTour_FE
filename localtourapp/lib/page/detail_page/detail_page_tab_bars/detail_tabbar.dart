@@ -347,12 +347,28 @@ class _DetailTabbarState extends State<DetailTabbar> {
   }
 
   Widget _buildContactRow() {
-    return Row(
-      children: [
-        const Icon(Icons.phone, color: Colors.black54),
-        const SizedBox(width: 8),
-        Text(widget.placeDetail.contact),
-      ],
+    return GestureDetector(
+      onTap: () async {
+        final phoneUrl = 'tel:${widget.placeDetail.contact}';
+        if (await canLaunch(phoneUrl)) {
+          await launch(phoneUrl);
+        } else {
+          throw 'Could not launch \${placeDetail.contact}';
+        }
+      },
+      child: Row(
+        children: [
+          const Icon(Icons.phone, color: Colors.black54),
+          const SizedBox(width: 8),
+          Text(
+            widget.placeDetail.contact,
+            style: const TextStyle(
+              color: Colors.blue,
+              decoration: TextDecoration.underline,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

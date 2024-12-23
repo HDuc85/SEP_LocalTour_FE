@@ -364,7 +364,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
               // Positioned BackToTopButton
               Positioned(
                 bottom: 30,
-                left: 110,
+                left: 160,
                 child: AnimatedOpacity(
                   opacity: _showBackToTopButton ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 300),

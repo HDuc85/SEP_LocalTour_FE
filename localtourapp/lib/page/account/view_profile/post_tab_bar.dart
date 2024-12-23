@@ -274,7 +274,7 @@ class _PostTabBarState extends State<PostTabBar> {
               ),
               Positioned(
                 bottom: 50,
-                left: 110,
+                left: 160,
                 child: AnimatedOpacity(
                   opacity: _showBackToTopButton ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 300),

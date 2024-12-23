@@ -417,7 +417,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                 : const SizedBox()),
         Positioned(
           bottom: 12,
-          left: 110,
+          left: 160,
           child: AnimatedOpacity(
             opacity: _showBackToTopButton ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 300),
@@ -811,10 +811,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           // Existing destination item
 
           // Wrap the Checkbox with GestureDetector for onLongPress to show delete dialog
-          Widget checkboxWidget = GestureDetector(
-            onLongPress: () =>
-                _showDeleteDestinationConfirmationDialog(destination),
-            child: Checkbox(
+          Widget checkboxWidget = Checkbox(
               value: destination.isArrived,
               onChanged: (bool? value) async {
                 var result = await _scheduleService.UpdateDestination(
@@ -832,8 +829,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               },
               activeColor: const Color(0xFF008080),
               checkColor: Colors.white,
-            ),
-          );
+            );
 
           // Wrap the CircleAvatar with GestureDetector for onTap to show details
           Widget circleAvatar = GestureDetector(

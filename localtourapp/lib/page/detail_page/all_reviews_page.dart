@@ -402,7 +402,7 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
                 // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
                 Positioned(
                   bottom: 12,
-                  left: 110,
+                  left: 160,
                   child: AnimatedOpacity(
                     opacity: _showBackToTopButton ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 300),

@@ -184,7 +184,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
                                 },
                               ),
                               Text(
-                                '${_language != 'vi' ? 'Added on': 'Thêm vào lúc:'}: ${place.createdDate.toLocal().toShortDateString()}',
+                                '${_language != 'vi' ? 'Added on': 'Thêm vào lúc'}: ${place.createdDate.toLocal().toShortDateString()}',
                                 style: const TextStyle(
                                     fontSize: 12.0, color: Colors.black),
                               ),
@@ -242,7 +242,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
           // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
           Positioned(
             bottom: 12,
-            left: 110,
+            left: 160,
             child: AnimatedOpacity(
               opacity: _showBackToTopButton ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 300),

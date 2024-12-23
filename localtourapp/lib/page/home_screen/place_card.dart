@@ -104,19 +104,20 @@ class _PlaceCardState extends State<PlaceCard> {
       formattedDistance = formattedDistance.substring(0, formattedDistance.length - 2);
     }
     formattedDistance += ' km';
+
     return SizedBox(
-      width: 150,
-      height: 250,
+      width: 160,
+      height: 270,
       child: Container(
         margin: const EdgeInsets.only(right: 16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: const [
             BoxShadow(
               color: Colors.black26,
-              blurRadius: 5,
-              offset: Offset(-10, 15),
+              blurRadius: 10,
+              offset: Offset(5, 5),
             ),
           ],
         ),
@@ -128,7 +129,7 @@ class _PlaceCardState extends State<PlaceCard> {
                   flex: 1,
                   child: ClipRRect(
                     borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(12),
+                      top: Radius.circular(16),
                     ),
                     child: Stack(
                       children: [
@@ -138,32 +139,29 @@ class _PlaceCardState extends State<PlaceCard> {
                           height: double.infinity,
                           fit: BoxFit.cover,
                         ),
-                        if(widget.isEvent == null)
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFB0E0E6),
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(12),
-                                bottomRight: Radius.circular(12),
+                        if (widget.isEvent == null)
+                          Positioned(
+                            top: 8,
+                            left: 8,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
                               ),
-                            ),
-                            child: Text(
-                              widget.ward,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFB0E0E6),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                widget.ward,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -171,46 +169,31 @@ class _PlaceCardState extends State<PlaceCard> {
                 Expanded(
                   flex: 1,
                   child: Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.only(top: 8.0, bottom: 11, left: 8, right: 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(
-                          height: 40,
-
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  widget.placeName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
+                        Text(
+                          widget.placeName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             Image.asset(
                               iconUrl,
-                              width: 14,
-                              height: 14,
+                              width: 16,
+                              height: 16,
                             ),
                             const SizedBox(width: 4),
-                            widget.isEvent == null ?
-                             buildStarRating(
-                                widget.score / 2) :
-                            SizedBox(
-                              width: 90,
+                            widget.isEvent == null
+                                ? buildStarRating(widget.score / 2)
+                                : Expanded(
                               child: Text(
                                 widget.eventModel!.placeName,
                                 style: const TextStyle(
@@ -221,23 +204,29 @@ class _PlaceCardState extends State<PlaceCard> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            // Display the score as stars
                           ],
                         ),
-                        const SizedBox(width: 4),
-                        widget.isEvent == null?
-                        Text(
-                          '(${widget.countFeedback.toString()})', // Display totalReviewers as text
-                          style:
-                              const TextStyle(fontSize: 12), // Optional styling
-                        ) : inHour(),
                         const SizedBox(height: 4),
+                        widget.isEvent == null
+                            ? Text(
+                          '(${widget.countFeedback.toString()})',
+                          style: const TextStyle(fontSize: 12),
+                        )
+                            : inHour(),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             const Icon(Icons.location_on,
                                 color: Colors.red, size: 16),
                             const SizedBox(width: 4),
-                            Text(formattedDistance),
+                            Text(
+                              formattedDistance,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -251,4 +240,5 @@ class _PlaceCardState extends State<PlaceCard> {
       ),
     );
   }
+
 }

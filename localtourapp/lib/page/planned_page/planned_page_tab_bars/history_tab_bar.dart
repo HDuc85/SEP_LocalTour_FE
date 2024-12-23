@@ -199,8 +199,8 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
                 },
                 separatorBuilder: (context, index) => const Divider(
                   color: Colors.black,
-                  thickness: 2,
-                  height: 2,
+                  thickness: 1,
+                  height: 1,
                 ),
               ),
 
@@ -217,7 +217,7 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
         // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
         Positioned(
           bottom: 12,
-          left: 110,
+          left: 160,
           child: AnimatedOpacity(
             opacity: _showBackToTopButton ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 300),

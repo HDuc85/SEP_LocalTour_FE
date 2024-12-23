@@ -18,8 +18,6 @@ class Assets {
   static const String baseFilterOption = 'lib/base/filter_option.dart';
   static const String baseFollowUsersProvider = 'lib/base/follow_users_provider.dart';
   static const String baseNowLocation = 'lib/base/now_location.dart';
-  static const String basePlaceCardInfo = 'lib/base/place_card_info.dart';
-  static const String basePlaceScoreManager = 'lib/base/place_score_manager.dart';
   static const String baseScheduleProvider = 'lib/base/schedule_provider.dart';
   static const String baseScrollableTextContainer = 'lib/base/scrollable_text_container.dart';
   static const String baseSearchBarIcon = 'lib/base/search_bar_icon.dart';

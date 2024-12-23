@@ -26,7 +26,6 @@ class BackToTopButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Set label based on languageCode
-    final String label = languageCode == 'vi' ? 'Lên Đầu Trang' : 'Back To Top';
 
     return Material(
       color: Colors.transparent,
@@ -44,8 +43,7 @@ class BackToTopButton extends StatelessWidget {
             boxShadow: const [
               BoxShadow(
                 color: Colors.black26,
-                blurRadius: 4,
-                offset: Offset(2, 2),
+                blurRadius: 10,
               ),
             ],
           ),
@@ -56,15 +54,6 @@ class BackToTopButton extends StatelessWidget {
                 icon,
                 size: iconSize,
                 color: textColor,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                label, // Use the dynamic label
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
               ),
             ],
           ),

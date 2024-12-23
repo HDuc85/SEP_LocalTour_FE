@@ -298,7 +298,7 @@ class _WheelPageState extends State<WheelPage> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _spinWheel,
-                      child: Text(_languageCode == 'vi' ? 'Xoay' : 'Spin'),
+                      child: Text(_languageCode == 'vi' ? 'Xoay' : 'Spin', style: TextStyle(color: Colors.black),),
                     ),
                   ],
                 ),

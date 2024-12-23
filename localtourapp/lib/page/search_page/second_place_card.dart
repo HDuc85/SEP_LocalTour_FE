@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:localtourapp/models/event/event_model.dart';
 
-import '../../base/place_score_manager.dart';
-
 class SecondPlaceCard extends StatefulWidget {
   final int placeCardId;
   final String placeName;
@@ -33,31 +31,14 @@ class SecondPlaceCard extends StatefulWidget {
 }
 
 class _SecondPlaceCardState extends State<SecondPlaceCard> {
-  late double score;
-  late int totalReviewers;
-  late StreamSubscription<int> _scoreSubscription;
 
   @override
   void initState() {
     super.initState();
-    // Get the initial score
-    score = PlaceScoreManager.instance.getScore(widget.placeCardId);
-    totalReviewers = PlaceScoreManager.instance.getReviewCount(widget.placeCardId);
-
-    // Listen for score updates
-    _scoreSubscription = PlaceScoreManager.instance.scoreUpdates.listen((updatedPlaceId) {
-      if (updatedPlaceId == widget.placeCardId) {
-        setState(() {
-          score = PlaceScoreManager.instance.getScore(widget.placeCardId);
-          totalReviewers = PlaceScoreManager.instance.getReviewCount(widget.placeCardId);
-        });
-      }
-    });
   }
 
   @override
   void dispose() {
-    _scoreSubscription.cancel();
     super.dispose();
   }
 

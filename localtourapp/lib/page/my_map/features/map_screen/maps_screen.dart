@@ -516,7 +516,6 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                         ),
                         if (isSearchMode)
                           Container(
-                            padding: const EdgeInsets.only(left: 10, right: 10),
                             child: isTagLoading
                                 ? const CircularProgressIndicator()
                                 : tags.isEmpty
@@ -536,37 +535,32 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                                             TagModel tag = tags[index];
                                             bool isSelected =
                                                 selectedTagId == tag.id;
-                                            return Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 3.0),
-                                              child: GestureDetector(
-                                                onTap: () {
-                                                  onTagSelected(tag);
-                                                },
-                                                child: Chip(
-                                                  backgroundColor: isSelected
-                                                      ? Colors.blueAccent
-                                                      : Colors.white,
-                                                  label: Text(
-                                                    language != 'vi'
-                                                        ? tag.tagName
-                                                        : tag.tagVi,
-                                                    style: TextStyle(
-                                                      color: isSelected
-                                                          ? Colors.white
-                                                          : Colors.black,
-                                                    ),
+                                            return GestureDetector(
+                                              onTap: () {
+                                                onTagSelected(tag);
+                                              },
+                                              child: Chip(
+                                                backgroundColor: isSelected
+                                                    ? Colors.blueAccent
+                                                    : Colors.white,
+                                                label: Text(
+                                                  language != 'vi'
+                                                      ? tag.tagName
+                                                      : tag.tagVi,
+                                                  style: TextStyle(
+                                                    color: isSelected
+                                                        ? Colors.white
+                                                        : Colors.black,
                                                   ),
-                                                  avatar:
-                                                      tag.tagPhotoUrl.isNotEmpty
-                                                          ? CircleAvatar(
-                                                              backgroundImage:
-                                                                  NetworkImage(tag
-                                                                      .tagPhotoUrl),
-                                                            )
-                                                          : null,
                                                 ),
+                                                avatar:
+                                                    tag.tagPhotoUrl.isNotEmpty
+                                                        ? CircleAvatar(
+                                                            backgroundImage:
+                                                                NetworkImage(tag
+                                                                    .tagPhotoUrl),
+                                                          )
+                                                        : null,
                                               ),
                                             );
                                           },

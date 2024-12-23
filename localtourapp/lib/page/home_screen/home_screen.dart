@@ -28,7 +28,6 @@ import '../../models/HomePage/banner.dart';
 import '../../services/banner_service.dart';
 import '../detail_page/detail_page.dart';
 import '../search_page/search_page.dart';
-import '../../base/place_card_info.dart';
 import '../../base/now_location.dart';
 import '../../base/search_bar_icon.dart';
 
@@ -56,8 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentBannerIndex = 0;
   List<BannerModel> _banners = []; // Store fetched banners
   bool _isBannerLoading = true; // Banner loading state
-  List<CardInfo> nearestLocation = [];
-  List<CardInfo> featuredPlaces = [];
   Map<int, bool> tagToggleStates = {};
   Timer? _autoScrollTimer;
 
@@ -350,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
               Positioned(
                 bottom: 12,
-                left: 110,
+                left: 160,
                 child: AnimatedOpacity(
                   opacity: _showBackToTopButton ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 300),
