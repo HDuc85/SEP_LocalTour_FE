@@ -297,7 +297,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                   backdropEnabled: true,
                   backdropTapClosesPanel: true,
                   controller: _panelController,
-                  maxHeight: 330,
+                  maxHeight: 400,
                   minHeight: 0,
                   parallaxEnabled: false,
                   onPanelSlide: (position) {
@@ -410,7 +410,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                         Padding(
                           padding: EdgeInsets.only(
                               top: MediaQuery.of(context).size.height * 0.041,
-                              left: MediaQuery.of(context).size.width * 0.05),
+                              left: MediaQuery.of(context).size.width * 0.02),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
                             height: 50,

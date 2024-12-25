@@ -50,7 +50,7 @@ class _BasePageState extends State<BasePage> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withOpacity(0.5),
               blurRadius: 8,
             ),
           ],
@@ -60,62 +60,65 @@ class _BasePageState extends State<BasePage> {
             topLeft: Radius.circular(16.0),
             topRight: Radius.circular(16.0),
           ),
-          child: BottomNavigationBar(
-            currentIndex: widget.currentIndex,
-            onTap: widget.onTabTapped,
-            selectedItemColor: Colors.redAccent,
-            unselectedItemColor: Colors.grey,
-            backgroundColor: Colors.white,
-            showSelectedLabels: true,
-            showUnselectedLabels: false,
-            type: BottomNavigationBarType.fixed,
-            items: [
-              BottomNavigationBarItem(
-                icon: AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
-                  height: widget.currentIndex == 0 ? 24 : 16,
-                  width: widget.currentIndex == 0 ? 24 : 16,
-                  child: Image.asset('assets/icons/Home.png'),
+          child: SizedBox(
+            height: 60,
+            child: BottomNavigationBar(
+              currentIndex: widget.currentIndex,
+              onTap: widget.onTabTapped,
+              selectedItemColor: Colors.grey,
+              backgroundColor: Colors.white,
+              showSelectedLabels: true,
+              selectedLabelStyle: const TextStyle(fontSize: 11.5),
+              showUnselectedLabels: false,
+              type: BottomNavigationBarType.fixed,
+              items: [
+                BottomNavigationBarItem(
+                  icon: AnimatedContainer(
+                    duration: const Duration(milliseconds: 100),
+                    height: widget.currentIndex == 0 ? 32 : 20,
+                    width: widget.currentIndex == 0 ? 32 : 20,
+                    child: Image.asset('assets/icons/Home.png'),
+                  ),
+                  label: 'Home',
                 ),
-                label: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
-                  height: widget.currentIndex == 1 ? 24 : 16,
-                  width: widget.currentIndex == 1 ? 24 : 16,
-                  child: Image.asset('assets/icons/Map.png'),
+                BottomNavigationBarItem(
+                  icon: AnimatedContainer(
+                    duration: const Duration(milliseconds: 100),
+                    height: widget.currentIndex == 1 ? 32 : 20,
+                    width: widget.currentIndex == 1 ? 32 : 20,
+                    child: Image.asset('assets/icons/Map.png'),
+                  ),
+                  label: 'Map',
                 ),
-                label: 'Map',
-              ),
-              BottomNavigationBarItem(
-                icon: AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
-                  height: widget.currentIndex == 2 ? 24 : 16,
-                  width: widget.currentIndex == 2 ? 24 : 16,
-                  child: Image.asset('assets/icons/Bookmark.png'),
+                BottomNavigationBarItem(
+                  icon: AnimatedContainer(
+                    duration: const Duration(milliseconds: 100),
+                    height: widget.currentIndex == 2 ? 32 : 20,
+                    width: widget.currentIndex == 2 ? 32 : 20,
+                    child: Image.asset('assets/icons/Bookmark.png'),
+                  ),
+                  label: 'Bookmark',
                 ),
-                label: 'Bookmark',
-              ),
-              BottomNavigationBarItem(
-                icon: AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
-                  height: widget.currentIndex == 3 ? 24 : 16,
-                  width: widget.currentIndex == 3 ? 24 : 16,
-                  child: Image.asset('assets/icons/Schedule.png'),
+                BottomNavigationBarItem(
+                  icon: AnimatedContainer(
+                    duration: const Duration(milliseconds: 100),
+                    height: widget.currentIndex == 3 ? 32 : 20,
+                    width: widget.currentIndex == 3 ? 32 : 20,
+                    child: Image.asset('assets/icons/Schedule.png'),
+                  ),
+                  label: 'Planned',
                 ),
-                label: 'Planned',
-              ),
-              BottomNavigationBarItem(
-                icon: AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
-                  height: widget.currentIndex == 4 ? 24 : 16,
-                  width: widget.currentIndex == 4 ? 24 : 16,
-                  child: Image.asset('assets/icons/Profile.png'),
+                BottomNavigationBarItem(
+                  icon: AnimatedContainer(
+                    duration: const Duration(milliseconds: 100),
+                    height: widget.currentIndex == 4 ? 32 : 20,
+                    width: widget.currentIndex == 4 ? 32 : 20,
+                    child: Image.asset('assets/icons/Profile.png'),
+                  ),
+                  label: 'Account',
                 ),
-                label: 'Account',
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

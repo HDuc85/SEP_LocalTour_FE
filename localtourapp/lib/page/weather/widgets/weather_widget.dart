@@ -1,12 +1,11 @@
-// lib/weather/widgets/weather_widget.dart
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
 import '../../../config/appConfig.dart';
 import '../../../config/secure_storage_helper.dart';
 import '../models/weather_model.dart';
 import '../services/weather_service.dart';
 import '../weather_detail_page.dart';
+import 'weather_card.dart'; // Ensure this import points to the WeatherCard file
 
 class WeatherWidget extends StatefulWidget {
   final double latitude;
@@ -25,12 +24,13 @@ class WeatherWidget extends StatefulWidget {
 class _WeatherWidgetState extends State<WeatherWidget> {
   String _languageCode = 'vi';
   final WeatherService _service = WeatherService();
-  late WeatherResponse weatherResponse;
-  bool isloading = true;
+  WeatherResponse? weatherResponse;
+  bool isLoading = true;
+  bool hasError = false;
+
   @override
   void initState() {
     super.initState();
-    // Fetch weather data after the first frame is rendered
     fetchInit();
   }
 
@@ -42,11 +42,33 @@ class _WeatherWidgetState extends State<WeatherWidget> {
   }
 
   Future<void> fetchInit() async {
-    var response = await _service.fetchWeather(latitude: widget.latitude, longitude: widget.longitude);
-    setState(() {
-      weatherResponse = response!;
-      isloading = false;
-    });
+    try {
+      await fetchLanguageCode();
+      var response = await _service.fetchWeather(
+        latitude: widget.latitude,
+        longitude: widget.longitude,
+      );
+      if (response != null) {
+        setState(() {
+          weatherResponse = response;
+          isLoading = false;
+          hasError = false;
+        });
+      } else {
+        throw Exception("Failed to fetch weather data");
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          hasError = true;
+        });
+      }
+      // Optionally, log the error or show a message
+      if (kDebugMode) {
+        print('Weather fetch error: $e');
+      }
+    }
   }
 
   String getWeatherDescription(int code) {
@@ -109,90 +131,33 @@ class _WeatherWidgetState extends State<WeatherWidget> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
+    if (hasError || weatherResponse == null) {
+      return Center(
+        child: Text(
+          _languageCode == 'vi'
+              ? 'Không thể tải dữ liệu thời tiết.'
+              : 'Unable to load weather data.',
+          style: const TextStyle(fontSize: 16, color: Colors.red),
+        ),
+      );
+    }
 
-        return
-          isloading ? const SizedBox() :
-          Card(
-          elevation: 4,
-          margin: const EdgeInsets.all(8.0),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                // Weather Title and Icon
-                Row(
-                  children: [
-                    Text(_languageCode == 'vi' ? "Thời tiết hiện tại":
-                      'Current Weather',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const Spacer(),
-                    Text(
-                      getWeatherIcon(weatherResponse.current.weathercode),
-                      style: const TextStyle(fontSize: 24),
-                    ),
-                  ],
-                ),
-                // Temperature
-                Text(
-                  '${weatherResponse.current.temperature.toStringAsFixed(1)}°C',
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                ),
-                // Weather Description
-                Text(
-                  getWeatherDescription(weatherResponse.current.weathercode),
-                  style: const TextStyle(fontSize: 16),
-                ),
-                // Additional Weather Details
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    // Wind Speed
-                    Column(
-                      children: [
-                        const Icon(Icons.wind_power, color: Colors.blue,),
-                        Text('${weatherResponse.current.windspeed} m/s'),
-                        Text(_languageCode == 'vi' ? "Tốc độ gió":'Wind Speed'),
-                      ],
-                    ),
-                    // Day/Night Indicator
-                    Column(
-                      children: [
-                        Icon(
-                          weatherResponse.current.isDay ? Icons.wb_sunny : Icons.nights_stay,
-                          color: weatherResponse.current.isDay ? Colors.orange : Colors.blueGrey,
-                        ),
-                        Text(_languageCode == 'vi' ?
-                        (weatherResponse.current.isDay ? 'Ban Ngày' : 'Ban Đêm'): (weatherResponse.current.isDay ? 'Day' : 'Night')),
-                      ],
-                    ),
-                    // Weather Code
-                  ],
-                ),
-                // Weather Advice
-                Text(_languageCode == 'vi' ?('Lời khuyên: ${weatherResponse.current.weathercode >= 61 && weatherResponse.current.weathercode <= 65 ? "Nhớ đem theo dù!" : "Chúc bạn một ngày vui vẻ!"}'):
-                ('Advice: ${weatherResponse.current.weathercode >= 61 && weatherResponse.current.weathercode <= 65 ? "Take an umbrella!" : "Enjoy your day!"}'),
-                  style: const TextStyle(fontSize: 16, color: Colors.blueGrey),
-                ),
-                // Navigate to Detailed Forecast
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => WeatherDetailPage(
-                          hourlyWeather: weatherResponse.hourly,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Text(_languageCode == 'vi' ? "Xem Dự báo hàng giờ":'View Hourly Forecast', style: const TextStyle(color: Colors.black),),
-                ),
-              ],
+    return WeatherCard(
+      currentWeather: weatherResponse!.current,
+      onViewDetails: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => WeatherDetailPage(
+              hourlyWeather: weatherResponse!.hourly,
             ),
           ),
         );
+      },
+    );
   }
 }

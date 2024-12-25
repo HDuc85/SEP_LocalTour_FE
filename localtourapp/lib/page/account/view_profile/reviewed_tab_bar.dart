@@ -99,7 +99,7 @@ class _ReviewedTabbarState extends State<ReviewedTabbar> {
               children: [
                 Container(
                   height: 40,
-                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                  margin: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     border: Border.all(color: Colors.black, width: 1),

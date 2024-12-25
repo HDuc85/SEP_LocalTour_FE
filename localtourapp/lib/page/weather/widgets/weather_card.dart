@@ -5,10 +5,12 @@ import '../models/weather_model.dart';
 
 class WeatherCard extends StatefulWidget {
   final CurrentWeather currentWeather;
+  final VoidCallback onViewDetails;
 
   const WeatherCard({
     Key? key,
     required this.currentWeather,
+    required this.onViewDetails,
   }) : super(key: key);
 
   @override
@@ -92,75 +94,152 @@ class _WeatherCardState extends State<WeatherCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 4,
-      margin: const EdgeInsets.all(8.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            // Weather Title and Icon
-            Row(
-              children: [
-                Text(
-                  _languageCode == 'vi' ? 'Thời tiết hiện tại' : 'Current Weather',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const Spacer(),
-                Text(
-                  getWeatherIcon(widget.currentWeather.weathercode),
-                  style: const TextStyle(fontSize: 24),
-                ),
-              ],
-            ),
-            // Temperature
-            Text(
-              '${widget.currentWeather.temperature.toStringAsFixed(1)}°C',
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-            ),
-            // Weather Description
-            Text(
-              getWeatherDescription(widget.currentWeather.weathercode),
-              style: const TextStyle(fontSize: 16),
-            ),
-            // Additional Weather Details
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                // Wind Speed
-                Column(
-                  children: [
-                    const Icon(Icons.wind_power, color: Colors.blue,),
-                    Text('${widget.currentWeather.windspeed} m/s'),
-                    Text(_languageCode == 'vi' ? 'Tốc độ gió' : 'Wind Speed'),
-                  ],
-                ),
-                // Day/Night Indicator
-                Column(
-                  children: [
-                    Icon(
-                      widget.currentWeather.isDay ? Icons.wb_sunny : Icons.nights_stay,
-                      color: widget.currentWeather.isDay ? Colors.orange : Colors.blueGrey,
+      elevation: 6,
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: widget.onViewDetails,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              // Weather Title and Icon
+              Row(
+                children: [
+                  Text(
+                    _languageCode == 'vi' ? 'Thời tiết hiện tại' : 'Current Weather',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
-                    Text(widget.currentWeather.isDay ? (_languageCode == 'vi' ? 'Ban ngày' : 'Day') : (_languageCode == 'vi' ? 'Ban đêm' : 'Night')),
-                  ],
+                  ),
+                  const Spacer(),
+                  Text(
+                    getWeatherIcon(widget.currentWeather.weathercode),
+                    style: const TextStyle(fontSize: 30),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              // Temperature
+              Text(
+                '${widget.currentWeather.temperature.toStringAsFixed(1)}°C',
+                style: const TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.blueAccent,
                 ),
-              ],
-            ),
-            // Weather Advice
-            Text(
-              _languageCode == 'vi'
-                  ? (widget.currentWeather.weathercode >= 61 && widget.currentWeather.weathercode <= 65
-                  ? "Mang theo ô!"
-                  : "Tận hưởng ngày mới!")
-                  : (widget.currentWeather.weathercode >= 61 && widget.currentWeather.weathercode <= 65
-                  ? "Take an umbrella!"
-                  : "Enjoy your day!"),
-              style: const TextStyle(fontSize: 16, color: Colors.blueGrey),
-            ),
-          ],
+              ),
+              const SizedBox(height: 10),
+              // Weather Description
+              Text(
+                getWeatherDescription(widget.currentWeather.weathercode),
+                style: const TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Additional Weather Details
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  // Wind Speed
+                  _WeatherDetailItem(
+                    icon: Icons.wind_power,
+                    label: _languageCode == 'vi' ? "Tốc độ gió" : 'Wind Speed',
+                    value: '${widget.currentWeather.windspeed} m/s',
+                    iconColor: Colors.blue,
+                  ),
+                  // Day/Night Indicator
+                  _WeatherDetailItem(
+                    icon: widget.currentWeather.isDay ? Icons.wb_sunny : Icons.nights_stay,
+                    label: widget.currentWeather.isDay
+                        ? (_languageCode == 'vi' ? 'Ban ngày' : 'Day')
+                        : (_languageCode == 'vi' ? 'Ban đêm' : 'Night'),
+                    value: '',
+                    iconColor: widget.currentWeather.isDay ? Colors.orange : Colors.blueGrey,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              // Weather Advice
+              Text(
+                _languageCode == 'vi'
+                    ? (widget.currentWeather.weathercode >= 61 && widget.currentWeather.weathercode <= 65
+                    ? "Mang theo ô!"
+                    : "Tận hưởng ngày mới!")
+                    : (widget.currentWeather.weathercode >= 61 && widget.currentWeather.weathercode <= 65
+                    ? "Take an umbrella!"
+                    : "Enjoy your day!"),
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.blueGrey,
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Navigate to Detailed Forecast
+              ElevatedButton(
+                onPressed: widget.onViewDetails,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                ),
+                child: Text(
+                  _languageCode == 'vi' ? "Xem Dự báo hàng giờ" : 'View Hourly Forecast',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _WeatherDetailItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color iconColor;
+
+  const _WeatherDetailItem({
+    Key? key,
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.iconColor = Colors.blue,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: iconColor, size: 28),
+        const SizedBox(height: 5),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.grey,
+          ),
+        ),
+      ],
     );
   }
 }

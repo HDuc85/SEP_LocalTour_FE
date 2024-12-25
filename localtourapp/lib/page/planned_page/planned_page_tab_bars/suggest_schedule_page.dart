@@ -126,89 +126,81 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
     return Container(
       height: size.height * 0.8,
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade100, Colors.white],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Schedule Name
-          Text(
-            suggestedScheduleName,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          // Header Section
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  suggestedScheduleName,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          // Start and End Date of Schedule
+          // Date Selection Section
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // Start Date
-              Column(
-                children: [
-                  Text(_languageCode == 'vi' ?'Ngày bắt đầu':"Start Date", style: const TextStyle(fontWeight: FontWeight.bold)),
-                  _buildDateField(_languageCode == 'vi' ?'Ngày bắt đầu':"Start Date",
-                    false,
-                    startTime,
-                        (newDate) {
-                      _onDateSelected(newDate, true);
-                    },
-                    clearable: true,
-                    onClear: () {
-                      _onDateSelected(null, true);
-                    },),
-                ],
+              _buildDateFieldCard(
+                _languageCode == 'vi' ? 'Ngày bắt đầu' : 'Start Date',
+                startTime,
+                    (newDate) => _onDateSelected(newDate, true),
               ),
-              // End Date
-              Column(
-                children: [
-                  Text(_languageCode == 'vi' ?'Ngày kết thúc':"End Date", style: const TextStyle(fontWeight: FontWeight.bold)),
-                  _buildDateField(_languageCode == 'vi' ?'Ngày kết thúc':"End Date",
-                    false,
-                    endTime,
-                        (newDate) {
-                      _onDateSelected(newDate, false);
-                    },
-                    clearable: true,
-                    onClear: () {
-                      _onDateSelected(null, false);
-                    },),
-                ],
+              _buildDateFieldCard(
+                _languageCode == 'vi' ? 'Ngày kết thúc' : 'End Date',
+                endTime,
+                    (newDate) => _onDateSelected(newDate, false),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
+          // Destination List or Empty Message
           Expanded(
             child: hasPlaces
                 ? SingleChildScrollView(
-              child: Column(
-                children: [
-                  _buildDestinationList(context, suggestedDestinations),
-                  const SizedBox(height: 20),
-                ],
-              ),
+              child: _buildDestinationList(context, suggestedDestinations),
             )
                 : Center(
-              child: Text(_languageCode == 'vi' ?'Không có điểm đến nào có sẵn theo sở thích của bạn.':"No destinations available based on your preferences."),
+              child: Text(
+                _languageCode == 'vi'
+                    ? 'Không có điểm đến nào có sẵn theo sở thích của bạn.'
+                    : "No destinations available based on your preferences.",
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
+              ),
             ),
           ),
+          // Action Buttons
+          const SizedBox(height: 10,),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              ElevatedButton(
+              _buildGradientButton(
+                text: _languageCode == 'vi' ? 'Khác' : 'Other',
+                color1: Colors.orange,
+                color2: Colors.deepOrange,
                 onPressed: hasPlaces ? _onOtherSchedule : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                child: Text(_languageCode == 'vi' ?'Khác':"Other"),
               ),
-              ElevatedButton(
+              _buildGradientButton(
+                text: _languageCode == 'vi' ? 'Chọn cái này' : 'Choose this',
+                color1: Colors.green,
+                color2: Colors.teal,
                 onPressed: hasPlaces ? _onChooseSchedule : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                child: Text(_languageCode == 'vi' ?'Chọn cái này':"Choose this"),
               ),
             ],
           ),
@@ -217,69 +209,81 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
     );
   }
 
-  Widget _buildDateField(
-      String labelText,
-      bool isStartDate,
-      DateTime? initialDate,
-      Function(DateTime?) onDateChanged, {
-        bool clearable = false,
-        VoidCallback? onClear,
-        bool isOwner = true,
-      }) {
+// Date Field Card
+  Widget _buildDateFieldCard(String label, DateTime? date, Function(DateTime?) onDateChanged) {
     return GestureDetector(
       onTap: () async {
-        DateTime? selectedDate =
-            initialDate; // Temporarily store the initial date
-        if (isOwner) {
-          // Date picker
-          final DateTime? date = await showDatePicker(
-            context: context,
-            initialDate: selectedDate ?? DateTime.now(),
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2100),
-          );
-
-          // If date is selected, proceed to time selection
-          if (date != null) {
-            selectedDate = DateTime(date.year, date.month, date.day,
-                selectedDate?.hour ?? 0, selectedDate?.minute ?? 0);
-              selectedDate = DateTime(
-                  date.year, date.month, date.day, 0, 0); // Default time
-            onDateChanged(selectedDate);
-          }
+        DateTime? selectedDate = await showDatePicker(
+          context: context,
+          initialDate: date ?? DateTime.now(),
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2100),
+        );
+        if (selectedDate != null) {
+          onDateChanged(selectedDate);
         }
       },
-      child: Stack(
-        children: [
-          AbsorbPointer(
-            child: SizedBox(
-              height: 30,
-              width: 120,
-              child: TextFormField(
-                decoration: InputDecoration(
-                  hintText: initialDate != null
-                      ? DateFormat('yyyy-MM-dd').format(initialDate)
-                      : labelText,
-                  hintStyle: const TextStyle(fontSize: 12),
-                  border: const OutlineInputBorder(),
-                  suffixIcon:(initialDate == null) ? const Icon(Icons.calendar_today) : null,
-                ),
-              ),
-            ),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.blueAccent,
+            width: 2,
           ),
-          if (clearable && initialDate != null)
-            Positioned(
-              right: 5,
-              top: 3,
-              child: GestureDetector(
-                onTap: onClear,
-                child: Icon(Icons.close, size: 22, color: Colors.grey[600]),
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(2, 4),
             ),
-        ],
+          ],
+        ),
+        child: Column(
+          children: [
+            Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Text(
+              date != null ? DateFormat('yyyy-MM-dd').format(date) : '-',
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ],
+        ),
       ),
     );
   }
+
+// Gradient Button
+  Widget _buildGradientButton({
+    required String text,
+    required Color color1,
+    required Color color2,
+    required VoidCallback? onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [color1, color2]),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildDestinationList(BuildContext context, List<DestinationModel> destinations) {
 
@@ -308,14 +312,13 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
             const SizedBox(height: 8),
             Column(
               children: dayDestinations.map((dest) {
-
                 return Card(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
                     side: const BorderSide(color: Colors.black, width: 1),
                   ),
                   margin: const EdgeInsets.only(bottom: 10),
-                  color: const Color(0xFFD6B588),
+                  color: Colors.orange[200],
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(8.0),
                     leading: dest.placePhotoDisplay != null
@@ -340,12 +343,10 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
                 );
               }).toList(),
             ),
-            const SizedBox(height: 16),
           ],
         ),
       );
     });
-
     return Column(children: dayWidgets);
   }
 }

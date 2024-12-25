@@ -351,31 +351,36 @@ class _SearchPageState extends State<SearchPage> {
           elevation: 0,
           backgroundColor: Colors.transparent,
           automaticallyImplyLeading: false,
-          title: Row(// Error: Expanded cannot be a direct child of AppBar
+          title: SizedBox(
+            height: 40,
+            child: Row(
               children: [
-            Expanded(
-              child: TextField(
-                onChanged: (value) {
-                  setState(() {
-                    searchText = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search, color: Colors.black),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: const BorderSide(color: Colors.black),
+                Expanded(
+                  child: TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        searchText = value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search, color: Colors.black),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: const BorderSide(color: Colors.black),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
-              ),
+              ],
             ),
-          ]),
+          ),
         ),
-        body: const Center(child: CircularProgressIndicator(
-        )),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
 
@@ -385,77 +390,83 @@ class _SearchPageState extends State<SearchPage> {
         elevation: 0,
         backgroundColor: Colors.transparent,
         automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () {
+        title: SizedBox(
+          height: 40,
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () {
                   Navigator.pop(context);
-              },
-            ),
-            Expanded(
-              child: TextField(
-                controller: _controllerSearchInput,
-                focusNode: _focusSearchInput,
-                onSubmitted: (value) {
-                  _generateCardWithSearch();
                 },
-                onChanged: (value) {
-                  setState(() {
-                    searchText = value;
-                    // Optionally, you can debounce the search input
-                  });
-                },
-                decoration: InputDecoration(
-                  prefixIcon: IconButton(icon: const Icon(Icons.search, color: Colors.black)
-                    ,onPressed: () {
-                    if(searchText == ""){
-                    FocusScope.of(context).requestFocus(_focusSearchInput);
-                  }else{
-                    _focusSearchInput.unfocus();
+              ),
+              Expanded(
+                child: TextField(
+                  controller: _controllerSearchInput,
+                  focusNode: _focusSearchInput,
+                  onSubmitted: (value) {
                     _generateCardWithSearch();
-                  }
-                  },),
-                  suffixIcon: searchText != ""
-                      ? IconButton(
-                    icon: const Icon(Icons.clear, color: Colors.black),
-                    onPressed: () {
-                      setState(() {
-                        _controllerSearchInput.clear();
-                        searchText = "";
-                        _generateCardInfoList();
-                      });
-                    },
-                  )
-                      :
-                  (isPlace ?
-                  IconButton(
-                    icon: const Icon(Icons.place_rounded, color: Colors.blue, ),
-                    onPressed: () {
+                  },
+                  onChanged: (value) {
                     setState(() {
-                      isPlace = false;
-                      _generateCardInfoList();
+                      searchText = value;
+                      // Optionally, you can debounce the search input
                     });
-                  },)
-                  :IconButton(
+                  },
+                  decoration: InputDecoration(
+                    prefixIcon: IconButton(
+                      icon: const Icon(Icons.search, color: Colors.black),
+                      onPressed: () {
+                        if (searchText.isEmpty) {
+                          FocusScope.of(context).requestFocus(_focusSearchInput);
+                        } else {
+                          _focusSearchInput.unfocus();
+                          _generateCardWithSearch();
+                        }
+                      },
+                    ),
+                    suffixIcon: searchText.isNotEmpty
+                        ? IconButton(
+                      icon: const Icon(Icons.clear, color: Colors.black),
+                      onPressed: () {
+                        setState(() {
+                          _controllerSearchInput.clear();
+                          searchText = "";
+                          _generateCardInfoList();
+                        });
+                      },
+                    )
+                        : (isPlace
+                        ? IconButton(
+                      icon: const Icon(Icons.place_rounded, color: Colors.blue),
+                      onPressed: () {
+                        setState(() {
+                          isPlace = false;
+                          _generateCardInfoList();
+                        });
+                      },
+                    )
+                        : IconButton(
                       icon: const Icon(Icons.event_available_rounded, color: Colors.greenAccent),
-                  onPressed: () {
-                    setState(() {
-                      isPlace = true;
-                      _generateCardInfoList();
-                    });
-                  },) ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: const BorderSide(color: Colors.black),
+                      onPressed: () {
+                        setState(() {
+                          isPlace = true;
+                          _generateCardInfoList();
+                        });
+                      },
+                    )),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: const BorderSide(color: Colors.black),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       body: Column(
@@ -463,53 +474,70 @@ class _SearchPageState extends State<SearchPage> {
         children: [
           // Row of buttons (Nearest, Featured, Tags)
           Container(
-            margin: const EdgeInsets.only(left: 10, right: 10, bottom: 5),
+            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: Row(
               children: [
-                _buildFilterButton(_languageCode == 'vi' ? "Gần nhất":
-                    "Nearest", const Color(0xFF99C896), SortBy.distance),
+                _buildFilterButton(
+                  _languageCode == 'vi' ? "Gần nhất" : "Nearest",
+                  const Color(0xFF99C896),
+                  SortBy.distance,
+                ),
                 const SizedBox(width: 5),
-                isPlace ?
-                _buildFilterButton(_languageCode == 'vi' ? "Nổi bật":
-                    "Featured", const Color(0xFFAAFF00), SortBy.rating)
-                :_buildFilterButton(_languageCode == 'vi' ? "Sắp ra mắt":
-                    "Coming soon", const Color(0xFFFFB200), SortBy.created_by, 'isComing'),
+                isPlace
+                    ? _buildFilterButton(
+                  _languageCode == 'vi' ? "Nổi bật" : "Featured",
+                  const Color(0xFFAAFF00),
+                  SortBy.rating,
+                )
+                    : _buildFilterButton(
+                  _languageCode == 'vi' ? "Sắp ra mắt" : "Coming Soon",
+                  const Color(0xFFFFB200),
+                  SortBy.created_by,
+                  'isComing',
+                ),
                 const SizedBox(width: 5),
-                if(!isPlace) _buildFilterButton(_languageCode == 'vi' ? "Đang diễn ra":
-                    "On Going", const Color(0xFF99C896), SortBy.created_by, 'onGoing'),
-                if(isPlace) const SizedBox(width: 5) ,
-                if(isPlace)
-                Flexible(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      showTagsModal(
-                        context: context,
-                        selectedTags: selectedTags,
-                        listTags: listTagPlaces,
-                        onSelectedTagsChanged: (updatedTags) {
-                          setState(() {
-                            selectedTags = updatedTags;
-                            _generateCardInfoList(); // Update list based on new tags
-                          });
-                        },
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFD6B588)),
-                      backgroundColor: Colors.transparent,
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Tags",
-                          style: TextStyle(color: Colors.black),
-                        ),
-                        Icon(Icons.arrow_forward, color: Colors.black),
-                      ],
+                if (!isPlace)
+                  _buildFilterButton(
+                    _languageCode == 'vi' ? "Đang diễn ra" : "On Going",
+                    const Color(0xFF99C896),
+                    SortBy.created_by,
+                    'onGoing',
+                  ),
+                if (isPlace) const SizedBox(width: 5),
+                if (isPlace)
+                  Flexible(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        showTagsModal(
+                          context: context,
+                          selectedTags: selectedTags,
+                          listTags: listTagPlaces,
+                          onSelectedTagsChanged: (updatedTags) {
+                            setState(() {
+                              selectedTags = updatedTags;
+                              _generateCardInfoList(); // Update list based on new tags
+                            });
+                          },
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFD6B588)),
+                        backgroundColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Tags",
+                            style: TextStyle(color: Colors.black),
+                          ),
+                          Icon(Icons.arrow_forward, color: Colors.black),
+                        ],
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
@@ -523,7 +551,7 @@ class _SearchPageState extends State<SearchPage> {
                 child: Row(
                   children: selectedTags.map((tagId) {
                     final tag = listTagPlaces.firstWhere(
-                      (t) => t.id == tagId,
+                          (t) => t.id == tagId,
                       orElse: () => TagModel(
                         id: tagId,
                         tagPhotoUrl: 'assets/icons/default.png',
@@ -542,6 +570,8 @@ class _SearchPageState extends State<SearchPage> {
                             _generateCardInfoList(); // Update list after removing tag
                           });
                         },
+                        backgroundColor: Colors.teal.shade50,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       ),
                     );
                   }).toList(),
@@ -549,90 +579,81 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ),
 
-          // List of place cards with dividers
+          // List of place/event cards with dividers
           Expanded(
-            child:
-                (listPlaces.isNotEmpty && isPlace) || (listEvent.isNotEmpty && !isPlace)
+            child: (listPlaces.isNotEmpty && isPlace) || (listEvent.isNotEmpty && !isPlace)
                 ? Column(
-                  children: [
-                    Expanded(
-                      child: isPlace?
-                        ListView.separated(
-                            controller: _listPlaceScrollController,
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: listPlaces.length+1,
-                            separatorBuilder: (context, index) => const Divider(
-                              height: 5,
-                            ),
-                            itemBuilder: (context, index) {
-                              final cardInfo =  listPlaces[index % listPlaces.length];
-                              return (index == listPlaces.length)? const SizedBox(height: 42,) :
-                                GestureDetector(
-                                onTap: () {
-                                  _navigateToDetail(cardInfo.placeId);
-                                },
-                                child: SecondPlaceCard(
-                                  placeCardId: cardInfo.placeId,
-                                  placeName: cardInfo.placeName,
-                                  wardName: cardInfo.wardName,
-                                  photoDisplay: cardInfo.photoDisplayUrl,
-                                  score: cardInfo.rateStar,
-                                  distance: cardInfo.distance,
-                                ),
-                              );
-                            },
-
-                          ) :
-                      ListView.separated(
-                        controller: _listPlaceScrollController,
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: listEvent.length + 1,
-                        separatorBuilder: (context, index) => const Divider(
-                          height: 5,
-                        ),
-                        itemBuilder: (context, index) {
-                          final eventInfo =  listEvent[index % listEvent.length];
-                          return (index == listEvent.length)?
-                          const SizedBox(height: 42,) : GestureDetector(
-                            onTap: () {
-                              //_navigateToDetail(cardInfo.placeId);
-                            },
-                            child: SecondPlaceCard(
-                              placeCardId: eventInfo.placeId,
-                              placeName: eventInfo.eventName,
-                              wardName: eventInfo.placeName,
-                              photoDisplay: eventInfo.eventPhoto!,
-                              score: 5,
-                              distance: eventInfo.distance,
-                              isEvent: true,
-                              event: eventInfo,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  Container(
-                    child: _isLoading
-                    ? const SizedBox(child: CircularProgressIndicator())
-                    : const SizedBox(),
+              children: [
+                Expanded(
+                  child: isPlace
+                      ? ListView.builder(
+                    controller: _listPlaceScrollController,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: listPlaces.length + 1,
+                    itemBuilder: (context, index) {
+                      final cardInfo = listPlaces[index % listPlaces.length];
+                      return (index == listPlaces.length)
+                          ? const SizedBox(height: 42)
+                          : SecondPlaceCard(
+                          placeCardId: cardInfo.placeId,
+                          placeName: cardInfo.placeName,
+                          wardName: cardInfo.wardName,
+                          photoDisplay: cardInfo.photoDisplayUrl,
+                          score: cardInfo.rateStar,
+                          distance: cardInfo.distance,
+                          dynamicHeight: 120,
+                        );
+                    },
                   )
-                  ],
-                )
-                : Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.search_off,
-                            size: 80, color: Colors.grey),
-                        Text(_languageCode == 'vi' ? "Không có địa điểm nào phù hợp với danh mục bạn đã chọn.":
-                          "No places match your selected categories.",
-                          style:
-                              TextStyle(fontSize: 18, color: Colors.grey[700]),
-                          textAlign: TextAlign.center,
+                      : ListView.builder(
+                    controller: _listPlaceScrollController,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: listEvent.length + 1,
+                    itemBuilder: (context, index) {
+                      final eventInfo = listEvent[index % listEvent.length];
+                      return (index == listEvent.length)
+                          ? const SizedBox(height: 42)
+                          : GestureDetector(
+                        onTap: () {
+                          // Implement navigation if needed
+                        },
+                        child: SecondPlaceCard(
+                          placeCardId: eventInfo.placeId,
+                          placeName: eventInfo.eventName,
+                          wardName: eventInfo.placeName,
+                          photoDisplay: eventInfo.eventPhoto!,
+                          score: 5,
+                          distance: eventInfo.distance,
+                          isEvent: true,
+                          event: eventInfo,
+                          dynamicHeight: 162,
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
+                ),
+                if (_isLoading)
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(),
+                  ),
+              ],
+            )
+                : Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.search_off, size: 80, color: Colors.grey),
+                  Text(
+                    _languageCode == 'vi'
+                        ? "Không có địa điểm nào phù hợp với danh mục bạn đã chọn."
+                        : "No places match your selected categories.",
+                    style: TextStyle(fontSize: 18, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

@@ -160,10 +160,9 @@ class _WeatherContentState extends State<WeatherContent> {
         return SingleChildScrollView(
           child: Column(
             children: [
-              WeatherCard(currentWeather: currentWeather),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
+              WeatherCard(
+                currentWeather: currentWeather,
+                onViewDetails: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -173,7 +172,6 @@ class _WeatherContentState extends State<WeatherContent> {
                     ),
                   );
                 },
-                child: Text(_languageCode == 'vi' ? "Xem Dự báo hàng giờ":'View Hourly Forecast', style: const TextStyle(color: Colors.black),),
               ),
             ],
           ),

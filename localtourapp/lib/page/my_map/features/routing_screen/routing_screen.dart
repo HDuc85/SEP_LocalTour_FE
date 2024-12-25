@@ -49,7 +49,7 @@ class RoutingScreen extends StatefulWidget {
   State<RoutingScreen> createState() => _RoutingScreenState();
 }
 
-class _RoutingScreenState extends State<RoutingScreen> {
+class _RoutingScreenState extends State<RoutingScreen>  with AutomaticKeepAliveClientMixin{
   String _languageCode = 'vi';
   final TraveledPlaceService _placeService = TraveledPlaceService();
   final LocationService _locationService = LocationService();
@@ -61,7 +61,8 @@ class _RoutingScreenState extends State<RoutingScreen> {
   MapNavigationViewController? _navigationController;
   late MapOptions _navigationOption;
   final _vietmapPlugin = VietMapNavigationPlugin();
-
+  @override
+  bool get wantKeepAlive => true;
 
   String guideDirection = "";
   Widget recenterButton = const SizedBox.shrink();
@@ -149,7 +150,8 @@ class _RoutingScreenState extends State<RoutingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ScheduleService _scheduleService = ScheduleService();
+    super.build(context);
+    final ScheduleService scheduleService = ScheduleService();
     return BlocListener<RoutingBloc, RoutingState>(
       bloc: routingBloc,
       listener: (context, state) {
@@ -314,7 +316,7 @@ class _RoutingScreenState extends State<RoutingScreen> {
                             ),
                           );
                           if(widget.scheduleChoosenId != null){
-                            await _scheduleService.UpdateDestination(
+                            await scheduleService.UpdateDestination(
                                 widget.destinationModel!.id,
                                 widget.scheduleChoosenId!,
                                 widget.placeId,

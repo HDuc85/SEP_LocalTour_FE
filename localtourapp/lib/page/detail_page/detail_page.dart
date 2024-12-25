@@ -1,6 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:localtourapp/config/appConfig.dart';
-import 'package:localtourapp/config/secure_storage_helper.dart';
+import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:geolocator/geolocator.dart';
+import '../../config/appConfig.dart';
+import '../../config/secure_storage_helper.dart';
 import 'package:localtourapp/models/Tag/tag_model.dart';
 import 'package:localtourapp/models/event/event_model.dart';
 import 'package:localtourapp/models/media_model.dart';
@@ -8,10 +13,9 @@ import 'package:localtourapp/models/places/place_detail_model.dart';
 import 'package:localtourapp/services/mark_place_service.dart';
 import 'package:localtourapp/services/place_service.dart';
 import 'package:localtourapp/services/tag_service.dart';
-
+import 'package:localtourapp/services/event_service.dart';
 import '../../base/back_to_top_button.dart';
 import '../../full_media/full_place_media_viewer.dart';
-import '../../services/event_service.dart';
 import 'detail_page_tab_bars/detail_tabbar.dart';
 import 'detail_page_tab_bars/review_tabbar.dart';
 
@@ -64,34 +68,47 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
     super.dispose();
   }
 
-  Future<void> _getPlaceDetail() async{
-    var fetchPlaceDetail = await _placeService.GetPlaceDetail(widget.placeId);
-    var fetchTagInPlace = await _tagService.getTagInPlace(widget.placeId);
-    var userId = await SecureStorageHelper().readValue(AppConfig.userId);
-    var fetchedListEvents = await _eventService.getEventInPlace(widget.placeId,1,1);
-    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
-    bool isMark = false;
-    if(userId == null){
-      _userId = '';
+  Future<void> _getPlaceDetail() async {
+    try {
+      var fetchPlaceDetail = await _placeService.GetPlaceDetail(widget.placeId);
+      var fetchTagInPlace = await _tagService.getTagInPlace(widget.placeId);
+      var userId = await SecureStorageHelper().readValue(AppConfig.userId);
+      var fetchedListEvents = await _eventService.getEventInPlace(widget.placeId, 1, 1);
+      var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+      bool isMark = false;
+      if (userId == null) {
+        _userId = '';
+      }
+      if (userId != null && userId.isNotEmpty) {
+        var listMark = await _markplaceService.getAllMarkPlace();
+        isMark = listMark.any((element) => element.placeId == widget.placeId);
+        _userId = userId;
+      }
+      setState(() {
+        _placeDetailModel = fetchPlaceDetail;
+        _listTagInPlace = fetchTagInPlace;
+        _listEvents = fetchedListEvents;
+        _languageCode = languageCode ?? 'vi';
+        isMarked = isMark;
+        isLoading = false;
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error fetching place details: $e');
+      }
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _languageCode == 'vi' ? "Lỗi khi tải dữ liệu chi tiết địa điểm." : 'Error loading place details.',
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     }
-    if(userId != null && userId.isNotEmpty)
-    {
-      var listMark = await _markplaceService.getAllMarkPlace();
-      isMark = listMark.any((element) => element.placeId == widget.placeId);
-      _userId = userId;
-    }
-    setState(() {
-      _placeDetailModel = fetchPlaceDetail;
-      _listTagInPlace = fetchTagInPlace;
-      _listEvents = fetchedListEvents;
-      _languageCode = languageCode!;
-      isMarked = isMark;
-      isLoading = false;
-    });
-
   }
-
-
 
   void _nestedScrollListener() {
     // Get the current scroll offset
@@ -117,7 +134,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
   }
 
   Future<void> _toggleBookmark(int placeId) async {
-    if (_userId != '' && _userId.isNotEmpty) {
+    if (_userId.isNotEmpty) {
       if (isMarked) {
         // Delete Bookmark
         bool success = await _markplaceService.deleteMarkPlace(placeId);
@@ -158,6 +175,16 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
           _showErrorSnackbar();
         }
       }
+    } else {
+      // Prompt user to log in or handle unauthenticated state
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _languageCode == 'vi' ? "Vui lòng đăng nhập để đánh dấu địa điểm." : 'Please log in to bookmark places.',
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -165,10 +192,9 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          _languageCode != 'vi'
-              ? 'Failed to update bookmark.'
-              : 'Cập nhật dấu trang thất bại.',
+          _languageCode != 'vi' ? 'Failed to update bookmark.' : 'Cập nhật dấu trang thất bại.',
         ),
+        backgroundColor: Colors.redAccent,
         duration: const Duration(seconds: 2),
       ),
     );
@@ -179,21 +205,23 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
     // Access widget properties directly
     final int placeId = widget.placeId;
 
-    return  isLoading
-        ? const Center(child: CircularProgressIndicator())
-        :
-      Scaffold(
+    return isLoading
+        ? const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    )
+        : Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        elevation: 0,
         title: Text(
-          _placeDetailModel.name, maxLines: 2,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          _placeDetailModel.name,
+          maxLines: 2,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
         ),
         actions: [
           IconButton(
             icon: Icon(
-              isMarked ? Icons.bookmark
-                  : Icons.bookmark_border,
+              isMarked ? Icons.bookmark : Icons.bookmark_border,
               color: Colors.red,
             ),
             onPressed: () {
@@ -202,197 +230,273 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
           ),
         ],
       ),
-      body:
-      Stack(
-            children: [
-              NestedScrollView(
-                key: _nestedScrollViewKey, // Assign the GlobalKey here
-                headerSliverBuilder: (context, innerBoxIsScrolled) {
-                  return [
-                    SliverToBoxAdapter(
-                      child: Column(
-                        children: [
-                          // Media List Section
-                          Stack(
-                            children: [
-                              _placeDetailModel.placeMedias.isNotEmpty
-                                  ? GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => FullScreenPlaceMediaViewer(
-                                        mediaList: _placeDetailModel.placeMedias,
-                                        initialIndex: 0,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: Image.network(
-                                  _placeDetailModel.placeMedias[0].url,
-                                  width: double.infinity,
-                                  height: 250, // Adjust height as needed
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                  const Center(child: Text('No media available')),
-                                ),
-                              )
-                                  : const Center(child: Text('No media available')),
-                              // Positioned WeatherIconButton
-                            ],
-                          ),
-                          const SizedBox(height: 1),
-                          // Thumbnails Section
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: _placeDetailModel.placeMedias.length > 1
-                                ? _placeDetailModel.placeMedias.skip(1).take(4).toList().asMap().entries.map((entry) {
-                              int index = entry.key;
-                              MediaModel media = entry.value;
-
-                              return Expanded(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => FullScreenPlaceMediaViewer(
-                                          mediaList: _placeDetailModel.placeMedias,
-                                          initialIndex: index + 1,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: Stack(
-                                    children: [
-                                      Image.network(
-                                        media.url,
-                                        fit: BoxFit.cover,
-                                        width: double.infinity,
-                                        height: 77.5,
-                                        errorBuilder: (context, error, stackTrace) =>
-                                            Container(
-                                              width: double.infinity,
-                                              height: 77.5,
-                                              color: Colors.grey,
-                                              child: const Icon(Icons.image, color: Colors.white),
-                                            ),
-                                      ),
-                                      if (index == 3 && _placeDetailModel.placeMedias.length > 5)
-                                        Container(
-                                          color: Colors.black.withOpacity(0.5),
-                                          height: 77.5,
-                                          child: Center(
-                                            child: Text(
-                                              _languageCode != 'vi' ? 'See more' : 'Xem thêm',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }).toList()
-                                : [],
-                          ),
-                          Container(
-                            width: double.infinity,
-                            height: 3,
-                            color: const Color(0xFFDCA1A1),
-                          ),
-                        ],
+      body: Stack(
+        children: [
+          NestedScrollView(
+            key: _nestedScrollViewKey, // Assign the GlobalKey here
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      // Media List Section with Carousel
+                      _buildMediaSection(),
+                      const SizedBox(height: 5),
+                      // Thumbnails Section
+                      _buildThumbnailsSection(),
+                      const SizedBox(height: 5),
+                      // Divider
+                      const Divider(thickness: 1, height: 1),
+                    ],
+                  ),
+                ),
+                // SliverPersistentHeader for Tabs
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _SliverAppBarDelegate(
+                    TabBar(
+                      controller: _tabController,
+                      labelColor: Colors.black,
+                      indicatorColor: const Color(0xFF008080),
+                      labelStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
+                      unselectedLabelColor: Colors.grey,
+                      tabs: [
+                        Tab(
+                          icon: const Icon(Icons.details),
+                          text: _languageCode == 'vi' ? 'Chi tiết' : 'Detail',
+                        ),
+                        Tab(
+                          icon: const Icon(Icons.reviews),
+                          text: _languageCode == 'vi' ? 'Đánh giá' : 'Review',
+                        ),
+                      ],
                     ),
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _SliverAppBarDelegate(
-                        TabBar(
-                          controller: _tabController,
-                          labelColor: Colors.black,
-                          indicatorColor: const Color(0xFF008080),
-                          labelStyle: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          tabs: [
-                            Container(
-                              height: 60, // Increase the height of each tab
-                              color: Colors.blue[100],
-                              child: Tab(
-                                icon: const Icon(Icons.details),
-                                text: _languageCode != 'vi'?'Detail':'Chi tiết',
-                              ),
-                            ),
-                            Container(
-                              height: 60, // Increase the height of each tab
-                              color: Colors.green[100],
-                              child: Tab(
-                                icon: const Icon(Icons.reviews),
-                                text: _languageCode != 'vi'?'Review':'Đánh giá',
-                              ),
-                            ),
-                          ],
+                  ),
+                ),
+              ];
+            },
+            body: TabBarView(
+              controller: _tabController,
+              children: [
+                DetailTabbar(
+                  userId: _userId, // Pass the userId here
+                  tags: _listTagInPlace,
+                  onAddPressed: () {},
+                  onReportPressed: () {},
+                  placeDetail: _placeDetailModel,
+                  languageCode: _languageCode,
+                  listEvents: _listEvents,
+                ),
+                ReviewTabbar(
+                  userId: _userId,
+                  placeId: placeId,
+                ),
+              ],
+            ),
+          ),
+          // Positioned BackToTopButton
+          Positioned(
+            bottom: 30,
+            right: 20,
+            child: AnimatedOpacity(
+              opacity: _showBackToTopButton ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 300),
+              child: _showBackToTopButton
+                  ? BackToTopButton(
+                onPressed: _scrollToTop,
+                languageCode: _languageCode,
+              )
+                  : const SizedBox.shrink(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMediaSection() {
+    return _placeDetailModel.placeMedias.isNotEmpty
+        ? GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => FullScreenPlaceMediaViewer(
+              mediaList: _placeDetailModel.placeMedias,
+              initialIndex: 0,
+            ),
+          ),
+        );
+      },
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: CachedNetworkImage(
+              imageUrl: _placeDetailModel.placeMedias[0].url,
+              width: double.infinity,
+              height: 250,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Shimmer.fromColors(
+                baseColor: Colors.grey[300]!,
+                highlightColor: Colors.grey[100]!,
+                child: Container(
+                  width: double.infinity,
+                  height: 250,
+                  color: Colors.white,
+                ),
+              ),
+              errorWidget: (context, url, error) => Container(
+                width: double.infinity,
+                height: 250,
+                color: Colors.grey[200],
+                child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 10,
+            right: 10,
+            child: FloatingActionButton(
+              mini: true,
+              backgroundColor: Colors.black.withOpacity(0.7),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FullScreenPlaceMediaViewer(
+                      mediaList: _placeDetailModel.placeMedias,
+                      initialIndex: 0,
+                    ),
+                  ),
+                );
+              },
+              child: const Icon(Icons.fullscreen, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    )
+        : Container(
+      width: double.infinity,
+      height: 250,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: const Center(
+        child: Text(
+          'No media available',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThumbnailsSection() {
+    final mediaList = _placeDetailModel.placeMedias;
+    if (mediaList.length <= 1) {
+      return const SizedBox.shrink();
+    }
+
+    // Determine how many thumbnails to show (max 4)
+    int thumbnailsToShow = mediaList.length > 5 ? 4 : mediaList.length - 1;
+    List<MediaModel> thumbnails = mediaList.skip(1).take(thumbnailsToShow).toList();
+
+    return Container(
+      height: 80,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: thumbnails.length,
+        itemBuilder: (context, index) {
+          // Check if it's the last thumbnail and there are more than 5 media items
+          bool isLastThumbnail = index == thumbnails.length - 1 && mediaList.length > 5;
+
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => FullScreenPlaceMediaViewer(
+                    mediaList: _placeDetailModel.placeMedias,
+                    initialIndex: index + 1,
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 10),
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Colors.grey[300],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Stack(
+                  children: [
+                    CachedNetworkImage(
+                      imageUrl: thumbnails[index].url,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Shimmer.fromColors(
+                        baseColor: Colors.grey[300]!,
+                        highlightColor: Colors.grey[100]!,
+                        child: Container(
+                          width: double.infinity,
+                          height: double.infinity,
+                          color: Colors.white,
                         ),
                       ),
+                      errorWidget: (context, url, error) => Container(
+                        color: Colors.grey[400],
+                        child: const Icon(Icons.broken_image, color: Colors.white),
+                      ),
                     ),
-                  ];
-                },
-                body: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    DetailTabbar(
-                      userId: _userId, // Pass the userId here
-                      tags: _listTagInPlace,
-                      onAddPressed: () {},
-                      onReportPressed: () {},
-                      placeDetail: _placeDetailModel,
-                      languageCode: _languageCode,
-                      listEvents: _listEvents,
-                    ),
-                    ReviewTabbar(
-                      userId: _userId, // Use widget.userId
-                      placeId: placeId,
-                    ),
+                    if (isLastThumbnail)
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '+${mediaList.length - 5}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
-              // Positioned BackToTopButton
-              Positioned(
-                bottom: 30,
-                left: 160,
-                child: AnimatedOpacity(
-                  opacity: _showBackToTopButton ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: _showBackToTopButton
-                      ? BackToTopButton(
-                    onPressed: _scrollToTop, languageCode: 'vi', // Link to the scrollToTop method
-                  )
-                      : const SizedBox.shrink(),
-                ),
-              ),
-            ],
-          ),
-
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
-// _SliverAppBarDelegate remains the same
+// SliverPersistentHeaderDelegate remains the same but improved for better visuals
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar _tabBar;
 
   _SliverAppBarDelegate(this._tabBar);
 
   @override
-  double get minExtent => _tabBar.preferredSize.height;
-
+  double get minExtent => 50; // Set a smaller minimum height
   @override
-  double get maxExtent => _tabBar.preferredSize.height;
+  double get maxExtent => 50; // Set a smaller maximum height
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {

@@ -656,38 +656,28 @@ class _PostTabBarState extends State<PostTabBar> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFFFDD0), // Favorite background color
+              TextButton.icon(
+                onPressed: () => toggleLike(post.id),
+                icon: Icon(
+                  post.isLiked ? Icons.favorite : Icons.favorite_border,
+                  color: Colors.red,
                 ),
-                child: TextButton.icon(
-                  onPressed: () => toggleLike(post.id),
-                  icon: Icon(
-                    post.isLiked ? Icons.favorite : Icons.favorite_border,
-                    color: Colors.red,
-                  ),
-                  label: Text(
-                    _languageCode == 'vi' ? 'Thích' : 'Loved',
-                    style: const TextStyle(color: Colors.red),
-                  ),
+                label: Text(
+                  _languageCode == 'vi' ? 'Thích' : 'Loved',
+                  style: const TextStyle(color: Colors.red),
                 ),
               ),
-              Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFF9DC183), // Comment background color
+              TextButton.icon(
+                onPressed: () => _openCommentsBottomSheet(post),
+                icon: const Icon(
+                  Icons.comment,
+                  color: Color(0xFF008080),
                 ),
-                child: TextButton.icon(
-                  onPressed: () => _openCommentsBottomSheet(post),
-                  icon: const Icon(
-                    Icons.comment,
-                    color: Color(0xFF008080),
-                  ),
-                  label: Text(
-                    _languageCode == 'vi'
-                        ? 'Bình Luận'
-                        : 'Comment',
-                    style: const TextStyle(color: Colors.black),
-                  ),
+                label: Text(
+                  _languageCode == 'vi'
+                      ? 'Bình Luận'
+                      : 'Comment',
+                  style: const TextStyle(color: Color(0xFF008080)),
                 ),
               ),
             ],

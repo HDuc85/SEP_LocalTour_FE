@@ -4,6 +4,7 @@ import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/feedback/feedback_model.dart';
 import 'package:localtourapp/services/review_service.dart';
 import '../../base/back_to_top_button.dart';
+import '../../base/const.dart';
 import '../../base/weather_icon_button.dart';
 import 'detail_card/review_card.dart';
 import 'detail_page_tab_bars/form/reportform.dart';
@@ -48,7 +49,7 @@ class _FilterCellState extends State<FilterCell> {
       onTap: widget.onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: widget.isSelected ? Colors.white : Colors.grey,
+          color: widget.isSelected ? Colors.white : Colors.black12,
           border: widget.isSelected ? Border.all(color: Colors.green) : Border.all(color: Colors.transparent),
           borderRadius: BorderRadius.circular(8),
         ),
@@ -299,24 +300,28 @@ class _AllReviewsPageState extends State<AllReviewsPage> {
         ? const Center(child: CircularProgressIndicator())
         :Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.brown),
-          onPressed: () => Navigator.pop(context),
-        ),
         title: const Text(
           "All Reviews",
           style: TextStyle(
-            color: Colors.brown,
             fontWeight: FontWeight.bold,
-            decoration: TextDecoration.underline,
+            fontSize: 20,
+            color: Colors.white,
           ),
         ),
         centerTitle: true,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Constants.defaultState, Constants.tagGridBackground],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
+          const SizedBox(height: 10,),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [

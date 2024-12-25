@@ -184,9 +184,14 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Text(
-                      "${_language != 'vi'?'reviewers':'Tổng đánh giá'}: $totalReviewers",
-                      style: const TextStyle(fontSize: 13),
+                    Column(
+                      children: [
+                        Text(
+                          "${_language != 'vi'?'reviewers':'Tổng đánh giá'}: ",
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        Text("$totalReviewers"),
+                      ],
                     ),
                     buildStarRating(_placeDetailModel.rating),
                     TextButton(
@@ -200,7 +205,10 @@ class _ReviewTabbarState extends State<ReviewTabbar> {
                           ),
                         );
                       },
-                      child:  Text(_language != 'vi'?"See all":"Xem tất cả", style: const TextStyle(color: Colors.blue),),
+                      child:  Text(
+                        _language == 'vi' ? "Xem tất cả" : "See All",
+                        style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),

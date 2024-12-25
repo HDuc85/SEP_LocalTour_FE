@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
 import '../../models/event/event_model.dart';
 
 class PlaceCard extends StatefulWidget {
@@ -12,8 +14,9 @@ class PlaceCard extends StatefulWidget {
   final TimeOfDay? timeClose;
   final bool? isEvent;
   final EventModel? eventModel;
+
   const PlaceCard({
-    super.key,
+    Key? key,
     required this.placeCardId,
     required this.placeName,
     required this.ward,
@@ -23,80 +26,64 @@ class PlaceCard extends StatefulWidget {
     required this.countFeedback,
     required this.timeClose,
     this.eventModel,
-    this.isEvent
-  });
+    this.isEvent,
+  }) : super(key: key);
 
   @override
   State<PlaceCard> createState() => _PlaceCardState();
 }
 
 class _PlaceCardState extends State<PlaceCard> {
-  late String iconUrl = "assets/icons/logo.png";
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
+  // Build star rating widget
   Widget buildStarRating(double score) {
     int fullStars = score.floor(); // Full stars
-    bool hasHalfStar =
-        (score - fullStars) >= 0.5; // Determine if there’s a half-star
+    bool hasHalfStar = (score - fullStars) >= 0.5; // Determine if there’s a half-star
 
     return Row(
       children: List.generate(5, (index) {
         if (index < fullStars) {
-          return const Icon(Icons.star, color: Colors.red, size: 16);
+          return const Icon(Icons.star, color: Colors.amber, size: 16);
         } else if (index == fullStars && hasHalfStar) {
-          return const Icon(Icons.star_half, color: Colors.red, size: 16);
+          return const Icon(Icons.star_half, color: Colors.amber, size: 16);
         } else {
-          return const Icon(Icons.star_border, color: Colors.red, size: 16);
+          return const Icon(Icons.star_border, color: Colors.amber, size: 16);
         }
       }),
     );
   }
+
+  // Display availability based on event times
   Widget inHour() {
+    if (widget.eventModel == null) return const SizedBox();
+
     DateTime now = DateTime.now();
+    DateTime startDate = widget.eventModel!.startDate;
+    DateTime endDate = widget.eventModel!.endDate;
 
-      Duration differenceStart = now.difference(widget.eventModel!.startDate);
-      Duration differenceEnd = now.difference(widget.eventModel!.endDate);
-
-      if(differenceStart.inHours > 0 && differenceEnd.inHours < 0 ){
-        int days = 0;
-        String type = '';
-        if(differenceEnd.inHours.abs() > 24){
-          days = (differenceEnd.inHours.abs() / 24).floor();
-          type = days == 1 ? 'Day' : 'Days';
-        }
-        else{
-          days = differenceEnd.inHours;
-          type = days == 1 ? 'Hour' : 'Hours';
-        }
-
-        return Text('Available in $days $type', style: const TextStyle(color: Colors.green, fontSize: 11),);
-      }
-      if(differenceStart.inHours < 0){
-
-        int days = 0;
-        String type = '';
-        if(differenceStart.inHours.abs() > 24){
-          days = (differenceStart.inHours.abs() / 24).floor();
-          type = days == 1 ? 'Day' : 'Days';
-        }
-        else{
-          days = differenceStart.inHours;
-          type = days == 1 ? 'Hour' : 'Hours';
-        }
-
-        return Text('Coming in $days $type ', style: const TextStyle(color: Colors.red ,fontSize: 11),);
-      }
-    return const SizedBox();
+    if (now.isAfter(startDate) && now.isBefore(endDate)) {
+      // Event is currently ongoing
+      return const Text(
+        'Ongoing',
+        style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold),
+      );
+    } else if (now.isBefore(startDate)) {
+      // Event is upcoming
+      Duration difference = startDate.difference(now);
+      int days = difference.inDays;
+      int hours = difference.inHours % 24;
+      String timeString = days > 0
+          ? '$days ${days == 1 ? 'Day' : 'Days'}'
+          : '$hours ${hours == 1 ? 'Hour' : 'Hours'}';
+      return Text(
+        'Coming in $timeString',
+        style: const TextStyle(color: Colors.red, fontSize: 12),
+      );
+    } else {
+      // Event has ended
+      return const SizedBox();
+    }
   }
+
   @override
   Widget build(BuildContext context) {
     String formattedDistance = widget.distance.toStringAsFixed(1);
@@ -107,86 +94,121 @@ class _PlaceCardState extends State<PlaceCard> {
 
     return SizedBox(
       width: 160,
-      height: 270,
+      height: 260,
       child: Container(
-        margin: const EdgeInsets.only(right: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
             BoxShadow(
-              color: Colors.black26,
-              blurRadius: 10,
-              offset: Offset(5, 5),
+              color: Colors.black.withOpacity(0.2), // Shadow color
+              blurRadius: 5, // Blur radius for smoothness
+              offset: const Offset(10, 15), // Shadow tilt to bottom-right
             ),
           ],
         ),
-        child: Stack(
-          children: [
-            Column(
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Column(
               children: [
+                // Image Section
                 Expanded(
-                  flex: 1,
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
-                    child: Stack(
-                      children: [
-                        Image.network(
-                          widget.photoDisplay,
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
+                  flex: 5,
+                  child: Stack(
+                    children: [
+                      // Cached Network Image with placeholder and error handling
+                      CachedNetworkImage(
+                        imageUrl: widget.photoDisplay,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          color: Colors.grey.shade200,
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
                         ),
-                        if (widget.isEvent == null)
-                          Positioned(
-                            top: 8,
-                            left: 8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFB0E0E6),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                widget.ward,
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
+                        errorWidget: (context, url, error) => Container(
+                          color: Colors.grey.shade200,
+                          child: const Center(
+                            child: Icon(Icons.error, color: Colors.red),
+                          ),
+                        ),
+                      ),
+                      // Gradient Overlay for better text contrast
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: 60,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.7),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Ward Label
+                      if (widget.isEvent == null)
+                        Positioned(
+                          top: 12,
+                          left: 12,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blueGrey,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              widget.ward,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
                             ),
                           ),
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
                 ),
+                // Details Section
                 Expanded(
-                  flex: 1,
+                  flex: 4,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 8.0, bottom: 11, left: 8, right: 8),
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Place Name
                         Text(
                           widget.placeName,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            fontSize: 14,
+                            color: Colors.black87,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 8),
+                        // Rating or Event Name
                         Row(
                           children: [
                             Image.asset(
-                              iconUrl,
+                              "assets/icons/logo.png",
                               width: 16,
                               height: 16,
                             ),
@@ -195,10 +217,11 @@ class _PlaceCardState extends State<PlaceCard> {
                                 ? buildStarRating(widget.score / 2)
                                 : Expanded(
                               child: Text(
-                                widget.eventModel!.placeName,
+                                widget.eventModel?.placeName ?? '',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
+                                  color: Colors.black54,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -206,19 +229,21 @@ class _PlaceCardState extends State<PlaceCard> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        // Feedback Count or In-Hour
                         widget.isEvent == null
                             ? Text(
                           '(${widget.countFeedback.toString()})',
-                          style: const TextStyle(fontSize: 12),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
                         )
                             : inHour(),
-                        const SizedBox(height: 8),
+                        // Distance
                         Row(
                           children: [
                             const Icon(Icons.location_on,
                                 color: Colors.red, size: 16),
-                            const SizedBox(width: 4),
                             Text(
                               formattedDistance,
                               style: const TextStyle(
@@ -235,10 +260,9 @@ class _PlaceCardState extends State<PlaceCard> {
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
-
 }

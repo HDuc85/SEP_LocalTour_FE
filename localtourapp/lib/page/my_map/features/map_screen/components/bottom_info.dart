@@ -53,7 +53,7 @@ class BottomSheetInfo extends StatelessWidget {
     if ((isEvent! && eventModel == null) ||
         (!isEvent! && detailModel == null)) {
       return Container(
-        height: 310,
+        height: 400,
         width: double.infinity,
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -67,7 +67,7 @@ class BottomSheetInfo extends StatelessWidget {
     }
 
     return Container(
-      height: 310,
+      height: 400,
       width: double.infinity,
       margin: const EdgeInsets.only(left: 15, right: 15),
       padding: const EdgeInsets.only(bottom: 0),
@@ -249,7 +249,7 @@ class BottomSheetInfo extends StatelessWidget {
                   children: [
                     const Icon(Icons.directions, color: Colors.blue),
                     const SizedBox(width: 5),
-                    Text(language! == 'vi' ? 'Chỉ đường' : 'Directions')
+                    Text(language! == 'vi' ? 'Chỉ đường' : 'Directions', style: const TextStyle(color: Colors.black),)
                   ],
                 ),
               ),
@@ -284,7 +284,7 @@ class BottomSheetInfo extends StatelessWidget {
                       const SizedBox(width: 1),
                       Text(language! == 'vi'
                           ? 'Thêm lịch trình'
-                          : 'Add to Schedule')
+                          : 'Add to Schedule', style: const TextStyle(color: Colors.black),)
                     ],
                   )),
             ],
@@ -296,104 +296,168 @@ class BottomSheetInfo extends StatelessWidget {
             children: [
               detailModel!.placeMedias.isNotEmpty
                   ? GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => FullScreenPlaceMediaViewer(
-                              mediaList: detailModel!.placeMedias,
-                              initialIndex: 0,
-                            ),
-                          ),
-                        );
-                      },
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FullScreenPlaceMediaViewer(
+                        mediaList: detailModel!.placeMedias,
+                        initialIndex: 0,
+                      ),
+                    ),
+                  );
+                },
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
                       child: Image.network(
                         detailModel!.placeMedias[0].url,
                         width: double.infinity,
-                        height: 250, // Adjust height as needed
+                        height: 250,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Center(child: Text('No media available')),
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return Container(
+                            width: double.infinity,
+                            height: 250,
+                            color: Colors.grey[200],
+                            child: const Center(child: CircularProgressIndicator()),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: double.infinity,
+                          height: 250,
+                          color: Colors.grey[200],
+                          child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                        ),
                       ),
-                    )
-                  : const Center(child: Text('No media available')),
-              // Positioned IconButton
-            ],
-          ),
-          const SizedBox(height: 1),
-          // Thumbnails Section
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: detailModel!.placeMedias.length > 1
-                ? detailModel!.placeMedias
-                    .skip(1)
-                    .take(4)
-                    .toList()
-                    .asMap()
-                    .entries
-                    .map((entry) {
-                    int index = entry.key;
-                    MediaModel media = entry.value;
-
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () {
+                    ),
+                    Positioned(
+                      bottom: 10,
+                      right: 10,
+                      child: FloatingActionButton(
+                        mini: true,
+                        backgroundColor: Colors.black.withOpacity(0.7),
+                        onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => FullScreenPlaceMediaViewer(
+                              builder: (_) => FullScreenPlaceMediaViewer(
                                 mediaList: detailModel!.placeMedias,
-                                initialIndex: index + 1,
+                                initialIndex: 0,
                               ),
                             ),
                           );
                         },
-                        child: Stack(
-                          children: [
-                            Image.network(
-                              media.url,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: 77.5,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                width: double.infinity,
-                                height: 77.5,
-                                color: Colors.grey,
-                                child: const Icon(Icons.image,
-                                    color: Colors.white),
-                              ),
-                            ),
-                            if (index == 3 &&
-                                detailModel!.placeMedias.length > 5)
-                              Container(
-                                color: Colors.black.withOpacity(0.5),
-                                height: 77.5,
-                                child: const Center(
-                                  child: Text(
-                                    'See more',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
+                        child: const Icon(Icons.fullscreen, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+                  : const Center(
+                child: Text(
+                  'No media available',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+// Thumbnails Section
+          SizedBox(
+            height: 80,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: detailModel!.placeMedias.length > 5
+                  ? 5
+                  : detailModel!.placeMedias.length,
+              itemBuilder: (context, index) {
+                // Handle the "+More" item
+                if (index == 4 && detailModel!.placeMedias.length > 5) {
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => FullScreenPlaceMediaViewer(
+                            mediaList: detailModel!.placeMedias,
+                            initialIndex: 4,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 10),
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        image: DecorationImage(
+                          image: NetworkImage(detailModel!.placeMedias[4].url),
+                          fit: BoxFit.cover,
+                          colorFilter: ColorFilter.mode(
+                            Colors.black.withOpacity(0.3),
+                            BlendMode.darken,
+                          ),
                         ),
                       ),
-                    );
-                  }).toList()
-                : [],
-          )
+                      child: Center(
+                        child: Text(
+                          '+${detailModel!.placeMedias.length - 5}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                // Handle other thumbnails
+                if (index < detailModel!.placeMedias.length - 1) {
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => FullScreenPlaceMediaViewer(
+                            mediaList: detailModel!.placeMedias,
+                            initialIndex: index + 1,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 10),
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        image: DecorationImage(
+                          image: NetworkImage(detailModel!.placeMedias[index + 1].url),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  );
+                } else {
+                  // Placeholder for invalid index (shouldn't be hit, but for safety)
+                }
+              },
+            ),
+          ),
+
         ],
       ),
     );
   }
 
   String FormatDistance(double distance) {
-    String formattedDistance = '${distance.toStringAsFixed(1)}';
+    String formattedDistance = distance.toStringAsFixed(1);
     if (formattedDistance.endsWith('.0')) {
       formattedDistance =
           formattedDistance.substring(0, formattedDistance.length - 2);
@@ -488,45 +552,45 @@ class BottomSheetInfo extends StatelessWidget {
         text: TextSpan(
           children: [
             language == 'vi'
-                ? TextSpan(
+                ? const TextSpan(
                     text: 'Đang diễn ra',
                     style: TextStyle(color: Colors.green, fontSize: 12),
                   )
-                : TextSpan(
+                : const TextSpan(
                     text: 'Ongoing',
                     style: TextStyle(color: Colors.green, fontSize: 12),
                   ),
             language == 'vi'
                 ? TextSpan(
                     text: ' - Kết thúc ${daysLeft} ngày nữa',
-                    style: TextStyle(color: Colors.green, fontSize: 12),
+                    style: const TextStyle(color: Colors.green, fontSize: 12),
                   )
                 : TextSpan(
                     text:
                         ' - End in ${daysLeft} ${daysLeft > 1 ? 'day' : 'days'}',
-                    style: TextStyle(color: Colors.green, fontSize: 12),
+                    style: const TextStyle(color: Colors.green, fontSize: 12),
                   ),
           ],
         ),
       );
-    } else if (now.isAfter(eventEnd.subtract(Duration(days: 1))) &&
+    } else if (now.isAfter(eventEnd.subtract(const Duration(days: 1))) &&
         now.isBefore(eventEnd)) {
       return RichText(
         text: TextSpan(
           children: [
             language == 'vi'
-                ? TextSpan(
+                ? const TextSpan(
                     text: 'Sắp kết thúc',
                     style: TextStyle(color: Colors.red, fontSize: 12),
                   )
-                : TextSpan(
+                : const TextSpan(
                     text: 'About to end',
                     style: TextStyle(color: Colors.red, fontSize: 12),
                   ),
             TextSpan(
               text:
                   ' - End at ${DateFormat('HH:mm dd/MM/yyyy').format(eventEnd)}',
-              style: TextStyle(color: Colors.red, fontSize: 12),
+              style: const TextStyle(color: Colors.red, fontSize: 12),
             ),
           ],
         ),
@@ -536,11 +600,11 @@ class BottomSheetInfo extends StatelessWidget {
         text: TextSpan(
           children: [
             language == 'vi'
-                ? TextSpan(
+                ? const TextSpan(
                     text: 'Sắp diễn ra',
                     style: TextStyle(color: Colors.orange, fontSize: 12),
                   )
-                : TextSpan(
+                : const TextSpan(
                     text: 'Coming soon',
                     style: TextStyle(color: Colors.orange, fontSize: 12),
                   ),
@@ -548,12 +612,12 @@ class BottomSheetInfo extends StatelessWidget {
                 ? TextSpan(
                     text:
                         ' - Diễn ra vào ${DateFormat('HH:mm dd/MM/yyyy').format(eventStart)}',
-                    style: TextStyle(color: Colors.orange, fontSize: 12),
+                    style: const TextStyle(color: Colors.orange, fontSize: 12),
                   )
                 : TextSpan(
                     text:
                         ' - Start at ${DateFormat('HH:mm dd/MM/yyyy').format(eventStart)}',
-                    style: TextStyle(color: Colors.orange, fontSize: 12),
+                    style: const TextStyle(color: Colors.orange, fontSize: 12),
                   ),
           ],
         ),
@@ -564,18 +628,18 @@ class BottomSheetInfo extends StatelessWidget {
           children: [
             TextSpan(
               text: language == 'vi' ? 'Đã kết thúc' : 'Ended',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
             ),
             TextSpan(
               text:
                   ' - ${language == 'vi' ? 'Kết thúc vào' : 'Ends on'} ${DateFormat('dd/MM/yyyy').format(eventEnd)}',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
             ),
           ],
         ),
       );
     }
 
-    return SizedBox();
+    return const SizedBox();
   }
 }

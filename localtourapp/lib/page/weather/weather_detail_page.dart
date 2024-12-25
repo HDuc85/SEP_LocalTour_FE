@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../config/appConfig.dart';
 import '../../config/secure_storage_helper.dart';
 import 'models/weather_model.dart';
+import 'package:weather_icons/weather_icons.dart';
 
 class WeatherDetailPage extends StatefulWidget {
   final HourlyWeather hourlyWeather;
@@ -64,25 +65,47 @@ class _WeatherDetailPageState extends State<WeatherDetailPage> {
     }
   }
 
-  String getWeatherIcon(int code) {
+  IconData getWeatherIcon(int code) {
     if (code == 0) {
-      return '☀️'; // Clear Sky
+      return WeatherIcons.day_sunny;
     } else if (code >= 1 && code <= 3) {
-      return '🌤️'; // Mainly Clear to Partly Cloudy
+      return WeatherIcons.day_cloudy;
     } else if (code >= 45 && code <= 48) {
-      return '🌫️'; // Fog
+      return WeatherIcons.fog;
     } else if (code >= 51 && code <= 55) {
-      return '🌦️'; // Drizzle
+      return WeatherIcons.sprinkle;
     } else if (code >= 61 && code <= 65) {
-      return '🌧️'; // Rain
+      return WeatherIcons.rain;
     } else if (code >= 71 && code <= 75) {
-      return '❄️'; // Snow
+      return WeatherIcons.snow;
     } else if (code >= 80 && code <= 82) {
-      return '🌦️'; // Rain Showers
+      return WeatherIcons.showers;
     } else if (code >= 95 && code <= 99) {
-      return '⛈️'; // Thunderstorm
+      return WeatherIcons.thunderstorm;
     } else {
-      return '❓'; // Unknown Weather Code
+      return WeatherIcons.na;
+    }
+  }
+
+  Color getWeatherColor(int code) {
+    if (code == 0) {
+      return Colors.orangeAccent;
+    } else if (code >= 1 && code <= 3) {
+      return Colors.blueGrey.shade700;
+    } else if (code >= 45 && code <= 48) {
+      return Colors.grey.shade700;
+    } else if (code >= 51 && code <= 55) {
+      return Colors.blue.shade300;
+    } else if (code >= 61 && code <= 65) {
+      return Colors.blue.shade700;
+    } else if (code >= 71 && code <= 75) {
+      return Colors.lightBlueAccent;
+    } else if (code >= 80 && code <= 82) {
+      return Colors.blue.shade500;
+    } else if (code >= 95 && code <= 99) {
+      return Colors.deepPurple;
+    } else {
+      return Colors.grey;
     }
   }
 
@@ -92,21 +115,100 @@ class _WeatherDetailPageState extends State<WeatherDetailPage> {
       appBar: AppBar(
         title: Text(
           _languageCode == 'vi' ? 'Dự báo theo giờ' : 'Hourly Forecast',
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        backgroundColor: Colors.teal.shade700,
+        elevation: 0,
+        centerTitle: true,
       ),
-      body: ListView.builder(
+      body: widget.hourlyWeather.time.isEmpty
+          ? Center(
+        child: Text(
+          _languageCode == 'vi' ? "Không có dữ liệu dự báo." : 'No forecast data available.',
+          style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+        ),
+      )
+          : ListView.builder(
+        padding: const EdgeInsets.all(10.0),
         itemCount: widget.hourlyWeather.time.length,
         itemBuilder: (context, index) {
-          return ListTile(
-            leading: Text(
-              getWeatherIcon(widget.hourlyWeather.weathercode[index]),
-              style: const TextStyle(fontSize: 24),
-            ),
-            title: Text(widget.hourlyWeather.time[index]),
-            subtitle: Text(
-              _languageCode == 'vi'
-                  ? 'Nhiệt độ: ${widget.hourlyWeather.temperature2m[index].toStringAsFixed(1)}°C, Mưa: ${widget.hourlyWeather.rain[index].toStringAsFixed(1)} mm'
-                  : 'Temp: ${widget.hourlyWeather.temperature2m[index].toStringAsFixed(1)}°C, Rain: ${widget.hourlyWeather.rain[index].toStringAsFixed(1)} mm',
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              color: getWeatherColor(widget.hourlyWeather.weathercode[index]).withOpacity(0.1),
+              child: InkWell(
+                onTap: () {
+                  // Optionally, handle tap to show more details
+                },
+                borderRadius: BorderRadius.circular(15),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      // Weather Icon
+                      Icon(
+                        getWeatherIcon(widget.hourlyWeather.weathercode[index]),
+                        size: 40,
+                        color: getWeatherColor(widget.hourlyWeather.weathercode[index]),
+                      ),
+                      const SizedBox(width: 20),
+                      // Time and Description
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.hourlyWeather.time[index],
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.normal,
+                                color: Colors.teal.shade700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              getWeatherDescription(widget.hourlyWeather.weathercode[index]),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.teal.shade500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Temperature and Rain
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${widget.hourlyWeather.temperature2m[index].toStringAsFixed(1)}°C',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.teal.shade700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _languageCode == 'vi'
+                                ? 'Mưa: ${widget.hourlyWeather.rain[index].toStringAsFixed(1)} mm'
+                                : 'Rain: ${widget.hourlyWeather.rain[index].toStringAsFixed(1)} mm',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.teal.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           );
         },

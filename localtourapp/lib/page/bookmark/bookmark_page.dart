@@ -1,9 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
 import 'package:localtourapp/models/markPlace/markPlaceModel.dart';
 import 'package:localtourapp/services/mark_place_service.dart';
 import 'package:collection/collection.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../base/back_to_top_button.dart';
 import '../../base/weather_icon_button.dart';
 import '../detail_page/detail_page.dart';
@@ -77,158 +79,172 @@ class _BookmarkPageState extends State<BookmarkPage> {
 
   @override
   Widget build(BuildContext context) {
-    
-    
-    if (markPlaces.isEmpty) {
-      return Center(
-        child: Text(_language == 'vi'? 'Chưa có dấu trang nào':
-          "No bookmarks yet.",
-          style: const TextStyle(fontSize: 18),
-        ),
-      );
-    }
     return Scaffold(
-      appBar: AppBar(automaticallyImplyLeading: false, title: Text(_language == 'vi'? 'Trang đánh dấu':'Bookmark Page'),),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(
+          _language == 'vi' ? 'Trang đánh dấu' : 'Bookmark Page',
+          style: Theme.of(context).appBarTheme.titleTextStyle,
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _fetchMarkPlaceData,
+            tooltip: _language == 'vi' ? 'Làm mới' : 'Refresh',
+          ),
+        ],
+      ),
       body: Stack(
         children: [
-          ListView.separated(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  itemCount: markPlaces.length,
-                  itemBuilder: (context, index) {
-                    final place = markPlaces[index];
-                    return GestureDetector(
-                      onTap: () {
-                        _navigateToDetail(place.placeId);
-                      },
-                      child: Column(
+          markPlaces.isEmpty
+              ? Center(
+            child: Text(
+              _language == 'vi' ? 'Chưa có dấu trang nào' : "No bookmarks yet.",
+              style: const TextStyle(fontSize: 18),
+            ),
+          )
+              : ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.only(bottom: 80.0),
+            itemCount: markPlaces.length,
+            itemBuilder: (context, index) {
+              final place = markPlaces[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                child: Card(
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: InkWell(
+                    onTap: () => _navigateToDetail(place.placeId),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
                         children: [
-                          // Place Image and Details
-                          Container(
-                            color: Colors.white,
-                            child: Row(
+                          // Image Section
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: CachedNetworkImage(
+                              imageUrl: place.photoDisplay,
+                              width: 75,
+                              height: 75,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Shimmer.fromColors(
+                                baseColor: Colors.grey.shade300,
+                                highlightColor: Colors.grey.shade100,
+                                child: Container(
+                                  width: 75,
+                                  height: 75,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              errorWidget: (context, url, error) => Container(
+                                width: 75,
+                                height: 75,
+                                color: Colors.grey.shade200,
+                                child: const Icon(Icons.image, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Details Section
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                ClipRRect(
-                                  child: Image.network(
-                                    place.photoDisplay,
-                                    width: 75,
-                                    height: 75,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) =>
-                                        Container(
-                                      width: 75,
-                                      height: 75,
-                                      color: Colors.grey,
-                                      child: const Icon(Icons.image,
-                                          color: Colors.white),
+                                // Place Name
+                                Text(
+                                  place.placeName,
+                                  style: Theme.of(context).textTheme.titleSmall,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                // Bookmark Actions
+                                Row(
+                                  children: [
+                                    // Remove Bookmark Button
+                                    IconButton(
+                                      icon: const Icon(Icons.bookmark, color: Colors.red),
+                                      onPressed: () async {
+                                        bool success = await _markplaceService.deleteMarkPlace(place.placeId);
+                                        if (success) {
+                                          setState(() {
+                                            markPlaces.removeAt(index);
+                                          });
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                _language != 'vi'
+                                                    ? 'Bookmark removed'
+                                                    : 'Đã xóa dấu trang',
+                                              ),
+                                            ),
+                                          );
+                                        } else {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                _language != 'vi'
+                                                    ? 'Failed to remove bookmark'
+                                                    : 'Xóa dấu trang thất bại',
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
                                     ),
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 8,
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        place.placeName,
-                                        style: const TextStyle(
-                                          fontSize: 16.0,
-                                          fontWeight: FontWeight.bold,
+                                    // Visited Checkbox
+                                    Row(
+                                      children: [
+                                        Text(
+                                          _language != 'vi' ? 'Visited' : 'Đã đi',
+                                          style: const TextStyle(fontSize: 12.0),
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Row(
-                                        children: [
-                                          Image.asset(
-                                            'assets/icons/logo.png',
-                                            width: 16,
-                                            height: 16,
-                                          ),
-                                          const SizedBox(
-                                            width: 8,
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                )
+                                        Checkbox(
+                                          value: place.isVisited,
+                                          onChanged: (bool? value) async {
+                                            bool success = await _markplaceService.updateMarkPlace(place.placeId, value ?? false);
+                                            if (success) {
+                                              setState(() {
+                                                place.isVisited = value ?? false;
+                                              });
+                                            } else {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    _language != 'vi'
+                                                        ? 'Failed to update the status.'
+                                                        : 'Cập nhật trạng thái thất bại.',
+                                                  ),
+                                                  backgroundColor: Colors.red,
+                                                ),
+                                              );
+                                            }
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                // Added Date
+                                Text(
+                                  '${_language != 'vi' ? 'Added on' : 'Thêm vào lúc'}: ${place.createdDate.toLocal().toShortDateString()}',
+                                  style: const TextStyle(
+                                      fontSize: 12.0, color: Colors.black),
+                                ),
                               ],
                             ),
                           ),
-                          // Bookmark Actions Row
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.bookmark,
-                                  color: Colors.red,
-                                ),
-                                onPressed: () async {
-                                  bool success = await _markplaceService.deleteMarkPlace(place.placeId);
-                                  if (success) {
-                                    setState(() {
-                                      markPlaces.removeWhere((markedPlace) => markedPlace.placeId == place.placeId);
-                                    });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(_language != 'vi' ? 'Bookmark removed' : 'Đã xóa dấu trang')),
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(_language != 'vi' ? 'Failed to remove bookmark' : 'Xóa dấu trang thất bại')),
-                                    );
-                                  }
-                                },
-                              ),
-                              Text(
-                                '${_language != 'vi' ? 'Added on': 'Thêm vào lúc'}: ${place.createdDate.toLocal().toShortDateString()}',
-                                style: const TextStyle(
-                                    fontSize: 12.0, color: Colors.black),
-                              ),
-                              Row(
-                                children: [
-                                   Text(_language != 'vi' ? 'Visited' : 'Đã đi',
-                                      style: const TextStyle(fontSize: 12.0)),
-                                  Checkbox(
-                                    value: place.isVisited,
-                                    onChanged: (bool? value) async {
-                                      bool success = await _markplaceService.updateMarkPlace(place.placeId, value ?? false);
-                                      if (success) {
-                                        setState(() {
-                                          place.isVisited = value ?? false; // Update local state
-                                        });
-                                      } else {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              _language != 'vi'
-                                                  ? 'Failed to update the status.'
-                                                  : 'Cập nhật trạng thái thất bại.',
-                                            ),
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        );
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
                         ],
                       ),
-                    );
-                  },
-                  separatorBuilder: (context, index) => const Divider(
-                    color: Colors.black, // Divider color
-                    thickness: 2,
-                    height: 2, // Divider thickness
+                    ),
                   ),
                 ),
-      
+              );
+            },
+          ),
           // Positioned Weather Icon Button (Bottom Left)
           Positioned(
             bottom: 0,
@@ -238,7 +254,7 @@ class _BookmarkPageState extends State<BookmarkPage> {
               assetPath: 'assets/icons/weather.png',
             ),
           ),
-      
+
           // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
           Positioned(
             bottom: 12,
@@ -248,8 +264,8 @@ class _BookmarkPageState extends State<BookmarkPage> {
               duration: const Duration(milliseconds: 300),
               child: _showBackToTopButton
                   ? BackToTopButton(
-                      onPressed: _scrollToTop, languageCode: 'vi',
-                    )
+                onPressed: _scrollToTop, languageCode: 'vi',
+              )
                   : const SizedBox.shrink(),
             ),
           ),
@@ -279,5 +295,3 @@ extension DateHelpers on DateTime {
     return "$day/$month/$year";
   }
 }
-
-// Ensure you have a DetailPage that can accept the arguments

@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:dots_indicator/dots_indicator.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
@@ -12,7 +10,6 @@ import 'package:localtourapp/models/HomePage/placeCard.dart';
 import 'package:localtourapp/models/Tag/tag_model.dart';
 import 'package:localtourapp/models/event/event_model.dart';
 import 'package:localtourapp/page/detail_page/event_detail_page.dart';
-import 'package:localtourapp/page/home_screen/notification_page.dart';
 import 'package:localtourapp/page/home_screen/place_card.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/fearuted_schedule_page.dart';
 import 'package:localtourapp/page/home_screen/wheel_page.dart';
@@ -149,10 +146,6 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.pushNamed(context, '/wheel');
   }
 
-  void _navigateToNotificationPage() {
-    Navigator.pushNamed(context, '/notification');
-  }
-
   // Function to scroll back to the top
   void _scrollToTop() {
     _scrollController.animateTo(
@@ -196,7 +189,6 @@ class _HomeScreenState extends State<HomeScreen> {
         isLoading = false;
       });
 
-
       final fetchedListPlaceNearest = await _placeService.getListPlace(
           lat, long, SortBy.distance, SortOrder.asc);
       setState(() {
@@ -224,7 +216,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         listEvent = fetchedListEvent;
-
       });
 
       for (var tag in topTags) {
@@ -232,9 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
             .getListPlace(lat, long, SortBy.distance, SortOrder.asc, [tag.id]);
       }
 
-      setState(() {
-
-      });
+      setState(() {});
     } catch (e) {}
   }
 
@@ -263,16 +252,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     _buildTagGrid(listTagTop),
                     const SizedBox(height: 40),
                     _buildBannerList(), // Use the real banners here
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 40),
                     _buildNearFeaturedSection('assets/icons/Nearest Places.png',
                         _language != 'vi'?'Nearest Location': 'Địa điểm gần nhất', listPlaceNearest, SortBy.distance),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 30),
                     _buildNearEventNearest('assets/icons/event.png',
                         _language != 'vi'?'Nearest Events':'Sự kiện gần nhất', listEvent, SortBy.distance),
                     const SizedBox(height: 40),
                     ...listTagTop.map((tag) {
                       return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 30.0),
+                        padding: const EdgeInsets.symmetric(vertical: 20.0),
                         child: _buildTagSection(tag),
                       );
                     }).toList(),
@@ -299,7 +288,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             onPressed: _navigateToWeatherPage,
                             assetPath: 'assets/icons/weather.png',
                           ),
-                          _language != 'vi'? const Text('Weather') :const Text('Thời tiết')
+                          _language != 'vi'
+                              ? const Text('Weather')
+                              : const Text('Thời tiết')
                         ]),
                       ),
                       PopupMenuItem(
@@ -309,17 +300,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               onPressed: _navigateToWheelPage,
                               assetPath: 'assets/icons/wheel.png',
                             ),
-                            _language != 'vi'? const Text('Today choose') : const Text('Lựa chọn hôm nay')
+                            _language != 'vi'
+                                ? const Text('Today choose')
+                                : const Text('Lựa chọn hôm nay')
                           ])),
-                      // PopupMenuItem(
-                      //     value: 3,
-                      //     child: Row(children: [
-                      //       WeatherIconButton(
-                      //         onPressed: _navigateToNotificationPage,
-                      //         assetPath: 'assets/icons/notification.png',
-                      //       ),
-                      //       _language != 'vi'? const Text('Notification') : const Text('Thông báo')
-                      //     ])),
                     ],
                     onSelected: (value) {
                       if (value == 1) {
@@ -327,21 +311,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       } else if (value == 2) {
                         _navigateToWheelPage();
                       }
-                      // else if (value == 3) {
-                      //   _navigateToNotificationPage();
-                      // }
                     },
                     child: Container(
                       padding: const EdgeInsets.all(8.0),
                       decoration: BoxDecoration(
-                        color: Colors.green[300], // Màu nền khi chưa click
-                        shape: BoxShape.circle, // Hình dạng tròn
+                        color: Colors.green[300],
+                        shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.more_vert,
                         color: Colors.black,
                       ),
-                    ), // Icon hiển thị trên nút
+                    ),
                   )),
 
               // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
@@ -353,7 +334,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   duration: const Duration(milliseconds: 300),
                   child: _showBackToTopButton
                       ? BackToTopButton(
-                          onPressed: _scrollToTop, languageCode: 'vi',
+                          onPressed: _scrollToTop,
+                          languageCode: 'vi',
                         )
                       : const SizedBox.shrink(),
                 ),
@@ -403,7 +385,8 @@ class _HomeScreenState extends State<HomeScreen> {
           left: MediaQuery.of(context).size.width / 2 - (_banners.length * 6.0),
           child: DotsIndicator(
             dotsCount: _banners.length,
-            position: _currentBannerIndex, // Ensure this is an int as per version 3.0.0
+            position:
+                _currentBannerIndex, // Ensure this is an int as per version 3.0.0
             decorator: DotsDecorator(
               size: const Size.square(4.0), // Inactive dot size
               activeSize: const Size(4.0, 6.0), // Active dot size
@@ -444,7 +427,9 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         child: _buildTagItem(
             'https://api.localtour.space/Media/image_4fc69903-324c-4765-96f4-f338815e4aad.png',
-            _language != 'vi' ? 'Top Schedule': "Top lịch trình"), // Example image for "Schedule Page"
+            _language != 'vi'
+                ? 'Top Schedule'
+                : "Top lịch trình"), // Example image for "Schedule Page"
       ),
       GestureDetector(
         onTap: () {
@@ -455,8 +440,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         },
-        child: _buildTagItem('https://api.localtour.space/Media/wheel.png',
-            _language != 'vi' ? 'Today choose' : 'Lựa chọn hôm nay'), // Example image for "Schedule Page"
+        child: _buildTagItem(
+            'https://api.localtour.space/Media/wheel.png',
+            _language != 'vi'
+                ? 'Today choose'
+                : 'Lựa chọn hôm nay'), // Example image for "Schedule Page"
       )
     ];
 
@@ -466,7 +454,8 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: () {
           _scrollToTagSection(tag.id);
         },
-        child: _buildTagItem(tag.tagPhotoUrl, _language != 'vi' ? tag.tagName : tag.tagVi),
+        child: _buildTagItem(
+            tag.tagPhotoUrl, _language != 'vi' ? tag.tagName : tag.tagVi),
       );
     }).toList());
 
@@ -526,7 +515,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 8),
         SizedBox(
           width: 80,
           height: 24, // Set a fixed height for the text container
@@ -596,6 +584,7 @@ class _HomeScreenState extends State<HomeScreen> {
               return Row(
                 children: [
                   if (index == 0) const SizedBox(width: 20),
+                  if (index == 0) const SizedBox(width: 5),
                   GestureDetector(
                     onTap: () {
                       // Navigate to DetailPage and pass the filtered data
@@ -620,14 +609,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   if (index == places.length - 1) const SizedBox(width: 20),
+                  if (index == places.length - 1) const SizedBox(width: 5),
                 ],
               );
             },
           ),
         ),
-        const SizedBox(height: 12),
         CustomSeeAllButton(
-          text: _language != 'vi'? "SEE ALL" : 'Xem tất cả',
+          text: _language != 'vi' ? "SEE ALL" : 'Xem tất cả',
           onPressed: () {
             // Navigate to SearchPage with the corresponding filter
             Navigator.push(
@@ -644,7 +633,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-
   Widget _buildNearEventNearest(
       String iconPath, String title, List<EventModel> events, SortBy sortBy) {
     return Column(
@@ -675,7 +663,7 @@ class _HomeScreenState extends State<HomeScreen> {
               EventModel event = events[index];
               return Row(
                 children: [
-                  if (index == 0) const SizedBox(width: 20),
+                  if (index == 0) const SizedBox(width: 5),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -700,15 +688,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       eventModel: event,
                     ),
                   ),
-                  if (index == events.length - 1) const SizedBox(width: 20),
+                  if (index == events.length - 1) const SizedBox(width: 5),
                 ],
               );
             },
           ),
         ),
-        const SizedBox(height: 12),
         CustomSeeAllButton(
-          text: _language != 'vi'?"SEE ALL":"Xem tất cả",
+          text: _language != 'vi' ? "SEE ALL" : "Xem tất cả",
           onPressed: () {
             // Navigate to SearchPage with the corresponding filter
             Navigator.push(
@@ -755,14 +742,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 Image.network(tag.tagPhotoUrl, width: 30, height: 30),
                 const SizedBox(width: 16),
                 Text(
-                  _language != 'vi'? tag.tagName.toUpperCase() : tag.tagVi.toUpperCase(),
+                  _language != 'vi'
+                      ? tag.tagName.toUpperCase()
+                      : tag.tagVi.toUpperCase(),
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 8),
           // Toggle buttons for Nearest and Featured
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -780,11 +768,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 10, horizontal: 49),
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 50),
+                  side: !isFeatured
+                      ? const BorderSide(color: Colors.black38, width: 1) // Border for selected button
+                      : const BorderSide(color: Colors.transparent), // No border for unselected button
+                ).copyWith(
+                  overlayColor: WidgetStateProperty.all(Constants.hoverColor), // Hover and click color
                 ),
-                child:  Text(
-                  _language != 'vi'?'Nearest':'Gần nhất',
+                child: Text(
+                  _language != 'vi' ? 'Nearest' : 'Gần nhất',
                   style: const TextStyle(fontSize: 15, color: Colors.white),
                 ),
               ),
@@ -802,11 +794,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 10, horizontal: 49),
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 50),
+                  side: isFeatured
+                      ? const BorderSide(color: Colors.black38, width: 1) // Border for selected button
+                      : const BorderSide(color: Colors.transparent), // No border for unselected button
+                ).copyWith(
+                  overlayColor: WidgetStateProperty.all(Constants.hoverColor), // Hover and click color
                 ),
-                child:  Text(
-                  _language != 'vi'? 'Featured':'Nổi bật',
+                child: Text(
+                  _language != 'vi' ? 'Featured' : 'Nổi bật',
                   style: const TextStyle(fontSize: 15, color: Colors.white),
                 ),
               ),
@@ -822,7 +818,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 PlaceCardModel place = listPlaceCards[index];
                 return Row(
                   children: [
-                    if (index == 0) const SizedBox(width: 20),
+                    if (index == 0) const SizedBox(width: 5),
                     GestureDetector(
                       onTap: () {
                         Navigator.push(
@@ -846,13 +842,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     if (index == listPlaceCards.length - 1)
-                      const SizedBox(width: 20),
+                      const SizedBox(width: 5),
                   ],
                 );
               },
             ),
           ),
-          const SizedBox(height: 12),
           CustomSeeAllButton(
             text: _language != 'vi'?'SEE ALL':'Xem tất cả',
             onPressed: () {

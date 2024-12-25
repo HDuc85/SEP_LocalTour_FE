@@ -50,7 +50,7 @@ class _PlannedPageState extends State<PlannedPage> {
                   tabs: [
                     Tab(
                       text: _languageCode == 'vi' ? 'Lịch trình':'Schedule',
-                      icon: const Icon(Icons.schedule),
+                      icon: const Icon(Icons.schedule, color: Colors.brown,),
                     ),
                     Tab(
                       text: _languageCode == 'vi' ? 'Lịch sử':'History',
