@@ -9,6 +9,7 @@ import 'package:localtourapp/models/users/userProfile.dart';
 import 'package:localtourapp/services/auth_service.dart';
 import 'package:localtourapp/services/user_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../base/const.dart';
 import '../../base/weather_icon_button.dart';
 import '../../models/users/followuser.dart';
 import '../../models/users/update_user_request.dart';
@@ -243,43 +244,125 @@ class _AccountPageState extends State<AccountPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
         automaticallyImplyLeading: false,
-        title: Text(_languageCode == 'vi' ? 'Trang cá nhân' : 'Account Page'),
+        title: Text(
+          _languageCode == 'vi' ? 'Trang cá nhân' : 'Account Page',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Constants.defaultState, Constants.selectedState],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
       body: SafeArea(
         child: Stack(
           children: [
             ListView(
               controller: _scrollController,
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               children: [
                 const SizedBox(height: 16),
                 if (isLogin) _buildProfileSection(userprofile),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 if (!isCurrentUser && isLogin)
                   _buildFollowButton(userprofile.isFollowed),
+                const SizedBox(height: 16),
                 if (isCurrentUser) ...[
-                  _buildPersonInfoSection(),
-                  const SizedBox(height: 12),
+                  _buildCardSection(
+                    icon: Icons.person,
+                    title: _languageCode == 'vi' ? 'Thông tin cá nhân' : 'Personal Information',
+                    subtitle: _languageCode == 'vi' ? 'Sửa hoặc thêm thông tin của bạn' : 'Edit or add your personal information',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PersonalInformationPage(
+                            userprofile: userprofile,
+                            userId: myUserId,
+                            fetchData: () {
+                              readUserProfile(myUserId);
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
                 ],
-                _buildSettingSection(),
-                const SizedBox(height: 12),
-                _buildContactSection(),
-                const SizedBox(height: 12),
-                _buildFAQSection(),
-                const SizedBox(height: 12),
-                if (isCurrentUser) ...[
-                  _buildUserPreference(),
-                  const SizedBox(height: 12), // Adjust spacing if needed
-                ],
+                _buildCardSection(
+                  icon: Icons.settings,
+                  title: _languageCode == 'vi' ? 'Cài đặt' : 'Settings',
+                  subtitle: _languageCode == 'vi' ? 'Tùy chỉnh ngôn ngữ' : 'Language settings',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SettingPage(
+                          onButtonPressed: (string) {
+                            setState(() {
+                              _languageCode = string;
+                            });
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildCardSection(
+                  icon: Icons.contact_mail,
+                  title: _languageCode == 'vi' ? 'Liên hệ' : 'Contact Us',
+                  subtitle: _languageCode == 'vi' ? 'Yêu cầu hỗ trợ hoặc phản hồi' : 'Reach out with support requests or feedback',
+                  onTap: _sendEmail,
+                ),
+                const SizedBox(height: 16),
+                _buildCardSection(
+                  icon: Icons.question_answer,
+                  title: _languageCode == 'vi' ? 'Câu hỏi thường gặp' : 'FAQ',
+                  subtitle: _languageCode == 'vi'
+                      ? 'Tìm câu trả lời cho những câu hỏi thường gặp'
+                      : 'Find answers to frequently asked questions',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FAQPage(languageCode: _languageCode),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                if (isCurrentUser)
+                  _buildCardSection(
+                    icon: Icons.favorite,
+                    title: _languageCode == 'vi' ? 'Sở thích của bạn' : 'Your Preference',
+                    subtitle: _languageCode == 'vi'
+                        ? 'Thêm hoặc cập nhật sở thích của bạn'
+                        : 'Add or update your preferences here',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UserPreferencePage(userprofile: userprofile),
+                        ),
+                      );
+                    },
+                  ),
+                const SizedBox(height: 24),
                 if (isCurrentUser || !isLogin)
-                  _buildLogoutButton(), // Add the Logout button here
+                  _buildLogoutButton(),
                 const SizedBox(height: 36),
               ],
             ),
             Positioned(
-              bottom: 0,
-              left: 20,
+              bottom: 16,
+              left: 16,
               child: WeatherIconButton(
                 onPressed: _navigateToWeatherPage,
                 assetPath: 'assets/icons/weather.png',
@@ -289,303 +372,6 @@ class _AccountPageState extends State<AccountPage> {
         ),
       ),
     );
-  }
-
-  // Add this method inside _AccountPageState
-  Widget _buildFollowButton(
-    bool isFollowing,
-  ) {
-    return Center(
-      child: ElevatedButton(
-        onPressed: () {
-          followBtn(isFollowing);
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isFollowing ? Colors.red : Colors.blue,
-        ),
-        child: Text(
-          isFollowing
-              ? (_languageCode == 'vi' ? "Hủy theo dõi" : "Unfollow")
-              : (_languageCode == 'vi' ? "Theo dõi" : "Follow"),
-        ),
-      ),
-    );
-  }
-
-  // Build Profile Section
-  Widget _buildProfileSection(Userprofile userProfile) {
-    return Container(
-      padding: const EdgeInsets.all(8.0),
-      decoration: BoxDecoration(
-        border: Border.all(width: 2),
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(1),
-            spreadRadius: 7,
-            blurRadius: 15,
-            offset: const Offset(5, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center, // Changed to start
-            children: [
-              // Profile picture on the left
-              GestureDetector(
-                onTap: isCurrentUser
-                    ? _selectAvatar
-                    : () {}, // Gọi khi nhấn vào avatar
-                child: CircleAvatar(
-                  radius: 40,
-                  backgroundImage: userProfile.userProfileImage != ''
-                      ? NetworkImage(userProfile.userProfileImage)
-                      : null,
-                  child: userProfile.userProfileImage == ''
-                      ? const Icon(Icons.account_circle,
-                          size: 80, color: Colors.grey)
-                      : null,
-                ),
-              ),
-              const SizedBox(width: 25),
-
-              // User details on the right
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      userProfile.userName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '(${userProfile.fullName})',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _languageCode == 'vi'
-                          ? '${userProfile.totalSchedules} lịch trình đã tạo'
-                          : '${userProfile.totalSchedules} schedules created',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                    Text(
-                      _languageCode == 'vi'
-                          ? '${userProfile.totalPosteds} bài đã tạo'
-                          : '${userProfile.totalPosteds} posts created',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                    Text(
-                      _languageCode == 'vi'
-                          ? '${userProfile.totalReviews} đánh giá'
-                          : '${userProfile.totalReviews} reviews',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                    const SizedBox(height: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => FollowListPage(
-                                  followers: followers,
-                                  followings: followings,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            _languageCode == 'vi'
-                                ? '${userProfile.totalFollowers} người theo dõi'
-                                : '${userProfile.totalFollowers} followers',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => FollowListPage(
-                                  followers: followers,
-                                  followings: followings,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            _languageCode == 'vi'
-                                ? '${userProfile.totalFollowed} đang theo dõi'
-                                : '${userProfile.totalFollowed} followings',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Container(
-            margin: const EdgeInsets.only(top: 15),
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ViewProfilePage(
-                      user: userprofile,
-                      userId: widget.userId == '' ? myUserId : widget.userId,
-                    ),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFD6B588),
-                minimumSize: const Size(double.infinity, 36),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-              ),
-              child: Text(
-                _languageCode == 'vi' ? "Xem Hồ sơ" : "View Profile",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Build Personal Information Section
-  Widget _buildPersonInfoSection() {
-    return InkWell(
-        onTap: () {
-          // Navigate to Personal Information Page when tapped
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PersonalInformationPage(
-                userprofile: userprofile,
-                userId: myUserId,
-                fetchData: () {
-                  readUserProfile(myUserId);
-                },
-              ),
-            ),
-          );
-        },
-        child: Container(
-            padding: const EdgeInsets.all(4.0),
-            decoration: BoxDecoration(
-              border: Border.all(width: 1),
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.5),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.person),
-              title: Text(_languageCode == 'vi'
-                  ? 'Thông tin cá nhân'
-                  : 'Personal information'),
-              subtitle: Text(_languageCode == 'vi'
-                  ? 'Sửa hoặc thêm thông tin của bạn'
-                  : 'Edit or add your personal information'),
-            )));
-  }
-
-  // Build Settings Section
-  Widget _buildSettingSection() {
-    return InkWell(
-        onTap: () {
-          // Navigate to Setting Page when tapped
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SettingPage(
-                onButtonPressed: (string) {
-                  setState(() {
-                    _languageCode = string;
-                  });
-                },
-              ),
-            ),
-          );
-        },
-        child: Container(
-            padding: const EdgeInsets.all(4.0),
-            decoration: BoxDecoration(
-              border: Border.all(width: 1),
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.5),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.settings),
-              title: Text(_languageCode == 'vi' ? 'Cài đặt' : 'Settings'),
-              subtitle: Text(_languageCode == 'vi'
-                  ? 'tùy chỉnh ngôn ngữ'
-                  : 'language settings'),
-            )));
-  }
-
-  // Build Contact Section
-  Widget _buildContactSection() {
-    return Container(
-        padding: const EdgeInsets.all(4.0),
-        decoration: BoxDecoration(
-          border: Border.all(width: 1),
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.5),
-              spreadRadius: 2,
-              blurRadius: 5,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: ListTile(
-          leading: const Icon(Icons.contact_mail),
-          title: Text(_languageCode == 'vi' ? 'Liên hệ' : 'Contact Us'),
-          subtitle: Text(_languageCode == 'vi'
-              ? 'Yêu cầu hỗ trợ hoặc phản hồi'
-              : 'Reach out with support requests or feedback'),
-          onTap: _sendEmail,
-        ));
   }
 
   // Function to handle sending emails
@@ -633,109 +419,268 @@ class _AccountPageState extends State<AccountPage> {
     );
   }
 
-  // Build FAQ Section
-  Widget _buildFAQSection() {
-    return InkWell(
-        onTap: () {
-          // Navigate to FAQ Page when tapped
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => FAQPage(languageCode: _languageCode),
-            ),
-          );
-        },
-        child: Container(
-            padding: const EdgeInsets.all(4.0),
-            decoration: BoxDecoration(
-              border: Border.all(width: 1),
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.5),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.question_answer),
-              title: const Text('FAQ'),
-              subtitle: Text(_languageCode == 'vi'
-                  ? 'Tìm câu trả lời cho những câu hỏi thường gặp'
-                  : 'Find answers to frequently asked questions'),
-            )));
-  }
-
-  // Build User Preference Section
-  Widget _buildUserPreference() {
-    return InkWell(
-        onTap: () {
-          // Navigate to User Preference Page when tapped
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => UserPreferencePage(
-                userprofile: userprofile,
-              ),
-            ),
-          );
-        },
-        child: Container(
-            padding: const EdgeInsets.all(4.0),
-            decoration: BoxDecoration(
-              border: Border.all(width: 1),
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.5),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.question_answer),
-              title: Text(_languageCode == 'vi'
-                  ? 'Sở thích của bạn'
-                  : 'Your Preference'),
-              subtitle: Text(_languageCode == 'vi'
-                  ? 'Thêm hoặc cập nhật sở thích của bạn'
-                  : 'Add or update your preferences here'),
-            )));
-  }
-
-  // Build Logout Button
-  Widget _buildLogoutButton() {
-    return Container(
-      margin: EdgeInsets.only(
-          top: !isLogin ? 8 : 8, bottom: 8, left: 8, right: 8),
+  // Add this method inside _AccountPageState
+  Widget _buildFollowButton(
+      bool isFollowing,
+      ) {
+    return Center(
       child: ElevatedButton(
         onPressed: () {
-          if (!isLogin) {
-            // Navigate to the login page
-            Navigator.pushNamed(context, '/login');
-          } else {
-            _logout();
-          }
+          followBtn(isFollowing);
         },
         style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          backgroundColor: isLogin ? Colors.red : Colors.blueAccent,
+          backgroundColor: isFollowing ? Colors.red : Colors.blue,
         ),
         child: Text(
-          isLogin
-              ? (_languageCode != 'vi' ? "Logout" : 'Đăng xuất')
-              : (_languageCode != 'vi' ? "Login" : 'Đăng nhập'),
+          isFollowing
+              ? (_languageCode == 'vi' ? "Hủy theo dõi" : "Unfollow")
+              : (_languageCode == 'vi' ? "Theo dõi" : "Follow"),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardSection({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: ListTile(
+          leading: Icon(icon, color: Constants.defaultState),
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(subtitle),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileSection(Userprofile userProfile) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Constants.selectedState, Constants.defaultState],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 4,
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 50,
+            backgroundImage: userProfile.userProfileImage != ''
+                ? NetworkImage(userProfile.userProfileImage)
+                : null,
+            child: userProfile.userProfileImage == ''
+                ? const Icon(Icons.account_circle, size: 80, color: Colors.white)
+                : null,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            userProfile.userName,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            userProfile.fullName,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.white70,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildProfileStat(
+                count: userProfile.totalSchedules,
+                label: _languageCode == 'vi' ? 'Lịch trình' : 'Schedules',
+              ),
+              _buildProfileStat(
+                count: userProfile.totalPosteds,
+                label: _languageCode == 'vi' ? 'Bài đăng' : 'Posts',
+              ),
+              _buildProfileStat(
+                count: userProfile.totalReviews,
+                label: _languageCode == 'vi' ? 'Đánh giá' : 'Reviews',
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FollowListPage(
+                        followers: followers,
+                        followings: followings,
+                      ),
+                    ),
+                  );
+                },
+                child: Column(
+                  children: [
+                    Text(
+                      '${userProfile.totalFollowers}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      _languageCode == 'vi' ? 'người theo dõi' : 'followers',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FollowListPage(
+                        followers: followers,
+                        followings: followings,
+                      ),
+                    ),
+                  );
+                },
+                child: Column(
+                  children: [
+                    Text(
+                      '${userProfile.totalFollowed}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      _languageCode == 'vi' ? 'đang theo dõi' : 'followings',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+
+              ),
+            ],
+          ),
+          Container(
+            margin: const EdgeInsets.only(top: 15),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ViewProfilePage(
+                      user: userprofile,
+                      userId: widget.userId == '' ? myUserId : widget.userId,
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD6B588),
+                minimumSize: const Size(double.infinity, 36),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+              child: Text(
+                _languageCode == 'vi' ? "Xem Hồ sơ" : "View Profile",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+    ]));
+  }
+
+  Widget _buildProfileStat({required int count, required String label}) {
+    return Column(
+      children: [
+        Text(
+          count.toString(),
           style: const TextStyle(
-              color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.white70,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    return ElevatedButton(
+      onPressed: () {
+        if (!isLogin) {
+          Navigator.pushNamed(context, '/login');
+        } else {
+          _logout();
+        }
+      },
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16.0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        backgroundColor: isLogin ? Colors.red : Colors.blue,
+      ),
+      child: Text(
+        isLogin
+            ? (_languageCode != 'vi' ? "Logout" : 'Đăng xuất')
+            : (_languageCode != 'vi' ? "Login" : 'Đăng nhập'),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );

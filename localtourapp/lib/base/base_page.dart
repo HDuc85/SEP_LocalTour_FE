@@ -86,7 +86,7 @@ class _BasePageState extends State<BasePage> {
                     duration: const Duration(milliseconds: 100),
                     height: widget.currentIndex == 1 ? 32 : 20,
                     width: widget.currentIndex == 1 ? 32 : 20,
-                    child: Image.asset('assets/icons/Map.png'),
+                    child: Image.asset('assets/icons/Treasure map.png'),
                   ),
                   label: 'Map',
                 ),

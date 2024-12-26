@@ -196,11 +196,25 @@ class _DetailTabbarState extends State<DetailTabbar> {
                     placeDescription: widget.placeDetail.description,
                     language: _language,
                   ),
+                  const SizedBox(height: 30,),
+                  const Divider(
+                    color: Colors.black,
+                    thickness: 1,
+                    indent: 16,
+                    endIndent: 16,
+                  ),
                 ],
               ),
             ),
             // Activity Section
             _buildActivitySection(),
+            const SizedBox(height: 30,),
+            const Divider(
+              color: Colors.black,
+              thickness: 1,
+              indent: 16,
+              endIndent: 16,
+            ),
             // Event Section
             Container(
               margin: const EdgeInsets.only(bottom: 20),
@@ -524,6 +538,12 @@ class _DetailTabbarState extends State<DetailTabbar> {
   }
 
   Widget _buildActivitySection() {
+    if (widget.placeDetail.placeActivities.isEmpty) {
+      return Center(
+          child: Text(_language != 'vi'
+              ? 'No products or activities available for this place.'
+              : 'Không có sản phẩm hay hoạt động nào trong địa điểm này.'));
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -586,13 +606,6 @@ class _DetailTabbarState extends State<DetailTabbar> {
               ),
             );
           },
-        ),
-        const SizedBox(height: 30),
-        const Divider(
-          color: Colors.black,
-          thickness: 1.5,
-          indent: 16,
-          endIndent: 16,
         ),
       ],
     );

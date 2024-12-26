@@ -81,7 +81,7 @@ class ActivityFormDialog extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           // Price and Discount Information
-          if (discount == null) ...[
+          if (discount == 0) ...[
             Center(
               child: Text(
                 '${price.toStringAsFixed(0)} $priceType',

@@ -8,7 +8,8 @@ import '../../config/secure_storage_helper.dart';
 
 class UserPreferencePage extends StatefulWidget {
   final Userprofile userprofile;
-  const UserPreferencePage({Key? key, required this.userprofile}) : super(key: key);
+  const UserPreferencePage({Key? key, required this.userprofile})
+      : super(key: key);
 
   @override
   State<UserPreferencePage> createState() => _UserPreferencePageState();
@@ -25,11 +26,11 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
   void initState() {
     super.initState();
     getdata();
-
   }
 
   Future<void> getdata() async {
-    var languageCode = await SecureStorageHelper().readValue(AppConfig.language);
+    var languageCode =
+        await SecureStorageHelper().readValue(AppConfig.language);
     try {
       var fetchListTag = await _tagService.getAllTag(1, 30);
       var fetchUserTag = await _tagService.getUserTag();
@@ -45,7 +46,10 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
         isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_languageCode == 'vi' ? 'Không thể tải dữ liệu' : 'Failed to load data')),
+        SnackBar(
+            content: Text(_languageCode == 'vi'
+                ? 'Không thể tải dữ liệu'
+                : 'Failed to load data')),
       );
     }
   }
@@ -63,7 +67,8 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () async {
             List<int> listTagSelected = listUserTag.map((e) => e.id).toList();
-            var result = await _tagService.addTagsPreferencs(listTagSelected);
+            var result =
+                await _tagService.addTagsPreferencs(listTagSelected);
             if (result) {
               // Show snackbar and delay navigation
               ScaffoldMessenger.of(context).showSnackBar(
@@ -97,51 +102,51 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Text(
-              _languageCode == 'vi'
-                  ? "Chọn sở thích của bạn"
-                  : "Choose your preferences",
-              style: const TextStyle(fontSize: 18),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _buildAllTagChips(),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(
+                    _languageCode == 'vi'
+                        ? "Chọn sở thích của bạn"
+                        : "Choose your preferences",
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _buildAllTagChips(),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
-
   // Builds a chip for each tag in the listTag
   List<Widget> _buildAllTagChips() {
+    return listTag.map((tag) {
+      final isSelected = listUserTag.any(
+        (element) => element.id == tag.id,
+      );
 
-
-    return
-
-      listTag.map((tag) {
-      final isSelected = listUserTag.any((element) => element.id == tag.id,);
-
-      return
-        GestureDetector(
+      return GestureDetector(
         onTap: () {
           setState(() {
             // Toggle the tag selection with enforcement of minimum 5 selections
             if (isSelected) {
               if (listUserTag.length > 5) {
-                listUserTag.removeWhere((element) => element.id == tag.id,);
+                listUserTag.removeWhere(
+                  (element) => element.id == tag.id,
+                );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(_languageCode == 'vi' ? 'Chọn ít nhất 5 sở thích':'You must select at least 5 preferences.'),
+                    content: Text(_languageCode == 'vi'
+                        ? 'Chọn ít nhất 5 sở thích'
+                        : 'You must select at least 5 preferences.'),
                   ),
                 );
               }
@@ -152,8 +157,7 @@ class _UserPreferencePageState extends State<UserPreferencePage> {
         },
         child: Chip(
           label: Text(
-              _languageCode == 'vi' ? tag.tagVi :
-              tag.tagName,
+            _languageCode == 'vi' ? tag.tagVi : tag.tagName,
             style: TextStyle(color: isSelected ? Colors.white : Colors.green),
           ),
           shape: const StadiumBorder(

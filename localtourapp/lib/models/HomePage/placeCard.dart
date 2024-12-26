@@ -10,6 +10,7 @@ class PlaceCardModel {
   double rateStar;
   int countFeedback;
   double distance;
+  TimeOfDay? timeOpen;
   TimeOfDay? timeClose;
   String address;
 
@@ -25,6 +26,7 @@ class PlaceCardModel {
     required this.countFeedback,
     required this.distance,
     required this.address,
+    this.timeOpen,
     this.timeClose,
   });
 
@@ -43,6 +45,7 @@ class PlaceCardModel {
       rateStar: (json['rating'] ?? 0).toDouble(),
       countFeedback: json['totalPlaceFeedback'] ?? 0,
       distance: json['distance']?.toDouble() ?? 0.0,
+      timeOpen: _parseTimeOfDay(json['timeClose']),
       timeClose: _parseTimeOfDay(json['timeClose']),
     );
   }

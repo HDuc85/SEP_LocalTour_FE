@@ -110,7 +110,7 @@ class _WeatherCardState extends State<WeatherCard> {
                   Text(
                     _languageCode == 'vi' ? 'Thời tiết hiện tại' : 'Current Weather',
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -121,17 +121,15 @@ class _WeatherCardState extends State<WeatherCard> {
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
               // Temperature
               Text(
                 '${widget.currentWeather.temperature.toStringAsFixed(1)}°C',
                 style: const TextStyle(
-                  fontSize: 48,
+                  fontSize: 40,
                   fontWeight: FontWeight.w300,
-                  color: Colors.blueAccent,
+                  color: Colors.pinkAccent,
                 ),
               ),
-              const SizedBox(height: 10),
               // Weather Description
               Text(
                 getWeatherDescription(widget.currentWeather.weathercode),
@@ -140,7 +138,6 @@ class _WeatherCardState extends State<WeatherCard> {
                   color: Colors.grey,
                 ),
               ),
-              const SizedBox(height: 20),
               // Additional Weather Details
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -163,13 +160,12 @@ class _WeatherCardState extends State<WeatherCard> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
               // Weather Advice
               Text(
                 _languageCode == 'vi'
                     ? (widget.currentWeather.weathercode >= 61 && widget.currentWeather.weathercode <= 65
                     ? "Mang theo ô!"
-                    : "Tận hưởng ngày mới!")
+                    : "Tận hưởng ngày mới của bạn!")
                     : (widget.currentWeather.weathercode >= 61 && widget.currentWeather.weathercode <= 65
                     ? "Take an umbrella!"
                     : "Enjoy your day!"),
@@ -178,12 +174,11 @@ class _WeatherCardState extends State<WeatherCard> {
                   color: Colors.blueGrey,
                 ),
               ),
-              const SizedBox(height: 10),
               // Navigate to Detailed Forecast
               ElevatedButton(
                 onPressed: widget.onViewDetails,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
+                  backgroundColor: Colors.pinkAccent,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
@@ -214,7 +209,7 @@ class _WeatherDetailItem extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
-    this.iconColor = Colors.blue,
+    this.iconColor = Colors.pinkAccent,
   }) : super(key: key);
 
   @override
@@ -222,7 +217,6 @@ class _WeatherDetailItem extends StatelessWidget {
     return Column(
       children: [
         Icon(icon, color: iconColor, size: 28),
-        const SizedBox(height: 5),
         Text(
           value,
           style: const TextStyle(
@@ -231,7 +225,6 @@ class _WeatherDetailItem extends StatelessWidget {
             color: Colors.black,
           ),
         ),
-        const SizedBox(height: 3),
         Text(
           label,
           style: const TextStyle(

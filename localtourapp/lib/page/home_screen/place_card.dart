@@ -93,7 +93,7 @@ class _PlaceCardState extends State<PlaceCard> {
     formattedDistance += ' km';
 
     return SizedBox(
-      width: 160,
+      width: 150,
       height: 260,
       child: Container(
         decoration: BoxDecoration(

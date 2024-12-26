@@ -1,12 +1,8 @@
-// lib/page/search_page.dart
-
 import 'dart:async';
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:localtourapp/models/HomePage/placeCard.dart';
 import 'package:localtourapp/models/event/event_model.dart';
-import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:localtourapp/services/event_service.dart';
 import 'package:localtourapp/services/location_Service.dart';
 import 'package:localtourapp/services/place_service.dart';
@@ -658,31 +654,5 @@ class _SearchPageState extends State<SearchPage> {
         ],
       ),
     );
-  }
-
-  void _navigateToDetail(int placeId) {
-    PlaceCardModel? selectedPlace = listPlaces.firstWhereOrNull((place) => place.placeId == placeId);
-
-    if (selectedPlace != null) {
-      if (widget.onPlaceSelected != null) {
-        widget.onPlaceSelected!(selectedPlace);
-        Navigator.pop(context);
-      } else {
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => DetailPage(
-              placeId: selectedPlace.placeId,
-            ),
-          ),
-        );
-
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Place not found')),
-      );
-    }
   }
 }

@@ -34,7 +34,7 @@ class ActivityCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap, // Use the passed onTap callback
       child: Container(
-        width: 160,
+        width: 150,
         margin: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
           color: Colors.white,

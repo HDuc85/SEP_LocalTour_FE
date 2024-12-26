@@ -434,78 +434,98 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   Widget _buildFilterSection() {
-    return Column(
-      children: [
-        const SizedBox(height: 10),
-        SizedBox(
-          height: 40,
-          width: 250,
-          child: TextField(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          // Search Field
+          TextField(
             controller: searchController,
             focusNode: searchFocusNode,
             decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.search, color: Colors.grey),
               labelText:
               _languageCode == 'vi' ? 'Tìm theo tên' : "Search by name",
-              border: const OutlineInputBorder(),
+              labelStyle: const TextStyle(fontSize: 14),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.grey),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.grey),
+              ),
             ),
             onChanged: (value) {
               setState(() {}); // Trigger filtering as user types
             },
           ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildDateField(
-              _languageCode == 'vi' ? 'Từ ngày' : "From Date",
-              true,
-              _fromDate,
-                  (newDate) {
-                _onDateSelected(newDate, true);
-              },
-              clearable: true,
-              onClear: () {
-                _onDateSelected(null, true);
-              },
-            ),
-            const SizedBox(width: 5),
-            _buildDateField(
-              _languageCode == 'vi' ? 'Tới ngày' : "To Date",
-              false,
-              _toDate,
-                  (newDate) {
-                _onDateSelected(newDate, false);
-              },
-              clearable: true,
-              onClear: () {
-                _onDateSelected(null, false);
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: () {
-            _filterSchedule();
-
-            setState(() {}); // Trigger the search with the current filters
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFDCA1A1),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: const BorderSide(color: Colors.black, width: 2),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+          const SizedBox(height: 16),
+          // Date Fields
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: _buildDateField(
+                  _languageCode == 'vi' ? 'Từ ngày' : "From Date",
+                  true,
+                  _fromDate,
+                      (newDate) {
+                    _onDateSelected(newDate, true);
+                  },
+                  clearable: true,
+                  onClear: () {
+                    _onDateSelected(null, true);
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildDateField(
+                  _languageCode == 'vi' ? 'Tới ngày' : "To Date",
+                  false,
+                  _toDate,
+                      (newDate) {
+                    _onDateSelected(newDate, false);
+                  },
+                  clearable: true,
+                  onClear: () {
+                    _onDateSelected(null, false);
+                  },
+                ),
+              ),
+            ],
           ),
-          child: Text(
-            _languageCode == 'vi' ? 'Tìm kiếm' : "Search",
-            style: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          const SizedBox(height: 16),
+          // Search Button
+          Center(
+            child: ElevatedButton.icon(
+              onPressed: () {
+                _filterSchedule(); // Filter based on current inputs
+                setState(() {}); // Trigger the UI update with current filters
+              },
+              icon: const Icon(Icons.filter_alt, color: Colors.white),
+              label: Text(
+                _languageCode == 'vi' ? 'Tìm kiếm' : "Search",
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFDCA1A1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: const BorderSide(color: Colors.black, width: 2),
+                ),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 50, vertical: 12),
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -558,8 +578,10 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                     children: [
                       GestureDetector(
                         onTap: () {
-                          _toggleEditing(schedule.id);
-                          _nameController.text = schedule.scheduleName;
+                          if (isOwner) {
+                            _toggleEditing(schedule.id);
+                            _nameController.text = schedule.scheduleName;
+                          }
                         },
                         child: isEditingName
                             ? TextFormField(
@@ -596,17 +618,22 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                               _languageCode == 'vi' ? 'Từ ngày' : "From Date",
                               true,
                               schedule.startDate,
-                                  (newDate) {
+                              isOwner
+                                  ? (newDate) {
                                 setState(() {
                                   schedule.startDate = newDate;
                                 });
-                              },
-                              clearable: true,
-                              onClear: () {
+                              }
+                                  : (newDate) {}, // No-op function for non-owners
+                              clearable: isOwner, // Only show clear button if owner
+                              onClear: isOwner
+                                  ? () {
                                 setState(() {
                                   schedule.startDate = null;
                                 });
-                              },
+                              }
+                                  : () {}, // No-op function for non-owners
+                              isOwner: isOwner, // Pass the ownership flag
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -615,21 +642,27 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                               _languageCode == 'vi' ? 'Tới ngày' : "To Date",
                               false,
                               schedule.endDate,
-                                  (newDate) {
+                              isOwner
+                                  ? (newDate) {
                                 setState(() {
                                   schedule.endDate = newDate;
                                 });
-                              },
-                              clearable: true,
-                              onClear: () {
+                              }
+                                  : (newDate) {}, // No-op function for non-owners
+                              clearable: isOwner, // Only show clear button if owner
+                              onClear: isOwner
+                                  ? () {
                                 setState(() {
                                   schedule.endDate = null;
                                 });
-                              },
+                              }
+                                  : () {}, // No-op function for non-owners
+                              isOwner: isOwner, // Pass the ownership flag
                             ),
                           ),
                         ],
                       ),
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
@@ -668,24 +701,21 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                               ),
                             ],
                           ),
-                          Row(
-                            children: [
-                              if (isCurrentUser)
-                                IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      color: Color(0xFF4F4F4F)),
-                                  onPressed: () {
-                                    _showDeleteConfirmationDialog(
-                                        schedule.id, schedule.scheduleName);
-                                  },
-                                ),
-                            ],
-                          ),
+                          if (isOwner)
+                            IconButton(
+                              icon: const Icon(Icons.delete,
+                                  color: Color(0xFF4F4F4F)),
+                              onPressed: () {
+                                _showDeleteConfirmationDialog(
+                                    schedule.id, schedule.scheduleName);
+                              },
+                            ),
                           const Spacer(),
                           if (isEditingName)
                             ElevatedButton.icon(
                               onPressed: () {
-                                updatedSchedule(schedule, _nameController.text);
+                                updatedSchedule(
+                                    schedule, _nameController.text);
                               },
                               label: Text(
                                 _languageCode == 'vi' ? 'Sửa' : "Update",
@@ -702,9 +732,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                 ),
                               ),
                             ),
-                          const SizedBox(
-                            width: 10,
-                          )
+                          const SizedBox(width: 10),
                         ],
                       ),
                     ],
@@ -818,8 +846,8 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   destination.id,
                   destination.scheduleId,
                   destination.placeId,
-                  null,
-                  null,
+                  destination.startDate,
+                  destination.endDate,
                   destination.detail,
                   value,
                 );
@@ -1075,208 +1103,256 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
       Function(DateTime?) updateStartDate,
       Function(DateTime?) updateEndDate,
       ) {
-    return SizedBox(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height * (2 / 3),
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            top: 16,
-            left: 16,
-            right: 16,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
           ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+        ],
+      ),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          top: 20,
+          left: 20,
+          right: 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar at the top
+            Container(
+              width: 50,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Destination Name
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DetailPage(placeId: destination.placeId),
+                  ),
+                );
+              },
+              child: Text(
+                destination.placeName,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            // Destination Image
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DetailPage(placeId: destination.placeId),
+                  ),
+                );
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  destination.placePhotoDisplay ?? 'assets/images/default.png',
+                  height: 150,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 150,
+                      color: Colors.grey.shade200,
+                      child: const Center(
+                        child: Icon(Icons.broken_image, color: Colors.red, size: 50),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Date Fields
+            Row(
               children: [
-                const SizedBox(height: 20),
-                GestureDetector(
-                  onTap: () {
-                    // Navigate to detail page when placeName is tapped
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DetailPage(
-                          placeId: destination.placeId,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    destination.placeName,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+                Expanded(
+                  child: _buildDateField(
+                    _languageCode == 'vi' ? 'Từ ngày' : "Start Date",
+                    true,
+                    destination.startDate,
+                        (newDate) => _onDateSelectedForDestination(newDate, true, destination),
+                    clearable: isCurrentUser,
+                    onClear: () => _onDateSelectedForDestination(null, true, destination),
+                    isOwner: isCurrentUser,
                   ),
                 ),
-                const SizedBox(height: 10),
-                GestureDetector(
-                  onTap: () {
-                    // Navigate to detail page when placePhotoDisplay is tapped
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DetailPage(
-                          placeId: destination.placeId,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Image.network(
-                    destination.placePhotoDisplay ??
-                        'assets/images/default.png',
-                    height: 150,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.broken_image,
-                          color: Colors.red, size: 50);
-                    },
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _buildDateField(
+                    _languageCode == 'vi' ? 'Tới ngày' : "End Date",
+                    false,
+                    destination.endDate,
+                        (newDate) => _onDateSelectedForDestination(newDate, false, destination),
+                    clearable: isCurrentUser,
+                    onClear: () => _onDateSelectedForDestination(null, false, destination),
+                    isOwner: isCurrentUser,
                   ),
-                ),
-                const SizedBox(height: 10),
-                _buildDateField(
-                  _languageCode == 'vi' ? 'Từ ngày' : "Start Date",
-                  true,
-                  destination.startDate,
-                      (newDate) {
-                    _onDateSelectedForDestination(newDate, true, destination);
-                  },
-                  clearable: isCurrentUser,
-                  onClear: () =>
-                      _onDateSelectedForDestination(null, true, destination),
-                  isOwner: isCurrentUser,
-                ),
-                const SizedBox(height: 6),
-                _buildDateField(
-                  _languageCode == 'vi' ? 'Tới ngày' : "End Date",
-                  false,
-                  destination.endDate,
-                      (newDate) {
-                    _onDateSelectedForDestination(newDate, false, destination);
-                  },
-                  clearable: isCurrentUser,
-                  onClear: () =>
-                      _onDateSelectedForDestination(null, false, destination),
-                  isOwner: isCurrentUser,
-                ),
-                const SizedBox(height: 10),
-                _buildDetailSection(
-                  destination.detail,
-                      (newDetail) async {
-                    if (isCurrentUser) {
-                      setState(() {
-                        destination.detail = newDetail;
-                      });
-                      // Validate dates before saving
-                      bool hasStartDate = destination.startDate != null;
-                      bool hasEndDate = destination.endDate != null;
-
-                      if (!hasStartDate && !hasEndDate) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              _languageCode == 'vi'
-                                  ? 'Vui lòng chọn ít nhất một ngày bắt đầu hoặc ngày kết thúc.'
-                                  : 'Please select at least a start date or an end date.',
-                            ),
-                          ),
-                        );
-                        return;
-                      }
-
-                      if (hasStartDate && hasEndDate) {
-                        if (destination.startDate!
-                            .isAfter(destination.endDate!) ||
-                            destination.startDate!
-                                .isAtSameMomentAs(destination.endDate!)) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                _languageCode == 'vi'
-                                    ? 'Ngày bắt đầu phải trước ngày kết thúc.'
-                                    : 'Start date must be before end date.',
-                              ),
-                            ),
-                          );
-                          return;
-                        }
-
-                        if (destination.startDate!.isBefore(DateTime.now())) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                _languageCode == 'vi'
-                                    ? 'Ngày bắt đầu phải sau thời điểm hiện tại.'
-                                    : 'Start date must be in the future.',
-                              ),
-                            ),
-                          );
-                          return;
-                        }
-                      }
-
-                      if (hasStartDate && !hasEndDate) {
-                        if (destination.startDate!.isBefore(DateTime.now())) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                _languageCode == 'vi'
-                                    ? 'Ngày bắt đầu phải sau thời điểm hiện tại.'
-                                    : 'Start date must be in the future.',
-                              ),
-                            ),
-                          );
-                          return;
-                        }
-                      }
-
-                      if (!hasStartDate && hasEndDate) {
-                        // Optional: Enforce endDate in the future
-                        if (destination.endDate!.isBefore(DateTime.now())) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                _languageCode == 'vi'
-                                    ? 'Ngày kết thúc phải sau thời điểm hiện tại.'
-                                    : 'End date must be in the future.',
-                              ),
-                            ),
-                          );
-                          return;
-                        }
-                      }
-
-                      // Save destination
-                      var result = await _scheduleService.UpdateDestination(
-                        destination.id,
-                        destination.scheduleId,
-                        destination.placeId,
-                        null,
-                        null,
-                        newDetail,
-                        destination.isArrived,
-                      );
-
-                      if (result) {
-                        fetchData();
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              _languageCode == 'vi'
-                                  ? 'Cập nhật điểm đến không thành công.'
-                                  : 'Failed to update destination.',
-                            ),
-                          ),
-                        );
-                      }
-                    }
-                  },
-                  isCurrentUser,
                 ),
               ],
             ),
+            const SizedBox(height: 20),
+            // Detail Section
+            _buildDetailSection(
+              destination.detail,
+                  (newDetail) async {
+                if (isCurrentUser) {
+                  await _validateAndSaveDetail(destination, newDetail);
+                }
+              },
+              isCurrentUser,
+            ),
+            const SizedBox(height: 20),
+            // Save Button
+            if (isCurrentUser)
+              SizedBox(
+                width: 100,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    await _validateAndSaveDetail(destination, destination.detail);
+                    Navigator.of(context).pop();
+                  },
+                  icon: const Icon(Icons.save, color: Colors.white,),
+                  label: Text(_languageCode == 'vi' ? 'Lưu' : "Save", style: const TextStyle(color: Colors.white,),),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orangeAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 10,)
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _validateAndSaveDetail(DestinationModel destination, String newDetail) async {
+    bool hasStartDate = destination.startDate != null;
+    bool hasEndDate = destination.endDate != null;
+
+    if (!hasStartDate && !hasEndDate) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _languageCode == 'vi'
+                ? 'Vui lòng chọn ít nhất một ngày bắt đầu hoặc ngày kết thúc.'
+                : 'Please select at least a start date or an end date.',
           ),
-        ));
+        ),
+      );
+      return;
+    }
+
+    if (hasStartDate && hasEndDate) {
+      if (destination.startDate!.isAfter(destination.endDate!) ||
+          destination.startDate!.isAtSameMomentAs(destination.endDate!)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _languageCode == 'vi'
+                  ? 'Ngày bắt đầu phải trước ngày kết thúc.'
+                  : 'Start date must be before end date.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      if (destination.startDate!.isBefore(DateTime.now())) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _languageCode == 'vi'
+                  ? 'Ngày bắt đầu phải sau thời điểm hiện tại.'
+                  : 'Start date must be in the future.',
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    if (hasStartDate && !hasEndDate) {
+      if (destination.startDate!.isBefore(DateTime.now())) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _languageCode == 'vi'
+                  ? 'Ngày bắt đầu phải sau thời điểm hiện tại.'
+                  : 'Start date must be in the future.',
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    if (!hasStartDate && hasEndDate) {
+      if (destination.endDate!.isBefore(DateTime.now())) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _languageCode == 'vi'
+                  ? 'Ngày kết thúc phải sau thời điểm hiện tại.'
+                  : 'End date must be in the future.',
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    // Save destination
+    var result = await _scheduleService.UpdateDestination(
+      destination.id,
+      destination.scheduleId,
+      destination.placeId,
+      destination.startDate,
+      destination.endDate,
+      newDetail,
+      destination.isArrived,
+    );
+
+    if (result) {
+      fetchData();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _languageCode == 'vi'
+                ? 'Cập nhật điểm đến không thành công.'
+                : 'Failed to update destination.',
+          ),
+        ),
+      );
+    }
   }
 
   void _onDateSelectedForDestination(
@@ -1441,28 +1517,28 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
 
   Future<void> _filterSchedule() async {
     String searchText = searchController.text.toLowerCase();
-    var search = _listScheduleInit;
-    if (searchText != '') {
-      search = search
-          .where(
-            (element) =>
-            element.scheduleName.toLowerCase().contains(searchText),
-      )
-          .toList();
+    List<ScheduleModel> search = _listScheduleInit; // Default to all schedules
+
+    // Apply search text filter if not empty
+    if (searchText.isNotEmpty) {
+      search = search.where((schedule) =>
+          schedule.scheduleName.toLowerCase().contains(searchText)).toList();
     }
+
+    // Apply date filters if set
     if (_fromDate != null) {
-      search = search.where((element) {
-        if (element.startDate != null) {
-          return element.startDate!.isAfter(_fromDate!);
+      search = search.where((schedule) {
+        if (schedule.startDate != null) {
+          return schedule.startDate!.isAfter(_fromDate!);
         }
         return false;
       }).toList();
     }
 
     if (_toDate != null) {
-      search = search.where((element) {
-        if (element.endDate != null) {
-          return element.endDate!.isBefore(_toDate!);
+      search = search.where((schedule) {
+        if (schedule.endDate != null) {
+          return schedule.endDate!.isBefore(_toDate!);
         }
         return false;
       }).toList();
