@@ -272,59 +272,118 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Positioned Weather Icon Button (Bottom Left)
               Positioned(
-                  bottom: 10,
-                  left: 10,
-                  child: PopupMenuButton<int>(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    offset: const Offset(0, -100),
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 1,
-                        child: Row(children: [
-                          WeatherIconButton(
-                            onPressed: _navigateToWeatherPage,
-                            assetPath: 'assets/icons/weather.png',
+                bottom: 10,
+                left: 10,
+                child: PopupMenuButton<int>(
+                  color: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  offset: const Offset(0, -125),
+                  itemBuilder: (context) => [
+                    // Weather Option
+                    PopupMenuItem(
+                      value: 1,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.blue[100]!, Colors.blue[300]!],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                          _language != 'vi'
-                              ? const Text('Weather')
-                              : const Text('Thời tiết')
-                        ]),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(2, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            WeatherIconButton(
+                              onPressed: _navigateToWeatherPage,
+                              assetPath: 'assets/icons/weather.png',
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              _language != 'vi' ? 'Weather' : 'Thời tiết',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
                       ),
-                      PopupMenuItem(
-                          value: 2,
-                          child: Row(children: [
+                    ),
+                    // Today Choose Option
+                    PopupMenuItem(
+                      value: 2,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.green[100]!, Colors.green[300]!],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(2, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
                             WeatherIconButton(
                               onPressed: _navigateToWheelPage,
                               assetPath: 'assets/icons/wheel.png',
                             ),
-                            _language != 'vi'
-                                ? const Text('Today choose')
-                                : const Text('Lựa chọn hôm nay')
-                          ])),
-                    ],
-                    onSelected: (value) {
-                      if (value == 1) {
-                        _navigateToWeatherPage();
-                      } else if (value == 2) {
-                        _navigateToWheelPage();
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        color: Colors.green[300],
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.more_vert,
-                        color: Colors.black,
+                            const SizedBox(width: 10),
+                            Text(
+                              _language != 'vi' ? 'Today choose' : 'Lựa chọn hôm nay',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  )),
-
+                  ],
+                  onSelected: (value) {
+                    if (value == 1) {
+                      _navigateToWeatherPage();
+                    } else if (value == 2) {
+                      _navigateToWheelPage();
+                    }
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.green[200]!, Colors.green[400]!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: const Offset(2, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.more_vert,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                ),
+              ),
               // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
               Positioned(
                 bottom: 12,

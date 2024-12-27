@@ -85,6 +85,16 @@ class _SuggestSchedulePageState extends State<SuggestSchedulePage> {
       if(result){
         widget.voidCallback();
       Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _languageCode == 'vi'
+                  ? 'Lịch trình mới đã được tạo'
+                  : 'New schedule has been created',
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(

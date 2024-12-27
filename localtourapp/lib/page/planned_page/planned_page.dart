@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/history_tab_bar.dart';
+import '../../base/const.dart';
 import '../../config/appConfig.dart';
 import '../../config/secure_storage_helper.dart';
 import 'planned_page_tab_bars/schedule_tab_bar.dart';
@@ -43,18 +44,33 @@ class _PlannedPageState extends State<PlannedPage> {
             return [
               SliverAppBar(
                 automaticallyImplyLeading: false,
-                title: Text(_languageCode == 'vi' ? 'Kế Hoạch':'Planned Page'),
+                title: Text(
+                  _languageCode == 'vi' ? 'Kế Hoạch' : 'Planned Page',
+                  style: const TextStyle(color: Colors.black),
+                ),
                 floating: true,
                 pinned: true,
+                flexibleSpace: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.orange[200]!,
+                        Constants.primaryColor,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                ),
                 bottom: TabBar(
                   tabs: [
                     Tab(
-                      text: _languageCode == 'vi' ? 'Lịch trình':'Schedule',
-                      icon: const Icon(Icons.schedule, color: Colors.brown,),
+                      text: _languageCode == 'vi' ? 'Lịch trình' : 'Schedule',
+                      icon: const Icon(Icons.schedule, color: Colors.grey),
                     ),
                     Tab(
-                      text: _languageCode == 'vi' ? 'Lịch sử':'History',
-                      icon: const Icon(Icons.history),
+                      text: _languageCode == 'vi' ? 'Lịch sử' : 'History',
+                      icon: const Icon(Icons.history, color: Colors.orange),
                     ),
                   ],
                   labelColor: Colors.black, // Selected tab text color
@@ -68,6 +84,7 @@ class _PlannedPageState extends State<PlannedPage> {
                   splashBorderRadius: BorderRadius.circular(8.0),
                 ),
               ),
+
             ];
           },
           body: TabBarView(

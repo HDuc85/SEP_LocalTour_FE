@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:localtourapp/models/schedule/schedule_model.dart';
@@ -9,7 +8,11 @@ class ScheduleForm extends StatefulWidget {
   final String userId;
   final int placeId;
   final String language;
-  const ScheduleForm({super.key, required this.userId, required this.placeId, required this.language});
+  const ScheduleForm(
+      {super.key,
+      required this.userId,
+      required this.placeId,
+      required this.language});
 
   @override
   State<ScheduleForm> createState() => _ScheduleFormState();
@@ -28,97 +31,157 @@ class _ScheduleFormState extends State<ScheduleForm> {
     super.initState();
     fetchInit();
   }
+
   Future<void> fetchInit() async {
     var listschedule = await _scheduleService.GetScheduleCurrentUser();
 
-    if(listschedule.isNotEmpty){
+    if (listschedule.isNotEmpty) {
       setState(() {
         _listSchedule = listschedule;
       });
     }
   }
 
-  Future<void> _addSchedule(String scheduleName, DateTime? startDate, DateTime? endDate) async{
-    var result = await _scheduleService.CreateSchedule(scheduleName, startDate, endDate);
-    if(result){
+  Future<void> _addSchedule(
+      String scheduleName, DateTime? startDate, DateTime? endDate) async {
+    var result =
+        await _scheduleService.CreateSchedule(scheduleName, startDate, endDate);
+    if (result) {
       fetchInit();
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-
     return SingleChildScrollView(
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(width: 2),
-          color: const Color(0xFFF0E68C), // Background color
-          borderRadius: BorderRadius.circular(20), // Add rounded corners
+          gradient: LinearGradient(
+            colors: [Colors.orange[100]!, Colors.yellow[200]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 10,
+              offset: Offset(4, 4),
+            ),
+          ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Title
             Text(
-              widget.language != 'vi' ? "ADD PLACE TO SCHEDULE":"Thêm địa điểm vào lịch trình",
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              widget.language != 'vi'
+                  ? "ADD PLACE TO SCHEDULE"
+                  : "Thêm địa điểm vào lịch trình",
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.brown,
+              ),
+              textAlign: TextAlign.center,
             ),
             const Divider(
               thickness: 2,
               color: Colors.black,
             ),
-            const SizedBox(height: 15),
+// Add Schedule Button
+            GestureDetector(
+              onTap: () {
+                showAddScheduleDialog(context,
+                        (scheduleName, startDate, endDate) {
+                      _addSchedule(scheduleName, startDate, endDate);
 
-            // Add Schedule Button
-            ElevatedButton.icon(
-              onPressed: () {
-                showAddScheduleDialog(context, (scheduleName, startDate, endDate) {
-
-                  _addSchedule(scheduleName,startDate,endDate);
-
-                  setState(() {
-                    _selectedScheduleId = null;
-                  });
-                },
-                _listSchedule);
+                      setState(() {
+                        _selectedScheduleId = null;
+                      });
+                    }, _listSchedule);
               },
-              icon: const Icon(Icons.add),
-              label:  Text(widget.language != 'vi' ? "Add Schedule" : 'Thêm lịch trình'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.orange[300]!, Colors.red[400]!],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 8,
+                      offset: Offset(2, 4),
+                    ),
+                  ],
                 ),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.add, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Text(
+                      widget.language == 'vi'
+                          ? 'Thêm lịch trình'
+                          : "Add Schedule",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
             const SizedBox(height: 20),
-
             // Schedule Dropdown
-             Align(
+            Align(
               alignment: Alignment.centerLeft,
-              child: Text(
-                widget.language != 'vi' ? "Schedule:" : "Lịch trình",
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today, color: Colors.brown),
+                  const SizedBox(width: 8),
+                  Text(
+                    widget.language != 'vi' ? "Schedule:" : "Lịch trình:",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.brown,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 8),
             SizedBox(
-              height: 40,
+              height: 50,
               child: DropdownButtonFormField<int>(
                 isExpanded: true,
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.black),
+                  ),
                 ),
                 value: _selectedScheduleId,
                 items: _listSchedule
                     .map((schedule) => DropdownMenuItem<int>(
-                  value: schedule.id, // Use unique schedule ID
-                  child: Text(schedule.scheduleName, overflow: TextOverflow.ellipsis,),
+                  value: schedule.id,
+                  child: Text(
+                    schedule.scheduleName,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 14),
+                  ),
                 ))
                     .toList(),
                 onChanged: (value) {
@@ -128,11 +191,11 @@ class _ScheduleFormState extends State<ScheduleForm> {
                 },
               ),
             ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 20),
 
             // From Date-Time Picker
             _buildDateTimePicker(
-              label: widget.language != 'vi' ? "From:" : "Từ",
+              label: widget.language != 'vi' ? "From:" : "Từ:",
               selectedDate: _fromDate,
               onDateTimeSelected: (selectedDateTime) {
                 setState(() {
@@ -146,11 +209,11 @@ class _ScheduleFormState extends State<ScheduleForm> {
               },
               isFromDate: true,
             ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 20),
 
             // To Date-Time Picker
             _buildDateTimePicker(
-              label: widget.language != 'vi' ? "To:" : "Tới",
+              label: widget.language != 'vi' ? "To:" : "Tới:",
               selectedDate: _toDate,
               onDateTimeSelected: (selectedDateTime) {
                 setState(() {
@@ -164,71 +227,91 @@ class _ScheduleFormState extends State<ScheduleForm> {
               },
               isFromDate: false,
             ),
-            const SizedBox(height: 25),
+            const SizedBox(height: 30),
 
             // Done Button
-            ElevatedButton(
-              onPressed: () async {
+            // Done Button
+            GestureDetector(
+              onTap: () async {
                 if (_selectedScheduleId == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                     SnackBar(
-                      content: Text(widget.language != 'vi' ? 'Please select a schedule.' : "Vui lòng chọn 1 lịch trình"),
+                    SnackBar(
+                      content: Text(widget.language != 'vi'
+                          ? 'Please select a schedule.'
+                          : "Vui lòng chọn 1 lịch trình"),
                       duration: const Duration(seconds: 2),
                     ),
                   );
                 } else {
-                  if (_fromDate != null &&
-                      _toDate != null &&
-                      _fromDate!.isAfter(_toDate!)) {
+                  if (_fromDate != null && _toDate != null && _fromDate!.isAfter(_toDate!)) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content:
-                        Text(widget.language != 'vi' ?'The "From" date cannot be after the "To" date.' : 'Không được chọn ngày bắt đầu sau ngày kết thúc'),
+                        content: Text(widget.language != 'vi'
+                            ? 'The "From" date cannot be after the "To" date.'
+                            : 'Không được chọn ngày bắt đầu sau ngày kết thúc'),
                         duration: const Duration(seconds: 2),
                       ),
                     );
                     return;
-                  }else{
-                    if(_fromDate != null && _fromDate!.isBefore(DateTime.now())){
-                      ScaffoldMessenger.of(context).showSnackBar(
-                         SnackBar(
-                          content:
-                          Text(widget.language != 'vi' ? 'The "From" date cannot be after Now.': 'Ngày bắt đầu không thể sau bây giờ'),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    }
+                  } else if (_fromDate != null && _fromDate!.isBefore(DateTime.now())) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(widget.language != 'vi'
+                            ? 'The "From" date cannot be in the past.'
+                            : 'Ngày bắt đầu không thể ở quá khứ'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                    return;
                   }
+
                   var schedule = _listSchedule.firstWhere(
                         (element) => element.id == _selectedScheduleId,
-                    orElse: () => ScheduleModel(id: 1, userId: '1', userName: 'userName', userProfileImage: 'userProfileImage', scheduleName: 'scheduleName', createdDate: DateTime.now(), status: 'status', isPublic: true, destinations: List.empty(), totalLikes: 0, isLiked: true),
                   );
 
-                  var result = await _scheduleService.CreateDestination(schedule.id, widget.placeId, _fromDate, _toDate, null);
-                  if(result){
+                  var result = await _scheduleService.CreateDestination(
+                      schedule.id, widget.placeId, _fromDate, _toDate, null);
+                  if (result) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                            '${widget.language != 'vi'?'Place has been added to Schedule':'Địa danh đã được thêm vào lịch trình'}:${schedule.scheduleName}'),
+                            '${widget.language != 'vi' ? 'Place has been added to Schedule' : 'Địa danh đã được thêm vào lịch trình'}: ${schedule.scheduleName}'),
                       ),
                     );
+                    Navigator.pop(context, true);
                   }
-
-                  Navigator.pop(context, true);
                 }
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFDCA1A1),
-                shape: RoundedRectangleBorder(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Colors.white, Colors.pinkAccent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(20),
-                  side: const BorderSide(color: Colors.black, width: 1),
+                  border: Border.all(color: Colors.black, width: 1),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 5,
+                      offset: Offset(2, 2),
+                    ),
+                  ],
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 50,
-                  vertical: 10,
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Center(
+                  child: Text(
+                    widget.language != 'vi' ? "DONE" : "Xong",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black, // Black text for better contrast
+                    ),
+                  ),
                 ),
               ),
-              child: Text(widget.language != 'vi' ? "DONE" : "Xong"),
             ),
           ],
         ),
@@ -261,21 +344,23 @@ class _ScheduleFormState extends State<ScheduleForm> {
             decoration: InputDecoration(
               hintText: selectedDate != null
                   ? DateFormat('yyyy-MM-dd HH:mm').format(selectedDate)
-                  :   (widget.language != 'vi' ?'Choose Date & Time' : 'Chọn ngày & giờ'),
+                  : (widget.language != 'vi'
+                      ? 'Choose Date & Time'
+                      : 'Chọn ngày & giờ'),
               hintStyle: const TextStyle(
                 fontSize: 12,
               ),
               border: const OutlineInputBorder(),
               suffixIcon: selectedDate != null
                   ? IconButton(
-                icon: const Icon(
-                  Icons.clear,
-                  size: 20,
-                ),
-                onPressed: () {
-                  onClear();
-                },
-              )
+                      icon: const Icon(
+                        Icons.clear,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        onClear();
+                      },
+                    )
                   : const Icon(Icons.calendar_today),
             ),
           ),

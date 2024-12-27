@@ -108,16 +108,14 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
 
           // Positioned Back to Top Button (Bottom Right) with AnimatedOpacity
           Positioned(
-            bottom: 16,
-            right: 16,
+            bottom: 12,
+            left: 160,
             child: AnimatedOpacity(
               opacity: _showBackToTopButton ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 300),
               child: _showBackToTopButton
-                  ? FloatingActionButton(
-                backgroundColor: const Color(0xFF6A11CB),
-                onPressed: _scrollToTop,
-                child: const Icon(Icons.arrow_upward, color: Colors.white),
+                  ? BackToTopButton(
+                onPressed: _scrollToTop, languageCode: 'vi',
               )
                   : const SizedBox.shrink(),
             ),

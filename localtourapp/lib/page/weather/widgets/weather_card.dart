@@ -122,14 +122,7 @@ class _WeatherCardState extends State<WeatherCard> {
                 ],
               ),
               // Temperature
-              Text(
-                '${widget.currentWeather.temperature.toStringAsFixed(1)}°C',
-                style: const TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.w300,
-                  color: Colors.pinkAccent,
-                ),
-              ),
+              buildTemperatureWidget(widget.currentWeather.temperature),
               // Weather Description
               Text(
                 getWeatherDescription(widget.currentWeather.weathercode),
@@ -178,7 +171,7 @@ class _WeatherCardState extends State<WeatherCard> {
               ElevatedButton(
                 onPressed: widget.onViewDetails,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.pinkAccent,
+                  backgroundColor: Colors.teal.shade500,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
@@ -196,6 +189,35 @@ class _WeatherCardState extends State<WeatherCard> {
       ),
     );
   }
+}
+
+Widget buildTemperatureWidget(double temperature) {
+  Color temperatureColor;
+
+  // Classify temperature and set colors
+  if (temperature <= 15.0) {
+    temperatureColor = Colors.blue;
+  } else if (temperature > 15.0 && temperature <= 25.0) {
+    temperatureColor = Colors.blue[100]!;
+  } else if (temperature > 25.0 && temperature <= 35.0) {
+    temperatureColor = Colors.yellow[700]!;
+  } else {
+    temperatureColor = Colors.red;
+  }
+
+  return Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Text(
+        '${temperature.toStringAsFixed(1)}°C',
+        style: TextStyle(
+          fontSize: 40,
+          fontWeight: FontWeight.w300,
+          color: temperatureColor, // Dynamic color based on range
+        ),
+      ),
+    ],
+  );
 }
 
 class _WeatherDetailItem extends StatelessWidget {

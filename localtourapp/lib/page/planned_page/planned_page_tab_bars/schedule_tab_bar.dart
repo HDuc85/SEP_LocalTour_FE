@@ -503,24 +503,44 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
           const SizedBox(height: 16),
           // Search Button
           Center(
-            child: ElevatedButton.icon(
-              onPressed: () {
+            child: GestureDetector(
+              onTap: () {
                 _filterSchedule(); // Filter based on current inputs
                 setState(() {}); // Trigger the UI update with current filters
               },
-              icon: const Icon(Icons.filter_alt, color: Colors.white),
-              label: Text(
-                _languageCode == 'vi' ? 'Tìm kiếm' : "Search",
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFDCA1A1),
-                shape: RoundedRectangleBorder(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Colors.white, Color(0xFFDCA1A1)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
                   borderRadius: BorderRadius.circular(20),
-                  side: const BorderSide(color: Colors.black, width: 2),
+                  border: Border.all(color: Colors.black, width: 1),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 8,
+                      offset: Offset(2, 4),
+                    ),
+                  ],
                 ),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 50, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.filter_alt, color: Colors.black),
+                    const SizedBox(width: 8),
+                    Text(
+                      _languageCode == 'vi' ? 'Tìm kiếm' : "Search",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -690,7 +710,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                                       : Icons.favorite_border,
                                   color: schedule.isLiked
                                       ? Colors.red
-                                      : Colors.grey,
+                                      : Colors.red,
                                 ),
                                 onPressed: () => _toggleFavorite(schedule.id),
                               ),
@@ -704,7 +724,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                           if (isOwner)
                             IconButton(
                               icon: const Icon(Icons.delete,
-                                  color: Color(0xFF4F4F4F)),
+                                  color: Colors.grey),
                               onPressed: () {
                                 _showDeleteConfirmationDialog(
                                     schedule.id, schedule.scheduleName);
@@ -786,6 +806,15 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               onPressed: () {
                 _deleteSchedule(scheduleId);
                 Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      _languageCode == 'vi'
+                          ? 'Lịch trình $scheduleName đã được xóa'
+                          : 'Schedule $scheduleName has been deleted',
+                    ),
+                  ),
+                );
               },
               child: Text(_languageCode == 'vi' ? 'Có' : 'Yes'),
             ),
@@ -1506,6 +1535,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   fetchData();
                 }
                 Navigator.of(context).pop();
+
               },
               child: Text(_languageCode == 'vi' ? 'Xóa' : 'Delete'),
             ),
@@ -1653,39 +1683,79 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        ElevatedButton.icon(
-          onPressed: () {
+        GestureDetector(
+          onTap: () {
             showAddScheduleDialog(context, (scheduleName, startDate, endDate) {
               _addSchedule(scheduleName, startDate, endDate);
             }, _listScheduleInit);
           },
-          icon: const Icon(Icons.add, color: Colors.white),
-          label: Text(
-            _languageCode == 'vi' ? 'Thêm lịch trình' : "Add Schedule",
-            style: const TextStyle(fontSize: 13.6, color: Colors.white),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.grey,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: const BorderSide(
-                  color: Colors.black, width: 2), // Black border
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.orange[300]!, Colors.red[400]!],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 8,
+                  offset: Offset(2, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.add, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  _languageCode == 'vi' ? 'Thêm lịch trình' : "Add Schedule",
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        ElevatedButton.icon(
-          onPressed: _showSuggestScheduleBottomSheet,
-          icon: const Icon(Icons.add, color: Colors.white),
-          label: Text(
-            _languageCode == 'vi' ? 'Gợi ý' : "Suggestion",
-            style: const TextStyle(fontSize: 14, color: Colors.white),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green[300],
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: const BorderSide(
-                  color: Colors.black, width: 2), // Black border
+        GestureDetector(
+          onTap: _showSuggestScheduleBottomSheet,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.green[300]!, Colors.teal[400]!],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 8,
+                  offset: Offset(2, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.lightbulb, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  _languageCode == 'vi' ? 'Gợi ý' : "Suggestion",
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
