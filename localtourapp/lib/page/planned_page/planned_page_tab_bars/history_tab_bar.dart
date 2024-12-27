@@ -132,11 +132,6 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            'assets/images/empty_state.png',
-            height: 150,
-          ),
-          const SizedBox(height: 20),
           Text(
             _languageCode == 'vi'
                 ? "Địa điểm đã đi đang trống.\nHãy đi đâu đó để thêm vào!"
