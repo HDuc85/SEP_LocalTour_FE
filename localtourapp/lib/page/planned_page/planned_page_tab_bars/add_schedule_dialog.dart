@@ -20,9 +20,11 @@ void showAddScheduleDialog(
 
   Future<void> fetchLanguageCode(StateSetter setState) async {
     var langCode = await SecureStorageHelper().readValue(AppConfig.language);
-    setState(() {
-      languageCode = langCode ?? 'vi';
-    });
+    if (context.mounted) {
+      setState(() {
+        languageCode = langCode ?? 'vi';
+      });
+    }
   }
 
   showDialog(

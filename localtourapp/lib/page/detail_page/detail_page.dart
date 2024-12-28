@@ -84,6 +84,7 @@ class _DetailPageState extends State<DetailPage> with SingleTickerProviderStateM
         isMark = listMark.any((element) => element.placeId == widget.placeId);
         _userId = userId;
       }
+      if (!mounted) return;
       setState(() {
         _placeDetailModel = fetchPlaceDetail;
         _listTagInPlace = fetchTagInPlace;

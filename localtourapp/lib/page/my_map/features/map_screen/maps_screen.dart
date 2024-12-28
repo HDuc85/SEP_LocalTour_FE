@@ -120,6 +120,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
         ),
       );
     } finally {
+      if (!mounted) return;
       setState(() {
         isTagLoading = false;
       });
