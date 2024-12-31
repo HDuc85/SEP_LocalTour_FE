@@ -23,101 +23,107 @@ class BasePage extends StatefulWidget {
 class _BasePageState extends State<BasePage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: widget.title != null
-          ? AppBar(
-        title: Text(
-          widget.title!,
-          maxLines: 2,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.blueAccent,
-        elevation: 4,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(16.0),
+    return WillPopScope(
+      onWillPop: () async {
+        // Prevent the back button from doing anything
+        return false; // Returning false prevents the app from navigating back
+      },
+      child: Scaffold(
+        appBar: widget.title != null
+            ? AppBar(
+          title: Text(
+            widget.title!,
+            maxLines: 2,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-        ),
-      )
-          : null,
-      body: widget.body,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16.0),
-            topRight: Radius.circular(16.0),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.5),
-              blurRadius: 8,
+          centerTitle: true,
+          backgroundColor: Colors.blueAccent,
+          elevation: 4,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(16.0),
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16.0),
-            topRight: Radius.circular(16.0),
           ),
-          child: SizedBox(
-            height: 60,
-            child: BottomNavigationBar(
-              currentIndex: widget.currentIndex,
-              onTap: widget.onTabTapped,
-              selectedItemColor: Colors.grey,
-              backgroundColor: Colors.white,
-              showSelectedLabels: true,
-              selectedLabelStyle: const TextStyle(fontSize: 11.5),
-              showUnselectedLabels: false,
-              type: BottomNavigationBarType.fixed,
-              items: [
-                BottomNavigationBarItem(
-                  icon: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
-                    height: widget.currentIndex == 0 ? 32 : 20,
-                    width: widget.currentIndex == 0 ? 32 : 20,
-                    child: Image.asset('assets/icons/Home.png'),
+        )
+            : null,
+        body: widget.body,
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16.0),
+              topRight: Radius.circular(16.0),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 8,
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16.0),
+              topRight: Radius.circular(16.0),
+            ),
+            child: SizedBox(
+              height: 60,
+              child: BottomNavigationBar(
+                currentIndex: widget.currentIndex,
+                onTap: widget.onTabTapped,
+                selectedItemColor: Colors.grey,
+                backgroundColor: Colors.white,
+                showSelectedLabels: true,
+                selectedLabelStyle: const TextStyle(fontSize: 11.5),
+                showUnselectedLabels: false,
+                type: BottomNavigationBarType.fixed,
+                items: [
+                  BottomNavigationBarItem(
+                    icon: AnimatedContainer(
+                      duration: const Duration(milliseconds: 100),
+                      height: widget.currentIndex == 0 ? 32 : 20,
+                      width: widget.currentIndex == 0 ? 32 : 20,
+                      child: Image.asset('assets/icons/Home.png'),
+                    ),
+                    label: 'Home',
                   ),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
-                    height: widget.currentIndex == 1 ? 32 : 20,
-                    width: widget.currentIndex == 1 ? 32 : 20,
-                    child: Image.asset('assets/icons/Treasure map.png'),
+                  BottomNavigationBarItem(
+                    icon: AnimatedContainer(
+                      duration: const Duration(milliseconds: 100),
+                      height: widget.currentIndex == 1 ? 32 : 20,
+                      width: widget.currentIndex == 1 ? 32 : 20,
+                      child: Image.asset('assets/icons/Treasure map.png'),
+                    ),
+                    label: 'Map',
                   ),
-                  label: 'Map',
-                ),
-                BottomNavigationBarItem(
-                  icon: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
-                    height: widget.currentIndex == 2 ? 32 : 20,
-                    width: widget.currentIndex == 2 ? 32 : 20,
-                    child: Image.asset('assets/icons/Bookmark.png'),
+                  BottomNavigationBarItem(
+                    icon: AnimatedContainer(
+                      duration: const Duration(milliseconds: 100),
+                      height: widget.currentIndex == 2 ? 32 : 20,
+                      width: widget.currentIndex == 2 ? 32 : 20,
+                      child: Image.asset('assets/icons/Bookmark.png'),
+                    ),
+                    label: 'Bookmark',
                   ),
-                  label: 'Bookmark',
-                ),
-                BottomNavigationBarItem(
-                  icon: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
-                    height: widget.currentIndex == 3 ? 32 : 20,
-                    width: widget.currentIndex == 3 ? 32 : 20,
-                    child: Image.asset('assets/icons/Schedule.png'),
+                  BottomNavigationBarItem(
+                    icon: AnimatedContainer(
+                      duration: const Duration(milliseconds: 100),
+                      height: widget.currentIndex == 3 ? 32 : 20,
+                      width: widget.currentIndex == 3 ? 32 : 20,
+                      child: Image.asset('assets/icons/Schedule.png'),
+                    ),
+                    label: 'Planned',
                   ),
-                  label: 'Planned',
-                ),
-                BottomNavigationBarItem(
-                  icon: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
-                    height: widget.currentIndex == 4 ? 32 : 20,
-                    width: widget.currentIndex == 4 ? 32 : 20,
-                    child: Image.asset('assets/icons/Profile.png'),
+                  BottomNavigationBarItem(
+                    icon: AnimatedContainer(
+                      duration: const Duration(milliseconds: 100),
+                      height: widget.currentIndex == 4 ? 32 : 20,
+                      width: widget.currentIndex == 4 ? 32 : 20,
+                      child: Image.asset('assets/icons/Profile.png'),
+                    ),
+                    label: 'Account',
                   ),
-                  label: 'Account',
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

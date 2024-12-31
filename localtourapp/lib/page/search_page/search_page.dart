@@ -11,7 +11,11 @@ import '../../config/appConfig.dart';
 import '../../config/secure_storage_helper.dart';
 import '../../constants/getListApi.dart';
 import '../../models/Tag/tag_model.dart';
+import '../../models/places/place_detail_model.dart';
+import '../../services/schedule_service.dart';
 import '../../services/tag_service.dart';
+import '../detail_page/detail_page.dart';
+import 'add_destination_bottom_sheet.dart';
 import 'second_place_card.dart';
 import 'tags_modal.dart'; // Ensure correct path
 
@@ -21,13 +25,17 @@ class SearchPage extends StatefulWidget {
   final String? textSearch;
   final Function(PlaceCardModel)? onPlaceSelected;
   final bool? isEvent;
+  final bool forAddingDestination;
+  final int? scheduleId;
   const SearchPage({
     Key? key,
     this.sortBy = SortBy.distance,
     this.initialTags = const [],
     this.onPlaceSelected,
     this.textSearch,
-    this.isEvent
+    this.isEvent,
+    this.forAddingDestination = false,
+    this.scheduleId,
   }) : super(key: key);
 
   @override
@@ -35,13 +43,14 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
+  final ScheduleService _scheduleService = ScheduleService();
   String _languageCode = 'vi';
   final PlaceService _placeService = PlaceService();
   final TagService _tagService = TagService();
   final EventService _eventService = EventService();
   final LocationService _locationService = LocationService();
   late List<PlaceCardModel> listPlaceInit = [];
-  late List<PlaceCardModel> listPlaces =[];
+  late List<PlaceCardModel> listPlaces = [];
   late List<EventModel> listEventInit = [];
   late List<EventModel> listEvent = [];
   bool isPlace = true;
@@ -51,7 +60,7 @@ class _SearchPageState extends State<SearchPage> {
   List<int> selectedTags = [];
   Position? _currentPosition;
   SortBy _selectedFilter = SortBy.distance;
-  String  _isComing = '';
+  String _isComing = '';
 
   int size = 10;
   final TextEditingController _controllerSearchInput = TextEditingController();
@@ -62,8 +71,8 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void initState() {
     super.initState();
-    if(widget.isEvent != null){
-      isPlace  = !widget.isEvent!;
+    if (widget.isEvent != null) {
+      isPlace = !widget.isEvent!;
     }
     _selectedFilter = widget.sortBy;
     selectedTags = List.from(widget.initialTags);
@@ -74,68 +83,82 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<void> fetchInit() async {
     var languageCode =
-    await SecureStorageHelper().readValue(AppConfig.language);
+        await SecureStorageHelper().readValue(AppConfig.language);
     setState(() {
       _languageCode = languageCode!;
     });
   }
 
   Future<void> _fetchCurrentLocation() async {
-
     Position? position = await _locationService.getCurrentPosition();
     double long = position != null ? position.longitude : 106.8096761;
-    double lat =  position != null ? position.latitude : 10.8411123;
-    if(position != null){
+    double lat = position != null ? position.latitude : 10.8411123;
+    if (position != null) {
       _currentPosition = position;
-    }else{
-      _currentPosition = Position(longitude: long, latitude: lat, timestamp: DateTime.timestamp(), accuracy: 1, altitude: 1, altitudeAccuracy: 1, heading: 1, headingAccuracy: 1, speed: 1, speedAccuracy: 1);
+    } else {
+      _currentPosition = Position(
+          longitude: long,
+          latitude: lat,
+          timestamp: DateTime.timestamp(),
+          accuracy: 1,
+          altitude: 1,
+          altitudeAccuracy: 1,
+          heading: 1,
+          headingAccuracy: 1,
+          speed: 1,
+          speedAccuracy: 1);
     }
 
-    if(widget.isEvent != null){
+    if (widget.isEvent != null) {
       isPlace = false;
     }
     final fetchedTags = await _tagService.getAllTag();
 
-   if(isPlace){
-     List<PlaceCardModel> fetchedListPlaces =[];
+    if (isPlace) {
+      List<PlaceCardModel> fetchedListPlaces = [];
 
-     if(widget.textSearch != "" && widget.textSearch != null ){
-       searchText = widget.textSearch!;
-       fetchedListPlaces = await _placeService.getListPlace(lat, long, SortBy.distance,SortOrder.asc,selectedTags,searchText);
-     }
-     else{
-       fetchedListPlaces = await _placeService.getListPlace(lat, long, SortBy.distance,SortOrder.asc,selectedTags);
-     }
-     setState(() {
-       listTagPlaces = fetchedTags;
-       listPlaces = fetchedListPlaces;
-       _controllerSearchInput.text = searchText;
-       _isLoading = false;
-     });
-   }else{
-     List<EventModel> fetchedListEvents = [];
-     if(widget.textSearch != "" && widget.textSearch != null ){
-       searchText = widget.textSearch!;
-       fetchedListEvents = await _eventService.getEventInPlace(null,lat, long,SortOrder.asc,SortBy.distance,searchText);
-     }
-     else{
-       fetchedListEvents = await _eventService.getEventInPlace(null,lat, long,SortOrder.asc,SortBy.distance);
-     }
-     setState(() {
-       listEvent = fetchedListEvents;
-       listEventInit = fetchedListEvents;
-       listTagPlaces = fetchedTags;
-       _controllerSearchInput.text = searchText;
-       _isLoading = false;
-     });
-   }
-
+      if (widget.textSearch != "" && widget.textSearch != null) {
+        searchText = widget.textSearch!;
+        fetchedListPlaces = await _placeService.getListPlace(lat, long,
+            SortBy.distance, SortOrder.asc, selectedTags, searchText);
+      } else {
+        fetchedListPlaces = await _placeService.getListPlace(
+            lat, long, SortBy.distance, SortOrder.asc, selectedTags);
+      }
+      setState(() {
+        listTagPlaces = fetchedTags;
+        listPlaces = fetchedListPlaces;
+        _controllerSearchInput.text = searchText;
+        _isLoading = false;
+      });
+    } else {
+      List<EventModel> fetchedListEvents = [];
+      if (widget.textSearch != "" && widget.textSearch != null) {
+        searchText = widget.textSearch!;
+        fetchedListEvents = await _eventService.getEventInPlace(
+            null, lat, long, SortOrder.asc, SortBy.distance, searchText);
+      } else {
+        fetchedListEvents = await _eventService.getEventInPlace(
+            null, lat, long, SortOrder.asc, SortBy.distance);
+      }
+      setState(() {
+        listEvent = fetchedListEvents;
+        listEventInit = fetchedListEvents;
+        listTagPlaces = fetchedTags;
+        _controllerSearchInput.text = searchText;
+        _isLoading = false;
+      });
+    }
   }
 
   void _generateCardInfoList() async {
-
-    if(isPlace){
-      final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.asc,selectedTags);
+    if (isPlace) {
+      final fetchedListPlaces = await _placeService.getListPlace(
+          _currentPosition!.latitude,
+          _currentPosition!.longitude,
+          SortBy.distance,
+          SortOrder.asc,
+          selectedTags);
       setState(() {
         listPlaces = fetchedListPlaces;
       });
@@ -146,19 +169,23 @@ class _SearchPageState extends State<SearchPage> {
       } else if (_selectedFilter == SortBy.rating) {
         listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
       }
-    }else{
-      final fetchedListEvent = await _eventService.getEventInPlace(null, _currentPosition!.latitude, _currentPosition!.longitude, SortOrder.asc,SortBy.distance,);
+    } else {
+      final fetchedListEvent = await _eventService.getEventInPlace(
+        null,
+        _currentPosition!.latitude,
+        _currentPosition!.longitude,
+        SortOrder.asc,
+        SortBy.distance,
+      );
       setState(() {
         listEvent = fetchedListEvent;
         listEventInit = fetchedListEvent;
       });
-
     }
-
   }
 
   void _generateCardWithSearch() async {
-    if(isPlace){
+    if (isPlace) {
       final fetchedListPlaces = await _placeService.getListPlace(
           _currentPosition!.latitude,
           _currentPosition!.longitude,
@@ -175,19 +202,25 @@ class _SearchPageState extends State<SearchPage> {
       } else if (_selectedFilter == SortBy.rating) {
         listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
       }
-    }else{
-      final fetchedListEvent = await _eventService.getEventInPlace(null, _currentPosition!.latitude, _currentPosition!.longitude, SortOrder.asc,SortBy.distance,searchText);
+    } else {
+      final fetchedListEvent = await _eventService.getEventInPlace(
+          null,
+          _currentPosition!.latitude,
+          _currentPosition!.longitude,
+          SortOrder.asc,
+          SortBy.distance,
+          searchText);
       setState(() {
         listEvent = fetchedListEvent;
         listEventInit = fetchedListEvent;
       });
     }
   }
+
   void _onScroll() {
     if (_listPlaceScrollController.position.pixels ==
-        _listPlaceScrollController.position.maxScrollExtent &&
+            _listPlaceScrollController.position.maxScrollExtent &&
         !_isLoading) {
-
       _loadMore();
     }
   }
@@ -198,7 +231,15 @@ class _SearchPageState extends State<SearchPage> {
     });
     size += 10;
     await Future.delayed(const Duration(seconds: 5));
-    final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.asc,selectedTags,searchText,1,size);
+    final fetchedListPlaces = await _placeService.getListPlace(
+        _currentPosition!.latitude,
+        _currentPosition!.longitude,
+        SortBy.distance,
+        SortOrder.asc,
+        selectedTags,
+        searchText,
+        1,
+        size);
     setState(() {
       listPlaces = fetchedListPlaces;
       _isLoading = false;
@@ -209,10 +250,9 @@ class _SearchPageState extends State<SearchPage> {
     } else if (_selectedFilter == SortBy.rating) {
       listPlaces.sort((a, b) => b.rateStar.compareTo(a.rateStar));
     }
-
   }
 
-  void addList(List<PlaceCardModel> list){
+  void addList(List<PlaceCardModel> list) {
     setState(() {
       listPlaces = list;
     });
@@ -226,97 +266,136 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   // New method to build filter buttons
-  Widget _buildFilterButton(
-      String text, Color color, SortBy sortBy ,[String? isComing]) {
+  Widget _buildFilterButton(String text, Color color, SortBy sortBy,
+      [String? isComing]) {
     bool isSelected = false;
-    if(sortBy == SortBy.created_by){
-      if(isComing == _isComing){
+    if (sortBy == SortBy.created_by) {
+      if (isComing == _isComing) {
         isSelected = true;
-      }
-      else{
+      } else {
         isSelected = false;
       }
-    }else{
+    } else {
       isSelected = _selectedFilter == sortBy;
     }
     return ElevatedButton(
       onPressed: () async {
-
-         if(isPlace){
-           if (isSelected) {
-             _selectedFilter = SortBy.none;
-             if(sortBy == SortBy.distance){
-               final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.desc,selectedTags,searchText,1,size);
-               addList(fetchedListPlaces);
-             }else{
-               final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.rating,SortOrder.desc,selectedTags,searchText,1,size);
-               addList(fetchedListPlaces);
-             }
-           } else {
-             _selectedFilter = sortBy;
-             if(sortBy == SortBy.distance){
-               final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.distance,SortOrder.asc,selectedTags,searchText,1,size);
-               addList(fetchedListPlaces);
-             }else{
-               final fetchedListPlaces = await _placeService.getListPlace(_currentPosition!.latitude, _currentPosition!.longitude, SortBy.rating,SortOrder.asc,selectedTags,searchText,1,size);
-                addList(fetchedListPlaces);
-             }
-           }
-         }else{
-           if(isSelected){
-             _selectedFilter = SortBy.none;
-             if(sortBy == SortBy.distance){
-               listEvent.sort((a,b) => b.distance.compareTo(a.distance));
-             }else{
-               _isComing = '';
-               if(isComing == 'isComing'){
+        if (isPlace) {
+          if (isSelected) {
+            _selectedFilter = SortBy.none;
+            if (sortBy == SortBy.distance) {
+              final fetchedListPlaces = await _placeService.getListPlace(
+                  _currentPosition!.latitude,
+                  _currentPosition!.longitude,
+                  SortBy.distance,
+                  SortOrder.desc,
+                  selectedTags,
+                  searchText,
+                  1,
+                  size);
+              addList(fetchedListPlaces);
+            } else {
+              final fetchedListPlaces = await _placeService.getListPlace(
+                  _currentPosition!.latitude,
+                  _currentPosition!.longitude,
+                  SortBy.rating,
+                  SortOrder.desc,
+                  selectedTags,
+                  searchText,
+                  1,
+                  size);
+              addList(fetchedListPlaces);
+            }
+          } else {
+            _selectedFilter = sortBy;
+            if (sortBy == SortBy.distance) {
+              final fetchedListPlaces = await _placeService.getListPlace(
+                  _currentPosition!.latitude,
+                  _currentPosition!.longitude,
+                  SortBy.distance,
+                  SortOrder.asc,
+                  selectedTags,
+                  searchText,
+                  1,
+                  size);
+              addList(fetchedListPlaces);
+            } else {
+              final fetchedListPlaces = await _placeService.getListPlace(
+                  _currentPosition!.latitude,
+                  _currentPosition!.longitude,
+                  SortBy.rating,
+                  SortOrder.asc,
+                  selectedTags,
+                  searchText,
+                  1,
+                  size);
+              addList(fetchedListPlaces);
+            }
+          }
+        } else {
+          if (isSelected) {
+            _selectedFilter = SortBy.none;
+            if (sortBy == SortBy.distance) {
+              listEvent.sort((a, b) => b.distance.compareTo(a.distance));
+            } else {
+              _isComing = '';
+              if (isComing == 'isComing') {
                 var list = listEventInit;
 
-                list.sort((a, b) => b.startDate.compareTo(a.startDate),);
+                list.sort(
+                  (a, b) => b.startDate.compareTo(a.startDate),
+                );
                 listEvent = list;
-               }else if(isComing == 'onGoing') {
-                 var list = listEventInit;
-                 listEvent = list;
+              } else if (isComing == 'onGoing') {
+                var list = listEventInit;
+                listEvent = list;
+              }
+            }
+          } else {
+            _selectedFilter = sortBy;
+            if (sortBy == SortBy.distance) {
+              listEvent.sort((a, b) => a.distance.compareTo(b.distance));
+            } else {
+              _isComing = isComing!;
+              DateTime now = DateTime.now();
+              if (isComing == 'isComing') {
+                var list = listEventInit.where(
+                  (element) {
+                    Duration difference = now.difference(element.startDate);
+                    if (difference.inDays < 0) {
+                      return true;
+                    }
+                    return false;
+                  },
+                ).toList();
 
-               }
-             }
-           }else {
-             _selectedFilter = sortBy;
-             if(sortBy == SortBy.distance){
-               listEvent.sort((a,b) => a.distance.compareTo(b.distance));
-             }else{
-               _isComing = isComing!;
-               DateTime now = DateTime.now();
-               if(isComing == 'isComing'){
-                 var list = listEventInit.where((element) {
-                   Duration difference = now.difference(element.startDate);
-                   if(difference.inDays < 0){
-                     return true;
-                   }
-                   return false;
-                 },).toList();
+                list.sort(
+                  (a, b) => a.startDate.compareTo(b.startDate),
+                );
+                listEvent = list;
+              } else if (isComing == 'onGoing') {
+                var list = listEventInit.where(
+                  (element) {
+                    Duration differenceStart =
+                        now.difference(element.startDate);
+                    Duration differenceEnd = now.difference(element.endDate);
 
-                 list.sort((a, b) => a.startDate.compareTo(b.startDate),);
-                 listEvent = list;
-               }else if(isComing == 'onGoing') {
-                 var list = listEventInit.where((element) {
-                   Duration differenceStart = now.difference(element.startDate);
-                   Duration differenceEnd = now.difference(element.endDate);
+                    if (differenceStart.inHours > 0 &&
+                        differenceEnd.inHours < 0) {
+                      return true;
+                    }
+                    return false;
+                  },
+                ).toList();
 
-                   if(differenceStart.inHours > 0 && differenceEnd.inHours < 0 ){
-                     return true;
-                   }
-                   return false;
-                 },).toList();
-
-                 list.sort((a, b) => a.startDate.compareTo(b.startDate),);
-                 listEvent = list;
-
-               }
-             }
-           }
-         }
-
+                list.sort(
+                  (a, b) => a.startDate.compareTo(b.startDate),
+                );
+                listEvent = list;
+              }
+            }
+          }
+        }
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: isSelected
@@ -336,6 +415,11 @@ class _SearchPageState extends State<SearchPage> {
         ),
       ),
     );
+  }
+
+  // Example detail fetch
+  Future<PlaceDetailModel> _fetchPlaceDetail(int placeId) async {
+    return await _placeService.GetPlaceDetail(placeId);
   }
 
   @override
@@ -414,7 +498,8 @@ class _SearchPageState extends State<SearchPage> {
                       icon: const Icon(Icons.search, color: Colors.black),
                       onPressed: () {
                         if (searchText.isEmpty) {
-                          FocusScope.of(context).requestFocus(_focusSearchInput);
+                          FocusScope.of(context)
+                              .requestFocus(_focusSearchInput);
                         } else {
                           _focusSearchInput.unfocus();
                           _generateCardWithSearch();
@@ -423,34 +508,36 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                     suffixIcon: searchText.isNotEmpty
                         ? IconButton(
-                      icon: const Icon(Icons.clear, color: Colors.black),
-                      onPressed: () {
-                        setState(() {
-                          _controllerSearchInput.clear();
-                          searchText = "";
-                          _generateCardInfoList();
-                        });
-                      },
-                    )
+                            icon: const Icon(Icons.clear, color: Colors.black),
+                            onPressed: () {
+                              setState(() {
+                                _controllerSearchInput.clear();
+                                searchText = "";
+                                _generateCardInfoList();
+                              });
+                            },
+                          )
                         : (isPlace
-                        ? IconButton(
-                      icon: const Icon(Icons.place_rounded, color: Colors.blue),
-                      onPressed: () {
-                        setState(() {
-                          isPlace = false;
-                          _generateCardInfoList();
-                        });
-                      },
-                    )
-                        : IconButton(
-                      icon: const Icon(Icons.event_available_rounded, color: Colors.greenAccent),
-                      onPressed: () {
-                        setState(() {
-                          isPlace = true;
-                          _generateCardInfoList();
-                        });
-                      },
-                    )),
+                            ? IconButton(
+                                icon: const Icon(Icons.place_rounded,
+                                    color: Colors.blue),
+                                onPressed: () {
+                                  setState(() {
+                                    isPlace = false;
+                                    _generateCardInfoList();
+                                  });
+                                },
+                              )
+                            : IconButton(
+                                icon: const Icon(Icons.event_available_rounded,
+                                    color: Colors.greenAccent),
+                                onPressed: () {
+                                  setState(() {
+                                    isPlace = true;
+                                    _generateCardInfoList();
+                                  });
+                                },
+                              )),
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
@@ -481,16 +568,16 @@ class _SearchPageState extends State<SearchPage> {
                 const SizedBox(width: 5),
                 isPlace
                     ? _buildFilterButton(
-                  _languageCode == 'vi' ? "Nổi bật" : "Featured",
-                  const Color(0xFFAAFF00),
-                  SortBy.rating,
-                )
+                        _languageCode == 'vi' ? "Nổi bật" : "Featured",
+                        const Color(0xFFAAFF00),
+                        SortBy.rating,
+                      )
                     : _buildFilterButton(
-                  _languageCode == 'vi' ? "Sắp ra mắt" : "Coming Soon",
-                  const Color(0xFFFFB200),
-                  SortBy.created_by,
-                  'isComing',
-                ),
+                        _languageCode == 'vi' ? "Sắp ra mắt" : "Coming Soon",
+                        const Color(0xFFFFB200),
+                        SortBy.created_by,
+                        'isComing',
+                      ),
                 const SizedBox(width: 5),
                 if (!isPlace)
                   _buildFilterButton(
@@ -519,7 +606,8 @@ class _SearchPageState extends State<SearchPage> {
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Color(0xFFD6B588)),
                         backgroundColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       child: const Row(
@@ -547,7 +635,7 @@ class _SearchPageState extends State<SearchPage> {
                 child: Row(
                   children: selectedTags.map((tagId) {
                     final tag = listTagPlaces.firstWhere(
-                          (t) => t.id == tagId,
+                      (t) => t.id == tagId,
                       orElse: () => TagModel(
                         id: tagId,
                         tagPhotoUrl: 'assets/icons/default.png',
@@ -567,7 +655,8 @@ class _SearchPageState extends State<SearchPage> {
                           });
                         },
                         backgroundColor: Colors.teal.shade50,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
                       ),
                     );
                   }).toList(),
@@ -577,82 +666,169 @@ class _SearchPageState extends State<SearchPage> {
 
           // List of place/event cards with dividers
           Expanded(
-            child: (listPlaces.isNotEmpty && isPlace) || (listEvent.isNotEmpty && !isPlace)
+            child: (listPlaces.isNotEmpty && isPlace) ||
+                    (listEvent.isNotEmpty && !isPlace)
                 ? Column(
-              children: [
-                Expanded(
-                  child: isPlace
-                      ? ListView.builder(
-                    controller: _listPlaceScrollController,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: listPlaces.length + 1,
-                    itemBuilder: (context, index) {
-                      final cardInfo = listPlaces[index % listPlaces.length];
-                      return (index == listPlaces.length)
-                          ? const SizedBox(height: 42)
-                          : SecondPlaceCard(
-                          placeCardId: cardInfo.placeId,
-                          placeName: cardInfo.placeName,
-                          wardName: cardInfo.wardName,
-                          photoDisplay: cardInfo.photoDisplayUrl,
-                          score: cardInfo.rateStar,
-                          distance: cardInfo.distance,
-                          dynamicHeight: 120,
-                        );
-                    },
-                  )
-                      : ListView.builder(
-                    controller: _listPlaceScrollController,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: listEvent.length + 1,
-                    itemBuilder: (context, index) {
-                      final eventInfo = listEvent[index % listEvent.length];
-                      return (index == listEvent.length)
-                          ? const SizedBox(height: 42)
-                          : GestureDetector(
-                        onTap: () {
-                          // Implement navigation if needed
-                        },
-                        child: SecondPlaceCard(
-                          placeCardId: eventInfo.placeId,
-                          placeName: eventInfo.eventName,
-                          wardName: eventInfo.placeName,
-                          photoDisplay: eventInfo.eventPhoto!,
-                          score: 5,
-                          distance: eventInfo.distance,
-                          isEvent: true,
-                          event: eventInfo,
-                          dynamicHeight: 162,
+                    children: [
+                      Expanded(
+                        child: isPlace
+                            ? ListView.builder(
+                                controller: _listPlaceScrollController,
+                                physics: const BouncingScrollPhysics(),
+                                itemCount: listPlaces.length + 1,
+                                itemBuilder: (context, index) {
+                                  if (index == listPlaces.length) {
+                                    return const SizedBox(height: 42);
+                                  }
+                                  final placeCard = listPlaces[index];
+                                  return GestureDetector(
+                                    onTap: () {
+                                      if (widget.forAddingDestination &&
+                                          widget.scheduleId != null) {
+                                        _showAddDestinationFlow(
+                                            placeCard, widget.scheduleId!);
+                                      } else {
+                                        _handlePlaceCardTap(placeCard);
+                                      }
+                                    },
+                                    child: SecondPlaceCard(
+                                      placeCardId: placeCard.placeId,
+                                      placeName: placeCard.placeName,
+                                      wardName: placeCard.wardName,
+                                      photoDisplay: placeCard.photoDisplayUrl,
+                                      score: placeCard.rateStar,
+                                      distance: placeCard.distance,
+                                      dynamicHeight: 120,
+                                    ),
+                                  );
+                                },
+                              )
+                            : ListView.builder(
+                                controller: _listPlaceScrollController,
+                                physics: const BouncingScrollPhysics(),
+                                itemCount: listEvent.length + 1,
+                                itemBuilder: (context, index) {
+                                  final eventInfo =
+                                      listEvent[index % listEvent.length];
+                                  return (index == listEvent.length)
+                                      ? const SizedBox(height: 42)
+                                      : GestureDetector(
+                                          onTap: () {
+                                            // Implement navigation if needed
+                                          },
+                                          child: SecondPlaceCard(
+                                            placeCardId: eventInfo.placeId,
+                                            placeName: eventInfo.eventName,
+                                            wardName: eventInfo.placeName,
+                                            photoDisplay: eventInfo.eventPhoto!,
+                                            score: 5,
+                                            distance: eventInfo.distance,
+                                            isEvent: true,
+                                            event: eventInfo,
+                                            dynamicHeight: 162,
+                                          ),
+                                        );
+                                },
+                              ),
+                      ),
+                      if (_isLoading)
+                        const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(),
                         ),
-                      );
-                    },
-                  ),
-                ),
-                if (_isLoading)
-                  const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: CircularProgressIndicator(),
-                  ),
-              ],
-            )
+                    ],
+                  )
                 : Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.search_off, size: 80, color: Colors.grey),
-                  Text(
-                    _languageCode == 'vi'
-                        ? "Không có địa điểm nào phù hợp với danh mục bạn đã chọn."
-                        : "No places match your selected categories.",
-                    style: TextStyle(fontSize: 18, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.search_off,
+                            size: 80, color: Colors.grey),
+                        Text(
+                          _languageCode == 'vi'
+                              ? "Không có địa điểm nào phù hợp với danh mục bạn đã chọn."
+                              : "No places match your selected categories.",
+                          style:
+                              TextStyle(fontSize: 18, color: Colors.grey[700]),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
           ),
         ],
       ),
     );
+  }
+
+  void _handlePlaceCardTap(PlaceCardModel placeCard) async {
+    // If onPlaceSelected is provided, handle the logic and close the search page
+    if (widget.onPlaceSelected != null) {
+      widget.onPlaceSelected!(placeCard);
+      Navigator.pop(context);
+      return;
+    }
+
+    // Otherwise, navigate to the DetailPage or show a bottom sheet
+    final placeDetail = await _fetchPlaceDetail(placeCard.placeId);
+
+    // Show Bottom Sheet for adding a destination
+    final bool? didAdd = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return AddDestinationBottomSheet(
+          placeDetail: placeDetail,
+        );
+      },
+    );
+
+    // If user added successfully, navigate back or refresh data
+    if (didAdd == true) {
+      Navigator.pop(context, true); // Signal the parent screen if necessary
+    } else {
+      // Navigate to DetailPage if no addition was made
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DetailPage(
+            placeId: placeCard.placeId,
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showAddDestinationFlow(PlaceCardModel placeCard, int scheduleId) async {
+    // 1) Fetch full place detail
+    final placeDetail = await _fetchPlaceDetail(placeCard.placeId);
+
+    // 2) Show bottom sheet
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return AddDestinationBottomSheet(placeDetail: placeDetail);
+      },
+    );
+
+    if (result != null) {
+      // Extract values from the result map
+      final DateTime? startDate = result['startDate'];
+      final DateTime? endDate = result['endDate'];
+      final String detail = result['detail'];
+
+      // Create the destination in your schedule
+      await _scheduleService.CreateDestination(
+        scheduleId, // Pass the scheduleId
+        placeDetail.id,
+        startDate,
+        endDate,
+        detail,
+      );
+
+      // Optionally navigate back after adding the destination
+      Navigator.pop(context); // Close the current screen
+    }
   }
 }

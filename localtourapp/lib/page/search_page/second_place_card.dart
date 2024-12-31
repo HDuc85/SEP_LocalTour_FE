@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:localtourapp/models/event/event_model.dart';
 
-import '../detail_page/detail_page.dart';
-
 class SecondPlaceCard extends StatefulWidget {
   final int placeCardId;
   final String placeName;
@@ -109,16 +107,6 @@ class _SecondPlaceCardState extends State<SecondPlaceCard> {
       ),
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => DetailPage(
-                placeId: widget.placeCardId,
-              ),
-            ),
-          );
-        },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(10.0),

@@ -143,6 +143,14 @@ class ScheduleService {
   }
 
   Future<bool> CreateDestination(int scheduleId,int placeId, DateTime? startDate, DateTime? endDate,String? detail, [bool? isArrive]) async {
+    if(startDate != null){
+      startDate = startDate.add(Duration(hours: 7));
+    }
+
+    if(endDate != null){
+      endDate = endDate.add(Duration(hours: 7));
+    }
+
     var body = {
       "scheduleId": scheduleId,
       "placeId": placeId,
@@ -161,6 +169,13 @@ class ScheduleService {
 
   }
   Future<bool> UpdateDestination(int destinationId,int scheduleId,int placeId, DateTime? startDate, DateTime? endDate,String? detail, bool? isArrive) async {
+    if(startDate != null){
+      startDate = startDate.add(Duration(hours: 7));
+    }
+
+    if(endDate != null){
+      endDate = endDate.add(Duration(hours: 7));
+    }
     var body = {
       "scheduleId": scheduleId,
       "placeId": placeId,
