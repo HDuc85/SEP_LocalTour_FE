@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:intl/intl.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
 import 'package:localtourapp/config/appConfig.dart';
@@ -15,6 +16,7 @@ import 'package:localtourapp/page/account/view_profile/comment.dart';
 import 'package:localtourapp/page/account/view_profile/create_post.dart';
 import 'package:localtourapp/services/post_service.dart';
 import 'package:localtourapp/video_player/video_thumbnail.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
 
 import '../../../constants/getListApi.dart';
 import '../../detail_page/detail_page_tab_bars/form/reportform.dart';
@@ -61,7 +63,9 @@ class _PostTabBarState extends State<PostTabBar> {
   Future<void> fetchDate() async {
     var languageCode =
         await SecureStorageHelper().readValue(AppConfig.language);
-    var result = await _postService.getListPost(widget.userId, SortBy.created_by);
+    var result =
+        await _postService.getListPost(widget.userId, SortBy.created_by);
+
     var userId = await SecureStorageHelper().readValue(AppConfig.userId);
 
     if (userId != null) {
@@ -125,11 +129,18 @@ class _PostTabBarState extends State<PostTabBar> {
   }
 
   Future<void> _toggleVisibility(
-      int postId, bool ispublic, String tilte, String content) async {
+      int postId, bool ispublic, String tilte, String content, int? placeId, int? scheduleId) async {
     var result =
-        await _postService.UpdatePostStatus(postId, !ispublic, tilte, content);
-    fetchDate();
+        await _postService.UpdatePostStatus(postId, !ispublic, tilte, content, placeId, scheduleId);
+    if (result == 'Success') {
+      // Fetch updated data
+      await fetchDate();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update post visibility')),
+      );
     }
+  }
 
   Future<void> _deletePost(int postId) async {
     var result = await _postService.DeletePost(postId);
@@ -203,7 +214,8 @@ class _PostTabBarState extends State<PostTabBar> {
       context: context,
       isScrollControlled: true,
       builder: (context) => CommentsBottomSheet(
-        post: post, onCommentAdded: () { },
+        post: post,
+        onCommentAdded: () {},
       ),
     );
   }
@@ -255,7 +267,8 @@ class _PostTabBarState extends State<PostTabBar> {
                             _languageCode == 'vi'
                                 ? 'Không tìm thấy bài nào'
                                 : "No posts found",
-                            style: const TextStyle(fontSize: 18, color: Colors.grey),
+                            style: const TextStyle(
+                                fontSize: 18, color: Colors.grey),
                           ),
                         ),
                       );
@@ -413,8 +426,9 @@ class _PostTabBarState extends State<PostTabBar> {
                       : labelText,
                   hintStyle: const TextStyle(fontSize: 12),
                   border: const OutlineInputBorder(),
-                  suffixIcon:
-                      (initialDate == null) ? const Icon(Icons.calendar_today) : null,
+                  suffixIcon: (initialDate == null)
+                      ? const Icon(Icons.calendar_today)
+                      : null,
                 ),
               ),
             ),
@@ -509,69 +523,68 @@ class _PostTabBarState extends State<PostTabBar> {
                   ),
                 ],
               ),
-                  if (widget.isCurrentUser) ...[
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            post.isPublic ? Icons.public : Icons.lock,
-                            color: Colors.green,
-                          ),
-                          onPressed: () => _toggleVisibility(
-                              post.id, post.isPublic, post.title, post.content),
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.edit,
-                            color: Colors.blue,
-                          ),
-                          onPressed: () {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              builder: (context) => CreatePostOverlay(
-                                existingPost: post,
-                                callback: () {},
-                              ),
-                            ).then((value) {
-                              fetchDate();
-                            });
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete,
-                            color: Colors.red,
-                          ),
-                          onPressed: () => _confirmDeletePost(post),
-                        ),
-                      ],
+              if (widget.isCurrentUser) ...[
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        post.isPublic ? Icons.public : Icons.lock,
+                        color: Colors.green,
+                      ),
+                      onPressed: () => _toggleVisibility(
+                          post.id, post.isPublic, post.title, post.content, post.placeId, post.scheduleId),
                     ),
-                  ],
-                  if (!widget.isCurrentUser) ...[
                     IconButton(
                       icon: const Icon(
-                        Icons.report,
-                        color: Colors.red,
+                        Icons.edit,
+                        color: Colors.blue,
                       ),
                       onPressed: () {
-                        ReportForm.show(
-                          context,
-                          _languageCode != 'vi'
-                              ? 'Report this post if it violates community guidelines.'
-                              : 'Báo cáo bài viết này nếu vi phạm nguyên tắc cộng đồng.',
-                          post.authorId, // Pass the userId for reporting
-                          post.placeId, // Pass placeId if applicable
-                          _languageCode,
-                          onSubmit: (String message) async {
-                      },
-                        );
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (context) => CreatePostOverlay(
+                            existingPost: post,
+                            callback: () {},
+                          ),
+                        ).then((value) {
+                          fetchDate();
+                        });
                       },
                     ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete,
+                        color: Colors.red,
+                      ),
+                      onPressed: () => _confirmDeletePost(post),
+                    ),
                   ],
+                ),
+              ],
+              if (!widget.isCurrentUser) ...[
+                IconButton(
+                  icon: const Icon(
+                    Icons.report,
+                    color: Colors.red,
+                  ),
+                  onPressed: () {
+                    ReportForm.show(
+                      context,
+                      _languageCode != 'vi'
+                          ? 'Report this post if it violates community guidelines.'
+                          : 'Báo cáo bài viết này nếu vi phạm nguyên tắc cộng đồng.',
+                      post.authorId, // Pass the userId for reporting
+                      post.placeId, // Pass placeId if applicable
+                      _languageCode,
+                      onSubmit: (String message) async {},
+                    );
+                  },
+                ),
+              ],
             ],
           ),
-          post.scheduleId != null
+          post.scheduleId != null && post.scheduleName != null
               ? // Schedule name
               Text(
                   post.scheduleName!,
@@ -582,7 +595,7 @@ class _PostTabBarState extends State<PostTabBar> {
                   ),
                 )
               : const SizedBox(),
-          post.placeId != null
+          post.placeId != null && post.placeName != null && post.placePhotoDisplay != null
               ? Row(
                   children: [
                     Expanded(
@@ -674,9 +687,7 @@ class _PostTabBarState extends State<PostTabBar> {
                   color: Color(0xFF008080),
                 ),
                 label: Text(
-                  _languageCode == 'vi'
-                      ? 'Bình Luận'
-                      : 'Comment',
+                  _languageCode == 'vi' ? 'Bình Luận' : 'Comment',
                   style: const TextStyle(color: Color(0xFF008080)),
                 ),
               ),
@@ -708,7 +719,35 @@ class _PostTabBarState extends State<PostTabBar> {
                   );
                 }
               },
-              child: _buildMediaThumbnail(media),
+              child: FutureBuilder<Widget>(
+                future: _buildMediaThumbnail(media),
+                builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox(
+                      width: 50,
+                      height: 50,
+                      child: Center(child: CircularProgressIndicator()) 
+                    ); // Show a loading indicator while waiting
+                  } else if (snapshot.hasError) {
+                    print('Error building media thumbnail: ${snapshot.error}');
+                    return Image.asset(
+                      'assets/images/image_placeholder.png',
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
+                    ); // Show a placeholder on error
+                  } else if (snapshot.hasData) {
+                    return snapshot.data!; // Return the built widget
+                  } else {
+                    return Image.asset(
+                      'assets/images/image_placeholder.png',
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
+                    ); // Show a placeholder if no data
+                  }
+                },
+              ),
             ),
           );
         }).toList(),
@@ -716,8 +755,8 @@ class _PostTabBarState extends State<PostTabBar> {
     );
   }
 
-  Widget _buildMediaThumbnail(MediaModel media) {
-    // If the media URL is empty or not valid, return a placeholder
+  Future<Widget> _buildMediaThumbnail(MediaModel media) async {
+    // If the media URL is empty or not valid, return a placeholderif (media.url.isEmpty) {
     if (media.url.isEmpty) {
       return Image.asset(
         'assets/images/image_placeholder.png',
@@ -751,10 +790,25 @@ class _PostTabBarState extends State<PostTabBar> {
         );
       } else {
         // Load local image file
-        final file = File(media.url);
-        if (file.existsSync()) {
+        File imageFile = File(media.url);
+        if (imageFile.existsSync()) {
+          // Convert HEIC to JPG if needed
+          if (media.url.toLowerCase().endsWith('.heic')) {
+            final convertedFile = await convertHeicToJpg(imageFile);
+            if (convertedFile != null) {
+              imageFile = convertedFile;
+            } else {
+              print('Failed to convert HEIC to JPG for ${media.url}');
+              return Image.asset(
+                'assets/images/image_placeholder.png',
+                width: 50,
+                height: 50,
+                fit: BoxFit.cover,
+              );
+            }
+          }
           return Image.file(
-            file,
+            imageFile,
             width: 50,
             height: 50,
             fit: BoxFit.cover,
@@ -773,6 +827,36 @@ class _PostTabBarState extends State<PostTabBar> {
       return VideoThumbnail(videoPath: media.url);
     }
   }
+
+  Future<File?> convertHeicToJpg(File heicFile) async {
+    print('convertHeicToJpg: Starting conversion for ${heicFile.path}');
+    try {
+      final tempDir = await path_provider.getTemporaryDirectory();
+      final tempPath = tempDir.path;
+      final targetPath =
+          '$tempPath/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      print('convertHeicToJpg: Temporary directory: $tempPath');
+      print('convertHeicToJpg: Target path: $targetPath');
+      final result = await FlutterImageCompress.compressAndGetFile(
+        heicFile.path,
+        targetPath,
+        quality: 88, // Adjust quality as needed
+        format: CompressFormat.jpeg,
+      );
+
+      if (result != null) {
+        print('convertHeicToJpg: Conversion successful, result path: ${result.path}');
+        return File(result.path);
+      } else {
+        print('convertHeicToJpg: Conversion failed, result is null');
+        return null;
+      }
+    } catch (e) {
+      print('convertHeicToJpg: Error converting HEIC to JPG: $e');
+      return null;
+    }
+  }
+
   void _navigateToWeatherPage() {
     Navigator.pushNamed(context, '/weather');
   }

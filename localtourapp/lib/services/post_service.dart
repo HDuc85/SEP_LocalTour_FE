@@ -50,7 +50,7 @@ Future<List<PostModel>> getListPost(
     }
   }
 
-  Future<String> CreatePost(String title, String content,int? placeId,int? scheduleId,List<File> mediaFiles, [bool? public]) async {
+  Future<String> CreatePost(String title, String content,int? placeId,int? scheduleId, List<File> mediaFiles, [bool? public]) async {
 
     try {
       String url = "${AppConfig.apiUrl}Post/createPost";
@@ -155,19 +155,17 @@ Future<List<PostModel>> getListPost(
     }
 
   }
-  Future<String> UpdatePostStatus(int postId, bool public, String title, String Content) async {
-
+  Future<String> UpdatePostStatus(int postId, bool public, String title, String Content, int? placeId, int? scheduleId) async {
     try {
       String url = "${AppConfig.apiUrl}Post/updatePost/$postId";
 
       Uri uri = Uri.parse(url);
-      final request =  http.MultipartRequest('PUT',uri);
+      final request = http.MultipartRequest('PUT', uri);
 
-
-      String? asscesstoken = await SecureStorageHelper().readValue(AppConfig.accessToken);
+      String? accessToken = await SecureStorageHelper().readValue(AppConfig.accessToken);
 
       Map<String, String> headers = {
-        'Authorization': 'Bearer $asscesstoken',
+        'Authorization': 'Bearer $accessToken',
         'Content-Type': 'multipart/form-data',
       };
 
@@ -176,6 +174,14 @@ Future<List<PostModel>> getListPost(
       request.fields['Title'] = title;
       request.fields['Content'] = Content;
       request.fields['Public'] = public.toString();
+
+      // Include PlaceId and ScheduleId if they are not null
+      if (placeId != null) {
+        request.fields['PlaceId'] = placeId.toString();
+      }
+      if (scheduleId != null) {
+        request.fields['ScheduleId'] = scheduleId.toString();
+      }
 
       // Send the request
       var response = await request.send();
@@ -190,7 +196,6 @@ Future<List<PostModel>> getListPost(
     } catch (e) {
       return '$e';
     }
-
   }
 
   Future<bool> CreateComment(int postId,int? parentId,String Content) async {

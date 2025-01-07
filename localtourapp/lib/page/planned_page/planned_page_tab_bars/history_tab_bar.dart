@@ -64,7 +64,7 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
 
   Future<void> _fetchTraveledPlaceData() async {
     var languageCode =
-    await SecureStorageHelper().readValue(AppConfig.language);
+        await SecureStorageHelper().readValue(AppConfig.language);
     try {
       final fetchedData = await _traveledPlaceService.getAllTraveledPlace();
       setState(() {
@@ -86,15 +86,17 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
           traveledPlaces.isEmpty
               ? _buildEmptyState()
               : ListView.separated(
-            controller: _scrollController,
-            padding: const EdgeInsets.all(8.0),
-            itemCount: traveledPlaces.length,
-            itemBuilder: (context, index) {
-              final place = traveledPlaces[index];
-              return _buildPlaceCard(place);
-            },
-            separatorBuilder: (context, index) => const SizedBox(height: 16),
-          ),
+                  controller: _scrollController,
+                  physics: const ClampingScrollPhysics(),
+                  padding: const EdgeInsets.all(8.0),
+                  itemCount: traveledPlaces.length,
+                  itemBuilder: (context, index) {
+                    final place = traveledPlaces[index];
+                    return _buildPlaceCard(place);
+                  },
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 16),
+                ),
 
           // Positioned Weather Icon Button (Bottom Left)
           Positioned(
@@ -115,8 +117,9 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
               duration: const Duration(milliseconds: 300),
               child: _showBackToTopButton
                   ? BackToTopButton(
-                onPressed: _scrollToTop, languageCode: 'vi',
-              )
+                      onPressed: _scrollToTop,
+                      languageCode: 'vi',
+                    )
                   : const SizedBox.shrink(),
             ),
           ),
@@ -194,7 +197,8 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
                     const SizedBox(height: 4),
                     Text(
                       place.wardName,
-                      style: const TextStyle(fontSize: 14.0, color: Colors.grey),
+                      style:
+                          const TextStyle(fontSize: 14.0, color: Colors.grey),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -214,7 +218,9 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
                     ),
                     const SizedBox(height: 8),
                     _buildVisitInfo(
-                      _languageCode == 'vi' ? "Số lần ghé thăm" : "Visited Times",
+                      _languageCode == 'vi'
+                          ? "Số lần ghé thăm"
+                          : "Visited Times",
                       place.traveledTimes.toString(),
                     ),
                   ],
@@ -243,4 +249,3 @@ class _HistoryTabbarState extends State<HistoryTabbar> {
     );
   }
 }
-

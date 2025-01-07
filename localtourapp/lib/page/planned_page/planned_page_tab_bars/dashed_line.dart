@@ -12,8 +12,8 @@ class DashedLine extends StatelessWidget {
     Key? key,
     required this.isHorizontal,
     required this.length,
-    this.dashLength = 10.0,
-    this.dashSpacing = 5.0,
+    this.dashLength = 6.0,
+    this.dashSpacing = 7.0,
   }) : super(key: key);
 
   @override
@@ -58,7 +58,7 @@ class DashedLinePainter extends CustomPainter {
 
       // Draw the arrowhead
       if ((isHorizontal && endX + dashSpacing >= size.width) || (!isHorizontal && endY + dashSpacing >= size.height)) {
-        const arrowLength = 8.0;
+        const arrowLength = 10.0;
         const arrowAngle = 0.5; // radians for angle of arrowhead
 
         if (isHorizontal) {

@@ -8,6 +8,7 @@ import 'package:localtourapp/models/schedule/schedule_model.dart';
 import 'package:localtourapp/page/detail_page/detail_page.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/add_schedule_dialog.dart';
 import 'package:localtourapp/page/planned_page/planned_page_tab_bars/suggest_schedule_page.dart';
+import 'package:localtourapp/page/planned_page/planned_page_tab_bars/update_destination_bottom_sheet.dart';
 import 'package:localtourapp/page/search_page/search_page.dart';
 import 'package:localtourapp/services/schedule_service.dart';
 import 'package:localtourapp/base/back_to_top_button.dart';
@@ -16,6 +17,8 @@ import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 
 import '../../../models/HomePage/placeCard.dart';
+import '../../../models/places/place_detail_model.dart';
+import '../../../services/place_service.dart';
 import 'dashed_line.dart';
 
 class ScheduleTabbar extends StatefulWidget {
@@ -47,6 +50,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   String bullet = "\u2022 ";
   DateTime? _fromDate;
   DateTime? _toDate;
+  final PlaceService _placeService = PlaceService();
   final TextEditingController searchController = TextEditingController();
   final FocusNode searchFocusNode = FocusNode();
   int? _expandedIndex;
@@ -111,13 +115,21 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
   }
 
   Future<void> fetchData() async {
-    var listschedule = await _scheduleService.GetScheduleUserId(_userId);
+    try {
+      var listschedule = await _scheduleService.GetScheduleUserId(_userId);
 
-    setState(() {
-      _listScheduleInit = listschedule;
-      _listSchedule = listschedule;
-    });
+      if (!mounted) return; // Check if the widget is still mounted
+
+      setState(() {
+        _listScheduleInit = listschedule;
+        _listSchedule = listschedule;
+      });
+    } catch (e) {
+      // Handle errors here if necessary
+      debugPrint("Error fetching data: $e");
+    }
   }
+
 
   @override
   void dispose() {
@@ -381,17 +393,10 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             children: [
               GestureDetector(
                 onTap: () => FocusScope.of(context).unfocus(),
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: MediaQuery.of(context).size.height,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  physics: const ClampingScrollPhysics(),
+                  children: [
                           _buildFilterSection(),
                           const Divider(
                             color: Colors.grey, // Color of the divider
@@ -404,9 +409,6 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                           const SizedBox(height: 100),
                         ],
                       ),
-                    ),
-                  ),
-                ),
               ),
               Positioned(
                 bottom: 0,
@@ -630,171 +632,189 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
               Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
-                  side: const BorderSide(color: Colors.black, width: 1),
+                  side: BorderSide(color: Colors.black.withOpacity(0.5), width: 1.5),
                 ),
                 margin: const EdgeInsets.only(bottom: 10),
-                color: Colors.orange[200],
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          if (isOwner) {
-                            _toggleEditing(schedule.id);
-                            _nameController.text = schedule.scheduleName;
-                          }
-                        },
-                        child: isEditingName
-                            ? TextFormField(
-                                controller: _nameController,
-                                focusNode: _nameFocusNode,
-                                onFieldSubmitted: (newValue) {
-                                  _saveScheduleName();
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.yellow[200]!,
+                        Colors.pink[200]!,
+                      ],
+                      begin: Alignment.bottomLeft,
+                      end: Alignment.topRight,
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  if (isOwner) {
+                                    _toggleEditing(schedule.id);
+                                    _nameController.text = schedule.scheduleName;
+                                  }
                                 },
-                                decoration: const InputDecoration(
-                                  border: OutlineInputBorder(),
-                                  contentPadding:
-                                      EdgeInsets.symmetric(horizontal: 8),
-                                ),
-                              )
-                            : Text(
-                                schedule.scheduleName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                child: isEditingName
+                                    ? TextFormField(
+                                  controller: _nameController,
+                                  focusNode: _nameFocusNode,
+                                  onFieldSubmitted: (newValue) {
+                                    _saveScheduleName();
+                                  },
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 10),
+                                  ),
+                                )
+                                    : Text(
+                                  schedule.scheduleName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ),
-                      ),
-                      Row(
-                        children: [
-                          Text(_languageCode == 'vi'
-                              ? 'Ngày tạo: ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}'
-                              : "Created date: ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}"),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildDateField(
-                              _languageCode == 'vi' ? 'Từ ngày' : "From Date",
-                              true,
-                              schedule.startDate,
-                              isOwner
-                                  ? (newDate) {
-                                      updateScheduleDates(
-                                          schedule, newDate, schedule.endDate);
-                                    }
-                                  : (newDate) {}, // No-op function for non-owners
-                              clearable:
-                                  isOwner, // Only show clear button if owner
-                              onClear: isOwner
-                                  ? () {
-                                      updateScheduleDates(
-                                          schedule, null, schedule.endDate);
-                                    }
-                                  : () {}, // No-op function for non-owners
-                              isOwner: isOwner, // Pass the ownership flag
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _buildDateField(
-                              _languageCode == 'vi' ? 'Tới ngày' : "To Date",
-                              false,
-                              schedule.endDate,
-                              isOwner
-                                  ? (newDate) {
-                                      updateScheduleDates(schedule,
-                                          schedule.startDate, newDate);
-                                    }
-                                  : (newDate) {}, // No-op function for non-owners
-                              clearable:
-                                  isOwner, // Only show clear button if owner
-                              onClear: isOwner
-                                  ? () {
-                                      updateScheduleDates(
-                                          schedule, schedule.startDate, null);
-                                    }
-                                  : () {}, // No-op function for non-owners
-                              isOwner: isOwner, // Pass the ownership flag
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.calendar_today, size: 16, color: Colors.grey[800]),
+                            const SizedBox(width: 8),
+                            Text(
+                              _languageCode == 'vi'
+                                  ? 'Ngày tạo: ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}'
+                                  : "Created date: ${DateFormat('yyyy-MM-dd').format(schedule.createdDate)}",
+                              style: TextStyle(color: Colors.grey[800]),
                             ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          if (isOwner)
-                            IconButton(
-                              icon: Icon(
-                                schedule.isPublic
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                                color: schedule.isPublic
-                                    ? Colors.blue
-                                    : Colors.red,
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildDateField(
+                                _languageCode == 'vi' ? 'Từ ngày' : "From Date",
+                                true,
+                                schedule.startDate,
+                                isOwner
+                                    ? (newDate) {
+                                  updateScheduleDates(
+                                      schedule, newDate, schedule.endDate);
+                                }
+                                    : (newDate) {},
+                                clearable: isOwner,
+                                onClear: isOwner
+                                    ? () {
+                                  updateScheduleDates(
+                                      schedule, null, schedule.endDate);
+                                }
+                                    : () {},
+                                isOwner: isOwner,
                               ),
-                              onPressed: isOwner
-                                  ? () => _toggleVisibility(
-                                      schedule, _nameController.text)
-                                  : null,
                             ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildDateField(
+                                _languageCode == 'vi' ? 'Tới ngày' : "To Date",
+                                false,
+                                schedule.endDate,
+                                isOwner
+                                    ? (newDate) {
+                                  updateScheduleDates(schedule,
+                                      schedule.startDate, newDate);
+                                }
+                                    : (newDate) {},
+                                clearable: isOwner,
+                                onClear: isOwner
+                                    ? () {
+                                  updateScheduleDates(
+                                      schedule, schedule.startDate, null);
+                                }
+                                    : () {},
+                                isOwner: isOwner,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (isEditingName)
                           Row(
-                            children: [
-                              IconButton(
-                                icon: Icon(
-                                  schedule.isLiked
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color: schedule.isLiked
-                                      ? Colors.red
-                                      : Colors.red,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.check_circle, color: Colors.green),
+                                  onPressed: () {
+                                    updatedSchedule(schedule, _nameController.text);
+                                  },
                                 ),
-                                onPressed: () => _toggleFavorite(schedule.id),
-                              ),
-                              Text(
-                                schedule.totalLikes.toString(),
-                                style: const TextStyle(
-                                    color: Colors.black, fontSize: 12),
-                              ),
-                            ],
+                                IconButton(
+                                  icon: const Icon(Icons.cancel, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                      _editingScheduleIds.remove(schedule.id);
+                                    });
+                                  },
+                                ),
+                              ],
                           ),
-                          if (isOwner)
-                            IconButton(
-                              icon:
-                                  const Icon(Icons.delete, color: Colors.grey),
-                              onPressed: () {
-                                _showDeleteConfirmationDialog(
-                                    schedule.id, schedule.scheduleName);
-                              },
-                            ),
-                          const Spacer(),
-                          if (isEditingName)
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                updatedSchedule(schedule, _nameController.text);
-                              },
-                              label: Text(
-                                _languageCode == 'vi' ? 'Sửa' : "Update",
-                                style: const TextStyle(
-                                    fontSize: 13, color: Colors.white),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.orange,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: const BorderSide(
-                                      color: Colors.black,
-                                      width: 1), // Black border
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    schedule.isPublic
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: schedule.isPublic
+                                        ? Colors.blue
+                                        : Colors.red,
+                                  ),
+                                  onPressed: isOwner
+                                      ? () => _toggleVisibility(
+                                      schedule, _nameController.text)
+                                      : null,
                                 ),
-                              ),
+                                IconButton(
+                                  icon: Icon(
+                                    schedule.isLiked
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () => _toggleFavorite(schedule.id),
+                                ),
+                                Text(
+                                  schedule.totalLikes.toString(),
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ],
                             ),
-                          const SizedBox(width: 10),
-                        ],
-                      ),
-                    ],
+                            if (isOwner)
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.grey),
+                                onPressed: () {
+                                  _showDeleteConfirmationDialog(
+                                      schedule.id, schedule.scheduleName);
+                                },
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -802,18 +822,14 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                 Container(
                   margin: const EdgeInsets.only(bottom: 20),
                   padding: const EdgeInsets.all(8),
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.9,
-                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.black, width: 1),
+                    border: Border.all(color: Colors.black.withOpacity(0.2), width: 1),
                   ),
                   child: Column(
                     children: [
                       _buildDestinationGrid(schedule.destinations, schedule),
-                      // Only show the add button here if there are no destinations
                     ],
                   ),
                 ),
@@ -875,7 +891,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     List<Widget> rows = [];
     int index = 0;
     int columns = 3;
-    double connectorHeight = 40; // Vertical connector height
+    double connectorHeight = 45; // Vertical connector height
     double circleSize = 50; // Diameter of CircleAvatar
 
     // Add a placeholder for the add button at the end of the destinations list
@@ -929,7 +945,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
 
           // Wrap the CircleAvatar with GestureDetector for onTap to show details
           Widget circleAvatar = GestureDetector(
-            onTap: () => _showDestinationDetails(destination),
+            onTap: () => _showDestinationDetails(destination,),
             child: Column(
               children: [
                 CircleAvatar(
@@ -941,7 +957,7 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
                   backgroundColor: Colors.grey,
                 ),
                 SizedBox(
-                  width: 65,
+                  width: 72,
                   child: Text(
                     destination.placeName,
                     maxLines: 1,
@@ -1040,14 +1056,14 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             child: const Icon(Icons.add_circle, size: 30),
           );
 
-          // Positions where we need to use Row (positions 4, 7, 10, ...)
+          // Add padding or SizedBox based on the position
           if ((addButtonIndex + 1) % 6 == 4) {
             // Positions: 4, 10, 16, 22, ...
             itemWidget = Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 addButtonContent,
-                const SizedBox(width: 10),
+                const SizedBox(width: 21), // Right padding/SizedBox
               ],
             );
           } else if ((addButtonIndex + 1) % 6 == 1) {
@@ -1055,23 +1071,22 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             itemWidget = Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(width: 10),
+                const SizedBox(width: 21), // Left padding/SizedBox
                 addButtonContent,
               ],
             );
           } else {
-            // Use Column
+            // Default case (no special padding)
             itemWidget = Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(
-                  height: 30,
-                ),
+                const SizedBox(height: 30),
                 addButtonContent,
               ],
             );
           }
         }
+
 
         rowWidgets.add(itemWidget);
 
@@ -1121,14 +1136,19 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
             children: [
               Expanded(
                 child: Align(
-                  alignment:
-                      isEvenRow ? Alignment.centerLeft : Alignment.centerRight,
-                  child: Container(
-                    width: circleSize,
-                    alignment: Alignment.center,
-                    child: DashedLine(
-                      isHorizontal: false,
-                      length: connectorHeight,
+                  alignment: isEvenRow ? Alignment.centerLeft : Alignment.centerRight,
+                  child: Padding(
+                    // Add conditional padding for left or right alignment
+                    padding: isEvenRow
+                        ? const EdgeInsets.only(left: 11.0)   // Padding for left alignment
+                        : const EdgeInsets.only(right: 11.0), // Padding for right alignment
+                    child: Container(
+                      width: circleSize,
+                      alignment: Alignment.center,
+                      child: DashedLine(
+                        isHorizontal: false,
+                        length: connectorHeight,
+                      ),
                     ),
                   ),
                 ),
@@ -1146,34 +1166,45 @@ class _ScheduleTabbarState extends State<ScheduleTabbar>
     );
   }
 
-  void _showDestinationDetails(DestinationModel destination) {
+  Future<PlaceDetailModel> _fetchPlaceDetail(int placeId) async {
+    return await _placeService.GetPlaceDetail(placeId);
+  }
+
+  // 1) Only accept a DestinationModel
+  Future<void> _showDestinationDetails(DestinationModel destination) async {
+    // 2) Fetch place detail using destination.placeId
+    final fetchedPlaceDetail = await _fetchPlaceDetail(destination.placeId);
+
+    // 3) Show bottom sheet
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            void updateStartDate(DateTime? newDate) {
-              setState(() {
-                destination.startDate = newDate;
-              });
-              this.setState(() {}); // Notify the parent widget of changes
-            }
-
-            void updateEndDate(DateTime? newDate) {
-              setState(() {
-                destination.endDate = newDate;
-              });
-              this.setState(() {}); // Notify the parent widget of changes
-            }
-
-            return _buildDestinationDetailSheet(
-                destination, updateStartDate, updateEndDate);
-          },
+      builder: (_) {
+        return UpdateDestinationBottomSheet(
+          placeDetail: fetchedPlaceDetail,
+          existingDestination: destination,
         );
       },
-    );
+    ).then((result) async {
+      if (result != null) {
+        final DateTime? startDate = result['startDate'];
+        final DateTime? endDate   = result['endDate'];
+        final String    detail    = result['detail'];
+        // 4) Update
+        await _scheduleService.UpdateDestination(
+          destination.id,
+          destination.scheduleId,      // Use destination's scheduleId
+          destination.placeId,         // Or fetchedPlaceDetail.id if needed
+          startDate,
+          endDate,
+          detail,
+          false,
+        );
+        fetchData();
+      }
+    });
   }
+
 
   Widget _buildDestinationDetailSheet(
     DestinationModel destination,

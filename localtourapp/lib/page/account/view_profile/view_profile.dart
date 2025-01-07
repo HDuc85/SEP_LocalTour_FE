@@ -57,6 +57,8 @@ class _ViewProfilePageState extends State<ViewProfilePage> {
                 forceElevated: innerBoxIsScrolled,
                 bottom: TabBar(
                   indicatorColor: Colors.black,
+                  labelColor: Colors.black, // Selected tab text color
+                  unselectedLabelColor: Colors.black54,
                   tabs: [
                     Tab(
                       icon: const Icon(Icons.post_add, color: Colors.blue),

@@ -464,12 +464,27 @@ class _CreatePostOverlayState extends State<CreatePostOverlay> {
                         ] else ...[
                           Center(
                             child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
+                              onPressed: () async {
+                                await Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => SearchPage(
-                                      onPlaceSelected: _selectPlace,
+                                      onPlaceSelected: (PlaceCardModel place) {
+                                        setState(() {
+                                          selectedPlace = PlaceCardModel(
+                                            placeId: place.placeId,
+                                            photoDisplayUrl: place.photoDisplayUrl,
+                                            placeName: place.placeName,
+                                            wardName: '',
+                                            latitude: 0,
+                                            longitude: 0,
+                                            rateStar: 0.0,
+                                            countFeedback: 0,
+                                            distance: 0,
+                                            address: '',
+                                          );
+                                        });
+                                      },
                                     ),
                                   ),
                                 );

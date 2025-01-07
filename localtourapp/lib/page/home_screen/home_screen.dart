@@ -279,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  offset: const Offset(0, -125),
+                  offset: const Offset(0, -135),
                   itemBuilder: (context) => [
                     // Weather Option
                     PopupMenuItem(
@@ -306,10 +306,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               onPressed: _navigateToWeatherPage,
                               assetPath: 'assets/icons/weather.png',
                             ),
-                            const SizedBox(width: 10),
                             Text(
                               _language != 'vi' ? 'Weather' : 'Thời tiết',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
@@ -340,10 +339,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               onPressed: _navigateToWheelPage,
                               assetPath: 'assets/icons/wheel.png',
                             ),
-                            const SizedBox(width: 10),
                             Text(
                               _language != 'vi' ? 'Today choose' : 'Lựa chọn hôm nay',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),

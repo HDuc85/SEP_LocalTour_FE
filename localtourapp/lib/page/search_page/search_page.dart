@@ -762,32 +762,31 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _handlePlaceCardTap(PlaceCardModel placeCard) async {
-    // If onPlaceSelected is provided, handle the logic and close the search page
+    // Check if the page is accessed via the scheduletabbar
     if (widget.onPlaceSelected != null) {
+      // Case for CreatePostTabbar
       widget.onPlaceSelected!(placeCard);
-      Navigator.pop(context);
-      return;
-    }
+      Navigator.pop(context); // Close the SearchPage
+    } else if (widget.forAddingDestination && widget.scheduleId != null) {
+      // Show AddDestinationBottomSheet
+      final placeDetail = await _fetchPlaceDetail(placeCard.placeId);
 
-    // Otherwise, navigate to the DetailPage or show a bottom sheet
-    final placeDetail = await _fetchPlaceDetail(placeCard.placeId);
+      final bool? didAdd = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        builder: (ctx) {
+          return AddDestinationBottomSheet(
+            placeDetail: placeDetail,
+          );
+        },
+      );
 
-    // Show Bottom Sheet for adding a destination
-    final bool? didAdd = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) {
-        return AddDestinationBottomSheet(
-          placeDetail: placeDetail,
-        );
-      },
-    );
-
-    // If user added successfully, navigate back or refresh data
-    if (didAdd == true) {
-      Navigator.pop(context, true); // Signal the parent screen if necessary
+      // If user added successfully, navigate back or refresh data
+      if (didAdd == true) {
+        Navigator.pop(context, true); // Signal the parent screen if necessary
+      }
     } else {
-      // Navigate to DetailPage if no addition was made
+      // Navigate directly to the DetailPage
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -826,9 +825,6 @@ class _SearchPageState extends State<SearchPage> {
         endDate,
         detail,
       );
-
-      // Optionally navigate back after adding the destination
-      Navigator.pop(context); // Close the current screen
     }
   }
 }

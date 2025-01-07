@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:localtourapp/config/appConfig.dart';
 import 'package:localtourapp/config/secure_storage_helper.dart';
@@ -21,6 +22,7 @@ import 'personal_infomation.dart';
 import 'setting_page.dart';
 import 'user_preference.dart';
 import 'view_profile/view_profile.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
 
 class AccountPage extends StatefulWidget {
   final String userId;
@@ -128,14 +130,79 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+
+
+  Future<File?> convertHeicToJpg(File heicFile) async {
+    try {
+      final tempDir = await path_provider.getTemporaryDirectory();
+      final tempPath = tempDir.path;
+      final targetPath = '$tempPath/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      final result = await FlutterImageCompress.compressAndGetFile(
+        heicFile.path,
+        targetPath,
+        quality: 88, // Adjust quality as needed
+        format: CompressFormat.jpeg,
+      );
+
+      if (result != null) {
+        return File(result.path);
+      }
+      return null;
+    } catch (e) {
+      print('Error converting HEIC to JPG: $e');
+      return null;
+    }
+  }
+
   Future<void> _selectAvatar() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    showModalBottomSheet(
+      context:context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: Text(_languageCode == 'vi' ? 'Chụp ảnh' : 'Take a photo'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.image),
+                title: Text(_languageCode == 'vi' ? 'Chọn từ thư viện' : 'Choose from gallery'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final pickedFile = await _picker.pickImage(source: source);
 
     if (pickedFile != null) {
-      final file = File(pickedFile.path);
+      File imageFile = File(pickedFile.path);
+      if (pickedFile.path.toLowerCase().endsWith('.heic')) {
+        final convertedFile = await convertHeicToJpg(imageFile);
+        if (convertedFile != null) {
+          imageFile = convertedFile;
+        } else {
+          print('Failed to convert HEIC to JPG');
+          return;
+        }
+      }
       try {
         await _userService
-            .sendUserDataRequest(UpdateUserRequest(profilePicture: file));
+            .sendUserDataRequest(UpdateUserRequest(profilePicture: imageFile));
 
         if (!mounted) return;
 
@@ -152,7 +219,6 @@ class _AccountPageState extends State<AccountPage> {
       }
     }
   }
-
   Future<void> followBtn(bool isFollowing) async {
     if (isFollowLoading) return;
 
@@ -488,14 +554,17 @@ class _AccountPageState extends State<AccountPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          CircleAvatar(
-            radius: 50,
-            backgroundImage: userProfile.userProfileImage != ''
-                ? NetworkImage(userProfile.userProfileImage)
-                : null,
-            child: userProfile.userProfileImage == ''
-                ? const Icon(Icons.account_circle, size: 80, color: Colors.white)
-                : null,
+          GestureDetector(
+            onTap: isCurrentUser ? _selectAvatar : null,
+            child: CircleAvatar(
+              radius: 50,
+              backgroundImage: userProfile.userProfileImage != ''
+                  ? NetworkImage(userProfile.userProfileImage)
+                  : null,
+              child: userProfile.userProfileImage == ''
+                  ? const Icon(Icons.account_circle, size: 80, color: Colors.white)
+                  : null,
+            ),
           ),
           const SizedBox(height: 16),
           Text(

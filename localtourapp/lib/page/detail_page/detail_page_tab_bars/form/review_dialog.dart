@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
 
 import '../../../../config/appConfig.dart';
 import '../../../../config/secure_storage_helper.dart';
@@ -50,7 +52,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
   Future<void> _initDialog() async {
     await _convertListMedia();
     // Calculate initial total size after loading
-    _totalSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
+    _totalSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos],[]);
 
     // Now that media is loaded, update state
     setState(() {
@@ -90,28 +92,74 @@ class _ReviewDialogState extends State<ReviewDialog> {
     setState(() {
       _selectedImages.addAll(loadedImages);
       _selectedVideos.addAll(loadedVideos);
-      initSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
+      initSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos],[]);
       _languageCode = languageCode ?? 'en';
     });
   }
 
-  Future<void> _pickImages() async {
-    final List<XFile>? images = await _picker.pickMultiImage();
-    if (images == null) return;
+  Future<void> _selectImages() async {
+    showModalBottomSheet(
+      context:context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: Text(_languageCode == 'vi' ? 'Chụp ảnh' : 'Take a photo'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera); // Use _pickImage for single image
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.image),
+                title: Text(_languageCode == 'vi' ? 'Chọn từ thư viện' : 'Choose from gallery'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.gallery); // Use _pickImage for single image
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.image),
+                title: Text(_languageCode == 'vi' ? 'Chọn nhiều ảnh từ thư viện' : 'Choose multi images from gallery'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickMultiImages(); // Use _pickMultiImages for multi image
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
-    List<XFile> validImages = [];
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? image = await _picker.pickImage(source: source);
+    if (image == null) return;List<XFile> validImages = [];
     bool sizeExceeded = false;
 
-    for (var image in images) {
-      int imageSize = await _getFileSize(image);
-      if (imageSize <= 15) {
-        validImages.add(image);
+    File imageFile = File(image.path); // Convert XFile to File
+    if (image.path.toLowerCase().endsWith('.heic')) {
+      final convertedFile = await convertHeicToJpg(imageFile);
+      if (convertedFile != null) {
+        imageFile = convertedFile; // Use the converted file
       } else {
-        sizeExceeded = true;
+        print('Failed to convert HEIC to JPG for ${image.name}');
+        return; // Skip this image if conversion fails
       }
     }
 
-    int newSize = _calculateTotalSize([..._selectedImages, ...validImages, ..._selectedVideos]);
+    int imageSize = await _getFileSize(XFile(imageFile.path)); // Use the converted file path
+    if (imageSize <= 15) {
+      validImages.add(XFile(imageFile.path)); // Add the converted file
+    } else {
+      sizeExceeded = true;
+    }
+
+    int newSize = _calculateTotalSize([..._selectedImages, ...validImages], _selectedVideos);
     if (_selectedImages.length + validImages.length <= maxItems) {
       setState(() {
         _selectedImages.addAll(validImages);
@@ -123,7 +171,51 @@ class _ReviewDialogState extends State<ReviewDialog> {
 
     if (sizeExceeded) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_languageCode == 'vi' ? 'Mỗi ảnh phải nhỏ hơn 15 MB.' : 'Each image must be less than 15 MB.')),
+        SnackBar(content: Text(_languageCode== 'vi' ? 'Mỗi ảnh phải nhỏ hơn 15 MB.' : 'Each image must be less than 15 MB.')),
+      );
+    }
+  }
+
+  Future<void> _pickMultiImages() async {
+    final List<XFile>? images = await _picker.pickMultiImage();
+    if (images == null) return;
+
+    List<XFile> validImages = [];
+    bool sizeExceeded = false;
+
+    for (var image in images) {
+      File imageFile = File(image.path); // Convert XFile to File
+      if (image.path.toLowerCase().endsWith('.heic')) {
+        final convertedFile = await convertHeicToJpg(imageFile);
+        if (convertedFile != null) {
+          imageFile = convertedFile; // Use the converted file
+        }else {
+          print('Failed to convert HEIC to JPG for ${image.name}');
+          continue; // Skip this image if conversion fails
+        }
+      }
+
+      int imageSize = await _getFileSize(XFile(imageFile.path)); // Use the converted file path
+      if (imageSize <= 15) {
+        validImages.add(XFile(imageFile.path)); // Add the converted file
+      } else {
+        sizeExceeded = true;
+      }
+    }
+
+    int newSize = _calculateTotalSize([..._selectedImages, ...validImages], _selectedVideos);
+    if (_selectedImages.length + validImages.length <= maxItems) {
+      setState(() {
+        _selectedImages.addAll(validImages);
+        _totalSize = newSize;
+      });
+    } else {
+      _showLimitExceededMessage();
+    }
+
+    if (sizeExceeded) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_languageCode== 'vi' ? 'Mỗi ảnh phải nhỏ hơn 15 MB.' : 'Each image must be less than 15 MB.')),
       );
     }
   }
@@ -161,7 +253,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
     );
   }
 
-  int _calculateTotalSize(List<XFile> files) {
+  int _calculateTotalSize(List<XFile> files, List<XFile> selectedVideos) {
     return files.fold<int>(
         0,
             (total, file) =>
@@ -171,10 +263,34 @@ class _ReviewDialogState extends State<ReviewDialog> {
   bool _hasChanges() {
     bool contentChanged = widget.initialContent != contentController.text;
     bool ratingChanged = widget.initialRating != selectedRating;
-    bool mediaChanged = initSize != _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
+    bool mediaChanged = initSize != _calculateTotalSize([..._selectedImages, ..._selectedVideos],[]);
 
     return contentChanged || ratingChanged || mediaChanged;
   }
+
+  Future<File?> convertHeicToJpg(File heicFile) async {
+    try {
+      final tempDir = await path_provider.getTemporaryDirectory();
+      final tempPath = tempDir.path;
+      final targetPath = '$tempPath/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      final result = await FlutterImageCompress.compressAndGetFile(
+        heicFile.path,
+        targetPath,
+        quality: 88, // Adjust quality as needed
+        format: CompressFormat.jpeg,
+      );
+
+      if (result != null) {
+        return File(result.path);
+      }
+      return null;
+    } catch (e) {
+      print('Error converting HEIC to JPG: $e');
+      return null;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -239,7 +355,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.camera_alt, color: Colors.grey),
-                    onPressed: _pickImages,
+                    onPressed: _selectImages,
                   ),
                   IconButton(
                     icon: const Icon(Icons.videocam, color: Colors.grey),
@@ -275,7 +391,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
                               onTap: () {
                                 setState(() {
                                   _selectedImages.remove(image);
-                                  _totalSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
+                                  _totalSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos],[]);
                                 });
                               },
                               child: Container(
@@ -312,7 +428,7 @@ class _ReviewDialogState extends State<ReviewDialog> {
                               onTap: () {
                                 setState(() {
                                   _selectedVideos.remove(video);
-                                  _totalSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos]);
+                                  _totalSize = _calculateTotalSize([..._selectedImages, ..._selectedVideos],[]);
                                 });
                               },
                               child: Container(
